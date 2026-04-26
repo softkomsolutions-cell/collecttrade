@@ -1,0 +1,1020 @@
+.appShell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  background: #05070c;
+  color: #f5f7fb;
+}
+
+.sidebar {
+  border-right: 1px solid rgba(116, 132, 171, 0.16);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  background: #04060a;
+}
+
+.brandLockup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brandButton {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brandMark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(74, 139, 255, 0.14);
+  color: #4a8bff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.brandWordmark {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4a8bff;
+}
+
+.brandSub {
+  font-size: 12px;
+  color: #7d8bab;
+}
+
+.sideNav {
+  display: grid;
+  gap: 10px;
+}
+
+.sideNav button,
+.ghostButton,
+.tradeButton,
+.primaryButton,
+.segmentedControl button,
+.metricButton,
+.summaryCardButton,
+.sidebarCardButton,
+.brandButton,
+.splashCard {
+  border: 0;
+  font: inherit;
+}
+
+.sideNav button {
+  text-align: left;
+  background: transparent;
+  color: #8da2c8;
+  padding: 14px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.sideNav button:hover,
+.sideNav button.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f7fb;
+}
+
+.sidebarCard {
+  margin-top: auto;
+  border: 1px solid rgba(116, 132, 171, 0.16);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 8px;
+}
+
+.sidebarCardButton {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.sidebarCardButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(74, 139, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.sidebarCard span,
+.metricBlock span,
+.headerStatus span,
+.panelHeader p,
+.signalMeta,
+.signalKicker,
+.confidenceRow span,
+.signalFoot span,
+.collectibleStats span,
+.summaryCard span,
+.profileBlock span,
+.healthRow span {
+  color: #7d8bab;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebarCard strong,
+.metricBlock strong,
+.priceCluster span,
+.signalFoot strong,
+.collectibleStats strong,
+.summaryCard strong,
+.profileBlock strong,
+.healthRow strong {
+  font-size: 16px;
+}
+
+.sidebarCard small {
+  color: #8da2c8;
+}
+
+.workspaceShell {
+  min-width: 0;
+}
+
+.topbar {
+  padding: 18px 28px;
+  border-bottom: 1px solid rgba(116, 132, 171, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.metricStrip {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.metricBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.metricButton {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.metricButton:hover {
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.topbarTools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.livePill {
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(0, 181, 90, 0.14);
+  color: #00d46a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ghostButton {
+  border-radius: 999px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f5f7fb;
+}
+
+.avatarCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #22314f;
+  font-weight: 700;
+}
+
+.workspace {
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pageHeader h1,
+.authPanel h1 {
+  margin: 0;
+  font-size: 56px;
+  line-height: 1;
+  color: #fff6ea;
+}
+
+.pageHeader p,
+.authBlurb,
+.signalCard p,
+.newsItem p,
+.collectibleCard p {
+  margin: 10px 0 0;
+  color: #8da2c8;
+  line-height: 1.6;
+}
+
+.headerStatus {
+  min-width: 220px;
+  text-align: right;
+}
+
+.panel,
+.signalCard,
+.collectibleCard,
+.summaryCard,
+.authPanel {
+  border: 1px solid rgba(116, 132, 171, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.24);
+}
+
+.panel {
+  padding: 24px;
+}
+
+.panelActions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.panelHeader h2,
+.signalCard h3,
+.collectibleCard h3,
+.newsItem h3,
+.emptyState h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #f5f7fb;
+}
+
+.chartPanel {
+  overflow: hidden;
+}
+
+.priceCluster {
+  display: grid;
+  gap: 6px;
+  text-align: right;
+}
+
+.priceCluster span {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.priceCluster small {
+  color: #8da2c8;
+}
+
+.splitGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.ruleList,
+.newsList,
+.railList,
+.healthList,
+.targetList {
+  display: grid;
+  gap: 12px;
+}
+
+.ruleRow,
+.newsItem,
+.railRow,
+.targetChip {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(116, 132, 171, 0.12);
+}
+
+.ruleRow,
+.railRow,
+.targetChip {
+  padding: 14px 16px;
+}
+
+.newsItem {
+  padding: 16px;
+}
+
+.newsItemTop,
+.signalCardTop,
+.collectibleTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.newsItemTop span:last-child,
+.signalMeta {
+  color: #8da2c8;
+}
+
+.newsItem small {
+  color: #7d8bab;
+}
+
+.stateGrid,
+.collectibleStats,
+.summaryGrid,
+.profileBlock {
+  display: grid;
+  gap: 16px;
+}
+
+.stateGrid {
+  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stateGrid div,
+.collectibleStats div,
+.summaryCard,
+.profileBlock div {
+  display: grid;
+  gap: 6px;
+}
+
+.signalGrid,
+.collectibleGrid,
+.summaryGrid {
+  display: grid;
+  gap: 24px;
+}
+
+.signalGrid,
+.collectibleGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summaryGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.signalCard,
+.collectibleCard {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.interactiveCard {
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.interactiveCard.clickable,
+.signalCard.interactiveCard,
+.collectibleCard.interactiveCard {
+  cursor: pointer;
+}
+
+.interactiveCard:hover {
+  border-color: rgba(74, 139, 255, 0.3);
+  background: rgba(255, 255, 255, 0.045);
+  transform: translateY(-2px);
+}
+
+.interactiveCard.active {
+  border-color: rgba(74, 139, 255, 0.42);
+  box-shadow: 0 24px 60px rgba(15, 24, 40, 0.34);
+}
+
+.signalBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.signalBadge.buy {
+  color: #00d46a;
+  background: rgba(0, 181, 90, 0.12);
+}
+
+.signalBadge.sell {
+  color: #ff6a6a;
+  background: rgba(255, 82, 82, 0.12);
+}
+
+.signalBadge.hold {
+  color: #9fb3d9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.confidenceRow {
+  display: grid;
+  gap: 10px;
+}
+
+.confidenceRow div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.confidenceTrack {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.confidenceFill {
+  height: 100%;
+  border-radius: 999px;
+  background: #4a8bff;
+}
+
+.signalFoot {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tradeButton,
+.primaryButton {
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tradeButton {
+  background: #f4f5f7;
+  color: #05070c;
+}
+
+.primaryButton {
+  background: #4a8bff;
+  color: #ffffff;
+}
+
+.collectibleCategory {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.summaryCard {
+  padding: 18px;
+}
+
+.summaryCardButton {
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.summaryCardButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(74, 139, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.tableShell {
+  display: grid;
+  gap: 0;
+}
+
+.tableHeaderRow,
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1fr 1fr 0.8fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(116, 132, 171, 0.12);
+}
+
+.tableHeaderRow {
+  color: #7d8bab;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tableHeaderRow.history,
+.tableRow.history {
+  grid-template-columns: 1fr 0.7fr 1.4fr 1.2fr 0.7fr;
+}
+
+.tableHeaderRow.positions,
+.tableRow.positions {
+  grid-template-columns: 1.4fr 0.7fr 0.6fr 1fr 1fr 0.8fr;
+}
+
+.tableHeaderRow.historyDetailed,
+.tableRow.historyDetailed {
+  grid-template-columns: 1.25fr 0.65fr 0.6fr 1.1fr 1.1fr 0.8fr;
+}
+
+.interactiveRow {
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.interactiveRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tableCellStack {
+  display: grid;
+  gap: 4px;
+}
+
+.tableCellStack strong {
+  font-size: 14px;
+}
+
+.tableCellStack small {
+  color: #8da2c8;
+  font-size: 12px;
+}
+
+.railRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.railDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #00d46a;
+}
+
+.segmentedControl {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.segmentedControl button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: transparent;
+  color: #8da2c8;
+  cursor: pointer;
+}
+
+.segmentedControl button.active {
+  background: #1a2234;
+  color: #f5f7fb;
+}
+
+.targetComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.targetComposer input,
+.authForm input,
+.ticketForm input,
+.ticketForm textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(116, 132, 171, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f5f7fb;
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+
+.ticketForm textarea {
+  resize: vertical;
+  min-height: 112px;
+  font: inherit;
+}
+
+.targetChip {
+  display: inline-flex;
+  width: fit-content;
+}
+
+.healthRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(116, 132, 171, 0.12);
+}
+
+.positive {
+  color: #00d46a;
+}
+
+.negative {
+  color: #ff6a6a;
+}
+
+.muted {
+  color: #9fb3d9;
+}
+
+.statusBanner {
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(74, 139, 255, 0.12);
+  color: #dbe7ff;
+  border: 1px solid rgba(74, 139, 255, 0.24);
+}
+
+.emptyState {
+  padding: 28px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(116, 132, 171, 0.24);
+}
+
+.emptyState p {
+  margin-top: 8px;
+  color: #8da2c8;
+}
+
+.authShell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(74, 139, 255, 0.14), transparent 32%),
+    radial-gradient(circle at top right, rgba(0, 181, 90, 0.1), transparent 26%),
+    #05070c;
+}
+
+.splashShell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(74, 139, 255, 0.18), transparent 30%),
+    radial-gradient(circle at top right, rgba(0, 181, 90, 0.1), transparent 24%),
+    #05070c;
+}
+
+.splashPanel {
+  width: min(1120px, 100%);
+  display: grid;
+  gap: 24px;
+}
+
+.splashEyebrow {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.splashPanel h1 {
+  margin: 0;
+  font-size: clamp(42px, 7vw, 78px);
+  line-height: 0.95;
+  color: #fff6ea;
+}
+
+.splashGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.splashCard {
+  border: 1px solid rgba(116, 132, 171, 0.18);
+  border-radius: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.splashCard:hover,
+.splashCard.active {
+  border-color: rgba(74, 139, 255, 0.38);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+}
+
+.splashCard span,
+.splashCard small,
+.splashHint {
+  color: #8da2c8;
+}
+
+.splashCard span {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.splashCard strong {
+  font-size: 20px;
+  color: #f5f7fb;
+}
+
+.splashCard small {
+  line-height: 1.6;
+}
+
+.splashHint {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.authPanel {
+  width: min(520px, 100%);
+  padding: 32px;
+  display: grid;
+  gap: 20px;
+}
+
+.authBrand {
+  color: #4a8bff;
+  letter-spacing: 0.12em;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.authForm {
+  display: grid;
+  gap: 16px;
+}
+
+.authForm label {
+  display: grid;
+  gap: 10px;
+}
+
+.authForm label span {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.authModeSwitch {
+  width: fit-content;
+}
+
+.chartSurface {
+  width: 100%;
+  min-height: 320px;
+}
+
+.ticketHero,
+.ticketMetaGrid,
+.ticketForm,
+.positionNote {
+  display: grid;
+  gap: 16px;
+}
+
+.ticketHero {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.ticketHero h3 {
+  margin: 8px 0 0;
+  font-size: 24px;
+  color: #f5f7fb;
+}
+
+.ticketMetaGrid {
+  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ticketMetaGrid div,
+.positionNote {
+  border-radius: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px;
+}
+
+.ticketMetaGrid span,
+.formField span,
+.positionNote span {
+  color: #7d8bab;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ticketMetaGrid strong {
+  font-size: 16px;
+}
+
+.ticketForm {
+  margin-top: 18px;
+}
+
+.formField {
+  display: grid;
+  gap: 10px;
+}
+
+.positionNote p {
+  margin: 0;
+  color: #dbe7ff;
+  line-height: 1.6;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 7, 12, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.modalCard {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(116, 132, 171, 0.18);
+  background: #08101a;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+  padding: 24px;
+}
+
+.ghostButton:disabled,
+.primaryButton:disabled,
+.tradeButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.interactiveCard:focus-visible,
+.interactiveRow:focus-visible,
+.metricButton:focus-visible,
+.summaryCardButton:focus-visible,
+.sidebarCardButton:focus-visible,
+.brandButton:focus-visible,
+.splashCard:focus-visible,
+.ghostButton:focus-visible,
+.primaryButton:focus-visible,
+.tradeButton:focus-visible,
+.segmentedControl button:focus-visible,
+.sideNav button:focus-visible {
+  outline: 2px solid rgba(74, 139, 255, 0.8);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1280px) {
+  .signalGrid,
+  .collectibleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .splashGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .appShell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(116, 132, 171, 0.16);
+  }
+
+  .topbar,
+  .pageHeader,
+  .panelHeader,
+  .signalFoot,
+  .panelActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .splitGrid,
+  .signalGrid,
+  .collectibleGrid,
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ticketHero,
+  .ticketMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .splashGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace,
+  .topbar {
+    padding: 18px;
+  }
+
+  .pageHeader h1,
+  .authPanel h1 {
+    font-size: 36px;
+  }
+
+  .metricStrip {
+    gap: 18px;
+  }
+
+  .tableHeaderRow,
+  .tableRow,
+  .tableHeaderRow.history,
+  .tableRow.history {
+    grid-template-columns: 1fr;
+  }
+}
