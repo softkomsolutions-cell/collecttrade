@@ -1,1133 +1,1262 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Chart from "./Chart";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
+import {
+  DEFAULT_DESK,
+  DEFAULT_EXECUTION_PROFILES,
+  DEFAULT_PAGE,
+  DEFAULT_SETTINGS,
+  MARKET_DESKS,
+  NAV_GROUPS,
+  NAV_ITEMS,
+  PAGE_SECTION_LINKS,
+  RESEARCH_REPORTS,
+  SCREEN_PREVIEWS,
+  TOKEN_KEY,
+} from "./appConfig";
+import {
+  buildHash,
+  buildTicketPlanDefaults,
+  defaultIntroIdForPage,
+  executionPlanForSignal,
+  formatTicketPlanInput,
+  labelDesk,
+  marketModeLabel,
+  normalizeAppSettings,
+  normalizeDesk,
+  normalizePage,
+  orderTicketPresetForDesk,
+  parseHashState,
+  providerLabel,
+  readLaunchPreference,
+  resolveTicketPlanMeta,
+  statusTone,
+  writeLaunchPreference,
+  workspaceLabel,
+} from "./appUtils";
+import {
+  AuthShell,
+  BootSplash,
+  EmptyState,
+  LandingShell,
+  SplashScreen,
+} from "./components/appShell";
 
-const TOKEN_KEY = "collecttrade_token";
-const DEFAULT_SETTINGS = {
-  preferredRegion: "south-africa",
-  timezone: "Africa/Johannesburg",
-  riskMode: "balanced",
-};
-
-const NAV_ITEMS = [
-  { id: "signals", label: "Alpha Signals" },
-  { id: "collectibles", label: "Collectibles" },
-  { id: "portfolio", label: "Portfolio" },
-  { id: "settings", label: "Settings" },
-];
-
-const SCREEN_PREVIEWS = {
-  signals: "Live 8/21 EMA setups with market context and execution tickets.",
-  collectibles: "LEGO, Pokemon, and sealed inventory with dedicated trade flow.",
-  portfolio: "Tracked positions, close workflow, and execution history.",
-  settings: "Desk controls, health status, sources, and account preferences.",
-};
-
-const DEFAULT_PAGE = NAV_ITEMS[0].id;
-
-const RAILS = [
-  "IBKR (Global)",
-  "Saxo (Wealth)",
-  "VALR (Crypto)",
-  "EasyEquities (JSE)",
-];
-
-function normalizePage(page) {
-  const candidate = String(page || "").trim().toLowerCase();
-  return NAV_ITEMS.some((item) => item.id === candidate) ? candidate : DEFAULT_PAGE;
-}
-
-function pageFromHash(hashValue) {
-  const rawValue = String(hashValue || "")
-    .replace(/^#\/?/, "")
-    .split(/[/?]/)[0];
-
-  return normalizePage(rawValue);
-}
-
-function formatDateTime(value, timeZone) {
-  if (!value) {
-    return "Waiting for data";
-  }
-
-  return new Intl.DateTimeFormat("en-ZA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(new Date(value));
-}
-
-function formatTickerPrice(ticker, value) {
-  if (typeof value !== "number") {
-    return "--";
-  }
-
-  if (ticker === "BTCUSD") {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 2,
-    }).format(value);
-  }
-
-  if (ticker === "JSE40") {
-    return new Intl.NumberFormat("en-ZA", {
-      style: "currency",
-      currency: "ZAR",
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-
-  if (ticker === "USDZAR") {
-    return `R${value.toFixed(4)}`;
-  }
-
-  return value.toFixed(5);
-}
-
-function formatCollectiblePrice(value) {
-  return new Intl.NumberFormat("en-ZA", {
-    style: "currency",
-    currency: "ZAR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function labelRegion(region) {
-  if (region === "south-africa") {
-    return "South Africa";
-  }
-
-  if (region === "global") {
-    return "Global";
-  }
-
-  return "All Regions";
-}
-
-function actionTone(action) {
-  if (action === "BUY") {
-    return "buy";
-  }
-
-  if (action === "SELL") {
-    return "sell";
-  }
-
-  return "hold";
-}
-
-function positiveTone(value) {
-  if (value > 0) {
-    return "positive";
-  }
-
-  if (value < 0) {
-    return "negative";
-  }
-
-  return "muted";
-}
-
-function statusTone(status) {
-  if (["online", "ok", "live"].includes(status)) {
-    return "positive";
-  }
-
-  if (["simulated", "pending"].includes(status)) {
-    return "muted";
-  }
-
-  return "negative";
-}
-
-function marketModeLabel(mode) {
-  if (mode === "live") {
-    return "Live";
-  }
-
-  if (mode === "hybrid") {
-    return "Live + Fallback";
-  }
-
-  return "Simulated";
-}
-
-function handleInteractiveKey(event, action) {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    action();
-  }
-}
-
-function openExternal(url) {
-  if (!url) {
-    return;
-  }
-
-  window.open(url, "_blank", "noopener,noreferrer");
-}
-
-function formatTradePrice(trade, value) {
-  if (typeof value !== "number") {
-    return "--";
-  }
-
-  if (trade?.assetClass === "collectible") {
-    return formatCollectiblePrice(value);
-  }
-
-  return formatTickerPrice(trade?.marketTicker, value);
-}
-
-function formatQuantity(value, unitLabel = "units") {
-  const quantity = Number(value);
-  if (!Number.isFinite(quantity)) {
-    return `1 ${unitLabel}`;
-  }
-
-  const singular =
-    unitLabel === "items" ? "item" : unitLabel === "units" ? "unit" : unitLabel;
-  return `${quantity} ${quantity === 1 ? singular : unitLabel}`;
-}
-
-function EmptyState({ title, body }) {
-  return (
-    <div className="emptyState">
-      <h3>{title}</h3>
-      <p>{body}</p>
-    </div>
+function lazyNamedExport(factory, exportName) {
+  return lazy(() =>
+    factory().then((module) => ({
+      default: module[exportName],
+    })),
   );
 }
 
-function SplashScreen({ ready, activePage, onEnter, onSelectPage }) {
-  return (
-    <div className="splashShell">
-      <div className="splashPanel">
-        <div className="authBrand">COLLECTRADE</div>
-        <div className="splashEyebrow">TRADER WORKSPACE</div>
-        <h1>Open the desk cleanly.</h1>
-        <p className="authBlurb">
-          A sharper start screen, clearer destinations, and dedicated app screens for signals,
-          collectibles, portfolio, and settings.
-        </p>
+const TradeScreen = lazy(() => import("./components/tradeScreen"));
+const HomeScreen = lazyNamedExport(() => import("./components/workspaceScreens"), "HomeScreen");
+const NewsScreen = lazyNamedExport(() => import("./components/workspaceScreens"), "NewsScreen");
+const ToolsScreen = lazyNamedExport(() => import("./components/workspaceScreens"), "ToolsScreen");
+const CollectiblesScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "CollectiblesScreen",
+);
+const PortfolioScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "PortfolioScreen",
+);
+const ReportsScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "ReportsScreen",
+);
+const ConnectionsScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "ConnectionsScreen",
+);
+const SettingsScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "SettingsScreen",
+);
+const OrderTicketModal = lazyNamedExport(
+  () => import("./components/workspaceCards"),
+  "OrderTicketModal",
+);
+const CloseTradeModal = lazyNamedExport(
+  () => import("./components/workspaceCards"),
+  "CloseTradeModal",
+);
 
-        <div className="splashGrid">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`splashCard ${activePage === item.id ? "active" : ""}`}
-              onClick={() => onSelectPage(item.id)}
-            >
-              <span>{item.label}</span>
-              <strong>/{item.id}</strong>
-              <small>{SCREEN_PREVIEWS[item.id]}</small>
-            </button>
-          ))}
-        </div>
+const EMPTY_SIGNALS_RESPONSE = {
+  generatedAt: null,
+  leadSignal: null,
+  signals: [],
+  marketData: {
+    provider: "Simulator",
+    mode: "simulated",
+    interval: "1h",
+    lastAttemptAt: null,
+    lastSuccessAt: null,
+    lastError: null,
+    sourceStatus: [],
+  },
+  strategyRules: [],
+};
 
-        <div className="panelActions">
-          <button
-            type="button"
-            className="primaryButton"
-            onClick={onEnter}
-            disabled={!ready}
-          >
-            {ready ? `Enter ${NAV_ITEMS.find((item) => item.id === activePage)?.label || "Workspace"}` : "Booting Workspace..."}
-          </button>
-          <div className="splashHint">
-            {ready ? "Each option now has its own addressable screen." : "Restoring session and desk state..."}
-          </div>
-        </div>
-      </div>
-    </div>
+const EMPTY_NEWS_RESPONSE = {
+  region: DEFAULT_SETTINGS.preferredRegion,
+  refreshedAt: null,
+  items: [],
+  sources: [],
+  sourceStatus: [],
+};
+
+const EMPTY_COLLECTIBLES_RESPONSE = {
+  updatedAt: null,
+  categories: [],
+  brands: [],
+  items: [],
+  referenceShelves: [],
+};
+
+const EMPTY_FEEDBACK_RESPONSE = {
+  items: [],
+  summary: {},
+  permissions: { canManage: false },
+};
+
+const EMPTY_HEALTH = {
+  ok: true,
+  services: {},
+  metrics: {},
+  sources: [],
+  marketSources: [],
+  connectors: [],
+};
+
+const EMPTY_SHARE_STATUS = {
+  status: "idle",
+  provider: null,
+  publicUrl: "",
+  localUrl: "http://127.0.0.1:5000",
+  startedAt: null,
+  lastHeartbeatAt: null,
+  notes: "No public share session yet.",
+};
+
+const INITIAL_AUTH_FORM = {
+  name: "",
+  email: "",
+  password: "",
+};
+
+const INITIAL_VALR_FORM = {
+  apiKey: "",
+  apiSecret: "",
+  preferredPair: DEFAULT_EXECUTION_PROFILES.crypto.pair,
+  subAccountId: "",
+};
+
+const INITIAL_FEEDBACK_FORM = {
+  title: "",
+  area: "landing",
+  type: "ux",
+  severity: "medium",
+  notes: "",
+};
+
+function deskForTicker(ticker) {
+  const normalized = String(ticker || "").toUpperCase();
+  if (["USDZAR", "EURUSD"].includes(normalized)) {
+    return "forex";
+  }
+  if (["SPY", "QQQ", "GLD"].includes(normalized)) {
+    return "etfs";
+  }
+  if (["BTCUSD", "BTCZAR", "BTCUSDT", "BTCUSDC"].includes(normalized)) {
+    return "crypto";
+  }
+  if (["JSE40", "JTOPI"].includes(normalized)) {
+    return "jse";
+  }
+  return "forex";
+}
+
+function filterSignalsByDesk(signals, desk) {
+  if (desk === "all") {
+    return signals;
+  }
+  return signals.filter((signal) => signal.desk === desk);
+}
+
+function filterNewsItemsByDesk(items, desk) {
+  if (desk === "all") {
+    return items;
+  }
+
+  return items.filter((item) => {
+    const itemDesk = item.marketTicker ? deskForTicker(item.marketTicker) : null;
+    if (itemDesk === desk) {
+      return true;
+    }
+
+    if (desk === "jse") {
+      return item.region === "south-africa";
+    }
+
+    if (desk === "forex") {
+      return item.region === "south-africa" || item.sourceId === "fxstreet";
+    }
+
+    if (desk === "crypto") {
+      return item.sourceId === "coindesk";
+    }
+
+    if (desk === "etfs") {
+      return item.region === "global";
+    }
+
+    return false;
+  });
+}
+
+function buildSourceMap(sources) {
+  return Object.fromEntries(
+    (sources || []).map((source) => [source.id, source.url]),
   );
 }
 
-function AuthShell({
-  authMode,
-  authForm,
-  authStatus,
-  onModeChange,
-  onSubmit,
-  onFieldChange,
-}) {
+function toPlanNumber(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
+
+function buildMarketPlanSet(signal, side) {
+  const preset = orderTicketPresetForDesk(signal.desk, "market");
+  const skeleton = {
+    kind: "market",
+    desk: signal.desk,
+    marketTicker: signal.ticker,
+    price: Number(signal.price || 0),
+  };
+  const presetDefaults = buildTicketPlanDefaults(skeleton, preset, side);
+  const presetPlan = {
+    stopPrice: presetDefaults.stopPrice,
+    targetPrice: presetDefaults.targetPrice,
+    riskBudget: presetDefaults.riskBudget || preset.defaultRiskBudget || "",
+    source: "Desk preset",
+    rationale: "Using desk-default risk and reward spacing.",
+  };
+  const structuredEntry = side === "SELL" ? signal.tradePlan?.sell : signal.tradePlan?.buy;
+  const structuredPlan = structuredEntry
+    ? {
+        stopPrice: formatTicketPlanInput(skeleton, structuredEntry.stopPrice),
+        targetPrice: formatTicketPlanInput(skeleton, structuredEntry.targetPrice),
+        riskBudget: preset.defaultRiskBudget || "",
+        source: structuredEntry.source || "Signal structure",
+        rationale:
+          structuredEntry.rationale ||
+          "Recent swing structure and the 21 EMA are framing this plan.",
+      }
+    : null;
+
+  return {
+    presetPlan,
+    structuredPlan,
+    support: signal.tradePlan?.support ?? signal.tradePlan?.recentLow ?? null,
+    resistance: signal.tradePlan?.resistance ?? signal.tradePlan?.recentHigh ?? null,
+  };
+}
+
+function applyTicketPlan(ticket, mode, side = ticket.side) {
+  const structuredPlan = ticket.structuredPlans?.[side] || null;
+  const presetPlan = ticket.presetPlans?.[side] || null;
+  const basePlan =
+    mode === "structure" ? structuredPlan || presetPlan : presetPlan || structuredPlan;
+
+  if (!basePlan) {
+    return ticket;
+  }
+
+  const nextTicket = {
+    ...ticket,
+    side,
+    planMode: mode,
+    stopPrice: basePlan.stopPrice,
+    targetPrice: basePlan.targetPrice,
+    riskBudget: basePlan.riskBudget || ticket.riskBudget,
+    baseStopPrice: basePlan.stopPrice,
+    baseTargetPrice: basePlan.targetPrice,
+    basePlanSource: basePlan.source,
+    basePlanRationale: basePlan.rationale,
+  };
+
+  return {
+    ...nextTicket,
+    ...resolveTicketPlanMeta(nextTicket, nextTicket.stopPrice, nextTicket.targetPrice),
+  };
+}
+
+function buildMarketTicket(signal, side) {
+  const preset = orderTicketPresetForDesk(signal.desk, "market");
+  const buyPlanSet = buildMarketPlanSet(signal, "BUY");
+  const sellPlanSet = buildMarketPlanSet(signal, "SELL");
+  const structuredPlans = {
+    BUY: buyPlanSet.structuredPlan,
+    SELL: sellPlanSet.structuredPlan,
+  };
+  const presetPlans = {
+    BUY: buyPlanSet.presetPlan,
+    SELL: sellPlanSet.presetPlan,
+  };
+  const defaultMode = structuredPlans[side] ? "structure" : "preset";
+  const basePlan = defaultMode === "structure" ? structuredPlans[side] : presetPlans[side];
+
+  const ticket = {
+    kind: "market",
+    marketTicker: signal.ticker,
+    label: signal.label,
+    summary: signal.headline,
+    meta: signal.exitRule,
+    price: Number(signal.price || 0),
+    desk: signal.desk,
+    deskLabel: preset.deskLabel,
+    side,
+    signalAction: signal.action,
+    setup: signal.setup,
+    quantity: preset.defaultQuantity,
+    unitLabel: preset.unitLabel,
+    quantityStep: preset.quantityStep,
+    minQuantity: preset.minQuantity,
+    timingHint: preset.timingHint,
+    notePlaceholder: preset.notePlaceholder,
+    executionCue: preset.executionCue,
+    warnings: preset.warnings,
+    checklist: preset.checklist,
+    orderNote: "",
+    structuredPlans,
+    presetPlans,
+    support: signal.tradePlan?.support ?? null,
+    resistance: signal.tradePlan?.resistance ?? null,
+    planMode: defaultMode,
+    stopPrice: basePlan?.stopPrice || "",
+    targetPrice: basePlan?.targetPrice || "",
+    riskBudget: basePlan?.riskBudget || preset.defaultRiskBudget || "",
+    baseStopPrice: basePlan?.stopPrice || "",
+    baseTargetPrice: basePlan?.targetPrice || "",
+    basePlanSource: basePlan?.source || "Desk preset",
+    basePlanRationale: basePlan?.rationale || "Using desk-default risk and reward spacing.",
+  };
+
+  return {
+    ...ticket,
+    ...resolveTicketPlanMeta(ticket, ticket.stopPrice, ticket.targetPrice),
+  };
+}
+
+function buildCollectibleTicket(item, side) {
+  const preset = orderTicketPresetForDesk("collectible", "collectible");
+  const skeleton = {
+    kind: "collectible",
+    desk: "collectibles",
+    marketTicker: item.id,
+    price: Number(item.price || 0),
+  };
+  const buyPlan = buildTicketPlanDefaults(skeleton, preset, "BUY");
+  const sellPlan = buildTicketPlanDefaults(skeleton, preset, "SELL");
+  const presetPlans = {
+    BUY: {
+      ...buyPlan,
+      source: "Inventory preset",
+      rationale: "Using the slower collectible inventory risk template.",
+    },
+    SELL: {
+      ...sellPlan,
+      source: "Inventory preset",
+      rationale: "Using the slower collectible inventory risk template.",
+    },
+  };
+  const basePlan = presetPlans[side];
+  const ticket = {
+    kind: "collectible",
+    collectibleId: item.id,
+    label: item.name,
+    summary: item.description,
+    meta: item.category,
+    price: Number(item.price || 0),
+    desk: "collectibles",
+    deskLabel: preset.deskLabel,
+    side,
+    signalAction: side,
+    setup: item.category,
+    quantity: preset.defaultQuantity,
+    unitLabel: preset.unitLabel,
+    quantityStep: preset.quantityStep,
+    minQuantity: preset.minQuantity,
+    timingHint: preset.timingHint,
+    notePlaceholder: preset.notePlaceholder,
+    executionCue: preset.executionCue,
+    warnings: preset.warnings,
+    checklist: preset.checklist,
+    orderNote: "",
+    structuredPlans: null,
+    presetPlans,
+    support: null,
+    resistance: null,
+    planMode: "preset",
+    stopPrice: basePlan.stopPrice,
+    targetPrice: basePlan.targetPrice,
+    riskBudget: basePlan.riskBudget || preset.defaultRiskBudget || "",
+    baseStopPrice: basePlan.stopPrice,
+    baseTargetPrice: basePlan.targetPrice,
+    basePlanSource: basePlan.source,
+    basePlanRationale: basePlan.rationale,
+  };
+
+  return {
+    ...ticket,
+    ...resolveTicketPlanMeta(ticket, ticket.stopPrice, ticket.targetPrice),
+  };
+}
+
+function buildMentorSummary(signal, leadNewsItem) {
+  if (!signal) {
+    return {
+      action: "Stand by",
+      setup: "No lead setup yet",
+      rationale: "The desk is waiting for a cleaner signal before it promotes a trade idea.",
+      invalidation: "No structure yet.",
+    };
+  }
+
+  return {
+    action: `${signal.action} ${signal.label}`,
+    setup: signal.setup,
+    rationale: leadNewsItem
+      ? `${signal.thesis} Macro tape lead: ${leadNewsItem.sourceName}.`
+      : signal.thesis,
+    invalidation: signal.exitRule,
+  };
+}
+
+function buildMentorChecklist(signal, leadNewsItem) {
+  if (!signal) {
+    return [
+      "Wait for the desk to promote a clean lead setup.",
+      "Check the macro tape before moving into the ticket.",
+      "Keep the next trade small until the state is clearer.",
+    ];
+  }
+
+  return [
+    `Anchor trend is ${signal.anchorTrend}; avoid fighting the higher-level structure without a reason.`,
+    signal.retest
+      ? "A retest is active; confirm the hold before submitting the ticket."
+      : "No retest yet; patience may improve the entry.",
+    leadNewsItem
+      ? `Macro tape lead: ${leadNewsItem.title}`
+      : "Read the macro tape so the desk is not blind to the current story.",
+    signal.exitRule,
+  ];
+}
+
+function buildChartPlan(activeSignal, orderTicket) {
+  if (!activeSignal) {
+    return null;
+  }
+
+  const signalSupport = activeSignal.tradePlan?.support ?? null;
+  const signalResistance = activeSignal.tradePlan?.resistance ?? null;
+
+  if (
+    orderTicket &&
+    orderTicket.kind === "market" &&
+    orderTicket.marketTicker === activeSignal.ticker
+  ) {
+    return {
+      side: orderTicket.side,
+      support: signalSupport,
+      resistance: signalResistance,
+      stopPrice: toPlanNumber(orderTicket.stopPrice),
+      targetPrice: toPlanNumber(orderTicket.targetPrice),
+      source: orderTicket.planSource,
+      rationale: orderTicket.planRationale,
+    };
+  }
+
+  const preferredSide =
+    activeSignal.action === "SELL"
+      ? "SELL"
+      : activeSignal.action === "BUY"
+        ? "BUY"
+        : "BUY";
+  const structuredEntry =
+    preferredSide === "SELL" ? activeSignal.tradePlan?.sell : activeSignal.tradePlan?.buy;
+
+  return {
+    side: preferredSide,
+    support: signalSupport,
+    resistance: signalResistance,
+    stopPrice: structuredEntry?.stopPrice ?? null,
+    targetPrice: structuredEntry?.targetPrice ?? null,
+    source: structuredEntry?.source || "Signal structure",
+    rationale:
+      structuredEntry?.rationale ||
+      "The signal structure is framing the first stop and target idea.",
+  };
+}
+
+function createRequestHeaders(token, hasBody) {
+  const headers = {};
+  if (hasBody) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+async function requestJson(path, options = {}) {
+  const { method = "GET", body, token } = options;
+  const response = await fetch(path, {
+    method,
+    headers: createRequestHeaders(token, body !== undefined),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!response.ok) {
+    const error = new Error(data?.error || data?.message || response.statusText);
+    error.status = response.status;
+    error.payload = data;
+    throw error;
+  }
+
+  return data;
+}
+
+function LoadingShell({ message }) {
   return (
     <div className="authShell">
-      <div className="authPanel">
-        <div className="authBrand">COLLECTRADE</div>
-        <h1>Trade the 8/21 setup with a cleaner desk.</h1>
-        <p className="authBlurb">
-          South Africa-aware news, collectible inventory, portfolio tracking, and a live EMA engine in one
-          workspace.
-        </p>
-
-        <div className="segmentedControl authModeSwitch">
-          <button
-            type="button"
-            className={authMode === "login" ? "active" : ""}
-            onClick={() => onModeChange("login")}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            className={authMode === "register" ? "active" : ""}
-            onClick={() => onModeChange("register")}
-          >
-            Create account
-          </button>
-        </div>
-
-        <form className="authForm" onSubmit={onSubmit}>
-          {authMode === "register" ? (
-            <label>
-              <span>Name</span>
-              <input
-                type="text"
-                value={authForm.name}
-                onChange={(event) => onFieldChange("name", event.target.value)}
-                placeholder="Darren"
-                autoComplete="name"
-              />
-            </label>
-          ) : null}
-
-          <label>
-            <span>Email</span>
-            <input
-              type="email"
-              value={authForm.email}
-              onChange={(event) => onFieldChange("email", event.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </label>
-
-          <label>
-            <span>Password</span>
-            <input
-              type="password"
-              value={authForm.password}
-              onChange={(event) => onFieldChange("password", event.target.value)}
-              placeholder="Minimum 8 characters"
-              autoComplete={authMode === "login" ? "current-password" : "new-password"}
-            />
-          </label>
-
-          {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
-
-          <button className="primaryButton" type="submit">
-            {authMode === "login" ? "Sign in" : "Create account"}
-          </button>
-        </form>
+      <div className="authShellInner">
+        <section className="authStage">
+          <div className="authBrand">COLLECTRADE</div>
+          <div className="splashEyebrow">RESTORING WORKSPACE</div>
+          <h1>Opening the session cleanly.</h1>
+          <p className="authBlurb">{message}</p>
+        </section>
       </div>
     </div>
   );
 }
 
-function SignalCard({ signal, isActive, onSelect, onFastTrade }) {
+function WorkspaceLoadingState({ label }) {
   return (
-    <article
-      className={`signalCard interactiveCard ${isActive ? "active" : ""}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(signal)}
-      onKeyDown={(event) => handleInteractiveKey(event, () => onSelect(signal))}
-    >
-      <div className="signalCardTop">
-        <span className={`signalBadge ${actionTone(signal.action)}`}>{signal.action}</span>
-        <span className="signalMeta">{signal.rsi} RSI</span>
-      </div>
-
-      <div className="signalKicker">
-        {signal.region === "south-africa" ? "SA macro intelligence" : "Global market intelligence"}
-      </div>
-
-      <h3>{signal.headline}</h3>
-      <p>{signal.thesis}</p>
-
-      <div className="confidenceRow">
-        <div>
-          <span>AI confidence</span>
-          <strong>{signal.confidence}%</strong>
-        </div>
-        <div className="confidenceTrack">
-          <div className="confidenceFill" style={{ width: `${signal.confidence}%` }} />
-        </div>
-      </div>
-
-      <div className="signalFoot">
-        <div>
-          <strong>{signal.label}</strong>
-          <span>
-            {signal.setup} | {signal.gapState}
-          </span>
-        </div>
-        <button
-          className="tradeButton"
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onFastTrade(signal);
-          }}
-        >
-          Open Ticket
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function CollectibleCard({ item, isActive, onSelect, onTrade }) {
-  return (
-    <article
-      className={`collectibleCard interactiveCard ${isActive ? "active" : ""}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(item)}
-      onKeyDown={(event) => handleInteractiveKey(event, () => onSelect(item))}
-    >
-      <div className="collectibleTop">
-        <span className="collectibleCategory">{item.category}</span>
-        <span className={`signalBadge ${item.status === "Buy" ? "buy" : "hold"}`}>
-          {item.status.toUpperCase()}
-        </span>
-      </div>
-
-      <h3>{item.name}</h3>
-      <p>{item.note}</p>
-
-      <div className="collectibleStats">
-        <div>
-          <span>Market</span>
-          <strong>{item.market}</strong>
-        </div>
-        <div>
-          <span>Venue</span>
-          <strong>{item.venue}</strong>
-        </div>
-        <div>
-          <span>Indicative</span>
-          <strong>{formatCollectiblePrice(item.price)}</strong>
-        </div>
-        <div>
-          <span>Move</span>
-          <strong className={positiveTone(item.changePercent)}>{item.changePercent.toFixed(1)}%</strong>
-        </div>
-      </div>
-
-      <div className="signalFoot">
-        <div>
-          <strong>{item.confidence}% confidence</strong>
-          <span>{item.status} collector flow</span>
-        </div>
-        <button
-          className="tradeButton"
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onTrade(item);
-          }}
-        >
-          Open Ticket
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function OrderTicketModal({ ticket, busy, onClose, onFieldChange, onSubmit }) {
-  if (!ticket) {
-    return null;
-  }
-
-  const quantity = Math.max(1, Number(ticket.quantity || 1));
-  const notional = Number((ticket.price * quantity).toFixed(2));
-  const priceLabel =
-    ticket.kind === "collectible"
-      ? formatCollectiblePrice(ticket.price)
-      : formatTickerPrice(ticket.marketTicker, ticket.price);
-
-  return (
-    <div className="modalBackdrop" onClick={onClose}>
-      <div
-        className="modalCard"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="order-ticket-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="panelHeader">
-          <div>
-            <h2 id="order-ticket-title">Order Ticket</h2>
-            <p>{ticket.summary}</p>
-          </div>
-          <button type="button" className="ghostButton" onClick={onClose}>
-            Close
-          </button>
-        </div>
-
-        <div className="ticketHero">
-          <div>
-            <span className="collectibleCategory">
-              {ticket.kind === "collectible" ? "Collectible order" : "Market order"}
-            </span>
-            <h3>{ticket.label}</h3>
-          </div>
-          <div className="priceCluster">
-            <span>{priceLabel}</span>
-            <small>{ticket.meta}</small>
-          </div>
-        </div>
-
-        <div className="segmentedControl">
-          {["BUY", "SELL"].map((side) => (
-            <button
-              type="button"
-              key={side}
-              className={ticket.side === side ? "active" : ""}
-              onClick={() => onFieldChange("side", side)}
-            >
-              {side}
-            </button>
-          ))}
-        </div>
-
-        <div className="ticketForm">
-          <label className="formField">
-            <span>Quantity</span>
-            <input
-              type="number"
-              min="1"
-              max="1000"
-              value={ticket.quantity}
-              onChange={(event) => onFieldChange("quantity", event.target.value)}
-            />
-          </label>
-
-          <label className="formField">
-            <span>Desk Note</span>
-            <textarea
-              rows="4"
-              value={ticket.orderNote}
-              onChange={(event) => onFieldChange("orderNote", event.target.value)}
-              placeholder="Why this entry makes sense right now."
-            />
-          </label>
-        </div>
-
-        <div className="ticketMetaGrid">
-          <div>
-            <span>Setup</span>
-            <strong>{ticket.setup}</strong>
-          </div>
-          <div>
-            <span>Indicative Notional</span>
-            <strong>
-              {ticket.kind === "collectible"
-                ? formatCollectiblePrice(notional)
-                : formatTickerPrice(ticket.marketTicker, notional)}
-            </strong>
-          </div>
-          <div>
-            <span>Order Size</span>
-            <strong>{formatQuantity(quantity, ticket.unitLabel)}</strong>
-          </div>
-          <div>
-            <span>Action</span>
-            <strong>{ticket.side}</strong>
-          </div>
-        </div>
-
-        <div className="panelActions">
-          <button type="button" className="ghostButton" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="button" className="primaryButton" onClick={onSubmit} disabled={busy}>
-            {busy ? "Submitting..." : `${ticket.side} ${ticket.kind === "collectible" ? "Collectible" : "Position"}`}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CloseTradeModal({ trade, busy, onClose, onFieldChange, onSubmit }) {
-  if (!trade) {
-    return null;
-  }
-
-  return (
-    <div className="modalBackdrop" onClick={onClose}>
-      <div
-        className="modalCard"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="close-trade-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="panelHeader">
-          <div>
-            <h2 id="close-trade-title">Close Position</h2>
-            <p>Confirm the exit and add an optional note for the blotter.</p>
-          </div>
-          <button type="button" className="ghostButton" onClick={onClose}>
-            Close
-          </button>
-        </div>
-
-        <div className="ticketHero">
-          <div>
-            <span className="collectibleCategory">
-              {trade.assetClass === "collectible" ? "Collectible position" : "Market position"}
-            </span>
-            <h3>{trade.ticker}</h3>
-          </div>
-          <div className="priceCluster">
-            <span>{formatTradePrice(trade, trade.currentPrice)}</span>
-            <small>{formatQuantity(trade.quantity, trade.unitLabel)}</small>
-          </div>
-        </div>
-
-        <div className="ticketMetaGrid">
-          <div>
-            <span>Side</span>
-            <strong>{trade.side}</strong>
-          </div>
-          <div>
-            <span>PnL</span>
-            <strong className={positiveTone(trade.pnl)}>{trade.pnl.toFixed(2)}%</strong>
-          </div>
-          <div>
-            <span>Current Value</span>
-            <strong>{formatTradePrice(trade, trade.currentValue)}</strong>
-          </div>
-          <div>
-            <span>Setup</span>
-            <strong>{trade.setup}</strong>
-          </div>
-        </div>
-
-        <div className="ticketForm">
-          <label className="formField">
-            <span>Close Note</span>
-            <textarea
-              rows="4"
-              value={trade.orderNote}
-              onChange={(event) => onFieldChange(event.target.value)}
-              placeholder="Locking gains, reducing risk, or rotating capital."
-            />
-          </label>
-        </div>
-
-        <div className="panelActions">
-          <button type="button" className="ghostButton" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="button" className="primaryButton" onClick={onSubmit} disabled={busy}>
-            {busy ? "Closing..." : "Confirm Close"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PositionDetailCard({ trade, timeZone, onNavigate, onCloseTrade }) {
-  if (!trade) {
-    return (
+    <section className="panel">
       <EmptyState
-        title="No position selected"
-        body="Open a trade or click any portfolio row to inspect the full position detail."
+        title={`Opening ${label}`}
+        body="Loading this workspace on demand so the app shell stays lighter for the session."
       />
-    );
-  }
-
-  const referencePrice =
-    trade.status === "closed" ? trade.exitPrice || trade.currentPrice : trade.currentPrice;
-
-  return (
-    <section className="panel" id="position-detail">
-      <div className="panelHeader">
-        <div>
-          <h2>{trade.ticker}</h2>
-          <p>{trade.assetClass === "collectible" ? trade.note : trade.setup}</p>
-        </div>
-        <div className="priceCluster">
-          <span>{formatTradePrice(trade, referencePrice)}</span>
-          <small>{formatQuantity(trade.quantity, trade.unitLabel)}</small>
-        </div>
-      </div>
-
-      <div className="stateGrid">
-        <div>
-          <span>Status</span>
-          <strong>{trade.status}</strong>
-        </div>
-        <div>
-          <span>Side</span>
-          <strong>{trade.side}</strong>
-        </div>
-        <div>
-          <span>Entry</span>
-          <strong>{formatTradePrice(trade, trade.entryPrice)}</strong>
-        </div>
-        <div>
-          <span>Current Value</span>
-          <strong>{formatTradePrice(trade, trade.currentValue)}</strong>
-        </div>
-        <div>
-          <span>PnL</span>
-          <strong className={positiveTone(trade.pnl)}>{trade.pnl.toFixed(2)}%</strong>
-        </div>
-        <div>
-          <span>PnL Amount</span>
-          <strong className={positiveTone(trade.pnlAmount)}>{formatTradePrice(trade, trade.pnlAmount)}</strong>
-        </div>
-      </div>
-
-      {trade.orderNote ? (
-        <div className="positionNote">
-          <span>Desk note</span>
-          <p>{trade.orderNote}</p>
-        </div>
-      ) : null}
-
-      {trade.status === "closed" ? (
-        <div className="positionNote">
-          <span>Exit</span>
-          <p>
-            {trade.exitReason || "Closed"} on{" "}
-            {formatDateTime(trade.closedAt || trade.updatedAt, timeZone)}
-          </p>
-        </div>
-      ) : null}
-
-      <div className="panelActions">
-        <button type="button" className="ghostButton" onClick={() => onNavigate(trade)}>
-          Open Underlying
-        </button>
-        {trade.status === "open" ? (
-          <button type="button" className="primaryButton" onClick={() => onCloseTrade(trade)}>
-            Close Position
-          </button>
-        ) : null}
-      </div>
     </section>
   );
 }
 
 export default function App() {
-  const [page, setPage] = useState(() => pageFromHash(window.location.hash));
-  const [selectedSignalTicker, setSelectedSignalTicker] = useState("");
-  const [selectedCollectibleId, setSelectedCollectibleId] = useState("");
+  const initialHashState = useMemo(() => parseHashState(window.location.hash), []);
+  const initialLaunchPreference = useMemo(() => readLaunchPreference(), []);
+  const initialPage = window.location.hash
+    ? initialHashState.page
+    : initialLaunchPreference?.page || initialHashState.page || DEFAULT_PAGE;
+  const initialDesk = window.location.hash
+    ? initialHashState.desk
+    : initialLaunchPreference?.desk || initialHashState.desk || DEFAULT_DESK;
+
+  const [page, setPage] = useState(normalizePage(initialPage));
+  const [activeDesk, setActiveDesk] = useState(normalizeDesk(initialDesk));
+  const [authChecked, setAuthChecked] = useState(() => !window.localStorage.getItem(TOKEN_KEY));
+  const [bootSplashVisible, setBootSplashVisible] = useState(true);
   const [authToken, setAuthToken] = useState(() => window.localStorage.getItem(TOKEN_KEY) || "");
   const [currentUser, setCurrentUser] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [splashVisible, setSplashVisible] = useState(true);
+  const [authStage, setAuthStage] = useState("landing");
   const [authMode, setAuthMode] = useState("login");
   const [authStatus, setAuthStatus] = useState("");
-  const [authForm, setAuthForm] = useState({ name: "", email: "", password: "" });
-  const [signalsResponse, setSignalsResponse] = useState({
-    generatedAt: null,
-    leadSignal: null,
-    signals: [],
-    marketData: {
-      provider: "Simulator",
-      mode: "simulated",
-      interval: "1h",
-      lastSuccessAt: null,
-      sourceStatus: [],
-    },
-    strategyRules: [],
+  const [authForm, setAuthForm] = useState(INITIAL_AUTH_FORM);
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [preAuthLaunch, setPreAuthLaunch] = useState({
+    page: normalizePage(initialPage),
+    desk: normalizeDesk(initialDesk),
+    introId: initialLaunchPreference?.introId || defaultIntroIdForPage(initialPage),
+    sectionId:
+      initialLaunchPreference?.sectionId || PAGE_SECTION_LINKS[normalizePage(initialPage)]?.[0]?.id,
+    landingId: initialLaunchPreference?.landingId || initialLaunchPreference?.introId || "news",
   });
-  const [newsResponse, setNewsResponse] = useState({
-    refreshedAt: null,
-    items: [],
-    sources: [],
-    sourceStatus: [],
-  });
-  const [collectibles, setCollectibles] = useState([]);
+  const [pendingSectionTarget, setPendingSectionTarget] = useState(null);
+
+  const [signalsResponse, setSignalsResponse] = useState(EMPTY_SIGNALS_RESPONSE);
+  const [newsResponse, setNewsResponse] = useState(EMPTY_NEWS_RESPONSE);
+  const [collectiblesResponse, setCollectiblesResponse] = useState(EMPTY_COLLECTIBLES_RESPONSE);
+  const [health, setHealth] = useState(EMPTY_HEALTH);
   const [portfolio, setPortfolio] = useState([]);
   const [targets, setTargets] = useState([]);
   const [targetInput, setTargetInput] = useState("");
+  const [connectors, setConnectors] = useState([]);
+  const [feedbackResponse, setFeedbackResponse] = useState(EMPTY_FEEDBACK_RESPONSE);
+  const [shareStatus, setShareStatus] = useState(EMPTY_SHARE_STATUS);
   const [appSettings, setAppSettings] = useState(DEFAULT_SETTINGS);
   const [settingsStatus, setSettingsStatus] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState("");
+  const [feedbackForm, setFeedbackForm] = useState(INITIAL_FEEDBACK_FORM);
+  const [feedbackBusyKey, setFeedbackBusyKey] = useState("");
+  const [connectorBusyKey, setConnectorBusyKey] = useState("");
+  const [tradeActionBusy, setTradeActionBusy] = useState(false);
   const [tradeStatus, setTradeStatus] = useState("");
-  const [selectedTradeId, setSelectedTradeId] = useState("");
+  const [toolStatus, setToolStatus] = useState("");
+  const [chartUploadName, setChartUploadName] = useState("");
+  const [valrForm, setValrForm] = useState(INITIAL_VALR_FORM);
+
+  const [selectedSignalTicker, setSelectedSignalTicker] = useState(null);
+  const [selectedCollectibleId, setSelectedCollectibleId] = useState(null);
+  const [selectedTradeId, setSelectedTradeId] = useState(null);
   const [orderTicket, setOrderTicket] = useState(null);
   const [closeTicket, setCloseTicket] = useState(null);
-  const [tradeActionBusy, setTradeActionBusy] = useState(false);
-  const [health, setHealth] = useState({
-    services: {},
-    metrics: {},
-    sources: [],
-  });
+  const [collectibleQuery, setCollectibleQuery] = useState("");
+  const [collectibleBrand, setCollectibleBrand] = useState("all");
+  const [collectibleCategory, setCollectibleCategory] = useState("all");
 
-  const navigateToPage = useCallback((nextPage, replace = false) => {
-    const normalizedPage = normalizePage(nextPage);
-    setPage(normalizedPage);
-
-    const nextHash = `#/${normalizedPage}`;
-    if (window.location.hash === nextHash) {
-      return normalizedPage;
-    }
-
-    if (replace) {
-      window.history.replaceState(null, "", nextHash);
-    } else {
-      window.history.pushState(null, "", nextHash);
-    }
-
-    return normalizedPage;
-  }, []);
-
-  const jumpToPageSection = useCallback((nextPage, sectionId) => {
-    navigateToPage(nextPage);
-    if (!sectionId) {
-      return;
-    }
-
-    window.setTimeout(() => {
-      document.getElementById(sectionId)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 80);
-  }, [navigateToPage]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setSplashVisible(false);
-    }, 1600);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      setPage(pageFromHash(window.location.hash));
-    };
-
-    if (!window.location.hash) {
-      window.history.replaceState(null, "", `#/${DEFAULT_PAGE}`);
-    }
-
-    window.addEventListener("hashchange", handleHashChange);
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const activeScreen = NAV_ITEMS.find((item) => item.id === page);
-    document.title = `Collecttrade | ${activeScreen?.label || "Workspace"}`;
-  }, [page]);
-
-  const clearAuth = useCallback(() => {
+  const clearSession = useCallback(() => {
     window.localStorage.removeItem(TOKEN_KEY);
     setAuthToken("");
     setCurrentUser(null);
-    setAuthChecked(true);
+    setAuthStage("landing");
+    setAuthMode("login");
+    setAuthStatus("");
+    setSplashVisible(false);
     setPortfolio([]);
     setTargets([]);
-    setSelectedTradeId("");
-    setOrderTicket(null);
-    setCloseTicket(null);
-    setTradeStatus("");
+    setConnectors([]);
+    setFeedbackResponse(EMPTY_FEEDBACK_RESPONSE);
+    setShareStatus(EMPTY_SHARE_STATUS);
+    setAppSettings(DEFAULT_SETTINGS);
   }, []);
 
-  const apiJson = useCallback(
-    async (url, options = {}, requiresAuth = false) => {
-      const headers = new Headers(options.headers || {});
-      const config = {
-        ...options,
-        headers,
-      };
-
-      if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
-        headers.set("Content-Type", "application/json");
-        config.body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  const syncHashRoute = useCallback(
+    (nextPage, nextDesk) => {
+      const nextHash = buildHash(nextPage, nextDesk);
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash;
       }
-
-      if (requiresAuth) {
-        if (!authToken) {
-          throw new Error("unauthorized");
-        }
-        headers.set("Authorization", `Bearer ${authToken}`);
-      }
-
-      const response = await fetch(url, config);
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.error || data.message || "request_failed");
-      }
-
-      return data;
     },
-    [authToken],
+    [],
   );
 
-  useEffect(() => {
-    let cancelled = false;
+  const rememberLaunch = useCallback((preference) => {
+    writeLaunchPreference(preference);
+  }, []);
 
-    async function restoreSession() {
-      if (!authToken) {
-        setAuthChecked(true);
+  const navigateToPage = useCallback(
+    (nextPage, reopenIntro = false, nextDesk = activeDesk) => {
+      if (reopenIntro) {
+        setSplashVisible(true);
+        return;
+      }
+
+      const normalizedPage = normalizePage(nextPage);
+      const normalizedDesk = normalizeDesk(nextDesk);
+      setPage(normalizedPage);
+      setActiveDesk(normalizedDesk);
+      syncHashRoute(normalizedPage, normalizedDesk);
+      if (currentUser) {
+        rememberLaunch({
+          page: normalizedPage,
+          desk: normalizedDesk,
+          introId: defaultIntroIdForPage(normalizedPage),
+          sectionId: PAGE_SECTION_LINKS[normalizedPage]?.[0]?.id || null,
+        });
+      }
+    },
+    [activeDesk, currentUser, rememberLaunch, syncHashRoute],
+  );
+
+  const jumpToPageSection = useCallback(
+    (nextPage, sectionId, nextDesk = activeDesk) => {
+      const normalizedPage = normalizePage(nextPage);
+      const normalizedDesk = normalizeDesk(nextDesk);
+      setPendingSectionTarget({
+        page: normalizedPage,
+        desk: normalizedDesk,
+        sectionId,
+      });
+      setPage(normalizedPage);
+      setActiveDesk(normalizedDesk);
+      syncHashRoute(normalizedPage, normalizedDesk);
+      if (currentUser) {
+        rememberLaunch({
+          page: normalizedPage,
+          desk: normalizedDesk,
+          introId: defaultIntroIdForPage(normalizedPage),
+          sectionId,
+        });
+      }
+    },
+    [activeDesk, currentUser, rememberLaunch, syncHashRoute],
+  );
+
+  const refreshCore = useCallback(async () => {
+    const region = appSettings.preferredRegion || DEFAULT_SETTINGS.preferredRegion;
+    const [signalsData, newsData, collectiblesData, healthData] = await Promise.all([
+      requestJson("/api/signals"),
+      requestJson(`/api/news?region=${encodeURIComponent(region)}`),
+      requestJson("/api/collectibles"),
+      requestJson("/api/health"),
+    ]);
+
+    setSignalsResponse({
+      ...EMPTY_SIGNALS_RESPONSE,
+      ...signalsData,
+      signals: signalsData.signals || [],
+      marketData: {
+        ...EMPTY_SIGNALS_RESPONSE.marketData,
+        ...(signalsData.marketData || {}),
+        sourceStatus: signalsData.marketData?.sourceStatus || [],
+      },
+      strategyRules: signalsData.strategyRules || [],
+    });
+    setNewsResponse({
+      ...EMPTY_NEWS_RESPONSE,
+      ...newsData,
+      items: newsData.items || [],
+      sources: newsData.sources || [],
+      sourceStatus: newsData.sourceStatus || [],
+    });
+    setCollectiblesResponse({
+      ...EMPTY_COLLECTIBLES_RESPONSE,
+      ...collectiblesData,
+      items: collectiblesData.items || [],
+      categories: collectiblesData.categories || [],
+      brands: collectiblesData.brands || [],
+      referenceShelves: collectiblesData.referenceShelves || [],
+    });
+    setHealth({
+      ...EMPTY_HEALTH,
+      ...healthData,
+      services: healthData.services || {},
+      metrics: healthData.metrics || {},
+      sources: healthData.sources || [],
+      marketSources: healthData.marketSources || [],
+      connectors: healthData.connectors || [],
+    });
+  }, [appSettings.preferredRegion]);
+
+  const refreshContext = useCallback(
+    async (tokenOverride = authToken) => {
+      if (!tokenOverride) {
         return;
       }
 
       try {
-        const data = await apiJson("/api/auth/me", {}, true);
-        if (cancelled) {
+        const [
+          portfolioData,
+          settingsData,
+          targetsData,
+          connectorsData,
+          feedbackData,
+          shareData,
+        ] = await Promise.all([
+          requestJson("/api/portfolio", { token: tokenOverride }),
+          requestJson("/api/settings", { token: tokenOverride }),
+          requestJson("/api/news/targets", { token: tokenOverride }),
+          requestJson("/api/connectors", { token: tokenOverride }),
+          requestJson("/api/feedback", { token: tokenOverride }),
+          requestJson("/api/share-status", { token: tokenOverride }),
+        ]);
+
+        setPortfolio(Array.isArray(portfolioData) ? portfolioData : []);
+        setAppSettings(normalizeAppSettings(settingsData.settings));
+        setTargets(targetsData.items || []);
+        setConnectors(connectorsData.providers || []);
+        const nextCryptoConnector = (connectorsData.providers || []).find(
+          (provider) => provider.id === "valr",
+        );
+        if (nextCryptoConnector) {
+          setValrForm((current) => ({
+            ...current,
+            preferredPair:
+              nextCryptoConnector.config?.preferredPair ||
+              current.preferredPair ||
+              DEFAULT_EXECUTION_PROFILES.crypto.pair,
+            subAccountId: nextCryptoConnector.config?.subAccountId || current.subAccountId || "",
+          }));
+        }
+        setFeedbackResponse({
+          ...EMPTY_FEEDBACK_RESPONSE,
+          ...feedbackData,
+          items: feedbackData.items || [],
+          summary: feedbackData.summary || {},
+          permissions: feedbackData.permissions || { canManage: false },
+        });
+        setShareStatus({
+          ...EMPTY_SHARE_STATUS,
+          ...(shareData.share || {}),
+        });
+      } catch (error) {
+        if (error.status === 401) {
+          clearSession();
           return;
         }
+        throw error;
+      }
+    },
+    [authToken, clearSession],
+  );
+
+  useEffect(() => {
+    if (!window.location.hash) {
+      syncHashRoute(page, activeDesk);
+    }
+  }, [activeDesk, page, syncHashRoute]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setBootSplashVisible(false);
+    }, 1300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem(TOKEN_KEY);
+
+    if (!token) {
+      return;
+    }
+
+    requestJson("/api/auth/me", { token })
+      .then((data) => {
         setCurrentUser(data.user);
-        setAppSettings(data.settings || DEFAULT_SETTINGS);
-      } catch {
-        if (!cancelled) {
-          clearAuth();
-        }
-      } finally {
-        if (!cancelled) {
-          setAuthChecked(true);
-        }
-      }
-    }
-
-    restoreSession();
-    return () => {
-      cancelled = true;
-    };
-  }, [authToken, apiJson, clearAuth]);
-
-  const refreshCore = useCallback(async () => {
-    const [signalData, healthData, portfolioData] = await Promise.all([
-      apiJson("/api/signals"),
-      apiJson("/api/health"),
-      apiJson("/api/portfolio", {}, true),
-    ]);
-
-    setSignalsResponse(signalData);
-    setHealth(healthData);
-    setPortfolio(portfolioData);
-  }, [apiJson]);
-
-  const refreshContext = useCallback(async () => {
-    const [newsData, collectiblesData, settingsData, targetsData] = await Promise.all([
-      apiJson(`/api/news?region=${encodeURIComponent(appSettings.preferredRegion)}`),
-      apiJson("/api/collectibles"),
-      apiJson("/api/settings", {}, true),
-      apiJson("/api/news/targets", {}, true),
-    ]);
-
-    setNewsResponse(newsData);
-    setCollectibles(collectiblesData.items || []);
-    setAppSettings(settingsData.settings || DEFAULT_SETTINGS);
-    setTargets(targetsData.items || []);
-  }, [apiJson, appSettings.preferredRegion]);
-
-  useEffect(() => {
-    if (!currentUser) {
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    const run = async () => {
-      try {
-        await refreshCore();
-      } catch (error) {
-        if (!cancelled) {
-          if (error.message === "unauthorized") {
-            clearAuth();
-            return;
-          }
-          setTradeStatus("Core trading data is taking a moment to refresh.");
-        }
-      }
-    };
-
-    run();
-    const intervalId = window.setInterval(run, 5000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [currentUser, refreshCore, clearAuth]);
-
-  useEffect(() => {
-    if (!currentUser) {
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    const run = async () => {
-      try {
-        await refreshContext();
-      } catch (error) {
-        if (!cancelled) {
-          if (error.message === "unauthorized") {
-            clearAuth();
-            return;
-          }
-          setSettingsStatus("Context data is refreshing. Try again in a moment.");
-        }
-      }
-    };
-
-    run();
-    const intervalId = window.setInterval(run, 60000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [currentUser, refreshContext, clearAuth]);
-
-  const handleAuthSubmit = async (event) => {
-    event.preventDefault();
-    setAuthStatus("");
-
-    try {
-      const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const payload = {
-        email: authForm.email.trim(),
-        password: authForm.password,
-      };
-
-      if (authMode === "register") {
-        payload.name = authForm.name.trim();
-      }
-
-      const data = await apiJson(endpoint, {
-        method: "POST",
-        body: payload,
+        setAppSettings(normalizeAppSettings(data.settings));
+      })
+      .catch(() => {
+        clearSession();
+      })
+      .finally(() => {
+        setAuthChecked(true);
       });
+  }, [clearSession]);
 
-      window.localStorage.setItem(TOKEN_KEY, data.token);
-      setAuthToken(data.token);
-      setCurrentUser(data.user);
-      setAppSettings(data.settings || DEFAULT_SETTINGS);
-      setAuthForm({ name: "", email: "", password: "" });
-      setAuthStatus(authMode === "login" ? "Welcome back." : "Account created.");
-    } catch (error) {
-      const messages = {
-        invalid_credentials: "That email/password pair does not match our records.",
-        email_in_use: "That email is already in use.",
-        password_too_short: "Use at least 8 characters for the password.",
-        name_too_short: "Add the account name you want to trade under.",
-        invalid_email: "Use a valid email address.",
-      };
+  useEffect(() => {
+    const handleHashChange = () => {
+      const next = parseHashState(window.location.hash);
+      setPage(next.page);
+      setActiveDesk(next.desk);
+      if (!currentUser) {
+        setPreAuthLaunch((previous) => ({
+          ...previous,
+          page: next.page,
+          desk: next.desk,
+          introId: defaultIntroIdForPage(next.page),
+          sectionId: PAGE_SECTION_LINKS[next.page]?.[0]?.id || null,
+        }));
+      }
+    };
 
-      setAuthStatus(messages[error.message] || "We could not complete that request.");
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [currentUser]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      refreshCore().catch(() => {});
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshCore]);
+
+  useEffect(() => {
+    if (!currentUser || !authToken) {
+      return;
     }
-  };
 
-  const handleLogout = () => {
-    clearAuth();
-    setAuthStatus("");
-    setSettingsStatus("");
-    setTradeStatus("");
-  };
+    const timeoutId = window.setTimeout(() => {
+      refreshContext().catch(() => {});
+    }, 0);
 
-  const handleSignalSelect = useCallback(
-    (signal) => {
-      setSelectedSignalTicker(signal.ticker);
-      jumpToPageSection("signals", "chart-panel");
-    },
-    [jumpToPageSection],
+    return () => window.clearTimeout(timeoutId);
+  }, [authToken, currentUser, refreshContext]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      refreshCore().catch(() => {});
+      if (currentUser && authToken) {
+        refreshContext().catch(() => {});
+      }
+    }, 20000);
+
+    return () => window.clearInterval(interval);
+  }, [authToken, currentUser, refreshContext, refreshCore]);
+
+  useEffect(() => {
+    if (!pendingSectionTarget) {
+      return;
+    }
+
+    if (pendingSectionTarget.page !== page) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const element = document.getElementById(pendingSectionTarget.sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      setPendingSectionTarget(null);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [page, pendingSectionTarget]);
+
+  const filteredSignals = useMemo(
+    () => filterSignalsByDesk(signalsResponse.signals || [], activeDesk),
+    [activeDesk, signalsResponse.signals],
+  );
+  const resolvedSelectedSignalTicker =
+    filteredSignals.some((signal) => signal.ticker === selectedSignalTicker)
+      ? selectedSignalTicker
+      : filteredSignals[0]?.ticker || null;
+
+  const activeSignal =
+    filteredSignals.find((signal) => signal.ticker === resolvedSelectedSignalTicker) ||
+    filteredSignals[0] ||
+    signalsResponse.leadSignal ||
+    null;
+  const effectiveDeskKey =
+    activeDesk === "all" ? activeSignal?.desk || DEFAULT_DESK : activeDesk;
+  const activeDeskProfile =
+    appSettings.executionProfiles?.[effectiveDeskKey] ||
+    DEFAULT_EXECUTION_PROFILES[effectiveDeskKey] ||
+    DEFAULT_EXECUTION_PROFILES.forex;
+
+  const marketSourceMap = useMemo(
+    () =>
+      Object.fromEntries(
+        (signalsResponse.marketData?.sourceStatus || []).map((source) => [source.ticker, source]),
+      ),
+    [signalsResponse.marketData?.sourceStatus],
   );
 
-  const openMarketTicket = useCallback((signal, side = signal.action === "SELL" ? "SELL" : "BUY") => {
+  const newsItemsForDesk = useMemo(
+    () => filterNewsItemsByDesk(newsResponse.items || [], activeDesk),
+    [activeDesk, newsResponse.items],
+  );
+  const leadNewsItem = newsItemsForDesk[0] || newsResponse.items?.[0] || null;
+  const activeDeskNewsLabel =
+    activeDesk === "all" ? "All desk headlines" : `${labelDesk(activeDesk)} lens`;
+  const southAfricaHeadlineCount = newsItemsForDesk.filter(
+    (item) => item.region === "south-africa",
+  ).length;
+  const globalHeadlineCount = newsItemsForDesk.filter((item) => item.region === "global").length;
+  const newsSourceMap = useMemo(() => buildSourceMap(newsResponse.sources), [newsResponse.sources]);
+
+  const filteredCollectibles = useMemo(() => {
+    const query = collectibleQuery.trim().toLowerCase();
+    return (collectiblesResponse.items || []).filter((item) => {
+      const matchesQuery =
+        !query ||
+        [item.name, item.brand, item.category, item.description, item.thesis, item.sku]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query));
+      const matchesBrand = collectibleBrand === "all" || item.brand === collectibleBrand;
+      const matchesCategory =
+        collectibleCategory === "all" || item.category === collectibleCategory;
+      return matchesQuery && matchesBrand && matchesCategory;
+    });
+  }, [collectibleBrand, collectibleCategory, collectibleQuery, collectiblesResponse.items]);
+  const collectibles = collectiblesResponse.items || [];
+  const resolvedSelectedCollectibleId =
+    filteredCollectibles.some((item) => item.id === selectedCollectibleId)
+      ? selectedCollectibleId
+      : filteredCollectibles[0]?.id || null;
+
+  const activeCollectible =
+    filteredCollectibles.find((item) => item.id === resolvedSelectedCollectibleId) ||
+    filteredCollectibles[0] ||
+    null;
+
+  const openTrades = useMemo(
+    () => portfolio.filter((trade) => trade.status === "open"),
+    [portfolio],
+  );
+  const closedTrades = useMemo(
+    () => portfolio.filter((trade) => trade.status !== "open"),
+    [portfolio],
+  );
+
+  const resolvedSelectedTradeId = portfolio.some((trade) => trade.id === selectedTradeId)
+    ? selectedTradeId
+    : portfolio[0]?.id || null;
+
+  const activePortfolioTrade =
+    portfolio.find((trade) => trade.id === resolvedSelectedTradeId) ||
+    openTrades[0] ||
+    closedTrades[0] ||
+    null;
+
+  const totalOpenPnl = useMemo(
+    () => openTrades.reduce((sum, trade) => sum + Number(trade.pnl || 0), 0),
+    [openTrades],
+  );
+
+  const activeChartPlan = useMemo(
+    () => buildChartPlan(activeSignal, orderTicket),
+    [activeSignal, orderTicket],
+  );
+
+  const mentorSummary = useMemo(
+    () => buildMentorSummary(activeSignal, leadNewsItem),
+    [activeSignal, leadNewsItem],
+  );
+  const mentorChecklist = useMemo(
+    () => buildMentorChecklist(activeSignal, leadNewsItem),
+    [activeSignal, leadNewsItem],
+  );
+
+  const toolsDeskKey = page === "tools" ? effectiveDeskKey : effectiveDeskKey;
+  const activeResearchReports = useMemo(
+    () =>
+      RESEARCH_REPORTS.filter(
+        (report) =>
+          report.targetDesk === toolsDeskKey ||
+          (toolsDeskKey === "forex" && report.targetDesk === "forex"),
+      ),
+    [toolsDeskKey],
+  );
+
+  const connectedProviderCount = connectors.filter((provider) => provider.configured).length;
+  const cryptoConnector = connectors.find((provider) => provider.id === "valr") || null;
+  const liveReadyDeskCount = MARKET_DESKS.filter((desk) => {
+    const profile = appSettings.executionProfiles?.[desk.id];
+    if (!profile || profile.mode !== "live") {
+      return false;
+    }
+    const fauxSignal = { desk: desk.id };
+    return executionPlanForSignal(fauxSignal, appSettings, connectors).ready;
+  }).length;
+  const degradedSourceCount = [
+    ...(health.sources || []),
+    ...(signalsResponse.marketData?.sourceStatus || []),
+  ].filter((source) => !["ok", "online", "simulated", "configured", "manual_setup", "unsupported"].includes(source.status)).length;
+
+  const handleLandingContinue = useCallback((selection, nextMode) => {
+    setPreAuthLaunch(selection);
+    setAuthMode(nextMode);
+    setAuthStage("auth");
+  }, []);
+
+  const handleAuthenticatedRoute = useCallback(
+    async (token, user, settings, launchSelection) => {
+      window.localStorage.setItem(TOKEN_KEY, token);
+      setAuthToken(token);
+      setCurrentUser(user);
+      setAppSettings(normalizeAppSettings(settings));
+      setAuthStatus("");
+      setAuthStage("landing");
+      setSplashVisible(false);
+      const launch = launchSelection || preAuthLaunch;
+      const nextPage = normalizePage(launch?.page || page);
+      const nextDesk = normalizeDesk(launch?.desk || activeDesk);
+      rememberLaunch({
+        page: nextPage,
+        desk: nextDesk,
+        introId: launch?.introId || defaultIntroIdForPage(nextPage),
+        sectionId: launch?.sectionId || PAGE_SECTION_LINKS[nextPage]?.[0]?.id || null,
+        landingId: launch?.landingId || launch?.introId || defaultIntroIdForPage(nextPage),
+      });
+      setPage(nextPage);
+      setActiveDesk(nextDesk);
+      syncHashRoute(nextPage, nextDesk);
+      if (launch?.sectionId) {
+        setPendingSectionTarget({
+          page: nextPage,
+          desk: nextDesk,
+          sectionId: launch.sectionId,
+        });
+      }
+      await Promise.all([refreshCore(), refreshContext(token)]);
+    },
+    [
+      activeDesk,
+      page,
+      preAuthLaunch,
+      refreshContext,
+      refreshCore,
+      rememberLaunch,
+      syncHashRoute,
+    ],
+  );
+
+  const handleAuthSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      setAuthStatus("");
+
+      const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const body =
+        authMode === "login"
+          ? {
+              email: authForm.email,
+              password: authForm.password,
+            }
+          : {
+              name: authForm.name,
+              email: authForm.email,
+              password: authForm.password,
+            };
+
+      try {
+        const data = await requestJson(endpoint, {
+          method: "POST",
+          body,
+        });
+        await handleAuthenticatedRoute(data.token, data.user, data.settings, preAuthLaunch);
+      } catch (error) {
+        setAuthStatus(String(error.message || "Authentication failed."));
+      }
+    },
+    [authForm, authMode, handleAuthenticatedRoute, preAuthLaunch],
+  );
+
+  const handleAuthFieldChange = useCallback((field, value) => {
+    setAuthForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }, []);
+
+  const handleSplashLaunch = useCallback(
+    (selection) => {
+      rememberLaunch(selection);
+      setSplashVisible(false);
+      jumpToPageSection(selection.page, selection.sectionId, selection.desk);
+    },
+    [jumpToPageSection, rememberLaunch],
+  );
+
+  const handleDeskRoute = useCallback(
+    (targetPage, desk) => {
+      navigateToPage(targetPage, false, desk);
+    },
+    [navigateToPage],
+  );
+
+  const closeMenu = useCallback(() => {
+    setMenuVisible(false);
+  }, []);
+
+  const openMenu = useCallback(() => {
+    setMenuVisible(true);
+  }, []);
+
+  const handleMenuNavigate = useCallback(
+    (targetPage, targetDesk = activeDesk) => {
+      setMenuVisible(false);
+      navigateToPage(targetPage, false, targetDesk);
+    },
+    [activeDesk, navigateToPage],
+  );
+
+  const handleMenuSection = useCallback(
+    (targetPage, sectionId, targetDesk = activeDesk) => {
+      setMenuVisible(false);
+      jumpToPageSection(targetPage, sectionId, targetDesk);
+    },
+    [activeDesk, jumpToPageSection],
+  );
+
+  const handleMenuSplash = useCallback(() => {
+    setMenuVisible(false);
+    setSplashVisible(true);
+  }, []);
+
+  const handleMenuLogout = useCallback(() => {
+    setMenuVisible(false);
+    clearSession();
+  }, [clearSession]);
+
+  const handleSelectSignal = useCallback((signal) => {
     setSelectedSignalTicker(signal.ticker);
-    setOrderTicket({
-      kind: "market",
-      marketTicker: signal.ticker,
-      label: signal.label,
-      side,
-      quantity: "1",
-      orderNote: "",
-      price: signal.price,
-      setup: signal.setup,
-      summary: signal.thesis,
-      meta: `${signal.headline} | ${signal.gapState}`,
-      unitLabel: "units",
-    });
   }, []);
 
-  const openCollectibleTicket = useCallback((item, side = "BUY") => {
+  const openMarketTicket = useCallback((signal, preferredSide) => {
+    const nextSide =
+      preferredSide ||
+      (signal.action === "SELL" ? "SELL" : signal.action === "BUY" ? "BUY" : "BUY");
+    setOrderTicket(buildMarketTicket(signal, nextSide));
+    setTradeStatus("");
+  }, []);
+
+  const handleCollectibleSelect = useCallback((item) => {
     setSelectedCollectibleId(item.id);
-    setOrderTicket({
-      kind: "collectible",
-      collectibleId: item.id,
-      label: item.name,
-      side,
-      quantity: "1",
-      orderNote: "",
-      price: item.price,
-      setup: `${item.category} collector flow`,
-      summary: item.note,
-      meta: `${item.category} | ${item.market}`,
-      unitLabel: "items",
-    });
   }, []);
 
-  const handleFastTrade = useCallback(
-    (signal) => {
-      setTradeStatus("");
-      openMarketTicket(signal);
-    },
-    [openMarketTicket],
-  );
+  const openCollectibleTicket = useCallback((item, preferredSide = "BUY") => {
+    setOrderTicket(buildCollectibleTicket(item, preferredSide));
+    setTradeStatus("");
+  }, []);
 
-  const handleCollectibleTrade = useCallback(
-    (item, side = "BUY") => {
-      setTradeStatus("");
-      openCollectibleTicket(item, side);
-    },
-    [openCollectibleTicket],
-  );
-
-  const handleCollectibleSelect = useCallback(
-    (item) => {
-      setSelectedCollectibleId(item.id);
-      jumpToPageSection("collectibles", "collectibles-focus");
-    },
-    [jumpToPageSection],
-  );
-
-  const handleOrderTicketChange = useCallback((field, value) => {
+  const handleOrderFieldChange = useCallback((field, value) => {
     setOrderTicket((current) => {
       if (!current) {
         return current;
       }
 
-      return {
+      if (field === "side") {
+        const nextSide = String(value || "").toUpperCase() === "SELL" ? "SELL" : "BUY";
+        const nextMode = current.structuredPlans?.[nextSide] ? "structure" : "preset";
+        return applyTicketPlan(current, nextMode, nextSide);
+      }
+
+      const nextTicket = {
         ...current,
-        [field]:
-          field === "quantity"
-            ? String(value).replace(/[^\d]/g, "").slice(0, 4) || "1"
-            : value.slice(0, 240),
+        [field]: value,
       };
+
+      if (field === "stopPrice" || field === "targetPrice") {
+        return {
+          ...nextTicket,
+          ...resolveTicketPlanMeta(
+            nextTicket,
+            field === "stopPrice" ? value : nextTicket.stopPrice,
+            field === "targetPrice" ? value : nextTicket.targetPrice,
+          ),
+        };
+      }
+
+      return nextTicket;
     });
   }, []);
 
-  const submitOrderTicket = async () => {
-    if (!orderTicket) {
-      return;
-    }
+  const handleOrderPlanAction = useCallback((mode) => {
+    setOrderTicket((current) => {
+      if (!current) {
+        return current;
+      }
 
-    const quantity = Number(orderTicket.quantity);
-    if (!Number.isFinite(quantity) || quantity < 1) {
-      setTradeStatus("Use a quantity of at least 1.");
+      if (mode === "base") {
+        return {
+          ...current,
+          stopPrice: current.baseStopPrice,
+          targetPrice: current.baseTargetPrice,
+          ...resolveTicketPlanMeta(current, current.baseStopPrice, current.baseTargetPrice),
+        };
+      }
+
+      if (mode === "structure" || mode === "preset") {
+        return applyTicketPlan(current, mode, current.side);
+      }
+
+      return current;
+    });
+  }, []);
+
+  const submitOrderTicket = useCallback(async () => {
+    if (!orderTicket || !authToken) {
       return;
     }
 
@@ -1135,68 +1264,58 @@ export default function App() {
     setTradeStatus("");
 
     try {
-      const url =
+      const endpoint =
         orderTicket.kind === "collectible" ? "/api/collectibles/trades" : "/api/trades";
       const body =
         orderTicket.kind === "collectible"
           ? {
               collectibleId: orderTicket.collectibleId,
               side: orderTicket.side,
-              quantity,
+              quantity: orderTicket.quantity,
               orderNote: orderTicket.orderNote,
+              stopPrice: orderTicket.stopPrice,
+              targetPrice: orderTicket.targetPrice,
+              riskBudget: orderTicket.riskBudget,
             }
           : {
               marketTicker: orderTicket.marketTicker,
               side: orderTicket.side,
-              quantity,
+              quantity: orderTicket.quantity,
               orderNote: orderTicket.orderNote,
+              stopPrice: orderTicket.stopPrice,
+              targetPrice: orderTicket.targetPrice,
+              riskBudget: orderTicket.riskBudget,
             };
 
-      const data = await apiJson(
-        url,
-        {
-          method: "POST",
-          body,
-        },
-        true,
-      );
-
+      const data = await requestJson(endpoint, {
+        method: "POST",
+        token: authToken,
+        body,
+      });
       setPortfolio(data.portfolio || []);
-      setSelectedTradeId(String(data.trade?.id || ""));
+      setTradeStatus(
+        orderTicket.kind === "collectible"
+          ? `${orderTicket.side} collectible ticket saved.`
+          : `${orderTicket.side} ${orderTicket.label} ticket submitted.`,
+      );
       setOrderTicket(null);
-      setTradeStatus(`${orderTicket.side} order opened on ${orderTicket.label}.`);
-      jumpToPageSection("portfolio", "position-detail");
+      await refreshContext();
     } catch (error) {
-      const messages = {
-        unknown_market: "That market is not available right now.",
-        unknown_collectible: "That collectible is not available right now.",
-        invalid_quantity: "Quantity needs to be between 1 and 1000.",
-      };
-      setTradeStatus(messages[error.message] || "Trade could not be placed yet.");
+      setTradeStatus(String(error.message || "Ticket submission failed."));
     } finally {
       setTradeActionBusy(false);
     }
-  };
+  }, [authToken, orderTicket, refreshContext]);
 
   const handleCloseTrade = useCallback((trade) => {
-    setSelectedTradeId(String(trade.id));
     setCloseTicket({
-      tradeId: trade.id,
-      ticker: trade.ticker,
-      assetClass: trade.assetClass,
-      currentPrice: trade.currentPrice,
-      currentValue: trade.currentValue,
-      quantity: trade.quantity,
-      unitLabel: trade.unitLabel,
-      side: trade.side,
-      setup: trade.setup,
-      pnl: Number(trade.pnl || 0),
+      ...trade,
       orderNote: "",
     });
   }, []);
 
-  const submitCloseTrade = async () => {
-    if (!closeTicket) {
+  const submitCloseTrade = useCallback(async () => {
+    if (!closeTicket || !authToken) {
       return;
     }
 
@@ -1204,898 +1323,1020 @@ export default function App() {
     setTradeStatus("");
 
     try {
-      const data = await apiJson(
-        `/api/trades/${closeTicket.tradeId}/close`,
-        {
-          method: "POST",
-          body: {
-            orderNote: closeTicket.orderNote,
-          },
-        },
-        true,
-      );
-
+      const data = await requestJson(`/api/trades/${closeTicket.id}/close`, {
+        method: "POST",
+        token: authToken,
+        body: { orderNote: closeTicket.orderNote },
+      });
       setPortfolio(data.portfolio || []);
-      setSelectedTradeId(String(closeTicket.tradeId));
+      setTradeStatus(`Closed ${closeTicket.ticker}.`);
       setCloseTicket(null);
-      setTradeStatus(`Position closed on ${closeTicket.ticker}.`);
-      jumpToPageSection("portfolio", "order-history");
+      await refreshContext();
     } catch (error) {
-      const messages = {
-        unknown_trade: "That position no longer exists.",
-        trade_already_closed: "That position is already closed.",
-      };
-      setTradeStatus(messages[error.message] || "Position could not be closed yet.");
+      setTradeStatus(String(error.message || "Close request failed."));
     } finally {
       setTradeActionBusy(false);
     }
-  };
+  }, [authToken, closeTicket, refreshContext]);
 
-  const updateSettings = async (patch) => {
-    setSettingsStatus("");
-    try {
-      const data = await apiJson(
-        "/api/settings",
-        {
-          method: "PUT",
-          body: patch,
-        },
-        true,
-      );
-      setAppSettings(data.settings || DEFAULT_SETTINGS);
-      setSettingsStatus("Preferences saved.");
-    } catch {
-      setSettingsStatus("We could not save those settings just yet.");
-    }
-  };
-
-  const addTarget = async () => {
-    const target = targetInput.trim();
-    if (!target) {
-      return;
-    }
-
-    setSettingsStatus("");
-
-    try {
-      const data = await apiJson(
-        "/api/news/targets",
-        {
-          method: "POST",
-          body: { target },
-        },
-        true,
-      );
-      setTargets(data.items || []);
-      setTargetInput("");
-      setSettingsStatus("Web target saved.");
-    } catch {
-      setSettingsStatus("We could not save that target.");
-    }
-  };
-
-  const leadSignal = signalsResponse.leadSignal || signalsResponse.signals[0] || null;
-  const activeSignal =
-    signalsResponse.signals.find((signal) => signal.ticker === selectedSignalTicker) || leadSignal;
-  const activeCollectible =
-    collectibles.find((item) => item.id === selectedCollectibleId) || collectibles[0] || null;
-  const newsSourceMap = useMemo(
-    () => Object.fromEntries((newsResponse.sources || []).map((source) => [source.id, source.url])),
-    [newsResponse.sources],
-  );
-  const openTrades = useMemo(
-    () => portfolio.filter((trade) => trade.status === "open"),
-    [portfolio],
-  );
-  const closedTrades = useMemo(
-    () => portfolio.filter((trade) => trade.status === "closed"),
-    [portfolio],
-  );
-  const totalOpenPnl = useMemo(
-    () => openTrades.reduce((sum, trade) => sum + Number(trade.pnl || 0), 0),
-    [openTrades],
-  );
-  const activePortfolioTrade = useMemo(
-    () =>
-      portfolio.find((trade) => String(trade.id) === String(selectedTradeId)) ||
-      openTrades[0] ||
-      closedTrades[0] ||
-      null,
-    [portfolio, selectedTradeId, openTrades, closedTrades],
-  );
-
-  const handlePortfolioTradeSelect = useCallback(
-    (trade) => {
-      setSelectedTradeId(String(trade.id));
-      jumpToPageSection("portfolio", "position-detail");
-    },
-    [jumpToPageSection],
-  );
+  const handlePortfolioTradeSelect = useCallback((trade) => {
+    setSelectedTradeId(trade.id);
+  }, []);
 
   const handlePortfolioTradeNavigate = useCallback(
     (trade) => {
-      if (trade.assetClass === "collectible" && trade.collectibleId) {
-        setSelectedCollectibleId(trade.collectibleId);
-        jumpToPageSection("collectibles", "collectibles-focus");
+      if (trade.assetClass === "collectible") {
+        setSelectedCollectibleId(trade.collectibleId || trade.id);
+        jumpToPageSection("collectibles", "collectibles-grid");
         return;
       }
 
       if (trade.marketTicker) {
         setSelectedSignalTicker(trade.marketTicker);
-        jumpToPageSection("signals", "chart-panel");
       }
+      jumpToPageSection("signals", "chart-panel", trade.desk || activeDesk);
     },
-    [jumpToPageSection],
+    [activeDesk, jumpToPageSection],
   );
 
-  if (splashVisible || !authChecked) {
-    return (
-      <SplashScreen
-        ready={authChecked}
-        activePage={page}
-        onEnter={() => setSplashVisible(false)}
-        onSelectPage={(nextPage) => {
-          navigateToPage(nextPage);
-          if (authChecked) {
-            setSplashVisible(false);
+  const handleChartUpload = useCallback((event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    setChartUploadName(file.name);
+    setToolStatus(`Chart queued: ${file.name}`);
+  }, []);
+
+  const openResearchReport = useCallback(
+    (report) => {
+      jumpToPageSection(report.desk, report.targetSection, report.targetDesk || activeDesk);
+    },
+    [activeDesk, jumpToPageSection],
+  );
+
+  const updateSettings = useCallback(
+    async (partial) => {
+      if (!authToken) {
+        return;
+      }
+
+      try {
+        const data = await requestJson("/api/settings", {
+          method: "PUT",
+          token: authToken,
+          body: partial,
+        });
+        setAppSettings(normalizeAppSettings(data.settings));
+        setSettingsStatus("Workspace settings saved.");
+      } catch (error) {
+        setSettingsStatus(String(error.message || "Settings update failed."));
+      }
+    },
+    [authToken],
+  );
+
+  const updateExecutionProfile = useCallback(
+    async (deskId, patch) => {
+      const currentProfile =
+        appSettings.executionProfiles?.[deskId] || DEFAULT_EXECUTION_PROFILES[deskId];
+      const nextProfiles = {
+        ...appSettings.executionProfiles,
+        [deskId]: {
+          ...currentProfile,
+          ...patch,
+        },
+      };
+      await updateSettings({ executionProfiles: nextProfiles });
+    },
+    [appSettings.executionProfiles, updateSettings],
+  );
+
+  const addTarget = useCallback(async () => {
+    const target = targetInput.trim();
+    if (!target || !authToken) {
+      return;
+    }
+
+    try {
+      const data = await requestJson("/api/news/targets", {
+        method: "POST",
+        token: authToken,
+        body: { target },
+      });
+      setTargets(data.items || []);
+      setTargetInput("");
+      setSettingsStatus("Research target saved.");
+    } catch (error) {
+      setSettingsStatus(String(error.message || "Target save failed."));
+    }
+  }, [authToken, targetInput]);
+
+  const handleValrFieldChange = useCallback((field, value) => {
+    setValrForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }, []);
+
+  const saveValrConnector = useCallback(async () => {
+    if (!authToken) {
+      return;
+    }
+
+    setConnectorBusyKey("valr:save");
+    try {
+      const data = await requestJson("/api/connectors/valr", {
+        method: "PUT",
+        token: authToken,
+        body: valrForm,
+      });
+      setConnectors((current) =>
+        current.map((provider) => (provider.id === "valr" ? data.provider : provider)),
+      );
+      setSettingsStatus("VALR credentials saved.");
+      setValrForm((current) => ({
+        ...current,
+        apiKey: "",
+        apiSecret: "",
+      }));
+    } catch (error) {
+      setSettingsStatus(String(error.message || "VALR save failed."));
+    } finally {
+      setConnectorBusyKey("");
+    }
+  }, [authToken, valrForm]);
+
+  const testConnectorConnection = useCallback(
+    async (providerId) => {
+      if (!authToken) {
+        return;
+      }
+
+      setConnectorBusyKey(`${providerId}:test`);
+      try {
+        const data = await requestJson(`/api/connectors/${providerId}/test`, {
+          method: "POST",
+          token: authToken,
+        });
+        setConnectors((current) =>
+          current.map((provider) => (provider.id === providerId ? data.provider : provider)),
+        );
+        setSettingsStatus(data.detail || `${providerLabel(providerId)} connection test passed.`);
+      } catch (error) {
+        setSettingsStatus(String(error.message || "Connection test failed."));
+      } finally {
+        setConnectorBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const syncConnectorBalances = useCallback(
+    async (providerId) => {
+      if (!authToken) {
+        return;
+      }
+
+      setConnectorBusyKey(`${providerId}:sync`);
+      try {
+        const data = await requestJson(`/api/connectors/${providerId}/sync`, {
+          method: "POST",
+          token: authToken,
+        });
+        setConnectors((current) =>
+          current.map((provider) => (provider.id === providerId ? data.provider : provider)),
+        );
+        setSettingsStatus(data.detail || `${providerLabel(providerId)} account synced.`);
+      } catch (error) {
+        setSettingsStatus(String(error.message || "Account sync failed."));
+      } finally {
+        setConnectorBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const disconnectConnector = useCallback(
+    async (providerId) => {
+      if (!authToken) {
+        return;
+      }
+
+      setConnectorBusyKey(`${providerId}:disconnect`);
+      try {
+        const data = await requestJson(`/api/connectors/${providerId}`, {
+          method: "DELETE",
+          token: authToken,
+        });
+        setConnectors((current) =>
+          current.map((provider) => (provider.id === providerId ? data.provider : provider)),
+        );
+        setSettingsStatus(`${providerLabel(providerId)} disconnected.`);
+      } catch (error) {
+        setSettingsStatus(String(error.message || "Disconnect failed."));
+      } finally {
+        setConnectorBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const submitFeedback = useCallback(async () => {
+    if (!authToken) {
+      return;
+    }
+
+    setFeedbackBusyKey("submit");
+    try {
+      const data = await requestJson("/api/feedback", {
+        method: "POST",
+        token: authToken,
+        body: feedbackForm,
+      });
+      setFeedbackResponse({
+        ...EMPTY_FEEDBACK_RESPONSE,
+        ...data,
+        items: data.items || [],
+        summary: data.summary || {},
+        permissions: data.permissions || { canManage: false },
+      });
+      setFeedbackForm(INITIAL_FEEDBACK_FORM);
+      setFeedbackStatus("Feedback saved to the board.");
+    } catch (error) {
+      setFeedbackStatus(String(error.message || "Feedback save failed."));
+    } finally {
+      setFeedbackBusyKey("");
+    }
+  }, [authToken, feedbackForm]);
+
+  const updateFeedbackStatus = useCallback(
+    async (feedbackId, status) => {
+      if (!authToken) {
+        return;
+      }
+
+      setFeedbackBusyKey(`${feedbackId}:${status}`);
+      try {
+        const data = await requestJson(`/api/feedback/${feedbackId}`, {
+          method: "PATCH",
+          token: authToken,
+          body: { status },
+        });
+        setFeedbackResponse({
+          ...EMPTY_FEEDBACK_RESPONSE,
+          ...data,
+          items: data.items || [],
+          summary: data.summary || {},
+          permissions: data.permissions || { canManage: false },
+        });
+        setFeedbackStatus("Feedback board updated.");
+      } catch (error) {
+        setFeedbackStatus(String(error.message || "Feedback update failed."));
+      } finally {
+        setFeedbackBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const applyChartLevelToTicket = useCallback((levelKind) => {
+    if (!activeSignal) {
+      return;
+    }
+
+    if (!orderTicket || orderTicket.kind !== "market" || orderTicket.marketTicker !== activeSignal.ticker) {
+      setTradeStatus("Open the active ticket first if you want to use chart levels.");
+      return;
+    }
+
+    const support = activeSignal.tradePlan?.support ?? null;
+    const resistance = activeSignal.tradePlan?.resistance ?? null;
+    const levelMap =
+      orderTicket.side === "SELL"
+        ? {
+            support: ["targetPrice", support],
+            resistance: ["stopPrice", resistance],
+            stop: ["stopPrice", activeChartPlan?.stopPrice ?? null],
+            target: ["targetPrice", activeChartPlan?.targetPrice ?? null],
           }
-        }}
-      />
-    );
+        : {
+            support: ["stopPrice", support],
+            resistance: ["targetPrice", resistance],
+            stop: ["stopPrice", activeChartPlan?.stopPrice ?? null],
+            target: ["targetPrice", activeChartPlan?.targetPrice ?? null],
+          };
+
+    const mapping = levelMap[levelKind];
+    if (!mapping || !Number.isFinite(Number(mapping[1]))) {
+      return;
+    }
+
+    const [field, numericValue] = mapping;
+    const stringValue = formatTicketPlanInput(orderTicket, numericValue);
+
+    setOrderTicket((current) => {
+      if (!current) {
+        return current;
+      }
+      const nextTicket = {
+        ...current,
+        [field]: stringValue,
+      };
+      return {
+        ...nextTicket,
+        ...resolveTicketPlanMeta(
+          nextTicket,
+          field === "stopPrice" ? stringValue : nextTicket.stopPrice,
+          field === "targetPrice" ? stringValue : nextTicket.targetPrice,
+        ),
+      };
+    });
+  }, [activeChartPlan, activeSignal, orderTicket]);
+
+  const activePageSections = PAGE_SECTION_LINKS[page] || [];
+  const leadSignal = activeSignal || signalsResponse.leadSignal || null;
+  const activeSignalExecutionPlan = leadSignal
+    ? executionPlanForSignal(leadSignal, appSettings, connectors)
+    : executionPlanForSignal({ desk: effectiveDeskKey }, appSettings, connectors);
+
+  const currentWorkspaceCard = {
+    label: workspaceLabel(page, activeDesk),
+    hint: SCREEN_PREVIEWS[page] || "Current workspace",
+  };
+  const mobileClockLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-ZA", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: appSettings.timezone || "Africa/Johannesburg",
+      }).format(new Date()),
+    [appSettings.timezone],
+  );
+  const executionPlanForCard = useCallback(
+    (signal) => executionPlanForSignal(signal, appSettings, connectors),
+    [appSettings, connectors],
+  );
+
+  const topMetrics = [
+    {
+      id: "workspace",
+      label: "Workspace",
+      value: currentWorkspaceCard.label,
+      detail: activeDesk === "all" ? "Cross-market view" : labelDesk(activeDesk),
+      action: () => navigateToPage("home", false, activeDesk),
+    },
+    {
+      id: "feed",
+      label: "Market feed",
+      value: marketModeLabel(signalsResponse.marketData?.mode),
+      detail: signalsResponse.marketData?.provider || "Simulator",
+      action: () => jumpToPageSection("connections", "market-feed-status", activeDesk),
+    },
+    {
+      id: "book",
+      label: "Open book",
+      value: openTrades.length,
+      detail: Number.isFinite(totalOpenPnl) ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}%` : "--",
+      action: () => jumpToPageSection("portfolio", "open-positions"),
+    },
+    {
+      id: "feedback",
+      label: "Feedback",
+      value: feedbackResponse.summary?.open || 0,
+      detail: "Open partner items",
+      action: () => jumpToPageSection("settings", "feedback-board"),
+    },
+  ];
+  const primaryNavItems = NAV_ITEMS.filter((item) =>
+    ["home", "news", "signals", "collectibles", "portfolio"].includes(item.id),
+  );
+  const utilityNavItems = NAV_ITEMS.filter((item) =>
+    ["tools", "reports", "connections", "settings"].includes(item.id),
+  );
+  const defaultTradingDesk = ["forex", "etfs", "jse"].includes(activeDesk) ? activeDesk : "forex";
+  const menuPrimaryItems = [
+    {
+      id: "menu-news",
+      glyph: "NW",
+      label: "News",
+      detail: `${labelDesk(activeDesk)} macro tape`,
+      action: () => handleMenuNavigate("news", activeDesk),
+    },
+    {
+      id: "menu-trading",
+      glyph: "TR",
+      label: "Trading",
+      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
+      action: () => handleMenuNavigate("signals", defaultTradingDesk),
+    },
+    {
+      id: "menu-crypto",
+      glyph: "CR",
+      label: "Crypto",
+      detail: "BTC and crypto desk",
+      action: () => handleMenuNavigate("signals", "crypto"),
+    },
+    {
+      id: "menu-collectibles",
+      glyph: "CL",
+      label: "Collectibles",
+      detail: "Alternative inventory",
+      action: () => handleMenuNavigate("collectibles", activeDesk),
+    },
+    {
+      id: "menu-portfolio",
+      glyph: "PF",
+      label: "Portfolio",
+      detail: "Open positions and history",
+      action: () => handleMenuNavigate("portfolio", activeDesk),
+    },
+  ];
+  const menuDeskItems = MARKET_DESKS.map((desk) => ({
+    id: desk.id,
+    label: desk.label,
+    detail: desk.shortLabel,
+    active: activeDesk === desk.id,
+    action: () => handleMenuNavigate(page === "news" ? "news" : "signals", desk.id),
+  }));
+  const menuSupportItems = [
+    {
+      id: "menu-home",
+      label: "Home",
+      detail: "Workspace hub",
+      action: () => handleMenuNavigate("home", activeDesk),
+    },
+    {
+      id: "menu-reports",
+      label: "Reports",
+      detail: "Performance graphs",
+      action: () => handleMenuNavigate("reports", activeDesk),
+    },
+    {
+      id: "menu-tools",
+      label: "Tools",
+      detail: "Mentor and simulator",
+      action: () => handleMenuNavigate("tools", activeDesk),
+    },
+    {
+      id: "menu-connections",
+      label: "Connections",
+      detail: "Feeds and routing",
+      action: () => handleMenuNavigate("connections", activeDesk),
+    },
+    {
+      id: "menu-settings",
+      label: "Settings",
+      detail: "Account and setup",
+      action: () => handleMenuNavigate("settings", activeDesk),
+    },
+  ];
+  const menuActionItems = [
+    {
+      id: "menu-feedback",
+      label: "Feedback Board",
+      detail: "Partner notes and status",
+      action: () => handleMenuSection("settings", "feedback-board"),
+    },
+    {
+      id: "menu-testing",
+      label: "Partner Testing",
+      detail: "Guided review route",
+      action: () => handleMenuSection("settings", "partner-testing"),
+    },
+    {
+      id: "menu-intro",
+      label: "Intro Screen",
+      detail: "Open the launch chooser",
+      action: handleMenuSplash,
+    },
+    {
+      id: "menu-logout",
+      label: "Log Out",
+      detail: "End this session",
+      action: handleMenuLogout,
+    },
+  ];
+  const workspaceContent = (
+    <>
+      {page === "home" ? (
+        <HomeScreen
+          activeDesk={effectiveDeskKey}
+          activePageSections={activePageSections}
+          appSettings={appSettings}
+          collectiblesResponse={collectiblesResponse}
+          connectedProviderCount={connectedProviderCount}
+          feedbackResponse={feedbackResponse}
+          health={health}
+          jumpToPageSection={jumpToPageSection}
+          liveReadyDeskCount={liveReadyDeskCount}
+          navigateToPage={navigateToPage}
+          newsResponse={newsResponse}
+          openTrades={openTrades}
+          shareStatus={shareStatus}
+          signalsResponse={signalsResponse}
+          totalOpenPnl={totalOpenPnl}
+        />
+      ) : null}
+
+      {page === "news" ? (
+        <NewsScreen
+          activeDesk={activeDesk}
+          activeDeskNewsLabel={activeDeskNewsLabel}
+          activeDeskProfile={activeDeskProfile}
+          activePageSections={activePageSections}
+          appSettings={appSettings}
+          deskLeadSignal={leadSignal}
+          globalHeadlineCount={globalHeadlineCount}
+          handleDeskRoute={handleDeskRoute}
+          jumpToPageSection={jumpToPageSection}
+          leadNewsItem={leadNewsItem}
+          newsResponse={{ ...newsResponse, items: newsItemsForDesk }}
+          newsSourceMap={newsSourceMap}
+          refreshContext={refreshCore}
+          southAfricaHeadlineCount={southAfricaHeadlineCount}
+        />
+      ) : null}
+
+      {page === "signals" ? (
+        <TradeScreen
+          activeChartPlan={activeChartPlan}
+          activeDesk={activeDesk}
+          activePageSections={activePageSections}
+          activeSignalExecutionPlan={activeSignalExecutionPlan}
+          appSettings={appSettings}
+          applyChartLevelToTicket={applyChartLevelToTicket}
+          effectiveDeskKey={effectiveDeskKey}
+          executionPlanForCard={executionPlanForCard}
+          filteredSignals={filteredSignals}
+          handleDeskRoute={handleDeskRoute}
+          handleSelectSignal={handleSelectSignal}
+          jumpToPageSection={jumpToPageSection}
+          leadSignal={leadSignal}
+          marketSourceMap={marketSourceMap}
+          newsItemsForDesk={newsItemsForDesk}
+          newsSourceMap={newsSourceMap}
+          openMarketTicket={openMarketTicket}
+          openTrades={openTrades}
+          orderTicket={orderTicket}
+          signalsResponse={signalsResponse}
+          tradeStatus={tradeStatus}
+        />
+      ) : null}
+
+      {page === "tools" ? (
+        <ToolsScreen
+          activeChartPlan={activeChartPlan}
+          activeDeskProfile={activeDeskProfile}
+          activePageSections={activePageSections}
+          activeResearchReports={activeResearchReports}
+          activeSignal={leadSignal}
+          appSettings={appSettings}
+          chartUploadName={chartUploadName}
+          handleChartUpload={handleChartUpload}
+          jumpToPageSection={jumpToPageSection}
+          leadNewsItem={leadNewsItem}
+          mentorChecklist={mentorChecklist}
+          mentorSummary={mentorSummary}
+          navigateToPage={navigateToPage}
+          openResearchReport={openResearchReport}
+          openTrades={openTrades}
+          toolStatus={toolStatus}
+          toolsDeskKey={toolsDeskKey}
+        />
+      ) : null}
+
+      {page === "collectibles" ? (
+        <CollectiblesScreen
+          activeCollectible={activeCollectible}
+          activePageSections={activePageSections}
+          appSettings={appSettings}
+          collectibleBrand={collectibleBrand}
+          collectibleCategory={collectibleCategory}
+          collectibleQuery={collectibleQuery}
+          collectibles={collectibles}
+          collectiblesResponse={collectiblesResponse}
+          filteredCollectibles={filteredCollectibles}
+          handleCollectibleSelect={handleCollectibleSelect}
+          jumpToPageSection={jumpToPageSection}
+          openCollectibleTicket={openCollectibleTicket}
+          setCollectibleBrand={setCollectibleBrand}
+          setCollectibleCategory={setCollectibleCategory}
+          setCollectibleQuery={setCollectibleQuery}
+        />
+      ) : null}
+
+      {page === "portfolio" ? (
+        <PortfolioScreen
+          activeDesk={activeDesk}
+          activePageSections={activePageSections}
+          activePortfolioTrade={activePortfolioTrade}
+          appSettings={appSettings}
+          closedTrades={closedTrades}
+          handleCloseTrade={handleCloseTrade}
+          handlePortfolioTradeNavigate={handlePortfolioTradeNavigate}
+          handlePortfolioTradeSelect={handlePortfolioTradeSelect}
+          health={health}
+          jumpToPageSection={jumpToPageSection}
+          openTrades={openTrades}
+          totalOpenPnl={totalOpenPnl}
+        />
+      ) : null}
+
+      {page === "reports" ? (
+        <ReportsScreen
+          activeDesk={activeDesk}
+          activePageSections={activePageSections}
+          appSettings={appSettings}
+          closedTrades={closedTrades}
+          health={health}
+          jumpToPageSection={jumpToPageSection}
+          navigateToPage={navigateToPage}
+          openTrades={openTrades}
+          signalsResponse={signalsResponse}
+          totalOpenPnl={totalOpenPnl}
+        />
+      ) : null}
+
+      {page === "connections" ? (
+        <ConnectionsScreen
+          activeDesk={activeDesk}
+          activePageSections={activePageSections}
+          appSettings={appSettings}
+          connectedProviderCount={connectedProviderCount}
+          connectorBusyKey={connectorBusyKey}
+          connectors={connectors}
+          cryptoConnector={cryptoConnector}
+          degradedSourceCount={degradedSourceCount}
+          disconnectConnector={disconnectConnector}
+          handleValrFieldChange={handleValrFieldChange}
+          health={health}
+          jumpToPageSection={jumpToPageSection}
+          liveReadyDeskCount={liveReadyDeskCount}
+          newsResponse={newsResponse}
+          refreshContext={refreshContext}
+          refreshCore={refreshCore}
+          saveValrConnector={saveValrConnector}
+          settingsStatus={settingsStatus}
+          signalsResponse={signalsResponse}
+          syncConnectorBalances={syncConnectorBalances}
+          testConnectorConnection={testConnectorConnection}
+          updateExecutionProfile={updateExecutionProfile}
+          valrForm={valrForm}
+        />
+      ) : null}
+
+      {page === "settings" ? (
+        <SettingsScreen
+          activeDesk={activeDesk}
+          activePageSections={activePageSections}
+          addTarget={addTarget}
+          appSettings={appSettings}
+          connectedProviderCount={connectedProviderCount}
+          currentUser={currentUser}
+          feedbackBusyKey={feedbackBusyKey}
+          feedbackForm={feedbackForm}
+          feedbackResponse={feedbackResponse}
+          feedbackStatus={feedbackStatus}
+          jumpToPageSection={jumpToPageSection}
+          liveReadyDeskCount={liveReadyDeskCount}
+          navigateToPage={navigateToPage}
+          setFeedbackForm={setFeedbackForm}
+          settingsStatus={settingsStatus}
+          shareStatus={shareStatus}
+          setTargetInput={setTargetInput}
+          submitFeedback={submitFeedback}
+          targetInput={targetInput}
+          targets={targets}
+          updateFeedbackStatus={updateFeedbackStatus}
+          updateSettings={updateSettings}
+        />
+      ) : null}
+    </>
+  );
+
+  if (!authChecked) {
+    if (bootSplashVisible) {
+      return <BootSplash />;
+    }
+    return <LoadingShell message="Restoring account state, desk preference, and the last working route." />;
+  }
+
+  if (bootSplashVisible) {
+    return <BootSplash />;
   }
 
   if (!currentUser) {
+    if (authStage === "landing") {
+      return <LandingShell initialLaunch={preAuthLaunch} onContinue={handleLandingContinue} />;
+    }
+
     return (
       <AuthShell
         authMode={authMode}
         authForm={authForm}
         authStatus={authStatus}
-        onModeChange={(mode) => {
-          setAuthMode(mode);
-          setAuthStatus("");
-        }}
+        launchSelection={preAuthLaunch}
+        onBack={() => setAuthStage("landing")}
+        onModeChange={setAuthMode}
         onSubmit={handleAuthSubmit}
-        onFieldChange={(field, value) =>
-          setAuthForm((current) => ({
-            ...current,
-            [field]: value,
-          }))
-        }
+        onFieldChange={handleAuthFieldChange}
+      />
+    );
+  }
+
+  if (splashVisible) {
+    return (
+      <SplashScreen
+        ready
+        activePage={page}
+        activeDesk={activeDesk}
+        onLaunch={handleSplashLaunch}
       />
     );
   }
 
   return (
-    <div className="appShell">
+    <div className="appShell mobileAppShell">
       <aside className="sidebar">
-        <button
-          type="button"
-          className="brandLockup brandButton"
-          onClick={() => setSplashVisible(true)}
-        >
-          <div className="brandMark">CT</div>
+        <div className="brandLockup">
+          <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
+            <div className="brandMark">CT</div>
+          </button>
           <div>
-            <div className="brandWordmark">COLLECTRADE</div>
-            <div className="brandSub">Trader workspace</div>
+            <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
+              <div className="brandWordmark">COLLECTRADE</div>
+              <div className="brandSub">Workspace build for partner testing</div>
+            </button>
           </div>
-        </button>
+        </div>
+
+        <section className="sidebarCard sidebarCardButton workspaceCard">
+          <span>Current workspace</span>
+          <strong>{currentWorkspaceCard.label}</strong>
+          <small>{currentWorkspaceCard.hint}</small>
+          <div className="workspaceCardMeta">
+            <div>
+              <span>Desk</span>
+              <strong>{labelDesk(activeDesk)}</strong>
+            </div>
+            <div>
+              <span>Route</span>
+              <strong>{page === "signals" ? "Execution" : workspaceLabel(page, activeDesk)}</strong>
+            </div>
+          </div>
+        </section>
 
         <nav className="sideNav">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={page === item.id ? "active" : ""}
-              onClick={() => navigateToPage(item.id)}
-            >
-              {item.label}
-            </button>
+          {NAV_GROUPS.map((group) => (
+            <div className="navGroup" key={group.id}>
+              <div className="navGroupLabel">{group.label}</div>
+              {NAV_ITEMS.filter((item) => item.section.toLowerCase() === group.id).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={page === item.id ? "active" : ""}
+                  onClick={() => navigateToPage(item.id, false, activeDesk)}
+                >
+                  <div className="navButtonMain">
+                    <div className="navGlyph">{item.glyph}</div>
+                    <div className="navButtonCopy">
+                      <span>{item.label}</span>
+                      <small>{item.hint}</small>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
         <button
           type="button"
           className="sidebarCard sidebarCardButton"
-          onClick={() => jumpToPageSection("settings", "system-health")}
+          onClick={() => jumpToPageSection("settings", "partner-testing")}
         >
-          <span>AI status</span>
-          <strong>Deep scanning active</strong>
-          <small>Engine tick: {formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}</small>
+          <span>Partner route</span>
+          <strong>{shareStatus.status === "live" ? "Share live" : "Private session"}</strong>
+          <small>
+            {shareStatus.status === "live"
+              ? shareStatus.publicUrl
+              : "Open Settings -> Partner Testing when you are ready to hand this to partners."}
+          </small>
         </button>
       </aside>
 
       <div className="workspaceShell">
+        <div className="mobileStatusBar">
+          <span>{mobileClockLabel}</span>
+          <div className="mobileStatusIcons" aria-hidden="true">
+            <span className="mobileStatusDot" />
+            <span className="mobileStatusPill">5G</span>
+            <span className="mobileStatusBattery">92%</span>
+          </div>
+        </div>
+
+        <div className="mobileTitleBar">
+          <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
+            <div className="brandMark">CT</div>
+            <div className="mobileBrandCopy">
+              <strong>Collecttrade</strong>
+              <small>{currentWorkspaceCard.label}</small>
+            </div>
+          </button>
+
+          <div className="mobileTitleActions">
+            <div className="mobileTitleMeta">
+              <span>{labelDesk(activeDesk)}</span>
+              <strong>{marketModeLabel(signalsResponse.marketData?.mode)}</strong>
+            </div>
+            <button
+              type="button"
+              className="mobileMenuButton"
+              aria-label="Open menu"
+              onClick={openMenu}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          </div>
+        </div>
+
         <header className="topbar">
           <div className="metricStrip">
-            <button
-              type="button"
-              className="metricBlock metricButton"
-              onClick={() => {
-                if (leadSignal) {
-                  setSelectedSignalTicker(leadSignal.ticker);
-                }
-                jumpToPageSection("signals", "chart-panel");
-              }}
-            >
-              <span>Lead market</span>
-              <strong>{leadSignal?.label || "Waiting"}</strong>
-            </button>
-            <button
-              type="button"
-              className="metricBlock metricButton"
-              onClick={() => {
-                if (leadSignal) {
-                  setSelectedSignalTicker(leadSignal.ticker);
-                }
-                jumpToPageSection("signals", "signals-grid");
-              }}
-            >
-              <span>Signal</span>
-              <strong>{leadSignal ? `${leadSignal.action} ${leadSignal.setup}` : "No setup yet"}</strong>
-            </button>
-            <button
-              type="button"
-              className="metricBlock metricButton"
-              onClick={() => jumpToPageSection("portfolio", "open-positions")}
-            >
-              <span>Open positions</span>
-              <strong>{openTrades.length}</strong>
-            </button>
-            <button
-              type="button"
-              className="metricBlock metricButton"
-              onClick={() => jumpToPageSection("settings", "news-region")}
-            >
-              <span>Region</span>
-              <strong>{labelRegion(appSettings.preferredRegion)}</strong>
-            </button>
-            <button
-              type="button"
-              className="metricBlock metricButton"
-              onClick={() => jumpToPageSection("settings", "market-feed-status")}
-            >
-              <span>Feed</span>
-              <strong>
-                {signalsResponse.marketData?.provider || "Simulator"} |{" "}
-                {marketModeLabel(signalsResponse.marketData?.mode)}
-              </strong>
-            </button>
+            {topMetrics.map((metric) => (
+              <button
+                key={metric.id}
+                type="button"
+                className="metricBlock metricButton"
+                onClick={metric.action}
+              >
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+                <small>{metric.detail}</small>
+              </button>
+            ))}
           </div>
 
           <div className="topbarTools">
-            <span className="livePill">API LIVE</span>
+            <div className={`livePill ${statusTone(signalsResponse.marketData?.mode)}`}>
+              {marketModeLabel(signalsResponse.marketData?.mode)}
+            </div>
             <button
               type="button"
               className="ghostButton"
-              onClick={() => {
-                refreshCore();
-                refreshContext();
-              }}
+              onClick={() => jumpToPageSection("settings", "feedback-board")}
             >
-              Refresh
+              Feedback Board
             </button>
-            <div className="avatarCircle">{currentUser.name.charAt(0).toUpperCase()}</div>
-            <button type="button" className="ghostButton" onClick={handleLogout}>
-              Log out
+            <button type="button" className="ghostButton" onClick={clearSession}>
+              Log Out
             </button>
+            <div className="avatarCircle">
+              {(currentUser.name || currentUser.email || "U").slice(0, 1).toUpperCase()}
+            </div>
           </div>
         </header>
 
+        <div className="mobileUtilityRail">
+          {utilityNavItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`mobileUtilityChip ${page === item.id ? "active" : ""}`}
+              onClick={() => navigateToPage(item.id, false, activeDesk)}
+            >
+              <span>{item.glyph}</span>
+              <strong>{item.label}</strong>
+            </button>
+          ))}
+        </div>
+
         <main className="workspace">
-          {tradeStatus ? <div className="statusBanner">{tradeStatus}</div> : null}
-
-          {page === "signals" ? (
-            <>
-              <section className="pageHeader">
-                <div>
-                  <h1>Alpha Signals</h1>
-                  <p>Live 8/21 EMA workflow with South Africa-aware macro context and disciplined exits.</p>
-                </div>
-                <div className="headerStatus">
-                  <span>Market refresh</span>
-                  <strong>
-                    {formatDateTime(
-                      signalsResponse.marketData?.lastSuccessAt || signalsResponse.generatedAt,
-                      appSettings.timezone,
-                    )}
-                  </strong>
-                </div>
-              </section>
-
-              <section className="panel chartPanel" id="chart-panel">
-                <div className="panelHeader">
-                  <div>
-                    <h2>{activeSignal?.headline || "Waiting for the next setup"}</h2>
-                    <p>{activeSignal?.thesis || "The engine is building its first live state."}</p>
-                  </div>
-                  <div className="priceCluster">
-                    <span>{formatTickerPrice(activeSignal?.ticker, activeSignal?.price)}</span>
-                    <small>
-                      EMA8 {formatTickerPrice(activeSignal?.ticker, activeSignal?.ema8)} | EMA21{" "}
-                      {formatTickerPrice(activeSignal?.ticker, activeSignal?.ema21)}
-                    </small>
-                  </div>
-                </div>
-
-                {activeSignal ? (
-                  <Chart
-                    priceSeries={activeSignal.chart.price}
-                    ema8Series={activeSignal.chart.ema8}
-                    ema21Series={activeSignal.chart.ema21}
-                  />
-                ) : (
-                  <EmptyState
-                    title="No chart yet"
-                    body="The engine will render once it has enough market points."
-                  />
-                )}
-
-                {activeSignal ? (
-                  <div className="panelActions">
-                    <button
-                      type="button"
-                      className="primaryButton"
-                      onClick={() => openMarketTicket(activeSignal, "BUY")}
-                    >
-                      Buy Ticket
-                    </button>
-                    <button
-                      type="button"
-                      className="ghostButton"
-                      onClick={() => openMarketTicket(activeSignal, "SELL")}
-                    >
-                      Sell Ticket
-                    </button>
-                    <button
-                      type="button"
-                      className="ghostButton"
-                      onClick={() => jumpToPageSection("portfolio", "position-detail")}
-                    >
-                      Review Portfolio
-                    </button>
-                  </div>
-                ) : null}
-              </section>
-
-              <div className="splitGrid">
-                <section className="panel">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>Strategy State</h2>
-                      <p>Rules taken from your 8 and 21 EMA guide.</p>
-                    </div>
-                  </div>
-
-                  <div className="ruleList">
-                    {signalsResponse.strategyRules.map((rule) => (
-                      <div className="ruleRow" key={rule}>
-                        {rule}
-                      </div>
-                    ))}
-                  </div>
-
-                  {activeSignal ? (
-                    <div className="stateGrid">
-                      <div>
-                        <span>Anchor trend</span>
-                        <strong>{activeSignal.anchorTrend}</strong>
-                      </div>
-                      <div>
-                        <span>Gap state</span>
-                        <strong>{activeSignal.gapState}</strong>
-                      </div>
-                      <div>
-                        <span>Retest</span>
-                        <strong>{activeSignal.retest ? "Active" : "Not active"}</strong>
-                      </div>
-                      <div>
-                        <span>Chop filter</span>
-                        <strong>{activeSignal.chop ? "Avoid" : "Clear"}</strong>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {signalsResponse.marketData?.sourceStatus?.length ? (
-                    <div className="healthList">
-                      {signalsResponse.marketData.sourceStatus.map((source) => (
-                        <div className="healthRow" key={source.ticker}>
-                          <span>{source.label}</span>
-                          <strong className={statusTone(source.status)}>
-                            {source.status} | {source.provider}
-                          </strong>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </section>
-
-                <section className="panel">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>Macro Feed</h2>
-                      <p>{labelRegion(appSettings.preferredRegion)} headlines with honest timestamps.</p>
-                    </div>
-                  </div>
-
-                  <div className="newsList">
-                    {newsResponse.items.slice(0, 4).map((item) => {
-                      const targetUrl = item.link || newsSourceMap[item.sourceId];
-                      const interactiveProps = targetUrl
-                        ? {
-                            role: "button",
-                            tabIndex: 0,
-                            onClick: () => openExternal(targetUrl),
-                            onKeyDown: (event) =>
-                              handleInteractiveKey(event, () => openExternal(targetUrl)),
-                          }
-                        : {};
-
-                      return (
-                        <article
-                          key={item.id}
-                          className={`newsItem interactiveCard ${targetUrl ? "clickable" : ""}`}
-                          {...interactiveProps}
-                        >
-                          <div className="newsItemTop">
-                            <span>{item.sourceName}</span>
-                            <span>{item.region === "south-africa" ? "JSE / ZAR" : "Global"}</span>
-                          </div>
-                          <h3>{item.title}</h3>
-                          <p>{item.summary || "No summary available yet."}</p>
-                          <small>
-                            {item.publishedAt ? "Published " : "Seen "}
-                            {formatDateTime(item.publishedAt || item.seenAt, appSettings.timezone)}
-                          </small>
-                        </article>
-                      );
-                    })}
-
-                    {!newsResponse.items.length ? (
-                      <EmptyState
-                        title="News is refreshing"
-                        body="The feed is warming up and will fill in as sources respond."
-                      />
-                    ) : null}
-                  </div>
-                </section>
-              </div>
-
-              <section className="signalGrid" id="signals-grid">
-                {signalsResponse.signals.map((signal) => (
-                  <SignalCard
-                    key={signal.ticker}
-                    signal={signal}
-                    isActive={activeSignal?.ticker === signal.ticker}
-                    onSelect={handleSignalSelect}
-                    onFastTrade={handleFastTrade}
-                  />
-                ))}
-              </section>
-            </>
-          ) : null}
-
-          {page === "collectibles" ? (
-            <>
-              <section className="pageHeader">
-                <div>
-                  <h1>Collectibles</h1>
-                  <p>Real collectible flow: LEGO, Pokemon, sealed product, and graded inventory.</p>
-                </div>
-              </section>
-
-              {activeCollectible ? (
-                <section className="panel" id="collectibles-focus">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>{activeCollectible.name}</h2>
-                      <p>{activeCollectible.note}</p>
-                    </div>
-                    <div className="priceCluster">
-                      <span>{formatCollectiblePrice(activeCollectible.price)}</span>
-                      <small>
-                        {activeCollectible.category} | {activeCollectible.market}
-                      </small>
-                    </div>
-                  </div>
-
-                  <div className="stateGrid">
-                    <div>
-                      <span>Venue</span>
-                      <strong>{activeCollectible.venue}</strong>
-                    </div>
-                    <div>
-                      <span>Move</span>
-                      <strong className={positiveTone(activeCollectible.changePercent)}>
-                        {activeCollectible.changePercent.toFixed(1)}%
-                      </strong>
-                    </div>
-                    <div>
-                      <span>Confidence</span>
-                      <strong>{activeCollectible.confidence}%</strong>
-                    </div>
-                    <div>
-                      <span>Status</span>
-                      <strong>{activeCollectible.status}</strong>
-                    </div>
-                  </div>
-
-                  <div className="panelActions">
-                    <button
-                      type="button"
-                      className="primaryButton"
-                      onClick={() => handleCollectibleTrade(activeCollectible, "BUY")}
-                    >
-                      Buy Ticket
-                    </button>
-                    <button
-                      type="button"
-                      className="ghostButton"
-                      onClick={() => handleCollectibleTrade(activeCollectible, "SELL")}
-                    >
-                      Sell Ticket
-                    </button>
-                    <button
-                      type="button"
-                      className="ghostButton"
-                      onClick={() => jumpToPageSection("portfolio", "open-positions")}
-                    >
-                      View Portfolio
-                    </button>
-                  </div>
-                </section>
-              ) : null}
-
-              <section className="collectibleGrid">
-                {collectibles.map((item) => (
-                  <CollectibleCard
-                    key={item.id}
-                    item={item}
-                    isActive={activeCollectible?.id === item.id}
-                    onSelect={handleCollectibleSelect}
-                    onTrade={handleCollectibleTrade}
-                  />
-                ))}
-              </section>
-            </>
-          ) : null}
-
-          {page === "portfolio" ? (
-            <>
-              <section className="pageHeader">
-                <div>
-                  <h1>My Portfolio</h1>
-                  <p>User-scoped order tracking, EMA-managed exits, and saved execution history.</p>
-                </div>
-              </section>
-
-              <PositionDetailCard
-                trade={activePortfolioTrade}
-                timeZone={appSettings.timezone}
-                onNavigate={handlePortfolioTradeNavigate}
-                onCloseTrade={handleCloseTrade}
-              />
-
-              <section className="summaryGrid">
-                <button type="button" className="summaryCard summaryCardButton" onClick={() => jumpToPageSection("portfolio", "open-positions")}>
-                  <span>Open positions</span>
-                  <strong>{openTrades.length}</strong>
-                </button>
-                <button type="button" className="summaryCard summaryCardButton" onClick={() => jumpToPageSection("portfolio", "order-history")}>
-                  <span>Closed trades</span>
-                  <strong>{closedTrades.length}</strong>
-                </button>
-                <button type="button" className="summaryCard summaryCardButton" onClick={() => jumpToPageSection("portfolio", "open-positions")}>
-                  <span>Live PnL</span>
-                  <strong className={positiveTone(totalOpenPnl)}>{totalOpenPnl.toFixed(2)}%</strong>
-                </button>
-                <button type="button" className="summaryCard summaryCardButton" onClick={() => jumpToPageSection("signals", "chart-panel")}>
-                  <span>Last update</span>
-                  <strong>{formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}</strong>
-                </button>
-              </section>
-
-              <div className="splitGrid">
-                <section className="panel" id="open-positions">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>Open Positions</h2>
-                      <p>Open positions now carry quantity, notes, and a manual close workflow.</p>
-                    </div>
-                  </div>
-
-                  {openTrades.length ? (
-                    <div className="tableShell">
-                      <div className="tableHeaderRow positions">
-                        <span>Market</span>
-                        <span>Side</span>
-                        <span>Qty</span>
-                        <span>Entry</span>
-                        <span>Current</span>
-                        <span>PnL</span>
-                      </div>
-
-                      {openTrades.map((trade) => (
-                        <div
-                          className="tableRow positions interactiveRow"
-                          key={trade.id}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => handlePortfolioTradeSelect(trade)}
-                          onKeyDown={(event) => handleInteractiveKey(event, () => handlePortfolioTradeSelect(trade))}
-                        >
-                          <div className="tableCellStack">
-                            <strong>{trade.ticker}</strong>
-                            <small>{trade.assetClass === "collectible" ? trade.category : trade.setup}</small>
-                          </div>
-                          <span>{trade.side}</span>
-                          <span>{trade.quantity}</span>
-                          <span>{formatTradePrice(trade, trade.entryPrice)}</span>
-                          <span>{formatTradePrice(trade, trade.currentPrice)}</span>
-                          <span className={positiveTone(trade.pnl)}>{trade.pnl.toFixed(2)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="No open positions yet"
-                      body="Use Fast Trade from the Alpha Signals page to seed your portfolio."
-                    />
-                  )}
-                </section>
-
-                <section className="panel">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>Execution Rails</h2>
-                      <p>Operational lanes ready for local, offshore, crypto, and JSE flow.</p>
-                    </div>
-                  </div>
-
-                  <div className="railList">
-                    {RAILS.map((rail) => (
-                      <div className="railRow" key={rail}>
-                        <span className="railDot" />
-                        <strong>{rail}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-
-              <section className="panel" id="order-history">
-                <div className="panelHeader">
-                  <div>
-                    <h2>Order History</h2>
-                    <p>Full timestamps in South Africa local time.</p>
-                  </div>
-                </div>
-
-                {closedTrades.length ? (
-                  <div className="tableShell">
-                    <div className="tableHeaderRow historyDetailed">
-                      <span>Market</span>
-                      <span>Side</span>
-                      <span>Qty</span>
-                      <span>Status</span>
-                      <span>Handled</span>
-                      <span>Exit</span>
-                    </div>
-
-                    {closedTrades.map((trade) => (
-                      <div
-                        className="tableRow historyDetailed interactiveRow"
-                        key={trade.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => handlePortfolioTradeSelect(trade)}
-                        onKeyDown={(event) => handleInteractiveKey(event, () => handlePortfolioTradeSelect(trade))}
-                      >
-                        <div className="tableCellStack">
-                          <strong>{trade.ticker}</strong>
-                          <small>{trade.exitReason || trade.setup}</small>
-                        </div>
-                        <span>{trade.side}</span>
-                        <span>{trade.quantity}</span>
-                        <span>{trade.exitReason || "Closed"}</span>
-                        <span>{formatDateTime(trade.closedAt || trade.updatedAt, appSettings.timezone)}</span>
-                        <span>{formatTradePrice(trade, trade.exitPrice || trade.currentPrice)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    title="No history yet"
-                    body="Closed trades will land here with their exit reason and timestamp."
-                  />
-                )}
-              </section>
-            </>
-          ) : null}
-
-          {page === "settings" ? (
-            <>
-              <section className="pageHeader">
-                <div>
-                  <h1>Settings</h1>
-                  <p>Account controls, news coverage, system health, and saved desk targets.</p>
-                </div>
-              </section>
-
-              {settingsStatus ? <div className="statusBanner">{settingsStatus}</div> : null}
-
-              <div className="splitGrid">
-                <section className="panel" id="news-region">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>Account</h2>
-                      <p>Signed in as {currentUser.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="profileBlock">
-                    <div>
-                      <span>Name</span>
-                      <strong>{currentUser.name}</strong>
-                    </div>
-                    <div>
-                      <span>Last login</span>
-                      <strong>{formatDateTime(currentUser.lastLoginAt, appSettings.timezone)}</strong>
-                    </div>
-                    <div>
-                      <span>Timezone</span>
-                      <strong>{appSettings.timezone}</strong>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="panel" id="system-health">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>News Region</h2>
-                      <p>Keep your dashboard focused on South Africa, global flow, or both.</p>
-                    </div>
-                  </div>
-
-                  <div className="segmentedControl">
-                    {["south-africa", "global", "all"].map((region) => (
-                      <button
-                        type="button"
-                        key={region}
-                        className={appSettings.preferredRegion === region ? "active" : ""}
-                        onClick={() => updateSettings({ preferredRegion: region })}
-                      >
-                        {labelRegion(region)}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              </div>
-
-              <div className="splitGrid">
-                <section className="panel">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>Web Targets</h2>
-                      <p>Saved topics for your research loop and scanning agent.</p>
-                    </div>
-                  </div>
-
-                  <div className="targetComposer">
-                    <input
-                      type="text"
-                      value={targetInput}
-                      onChange={(event) => setTargetInput(event.target.value)}
-                      placeholder="Add a desk target"
-                    />
-                    <button type="button" className="primaryButton" onClick={addTarget}>
-                      Add
-                    </button>
-                  </div>
-
-                  <div className="targetList">
-                    {targets.map((target) => (
-                      <div className="targetChip" key={target}>
-                        {target}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="panel">
-                  <div className="panelHeader">
-                    <div>
-                      <h2>System Health</h2>
-                      <p>Useful when you are checking if the desk is ready for a live session.</p>
-                    </div>
-                  </div>
-
-                  <div className="healthList">
-                    {Object.entries(health.services || {}).map(([service, status]) => (
-                      <div className="healthRow" key={service}>
-                        <span>{service}</span>
-                        <strong className={statusTone(status)}>{status}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-
-              <section className="panel" id="market-feed-status">
-                <div className="panelHeader">
-                  <div>
-                    <h2>Source Status</h2>
-                    <p>Feed-level visibility so you can see what is loading and what is degraded.</p>
-                  </div>
-                </div>
-
-                <div className="tableShell">
-                  <div className="tableHeaderRow history">
-                    <span>Source</span>
-                    <span>Region</span>
-                    <span>Status</span>
-                    <span>Items</span>
-                    <span>Detail</span>
-                  </div>
-
-                  {(newsResponse.sourceStatus || health.sources || []).map((source) => (
-                    <div className="tableRow history" key={source.id}>
-                      <span>{source.name}</span>
-                      <span>{labelRegion(source.region)}</span>
-                      <span className={statusTone(source.status)}>{source.status}</span>
-                      <span>{source.items ?? 0}</span>
-                      <span>{source.detail || "Healthy"}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="panel">
-                <div className="panelHeader">
-                  <div>
-                    <h2>Market Feed Status</h2>
-                    <p>
-                      Twelve Data powers live candles when a key is configured. The simulator stays available as a
-                      fallback.
-                    </p>
-                  </div>
-                </div>
-
-                {signalsResponse.marketData?.mode === "simulated" ? (
-                  <div className="statusBanner">
-                    Add `TWELVE_DATA_API_KEY` in the server environment and restart the API to switch these markets
-                    from simulator candles to live provider data.
-                  </div>
-                ) : null}
-
-                <div className="tableShell">
-                  <div className="tableHeaderRow history">
-                    <span>Market</span>
-                    <span>Provider</span>
-                    <span>Status</span>
-                    <span>Points</span>
-                    <span>Detail</span>
-                  </div>
-
-                  {(signalsResponse.marketData?.sourceStatus || health.marketSources || []).map((source) => (
-                    <div className="tableRow history" key={source.ticker}>
-                      <span>{source.label}</span>
-                      <span>{source.provider}</span>
-                      <span className={statusTone(source.status)}>{source.status}</span>
-                      <span>{source.points ?? 0}</span>
-                      <span>{source.detail || "Healthy"}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </>
-          ) : null}
+          <Suspense fallback={<WorkspaceLoadingState label={currentWorkspaceCard.label} />}>
+            <div key={`${page}:${activeDesk}`} className="workspaceViewport">
+              {workspaceContent}
+            </div>
+          </Suspense>
         </main>
 
+        <nav className="mobileBottomNav" aria-label="Primary navigation">
+          {primaryNavItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`mobileBottomNavItem ${page === item.id ? "active" : ""}`}
+              onClick={() => navigateToPage(item.id, false, activeDesk)}
+            >
+              <span>{item.glyph}</span>
+              <strong>{item.label}</strong>
+            </button>
+          ))}
+        </nav>
+
+        {menuVisible ? (
+          <div className="mobileMenuBackdrop" onClick={closeMenu}>
+            <div className="mobileMenuScreen" onClick={(event) => event.stopPropagation()}>
+              <div className="mobileMenuScreenHeader">
+                <div>
+                  <span>Navigation</span>
+                  <strong>Choose where to go</strong>
+                  <small>
+                    {currentUser?.name || currentUser?.email || "Current session"} ·{" "}
+                    {labelDesk(activeDesk)} · {currentWorkspaceCard.label}
+                  </small>
+                </div>
+                <button type="button" className="ghostButton mobileMenuClose" onClick={closeMenu}>
+                  Close
+                </button>
+              </div>
+
+              <div className="mobileMenuScreenList">
+                {menuPrimaryItems.map((item) => (
+                  <button key={item.id} type="button" className="mobileMenuRow" onClick={item.action}>
+                    <div className="mobileMenuRowGlyph">{item.glyph}</div>
+                    <div className="mobileMenuRowCopy">
+                      <strong>{item.label}</strong>
+                      <small>{item.detail}</small>
+                    </div>
+                    <div className="mobileMenuRowArrow">→</div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mobileMenuScreenSection">
+                <span>Desk shortcuts</span>
+                <div className="mobileMenuPillRow">
+                  {menuDeskItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`mobileMenuPill ${item.active ? "active" : ""}`}
+                      onClick={item.action}
+                    >
+                      <strong>{item.label}</strong>
+                      <small>{item.detail}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mobileMenuScreenSection">
+                <span>More screens</span>
+                <div className="mobileMenuSupportList">
+                  {menuSupportItems.map((item) => (
+                    <button key={item.id} type="button" className="mobileMenuSupportCard" onClick={item.action}>
+                      <strong>{item.label}</strong>
+                      <small>{item.detail}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mobileMenuScreenSection">
+                <span>Actions</span>
+                <div className="mobileMenuActionList">
+                  {menuActionItems.map((item) => (
+                    <button key={item.id} type="button" className="mobileMenuActionRow" onClick={item.action}>
+                      <div>
+                        <strong>{item.label}</strong>
+                        <small>{item.detail}</small>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <Suspense fallback={null}>
         <OrderTicketModal
           ticket={orderTicket}
+          executionPlan={
+            orderTicket?.kind === "market" && leadSignal
+              ? executionPlanForSignal(
+                  { desk: orderTicket?.desk, ticker: orderTicket?.marketTicker },
+                  appSettings,
+                  connectors,
+                )
+              : orderTicket?.kind === "collectible"
+                ? {
+                    mode: "paper",
+                    providerLabel: "Collecttrade Paper",
+                    pair: null,
+                    ready: true,
+                    detail: "Collectibles stay inside the app as paper inventory trades.",
+                  }
+                : null
+          }
           busy={tradeActionBusy}
           onClose={() => setOrderTicket(null)}
-          onFieldChange={handleOrderTicketChange}
+          onFieldChange={handleOrderFieldChange}
+          onPlanAction={handleOrderPlanAction}
           onSubmit={submitOrderTicket}
         />
 
@@ -2104,11 +2345,11 @@ export default function App() {
           busy={tradeActionBusy}
           onClose={() => setCloseTicket(null)}
           onFieldChange={(value) =>
-            setCloseTicket((current) => (current ? { ...current, orderNote: value.slice(0, 240) } : current))
+            setCloseTicket((current) => (current ? { ...current, orderNote: value } : current))
           }
           onSubmit={submitCloseTrade}
         />
-      </div>
+      </Suspense>
     </div>
   );
 }

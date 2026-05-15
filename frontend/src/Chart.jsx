@@ -8,7 +8,18 @@ function toChartPoints(series) {
   }));
 }
 
-export default function Chart({ priceSeries, ema8Series, ema21Series }) {
+function buildLevelSeries(series, value) {
+  if (!Array.isArray(series) || !series.length || !Number.isFinite(Number(value))) {
+    return [];
+  }
+
+  return series.map((point) => ({
+    time: Math.floor(new Date(point.time).getTime() / 1000),
+    value: Number(value),
+  }));
+}
+
+export default function Chart({ priceSeries, ema8Series, ema21Series, plan }) {
   const chartRef = useRef(null);
 
   useEffect(() => {
@@ -48,10 +59,30 @@ export default function Chart({ priceSeries, ema8Series, ema21Series }) {
       color: "#ff6a6a",
       lineWidth: 2,
     });
+    const supportLine = chart.addSeries(LineSeries, {
+      color: "rgba(0, 212, 106, 0.55)",
+      lineWidth: 1,
+    });
+    const resistanceLine = chart.addSeries(LineSeries, {
+      color: "rgba(255, 191, 105, 0.75)",
+      lineWidth: 1,
+    });
+    const stopLine = chart.addSeries(LineSeries, {
+      color: "#ff6a6a",
+      lineWidth: 2,
+    });
+    const targetLine = chart.addSeries(LineSeries, {
+      color: "#8aafff",
+      lineWidth: 2,
+    });
 
     priceLine.setData(toChartPoints(priceSeries));
     ema8Line.setData(toChartPoints(ema8Series));
     ema21Line.setData(toChartPoints(ema21Series));
+    supportLine.setData(buildLevelSeries(priceSeries, plan?.support));
+    resistanceLine.setData(buildLevelSeries(priceSeries, plan?.resistance));
+    stopLine.setData(buildLevelSeries(priceSeries, plan?.stopPrice));
+    targetLine.setData(buildLevelSeries(priceSeries, plan?.targetPrice));
     chart.timeScale().fitContent();
 
     const resizeObserver = new ResizeObserver((entries) => {
@@ -67,7 +98,7 @@ export default function Chart({ priceSeries, ema8Series, ema21Series }) {
       resizeObserver.disconnect();
       chart.remove();
     };
-  }, [priceSeries, ema8Series, ema21Series]);
+  }, [priceSeries, ema8Series, ema21Series, plan]);
 
   return <div className="chartSurface" ref={chartRef} />;
 }

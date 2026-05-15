@@ -1,0 +1,5181 @@
+{
+  "generatedAt": "2026-04-28T12:44:54.624890+00:00",
+  "sourceFile": "C:\\Users\\Darren\\OneDrive\\Softkom Solutions\\Pete\\Product List May26.xls",
+  "count": 398,
+  "items": [
+    {
+      "id": "brother-tn-1000-hl-1110-dcp1510-1610-1k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN 1000",
+      "name": "Brother",
+      "description": "HL-1110/DCP1510/1610 1k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-2355-hl-2365-2300-2340-2560-2-6k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN 2355",
+      "name": "Brother",
+      "description": "HL-2365/2300/2340/2560 2.6k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-2280-hl-2270-2250-2275-450-2-6k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-2280",
+      "name": "Brother",
+      "description": "HL 2270/2250/2275/450 2.6k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-2060-tn410-2010-2230-2130-410-420-1-2k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-2060",
+      "name": "Brother",
+      "description": "TN410/2010/2230/2130/410/420 1.2k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-3290-tn-3290-3185-650-580-8k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-3290",
+      "name": "Brother",
+      "description": "TN-3290/3185/650/580 8k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-2500-tn-2500xl-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-2500",
+      "name": "Brother",
+      "description": "TN-2500XL 3k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-750-3350-tn-3350-3370",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-750/3350",
+      "name": "Brother",
+      "description": "TN-3350/3370",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-3467-tn-880-3467-3470-3472-3478-12k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-3467",
+      "name": "Brother",
+      "description": "TN-880/3467/3470/3472/3478 12K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-3607-tn-3607-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-3607",
+      "name": "Brother",
+      "description": "TN-3607 3k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-3607xxl-tn-3607-11k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-3607XXL",
+      "name": "Brother",
+      "description": "TN-3607 11k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn-3617xl-l6410-5210-25k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN-3617XL",
+      "name": "Brother",
+      "description": "L6410/5210 25k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn261-265-bk-hl-l3140-3150-2-5k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN261/265 BK",
+      "name": "Brother",
+      "description": "HL-L3140/3150 2.5K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn261-265-c-hl-l3140-3150-1-4k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN261/265 C",
+      "name": "Brother",
+      "description": "HL-L3140/3150 1.4K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn261-265-m-hl-l3140-3150-1-4k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN261/265 M",
+      "name": "Brother",
+      "description": "HL-L3140/3150 1.4K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn261-265-y-hl-l3140-3150-1-4k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN261/265 Y",
+      "name": "Brother",
+      "description": "HL-L3140/3150 1.4K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279-bk-hl-l3220-1-5k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279 BK",
+      "name": "Brother",
+      "description": "HL-L3220 1.5K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279-c-hl-l3220-1-2k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279 C",
+      "name": "Brother",
+      "description": "HL-L3220 1.2K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279-m-hl-l3220-1-2k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279 M",
+      "name": "Brother",
+      "description": "HL-L3220 1.2K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279-y-hl-l3220-1-2k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279 Y",
+      "name": "Brother",
+      "description": "HL-L3220 1.2K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279xxl-bk-hl-l3220-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279XXL BK",
+      "name": "Brother",
+      "description": "HL-L3220 3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279xxl-c-hl-l3220-2-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279XXL C",
+      "name": "Brother",
+      "description": "HL-L3220 2.3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279xxl-m-hl-l3220-2-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279XXL M",
+      "name": "Brother",
+      "description": "HL-L3220 2.3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn279xxl-y-hl-l3220-2-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN279XXL Y",
+      "name": "Brother",
+      "description": "HL-L3220 2.3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn469-bk-tn-910-419-459-469-9k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN469 BK",
+      "name": "Brother",
+      "description": "TN-910/419/459/469 9K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn469-c-tn-910-419-459-469-9k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN469 C",
+      "name": "Brother",
+      "description": "TN-910/419/459/469 9K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn469-m-tn-910-419-459-469-9k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN469 M",
+      "name": "Brother",
+      "description": "TN-910/419/459/469 9K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn469-y-tn-910-419-459-469-9k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN469 Y",
+      "name": "Brother",
+      "description": "TN-910/419/459/469 9K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn348-369-bk-tn-315-325-328-348-369-4k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN348/369 BK",
+      "name": "Brother",
+      "description": "TN-315/325/328/348/369 4K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn348-369-c-tn-315-325-328-348-369-3-5k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN348/369 C",
+      "name": "Brother",
+      "description": "TN-315/325/328/348/369 3.5K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn348-369-m-tn-315-325-328-348-369-3-5k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN348/369 M",
+      "name": "Brother",
+      "description": "TN-315/325/328/348/369 3.5K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn348-369-y-tn-315-325-328-348-369-3-5k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN348/369 Y",
+      "name": "Brother",
+      "description": "TN-315/325/328/348/369 3.5K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn277-b-tn-217-277-257-297-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN277 B",
+      "name": "Brother",
+      "description": "TN-217/277/257/297 3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn277-c-tn-217-277-257-297-2-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN277 C",
+      "name": "Brother",
+      "description": "TN-217/277/257/297 2.3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn277-m-tn-217-277-257-297-2-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN277 M",
+      "name": "Brother",
+      "description": "TN-217/277/257/297 2.3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-tn277-y-tn-217-277-257-297-2-3k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "TN277 Y",
+      "name": "Brother",
+      "description": "TN-217/277/257/297 2.3K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-2125-tn-2125",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-2125",
+      "name": "Brother",
+      "description": "TN-2125",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-2500-tn-2500-15k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-2500",
+      "name": "Brother",
+      "description": "TN-2500 15k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-3607-dr-3607-45k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-3607",
+      "name": "Brother",
+      "description": "DR-3607 45k",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-3405-dr-820-3400-3420-3405-3425-30k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-3405",
+      "name": "Brother",
+      "description": "DR-820/3400/3420/3405/3425 30K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-3350-dr-720-3300-3325-3350-3355-30k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-3350",
+      "name": "Brother",
+      "description": "DR-720/3300/3325/3350/3355 30K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-2255-dr-420-450-2060-2080-2250-2255-2280-12k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-2255",
+      "name": "Brother",
+      "description": "DR-420/450/2060/2080/2250/2255/2280 12K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-2305-dr-630-2300-2325-2305-2355-12k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-2305",
+      "name": "Brother",
+      "description": "DR-630/2300/2325/2305/2355/12K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-dr-1000-dr-1110-1510-1810-2070-10k",
+      "brand": "Brother",
+      "family": "BROTHER Laserjet",
+      "sku": "DR-1000",
+      "name": "Brother",
+      "description": "DR-1110/1510/1810/2070 10K",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-lc-472xl-b-mfc-j2340w-j3540dw-j3940dw",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "LC-472XL B",
+      "name": "Brother",
+      "description": "MFC-J2340W/J3540DW/J3940DW",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-lc-472xl-c-mfc-j2340w-j3540dw-j3940dw",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "LC-472XL C",
+      "name": "Brother",
+      "description": "MFC-J2340W/J3540DW/J3940DW",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-lc-472xl-m-mfc-j2340w-j3540dw-j3940dw",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "LC-472XL M",
+      "name": "Brother",
+      "description": "MFC-J2340W/J3540DW/J3940DW",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-lc-472xl-y-mfc-j2340w-j3540dw-j3940dw",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "LC-472XL Y",
+      "name": "Brother",
+      "description": "MFC-J2340W/J3540DW/J3940DW",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-bt6000-b-dcp-t300-t500w-t700-t800-115ml",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "BT6000 B",
+      "name": "Brother",
+      "description": "DCP-T300/T500W/T700/T800 115ml",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-bt5000-c-dcp-t300-t500w-t700-t800-45ml",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "BT5000 C",
+      "name": "Brother",
+      "description": "DCP-T300/T500W/T700/T800 45ml",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-bt5000-m-dcp-t300-t500w-t700-t800-45ml",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "BT5000 M",
+      "name": "Brother",
+      "description": "DCP-T300/T500W/T700/T800 45ml",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-bt5000-y-dcp-t300-t500w-t700-t800-45ml",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "BT5000 Y",
+      "name": "Brother",
+      "description": "DCP-T300/T500W/T700/T800 45ml",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "brother-btd60-b-t310-t510w-pigment-115ml",
+      "brand": "Brother",
+      "family": "BROTHER Inkjet",
+      "sku": "BTD60 B",
+      "name": "Brother",
+      "description": "T310/T510W Pigment 115ml",
+      "sourceSheet": "Brother",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t101-103-105-110-l4150-2170-7180-140ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T101/103/105/110",
+      "name": "Epson",
+      "description": "L4150/2170/7180 140ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t101-103-105-110-l4150-2170-7180-70ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T101/103/105/110",
+      "name": "Epson",
+      "description": "L4150/2170/7180 70ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t101-103-105-110-l4150-2170-7180-70ml-2",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T101/103/105/110",
+      "name": "Epson",
+      "description": "L4150/2170/7180 70ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t101-103-105-110-l4150-2170-7180-70ml-3",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T101/103/105/110",
+      "name": "Epson",
+      "description": "L4150/2170/7180 70ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t6641-black-ecotank-l655-l605-l1455-100ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T6641 Black",
+      "name": "Epson",
+      "description": "EcoTank L655 / L605 / L1455 - 100ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t6642-cyan-ecotank-l655-l605-l1455-100ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T6642 Cyan",
+      "name": "Epson",
+      "description": "EcoTank L655 / L605 / L1455 - 100ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t6643-magenta-ecotank-l655-l605-l1455-100ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T6643 Magenta",
+      "name": "Epson",
+      "description": "EcoTank L655 / L605 / L1455 - 100ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t6644-yellow-ecotank-l655-l605-l1455-100ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T6644 Yellow",
+      "name": "Epson",
+      "description": "EcoTank L655 / L605 / L1455 - 100ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "epson-t110-m1100-1170-2140-3180-120ml",
+      "brand": "Epson",
+      "family": "EPSON Inkjet",
+      "sku": "T110",
+      "name": "Epson",
+      "description": "M1100/1170/2140/3180 120ml",
+      "sourceSheet": "Epson",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-fx-10-l100-120-2k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "FX-10",
+      "name": "Canon",
+      "description": "L100/120 2k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca716bk-cb540-lbp-5050-black-2-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA716BK/CB540",
+      "name": "Canon",
+      "description": "LBP-5050 Black 2.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca716c-lbp-5050-cyan-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA716C",
+      "name": "Canon",
+      "description": "LBP-5050 Cyan 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca716m-lbp-5050-magenta-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA716M",
+      "name": "Canon",
+      "description": "LBP-5050 Magenta 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca716y-lbp-5050-yellow-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA716Y",
+      "name": "Canon",
+      "description": "LBP-5050 Yellow 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca731bk-cb540-lbp-7100-7110-black-2-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA731BK/CB540",
+      "name": "Canon",
+      "description": "LBP-7100/7110 Black 2.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca731c-lbp-7100-7110-cyan-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA731C",
+      "name": "Canon",
+      "description": "LBP-7100/7110 Cyan 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca731m-lbp-7100-7110-magenta-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA731M",
+      "name": "Canon",
+      "description": "LBP-7100/7110 Magenta 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca731y-lbp-7100-7110-yellow-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA731Y",
+      "name": "Canon",
+      "description": "LBP-7100/7110 Yellow 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca045bk-lbp-612-613-632dw-black-1-7k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA045BK",
+      "name": "Canon",
+      "description": "LBP-612/613/632dw Black 1.7k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca045c-lbp-612-613-632dw-cyan-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA045C",
+      "name": "Canon",
+      "description": "LBP-612/613/632dw Cyan 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca045m-lbp-612-613-632dw-magenta-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA045M",
+      "name": "Canon",
+      "description": "LBP-612/613/632dw Magenta 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca045y-lbp-612-613-632dw-yellow-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA045Y",
+      "name": "Canon",
+      "description": "LBP-612/613/632dw Yellow 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca712-285a-lbp-3010-lbp3100-2k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA712/285A",
+      "name": "Canon",
+      "description": "LBP-3010/LBP3100 2k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca713-285a-lbp-3250-2k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA713/285A",
+      "name": "Canon",
+      "description": "LBP-3250 2k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca047-217a-canon-113-black-1-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA047/217A",
+      "name": "Canon",
+      "description": "Canon 113 Black 1.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca725-285a-lbp-6000-2k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA725/285A",
+      "name": "Canon",
+      "description": "LBP-6000 2k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca737-283x-mf-230-237-2-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA737/283X",
+      "name": "Canon",
+      "description": "MF 230/237 2.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca728-726-lbp-mf4410-4430-4450-4550-4570-4580-2k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA728/726",
+      "name": "Canon",
+      "description": "LBP-MF4410/4430/4450/4550/4570/4580 2k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca056l-canon-lbp320-5-1k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA056L",
+      "name": "Canon",
+      "description": "Canon LBP320 5.1k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca056-canon-lbp320-10k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA056",
+      "name": "Canon",
+      "description": "Canon LBP320 10k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca056h-canon-lbp320-20k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA056H",
+      "name": "Canon",
+      "description": "Canon LBP320 20k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca057-lbp220-228-226-223dw-mf449-446-445-440-3-1k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA057",
+      "name": "Canon",
+      "description": "LBP220/228/226/223dw/MF449/446/445/440 3.1k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca057h-lbp220-228-226-223dw-mf449-446-445-440-10k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA057H",
+      "name": "Canon",
+      "description": "LBP220/228/226/223dw/MF449/446/445/440 10k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca070-lbp122-120dw-mf270-272-275dw-3k-wiyhout-chip",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA070",
+      "name": "Canon",
+      "description": "LBP122/120DW/MF270/272/275DW 3k Wiyhout Chip",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca070h-lbp122-120dw-mf270-272-275dw-9k-with-chip",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA070H",
+      "name": "Canon",
+      "description": "LBP122/120DW/MF270/272/275DW 9k With Chip",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca071-lbp122-120dw-mf270-272-275dw-1-2k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA071",
+      "name": "Canon",
+      "description": "LBP122/120DW/MF270/272/275DW 1.2k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca071h-lbp122-120dw-mf270-272-275dw-2-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA071H",
+      "name": "Canon",
+      "description": "LBP122/120DW/MF270/272/275DW 2.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca073xl-b-25k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA073XL B",
+      "name": "Canon",
+      "description": "25k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t03-525i-615i-51-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T03",
+      "name": "Canon",
+      "description": "525i/615i 51.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t06-ir1643i-17k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T06",
+      "name": "Canon",
+      "description": "IR1643i 17k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t08-i-sensys-x1238-10k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T08",
+      "name": "Canon",
+      "description": "I-Sensys X1238 10k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t09-b-lbp-1127-7-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T09 B",
+      "name": "Canon",
+      "description": "LBP 1127 7.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t09-c-lbp-1127-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T09 C",
+      "name": "Canon",
+      "description": "LBP 1127 6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t09-m-lbp-1127-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T09 M",
+      "name": "Canon",
+      "description": "LBP 1127 6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t09-y-lbp-1127-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T09 Y",
+      "name": "Canon",
+      "description": "LBP 1127 6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10-b-xmf1538-c1533-5-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10 B",
+      "name": "Canon",
+      "description": "XMF1538/C1533 5.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10-c-xmf1538-c1533-4-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10 C",
+      "name": "Canon",
+      "description": "XMF1538/C1533 4.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10-m-xmf1538-c1533-4-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10 M",
+      "name": "Canon",
+      "description": "XMF1538/C1533 4.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10-y-xmf1538-c1533-4-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10 Y",
+      "name": "Canon",
+      "description": "XMF1538/C1533 4.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10h-b-xmf1538-c1533-13k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10H B",
+      "name": "Canon",
+      "description": "XMF1538/C1533 13k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10h-c-xmf1538-c1533-10k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10H C",
+      "name": "Canon",
+      "description": "XMF1538/C1533 10k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10-m-xmf1538-c1533-10k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10 M",
+      "name": "Canon",
+      "description": "XMF1538/C1533 10k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t10h-y-xmf1538-c1533-10k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T10H Y",
+      "name": "Canon",
+      "description": "XMF1538/C1533 10k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t13h-b-x-144010-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T13H B",
+      "name": "Canon",
+      "description": "X 144010.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-t15-b-i-sensys-x1861-42k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "T15 B",
+      "name": "Canon",
+      "description": "I-Sensys X1861 42k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca055-b-crg-055-2-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA055 B",
+      "name": "Canon",
+      "description": "CRG-055 2.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca055-c-crg-055-2-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA055 C",
+      "name": "Canon",
+      "description": "CRG-055 2.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca055-m-crg-055-2-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA055 M",
+      "name": "Canon",
+      "description": "CRG-055 2.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca055-y-crg-055-2-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA055 Y",
+      "name": "Canon",
+      "description": "CRG-055 2.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca064h-b-crg-064h-b-13-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA064H B",
+      "name": "Canon",
+      "description": "CRG-064H B 13.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca064h-c-crg-064h-c-10-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA064H C",
+      "name": "Canon",
+      "description": "CRG-064H C 10.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca064h-m-crg-064h-m-10-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA064H M",
+      "name": "Canon",
+      "description": "CRG-064H M 10.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca064h-y-crg-064h-y-10-4k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA064H Y",
+      "name": "Canon",
+      "description": "CRG-064H Y 10.4k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067-b-crg-067-1-35k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067 B",
+      "name": "Canon",
+      "description": "CRG-067 1.35k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067-c-crg-067-1-25k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067 C",
+      "name": "Canon",
+      "description": "CRG-067 1.25k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067-m-crg-055-1-25k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067 M",
+      "name": "Canon",
+      "description": "CRG-055 1.25k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067-y-crg-055-1-25k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067 Y",
+      "name": "Canon",
+      "description": "CRG-055 1.25k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067h-b-crg-067-3-15k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067H B",
+      "name": "Canon",
+      "description": "CRG-067 3.15k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067h-c-crg-067-2-45k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067H C",
+      "name": "Canon",
+      "description": "CRG-067 2.45k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067h-m-crg-055-2-45k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067H M",
+      "name": "Canon",
+      "description": "CRG-055 2.45k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca067h-y-crg-055-2-45k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA067H Y",
+      "name": "Canon",
+      "description": "CRG-055 2.45k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069-b-crg-069-2-1k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069 B",
+      "name": "Canon",
+      "description": "CRG-069 2.1k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069-c-crg-069-1-9k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069 C",
+      "name": "Canon",
+      "description": "CRG-069 1.9k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069-m-crg-069-1-9k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069 M",
+      "name": "Canon",
+      "description": "CRG-069 1.9k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069-y-crg-069-1-9k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069 Y",
+      "name": "Canon",
+      "description": "CRG-069 1.9k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069h-b-crg-069-7-6k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069H B",
+      "name": "Canon",
+      "description": "CRG-069 7.6k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069h-c-crg-069-5-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069H C",
+      "name": "Canon",
+      "description": "CRG-069 5.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069h-m-crg-069-5-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069H M",
+      "name": "Canon",
+      "description": "CRG-069 5.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca069h-y-crg-069-5-5k",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA069H Y",
+      "name": "Canon",
+      "description": "CRG-069 5.5k",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca075b-crg-075-b",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA075B",
+      "name": "Canon",
+      "description": "CRG-075 B",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca075b-crg-075-b-2",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA075B",
+      "name": "Canon",
+      "description": "CRG-075 B",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca075b-crg-075-b-3",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA075B",
+      "name": "Canon",
+      "description": "CRG-075 B",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-ca075b-crg-075-b-4",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "CA075B",
+      "name": "Canon",
+      "description": "CRG-075 B",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-exv-49-b-exv-49-b",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "EXV-49 B",
+      "name": "Canon",
+      "description": "EXV-49 B",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-exv-49-c-exv-49-c",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "EXV-49 C",
+      "name": "Canon",
+      "description": "EXV-49 C",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-exv-49-m-exv-49-m",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "EXV-49 M",
+      "name": "Canon",
+      "description": "EXV-49 M",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-exv-49-y-exv-49-y",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "EXV-49 Y",
+      "name": "Canon",
+      "description": "EXV-49 Y",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-exv-39-gpr39-exv39-gpr39-npg55",
+      "brand": "Canon",
+      "family": "CANON Laserjet",
+      "sku": "EXV-39/GPR39",
+      "name": "Canon",
+      "description": "EXV39/GPR39/NPG55",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-2400-xl-black-mb-5340-4140-black",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-2400 XL Black",
+      "name": "Canon",
+      "description": "MB 5340/4140 Black",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-2400-xl-cyan-mb-5340-4140-cyan",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-2400 XL Cyan",
+      "name": "Canon",
+      "description": "MB 5340/4140 Cyan",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-2400-xl-magenta-mb-5340-4140-magenta",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-2400 XL Magenta",
+      "name": "Canon",
+      "description": "MB 5340/4140 Magenta",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-2400-xl-yellow-mb-5340-4140-yellow",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-2400 XL Yellow",
+      "name": "Canon",
+      "description": "MB 5340/4140 Yellow",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-1400-xl-black-mb-2040-mb2340-black-with-chip",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-1400 XL Black",
+      "name": "Canon",
+      "description": "MB 2040/MB2340 Black with chip",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-1400-xl-cyan-mb2040-mb2340-cyan-with-chip",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-1400 XL Cyan",
+      "name": "Canon",
+      "description": "MB2040/MB2340 Cyan with chip",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-1400-xl-magenta-mb2040-mb2340-magenta-with-chip",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-1400 XL Magenta",
+      "name": "Canon",
+      "description": "MB2040/MB2340 Magenta with chip",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-pgi-1400-xl-yellow-mb2040-mb2340-yellow-with-chip",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "PGI-1400 XL Yellow",
+      "name": "Canon",
+      "description": "MB2040/MB2340 Yellow with chip",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-490xl-gi1400-1410-4411-black-135ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-490XL",
+      "name": "Canon",
+      "description": "GI1400/1410/4411 Black 135ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-490-gi1400-1410-4411-cyan-70ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-490",
+      "name": "Canon",
+      "description": "GI1400/1410/4411 Cyan 70ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-490-gi1400-14104411-magenta-70ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-490",
+      "name": "Canon",
+      "description": "GI1400/14104411 Magenta 70ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-490-gi1400-1410-4411-yellow-70ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-490",
+      "name": "Canon",
+      "description": "GI1400/1410/4411 Yellow 70ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-41xl-1420-2420-3420-3460-black-140ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-41XL",
+      "name": "Canon",
+      "description": "1420/2420/3420/3460 Black 140ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-41xl-1420-2420-3420-3460-cyan-70ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-41XL",
+      "name": "Canon",
+      "description": "1420/2420/3420/3460 Cyan 70ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-41xl-1420-2420-3420-3460-magenta-70ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-41XL",
+      "name": "Canon",
+      "description": "1420/2420/3420/3460 Magenta 70ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-41xl-1420-2420-3420-3460-yellow-70ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-41XL",
+      "name": "Canon",
+      "description": "1420/2420/3420/3460 Yellow 70ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-46-black-gx7040-6040-pigment-175ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-46 Black",
+      "name": "Canon",
+      "description": "GX7040.6040 Pigment 175ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-46-cyan-gx7040-6040-pigment-140ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-46 Cyan",
+      "name": "Canon",
+      "description": "GX7040.6040 Pigment 140ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-46-magenta-gx7040-6040-pigment-140ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-46 Magenta",
+      "name": "Canon",
+      "description": "GX7040.6040 Pigment 140ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "canon-gi-46-yellow-gx7040-6040-pigment-140ml",
+      "brand": "Canon",
+      "family": "CANON Inkjet",
+      "sku": "GI-46 Yellow",
+      "name": "Canon",
+      "description": "GX7040.6040 Pigment 140ml",
+      "sourceSheet": "Canon",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-q2612a-hewlett-packard-laserjet-1010-1012-1015-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "Q2612A",
+      "name": "HP",
+      "description": "Hewlett-Packard LaserJet 1010, 1012, 1015 2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-q7553a-49a-laserjet-p2015-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "Q7553A/49A",
+      "name": "HP",
+      "description": "LaserJet P2015 3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-q7553x-49x-laserjet-p2015-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "Q7553X/49X",
+      "name": "HP",
+      "description": "LaserJet P2015 7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce390-364a-laserjet-m4555-m602-4015-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE390/364A",
+      "name": "HP",
+      "description": "LaserJet M4555/M602/4015 10k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce255a-laserjet-p3015-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE255A",
+      "name": "HP",
+      "description": "Laserjet P3015 6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce255x-laserjet-p3015-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE255X",
+      "name": "HP",
+      "description": "Laserjet P3015 6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce505-280a-laserjet-p2035-2055-2-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE505/280A",
+      "name": "HP",
+      "description": "LaserJet P2035/2055 2.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce505-280x-laserjet-p2055-6-4k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE505/280X",
+      "name": "HP",
+      "description": "LaserJet P2055 6.4k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce285a-35a-36a-laserjet-p1102-725-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE285A/35A/36A",
+      "name": "HP",
+      "description": "LaserJet P1102/725 2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce278a-laserjet-p1566-1606-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE278A",
+      "name": "HP",
+      "description": "LaserJet P1566/1606 2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf283a-laserjet-m127-1-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF283A",
+      "name": "HP",
+      "description": "LaserJet M127 1.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf283x-laserjet-83x-high-capacity-2-4k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF283X",
+      "name": "HP",
+      "description": "LaserJet 83X High Capacity 2.4k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf281a-laserjet-81a-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF281A",
+      "name": "HP",
+      "description": "LaserJet 81A 10k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf281x-crg039h-laserjet-81a-039h-25k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF281X/CRG039H",
+      "name": "HP",
+      "description": "LaserJet 81A/039H 25k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-q7551a-laserjet-3005-6-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "Q7551A",
+      "name": "HP",
+      "description": "LaserJet 3005 6.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-q7570a-laserjet-5200-5025-15k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "Q7570A",
+      "name": "HP",
+      "description": "LaserJet 5200/5025 15k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf226a-laserjet-26a-3-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF226A",
+      "name": "HP",
+      "description": "Laserjet 26A 3.1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf226x-laserjet-226x-9-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF226X",
+      "name": "HP",
+      "description": "Laserjet 226X 9.2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf287x-laserjet-8-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF287X",
+      "name": "HP",
+      "description": "Laserjet 8.1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf217a-047-laserjet-17a-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF217A/047",
+      "name": "HP",
+      "description": "Laserjet 17A 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf219a-laserjet-19a-drum-unit-12k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF219A",
+      "name": "HP",
+      "description": "Laserjet 19A Drum Unit 12k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf230x-laserjet-30x-4-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF230X",
+      "name": "HP",
+      "description": "Laserjet 30X 4.1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-hp103a-w1103a-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "HP103A",
+      "name": "HP",
+      "description": "W1103A 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1105a-135a-mfp137fnw-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1105A",
+      "name": "HP",
+      "description": "135a/MFP137fnw 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1106a-laserjet-106a-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1106A",
+      "name": "HP",
+      "description": "Laserjet 106A 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1106x-laserjet-106x-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1106X",
+      "name": "HP",
+      "description": "Laserjet 106X 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf259a-laserjet-59a-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF259A",
+      "name": "HP",
+      "description": "Laserjet 59A 3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf259x-laserjet-59x-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF259X",
+      "name": "HP",
+      "description": "Laserjet 59X 10k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-c151a-laserjet-pro-4003dw-4103fdw-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "C151A",
+      "name": "HP",
+      "description": "Laserjet Pro 4003dw/4103fdw 3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-c151x-laserjet-pro-4003dw-4103fdw-9-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "C151X",
+      "name": "HP",
+      "description": "Laserjet Pro 4003dw/4103fdw 9.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cz192a-laserjet-pro-400-m425dn-435bw-12k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CZ192A",
+      "name": "HP",
+      "description": "Laserjet Pro 400/M425dn/435bw 12k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w9004mc-e60155dn-25k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W9004MC",
+      "name": "HP",
+      "description": "E60155dn 25k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w9024mc-e40040dn-mfp-e425of",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W9024MC",
+      "name": "HP",
+      "description": "E40040dn/MFP E425of",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cbt136a-w1360a-laserjet-mfp-m234dw-m209-1-15k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CBT136A W1360A",
+      "name": "HP",
+      "description": "Laserjet MFP M234dw/M209 1.15k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cbt136x-w1360x-laserjet-mfp-m234dw-m209-2-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CBT136X W1360X",
+      "name": "HP",
+      "description": "Laserjet MFP M234dw/M209 2.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cb540-716bk-colour-laserjet-cp1215-1515-black-2-4k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CB540/716BK",
+      "name": "HP",
+      "description": "Colour LaserJet CP1215/1515 Black 2.4k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cb541-716c-colour-laserjet-cp1215-1515-cyan-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CB541/716C",
+      "name": "HP",
+      "description": "Colour LaserJet CP1215/1515 Cyan 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cb542-716y-colour-laserjet-cp1215-1515-yellow-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CB542/716Y",
+      "name": "HP",
+      "description": "Colour LaserJet CP1215/1515 Yellow 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cb543-716m-colour-laserjet-cp1215-1515-magenta-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CB543/716M",
+      "name": "HP",
+      "description": "Colour LaserJet CP1215/1515 Magenta 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce320a-colour-laserjet-cp1525-cm1415-black-2-4k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE320A",
+      "name": "HP",
+      "description": "Colour Laserjet CP1525/CM1415 Black 2.4k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce321a-colour-laserjet-cp1525-cm1415-cyan-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE321A",
+      "name": "HP",
+      "description": "Colour Laserjet CP1525/CM1415 Cyan 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce322a-colour-laserjet-cp1525-cm1415-yellow-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE322A",
+      "name": "HP",
+      "description": "Colour Laserjet CP1525/CM1415 Yellow 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce323a-colour-laserjet-cp1525-cm1415-magenta-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE323A",
+      "name": "HP",
+      "description": "Colour Laserjet CP1525/CM1415 Magenta 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf210a-colour-laserjet-pro-200-black-2-4k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF210A",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Black 2.4k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf211a-colour-laserjet-pro-200-cyan-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF211A",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Cyan 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf212a-colour-laserjet-pro-200-yellow-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF212A",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Yellow 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf213a-colour-laserjet-pro-200-magenta-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF213A",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Magenta 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf210x-colour-laserjet-pro-200-black-3-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF210X",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Black 3.2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf211x-colour-laserjet-pro-200-cyan-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF211X",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Cyan 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf212x-colour-laserjet-pro-200-yellow-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF212X",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Yellow 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf213x-colour-laserjet-pro-200-magenta-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF213X",
+      "name": "HP",
+      "description": "Colour LaserJet Pro 200 Magenta 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce310a-729-colour-laserjet-cp1025-mf100-black-1-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE310A/729",
+      "name": "HP",
+      "description": "Colour LaserJet CP1025/MF100 Black 1.3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce311a-colour-laserjet-cp1025-mf100-cyan-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE311A",
+      "name": "HP",
+      "description": "Colour LaserJet CP1025/MF100 Cyan 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce312a-colour-laserjet-cp1025-mf100-yellow-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE312A",
+      "name": "HP",
+      "description": "Colour LaserJet CP1025/MF100 Yellow 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-ce313a-colour-laserjet-cp1025-mf100-magenta-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CE313A",
+      "name": "HP",
+      "description": "Colour LaserJet CP1025/MF100 Magenta 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf410a-colour-laserjet-m377-477-black-2-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF410A",
+      "name": "HP",
+      "description": "Colour Laserjet M377/477 Black 2.3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf411a-colour-laserjet-m377-477-cyan-2-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF411A",
+      "name": "HP",
+      "description": "Colour Laserjet M377/477 Cyan 2.3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf412a-colour-laserjet-m377-477-yellow-2-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF412A",
+      "name": "HP",
+      "description": "Colour Laserjet M377/477 Yellow 2.3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf413a-colour-laserjet-m377-477-magenta-2-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF413A",
+      "name": "HP",
+      "description": "Colour Laserjet M377/477 Magenta 2.3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf540a-colour-laserjet-203a-black-1-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF540A",
+      "name": "HP",
+      "description": "Colour Laserjet 203A Black 1.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf541a-colour-laserjet-203a-cyan-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF541A",
+      "name": "HP",
+      "description": "Colour Laserjet 203A Cyan 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf542a-colour-laserjet-203a-yellow-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF542A",
+      "name": "HP",
+      "description": "Colour Laserjet 203A Yellow 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf543a-colour-laserjet-203a-magenta-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF543A",
+      "name": "HP",
+      "description": "Colour Laserjet 203A Magenta 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf230a-w2300a-b-colour-laserjet-4203dn-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF230A (W2300A) B",
+      "name": "HP",
+      "description": "Colour Laserjet 4203dn 2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf230a-w2301a-c-colour-laserjet-4203dn-1-8k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF230A (W2301A) C",
+      "name": "HP",
+      "description": "Colour Laserjet 4203dn 1.8k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf230a-w2302a-y-colour-laserjet-4203dn-1-8k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF230A (W2302A) Y",
+      "name": "HP",
+      "description": "Colour Laserjet 4203dn 1.8k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf230a-w2303a-m-colour-laserjet-4203dn-1-8k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF230A (W2303A) M",
+      "name": "HP",
+      "description": "Colour Laserjet 4203dn 1.8k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-117a-w2070a-bk-colour-laserjet-178-179nw-150a-nw-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "117A (W2070A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet 178/179nw/150a/nw 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-117a-w2071a-c-colour-laserjet-178-179nw-150a-nw-0-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "117A (W2071A)C",
+      "name": "HP",
+      "description": "Colour Laserjet 178/179nw/150a/nw 0.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-117a-w2072a-y-colour-laserjet-178-179nw-150a-nw-0-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "117A (W2072A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet 178/179nw/150a/nw 0.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-117a-w2073a-m-colour-laserjet-178-179nw-150a-nw-0-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "117A (W2073A)M",
+      "name": "HP",
+      "description": "Colour Laserjet 178/179nw/150a/nw 0.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1120a-16k-drum-unit-hp150-178-179",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1120A 16K",
+      "name": "HP",
+      "description": "Drum unit HP150/178/179",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415a-w2030a-bk-colour-laserjet-m454-479-455-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415A (W2030A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415a-w2031a-c-colour-laserjet-m454-479-455-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415A (W2031A)C",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415a-w2032a-y-colour-laserjet-m454-479-455-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415A (W2032A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415a-w2033a-m-colour-laserjet-m454-479-455-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415A (W2033A)M",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415x-w2030a-bk-colour-laserjet-m454-479-455-7-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415X (W2030A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 7.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415x-w2031a-c-colour-laserjet-m454-479-455-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415X (W2031A)C",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415x-w2032a-y-colour-laserjet-m454-479-455-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415X (W2032A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-415x-w2033a-m-colour-laserjet-m454-479-455-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "415X (W2033A)M",
+      "name": "HP",
+      "description": "Colour Laserjet M454/479/455 6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207a-w2210a-bk-colour-laserjet-m255-m282-283-1-7k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207A (W2210A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 1.7k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207a-w2211a-c-colour-laserjet-m255-m282-283-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207A (W2211A)C",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207a-w2212a-y-colour-laserjet-m255-m282-283-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207A (W2212A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207a-w2213a-m-colour-laserjet-m255-m282-283-1-6k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207A (W2213A)M",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 1.6k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207x-w2210a-bk-colour-laserjet-m255-m282-283-3-15k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207X (W2210A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 3.15k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207x-w2211a-c-colour-laserjet-m255-m282-283-2-45k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207X (W2211A)C",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 2.45k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207x-w2212a-y-colour-laserjet-m255-m282-283-2-45k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207X (W2212A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 2.45k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-207x-w2213a-m-colour-laserjet-m255-m282-283-2-45k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "207X (W2213A)M",
+      "name": "HP",
+      "description": "Colour Laserjet M255/M282/283 2.45k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-216a-w2410a-bk-colour-laserjet-m155-182-183fw-1-05k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "216A (W2410A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet M155/182/183fw 1.05k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-216a-w2411a-c-colour-laserjet-m155-182-183fw-0-85k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "216A (W2411A)C",
+      "name": "HP",
+      "description": "Colour Laserjet M155/182/183fw 0.85k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-216a-w2412a-m-colour-laserjet-m155-182-183fw-0-85k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "216A (W2412A)M",
+      "name": "HP",
+      "description": "Colour Laserjet M155/182/183fw 0.85k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-216a-w2413a-y-colour-laserjet-m155-182-183fw-0-85k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "216A (W2413A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet M155/182/183fw 0.85k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-212a-w2120a-bk-colour-laserjet-m554-555-578-5-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "212A (W2120A)BK",
+      "name": "HP",
+      "description": "Colour Laserjet M554/555/578 5.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-212a-w2121a-c-colour-laserjet-m554-555-578-4-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "212A (W2121A)C",
+      "name": "HP",
+      "description": "Colour Laserjet M554/555/578 4.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-212a-w2122a-y-colour-laserjet-m554-555-578-4-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "212A (W2122A)Y",
+      "name": "HP",
+      "description": "Colour Laserjet M554/555/578 4.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-212a-w2123a-m-colour-laserjet-m554-555-578-4-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "212A (W2123A)M",
+      "name": "HP",
+      "description": "Colour Laserjet M554/555/578 4.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222a-w2220a-bk-3203-3288mf-1-3k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222A (W2220A)BK",
+      "name": "HP",
+      "description": "3203/3288MF 1.3k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222a-w2221a-c-3203-3288mf-1-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222A (W2221A)C",
+      "name": "HP",
+      "description": "3203/3288MF 1.2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222a-w2222a-y-3203-3288mf-1-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222A (W2222A)Y",
+      "name": "HP",
+      "description": "3203/3288MF 1.2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222a-w2223a-m-3203-3288mf-1-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222A (W2223A)M",
+      "name": "HP",
+      "description": "3203/3288MF 1.2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222x-w2220x-bk-3203-3288mf-3-2k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222X (W2220X)BK",
+      "name": "HP",
+      "description": "3203/3288MF 3.2k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222x-w2221x-c-3203-3288mf-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222X (W2221X)C",
+      "name": "HP",
+      "description": "3203/3288MF 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222x-w2222x-y-3203-3288mf-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222X (W2222X)Y",
+      "name": "HP",
+      "description": "3203/3288MF 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-222x-w2223x-m-3203-3288mf-2-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "222X (W2223X)M",
+      "name": "HP",
+      "description": "3203/3288MF 2.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf360x-crg40h-bk-12-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF360X/CRG40H BK",
+      "name": "HP",
+      "description": "12.5K",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf360x-crg40h-c-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF360X/CRG40H C",
+      "name": "HP",
+      "description": "10K",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf360x-crg40h-m-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF360X/ CRG40H M",
+      "name": "HP",
+      "description": "10K",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf360x-crg40h-y-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF360X/CRG40H Y",
+      "name": "HP",
+      "description": "10K",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-659a-w2010a-mfp-m776",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "659A W2010A",
+      "name": "HP",
+      "description": "MFP M776",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-659a-w2011a-mfp-m776",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "659A W2011A",
+      "name": "HP",
+      "description": "MFP M776",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-659a-w2012a-mfp-m776",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "659A W2012A",
+      "name": "HP",
+      "description": "MFP M776",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-659a-w2013a-mfp-m776",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "659A W2013A",
+      "name": "HP",
+      "description": "MFP M776",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w9050mc-e876",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W9050MC",
+      "name": "HP",
+      "description": "E876",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w9051mc-e876",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W9051MC",
+      "name": "HP",
+      "description": "E876",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w9052mc-e876",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W9052MC",
+      "name": "HP",
+      "description": "E876",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w9053mc-e876",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W9053MC",
+      "name": "HP",
+      "description": "E876",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf320a-b-m651-m680-11-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF320A B",
+      "name": "HP",
+      "description": "M651/M680 11.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf321a-c-m651-m680-16-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF321A C",
+      "name": "HP",
+      "description": "M651/M680 16.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf322a-y-m651-m680-16-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF322A Y",
+      "name": "HP",
+      "description": "M651/M680 16.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf323a-m-m651-m680-16-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF323A M",
+      "name": "HP",
+      "description": "M651/M680 16.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf450a-b-m652-m653-m681-12-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF450A B",
+      "name": "HP",
+      "description": "M652/M653/M681 12.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf451a-c-m652-m653-m681-10-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF451A C",
+      "name": "HP",
+      "description": "M652/M653/M681 10.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf452a-y-m652-m653-m681-10-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF452A Y",
+      "name": "HP",
+      "description": "M652/M653/M681 10.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf453a-m-m652-m653-m681-10-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF453A M",
+      "name": "HP",
+      "description": "M652/M653/M681 10.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1450a-145a-3003-1-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1450A 145A",
+      "name": "HP",
+      "description": "3003 1.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1500a-150a-m111-141-1k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1500A 150A",
+      "name": "HP",
+      "description": "M111/141 1k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1470a-m635-634-10-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1470A",
+      "name": "HP",
+      "description": "M635/634 10.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1470x-m635-634-25k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1470X",
+      "name": "HP",
+      "description": "M635/634 25k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf232a-051-drum-m203-277-23k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF232A/051",
+      "name": "HP",
+      "description": "Drum M203/277 23k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf256a-laser-jet-m436nda-m433a-7-4k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF256A",
+      "name": "HP",
+      "description": "Laser Jet M436nda/M433A 7.4k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1331a-laser-408dn-mfp432fdn-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1331A",
+      "name": "HP",
+      "description": "Laser 408dn/MFP432fdn 5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-w1331x-laser-408dn-mfp432fdn-15k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "W1331X",
+      "name": "HP",
+      "description": "Laser 408dn/MFP432fdn 15k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf214x-laser-jet-700-m712dn-m712xh-17-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF214X",
+      "name": "HP",
+      "description": "Laser Jet 700 M712dn/M712xh 17.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf289a-laser-m507n-m507-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF289A",
+      "name": "HP",
+      "description": "Laser M507n/M507 5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf289x-laser-m507n-m507-10k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF289X",
+      "name": "HP",
+      "description": "Laser M507n/M507 10k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-cf325x-laser-jet-800-m806dn-34-5k",
+      "brand": "HP",
+      "family": "HP Laserjet",
+      "sku": "CF325X",
+      "name": "HP",
+      "description": "Laser Jet 800 M806dn 34.5k",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-gt53xl-b-500-508-515-617-140ml",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "GT53XL B",
+      "name": "HP",
+      "description": "500/508/515/617 140ml",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-gt52-c-500-508-515-617-70ml",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "GT52 C",
+      "name": "HP",
+      "description": "500/508/515/617 70ml",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-gt52-m-500-508-515-617-70ml",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "GT52 M",
+      "name": "HP",
+      "description": "500/508/515/617 70ml",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-gt52-y-500-508-515-617-70ml",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "GT52 Y",
+      "name": "HP",
+      "description": "500/508/515/617 70ml",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-hp728-black-desighn-jet-t730-t830-300ml-pigment",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "HP728 Black",
+      "name": "HP",
+      "description": "Desighn Jet T730/T830 300ml Pigment",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-hp728-cyan-desighn-jet-t730-t830-300ml-pigment",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "HP728 Cyan",
+      "name": "HP",
+      "description": "Desighn Jet T730/T830 300ml Pigment",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-hp728-magenta-desighn-jet-t730-t830-300ml-pigment",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "HP728 Magenta",
+      "name": "HP",
+      "description": "Desighn Jet T730/T830 300ml Pigment",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "hp-hp728-yellow-desighn-jet-t730-t830-300ml-pigment",
+      "brand": "HP",
+      "family": "HP Inkjet",
+      "sku": "HP728 Yellow",
+      "name": "HP",
+      "description": "Desighn Jet T730/T830 300ml Pigment",
+      "sourceSheet": "HP",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "olivetti-mf-3023b-tk5270-b1282-bk",
+      "brand": "Olivetti",
+      "family": "Olivetti",
+      "sku": "MF 3023B TK5270",
+      "name": "Olivetti",
+      "description": "B1282 BK",
+      "sourceSheet": "Olivetti",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "olivetti-mf-3023c-tk5270-b1283-c",
+      "brand": "Olivetti",
+      "family": "Olivetti",
+      "sku": "MF 3023C TK5270",
+      "name": "Olivetti",
+      "description": "B1283 C",
+      "sourceSheet": "Olivetti",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "olivetti-mf-3023m-tk5270-b1284-m",
+      "brand": "Olivetti",
+      "family": "Olivetti",
+      "sku": "MF 3023M TK5270",
+      "name": "Olivetti",
+      "description": "B1284 M",
+      "sourceSheet": "Olivetti",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "olivetti-mf-3023y-tk5270-b1285-y",
+      "brand": "Olivetti",
+      "family": "Olivetti",
+      "sku": "MF 3023Y TK5270",
+      "name": "Olivetti",
+      "description": "B1285 Y",
+      "sourceSheet": "Olivetti",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-scx-4521-scx-4521-1610-2010-3k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "SCX-4521",
+      "name": "Samsung",
+      "description": "SCX-4521/1610/2010 3k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-mlt-d101s-ml-2160-1-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "MLT-D101S",
+      "name": "Samsung",
+      "description": "ML-2160 1.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-mlt-d104s-1-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "MLT-D104S",
+      "name": "Samsung",
+      "description": "1.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-mlt-d105l-ml1915-1910-scx4600-4623-2-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "MLT-D105L",
+      "name": "Samsung",
+      "description": "ML1915/1910-SCX4600/4623 2.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-mlt-d111l-ml-2020-20701-8k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "MLT-D111L",
+      "name": "Samsung",
+      "description": "ML 2020/20701.8k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-mlt-d116l-m2825-2675-3k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "MLT-D116L",
+      "name": "Samsung",
+      "description": "M2825/2675 3k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-r116-drum-unit-r116-drum-unit-9k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "R116 Drum Unit",
+      "name": "Samsung",
+      "description": "R116 Drum Unit 9k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-samlt-d203l-m3820-3870-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "SAMLT-D203L",
+      "name": "Samsung",
+      "description": "M3820/3870 5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-samlt-d203u-m3820-3870-15k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "SAMLT-D203U",
+      "name": "Samsung",
+      "description": "M3820/3870 15k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-samlt-d205l-ml-3310-3710nd-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "SAMLT-D205L",
+      "name": "Samsung",
+      "description": "ML-3310/3710ND 5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-sams-358s-m4370",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "SAMS 358S",
+      "name": "Samsung",
+      "description": "M4370",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-sams-358s-drum-m4370-100k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "SAMS 358S Drum",
+      "name": "Samsung",
+      "description": "M4370 100k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-406-black-samsung-clp-365-366-1-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-406 Black",
+      "name": "Samsung",
+      "description": "Samsung CLP-365/366 1.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-406-cyan-samsung-clp-365-366-1k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-406 Cyan",
+      "name": "Samsung",
+      "description": "Samsung CLP-365/366 1k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-406-magenta-samsung-clp-365-366-1k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-406 Magenta",
+      "name": "Samsung",
+      "description": "Samsung CLP-365/366 1k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-406-yellow-samsung-clp-365-366-1k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-406 Yellow",
+      "name": "Samsung",
+      "description": "Samsung CLP-365/366 1k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-504-black-samsung-clp-415-clx-4195-2-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-504 Black",
+      "name": "Samsung",
+      "description": "Samsung CLP-415/CLX-4195 2.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-504-cyan-samsung-clp-415-clx-4195-1-8k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-504 Cyan",
+      "name": "Samsung",
+      "description": "Samsung CLP-415/CLX-4195 1.8k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-504-magenta-samsung-clp-415-clx-4195-1-8k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-504 Magenta",
+      "name": "Samsung",
+      "description": "Samsung CLP-415/CLX-4195 1.8k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-504-yellow-samsung-clp-415-clx-4195-1-8k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-504 Yellow",
+      "name": "Samsung",
+      "description": "Samsung CLP-415/CLX-4195 1.8k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-506l-black-samsung-clp-680-clx-6260-6k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-506L Black",
+      "name": "Samsung",
+      "description": "Samsung CLP-680/CLX-6260 6k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-506l-cyan-samsung-clp-680-clx-6260-3-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-506L Cyan",
+      "name": "Samsung",
+      "description": "Samsung CLP-680/CLX-6260 3.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-506l-magenta-samsung-clp-680-clx-6260-3-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-506L Magenta",
+      "name": "Samsung",
+      "description": "Samsung CLP-680/CLX-6260 3.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "samsung-clt-506l-yellow-samsung-clp-680-clx-6260-3-5k",
+      "brand": "Samsung",
+      "family": "SAMSUNG Laserjet",
+      "sku": "CLT-506L Yellow",
+      "name": "Samsung",
+      "description": "Samsung CLP-680/CLX-6260 3.5k",
+      "sourceSheet": "Samsung",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-pc110h-2-3k-p2200-2500-m6500-6600-black",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "PC110H 2.3k",
+      "name": "Pantum",
+      "description": "P2200/2500/M6500/6600 Black",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-pc210h-1-6k-p2200-2500-m6500-6600-black",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "PC210H 1.6k",
+      "name": "Pantum",
+      "description": "P2200/2500/M6500/6600 Black",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-pc252-1-6k-p2512w-6512nw",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "PC252 1.6k",
+      "name": "Pantum",
+      "description": "P2512W/6512NW",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-pc310h-6k-p3100-3500",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "PC310H 6k",
+      "name": "Pantum",
+      "description": "P3100/3500",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-pc410x-6k-p3300-7100",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "PC410X 6k",
+      "name": "Pantum",
+      "description": "P3300/7100",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl425x-6k-m7105dn-m710",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL425X 6k",
+      "name": "Pantum",
+      "description": "M7105DN/M710",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl425u-11k-m7105dn-m710",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL425U 11k",
+      "name": "Pantum",
+      "description": "M7105DN/M710",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl5120-3k-pa-bp5100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL5120 3k",
+      "name": "Pantum",
+      "description": "PA BP5100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl5120h-6k-pa-bp5100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL5120H 6k",
+      "name": "Pantum",
+      "description": "PA BP5100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl5120x-11k-pa-bp5100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL5120X 11k",
+      "name": "Pantum",
+      "description": "PA BP5100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-dl410-12k-p3300-7100-drum",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "DL410 12k",
+      "name": "Pantum",
+      "description": "P3300/7100 Drum",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-dl425x-25k-m7105dn-m7105dw-p3305dn-p3305dw-drum",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "DL425X 25k",
+      "name": "Pantum",
+      "description": "M7105DN/M7105DW/P3305DN/P3305DW Drum",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-dl5120-30k-bp5100",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "DL5120 30k",
+      "name": "Pantum",
+      "description": "BP5100",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl1100-b-2k-cp1100-cp1100dn-cp1100dw-cp1100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL1100 B 2k",
+      "name": "Pantum",
+      "description": "CP1100/CP1100DN/CP1100DW/CP1100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl1100-c-1-5k-cp1100-cp1100dn-cp1100dw-cp1100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL1100 C 1.5k",
+      "name": "Pantum",
+      "description": "CP1100/CP1100DN/CP1100DW/CP1100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl1100-m-1-5k-cp1100-cp1100dn-cp1100dw-cp1100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL1100 M 1.5k",
+      "name": "Pantum",
+      "description": "CP1100/CP1100DN/CP1100DW/CP1100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl1100-y-1-5k-cp1100-cp1100dn-cp1100dw-cp1100dn",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL1100 Y 1.5k",
+      "name": "Pantum",
+      "description": "CP1100/CP1100DN/CP1100DW/CP1100DN",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl2000-b-3-5k-cp2200dw",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL2000 B 3.5k",
+      "name": "Pantum",
+      "description": "CP2200DW",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl2000-c-3-5k-cp2200dw",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL2000 C 3.5k",
+      "name": "Pantum",
+      "description": "CP2200DW",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl2000-m-3-5k-cp2200dw",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL2000 M 3.5k",
+      "name": "Pantum",
+      "description": "CP2200DW",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "pantum-tl2000-y-3-5k-cp2200dw",
+      "brand": "Pantum",
+      "family": "PANTUM",
+      "sku": "TL2000 Y 3.5k",
+      "name": "Pantum",
+      "description": "CP2200DW",
+      "sourceSheet": "Pantum",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-sp311-sp310sfn-312sfnw-320dn-325dn",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "SP311",
+      "name": "Ricoh",
+      "description": "SP310SFN/312SFNW/320DN/325DN",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-407b-ricoh-mp-c306-406-307-407",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "407B",
+      "name": "Ricoh",
+      "description": "Ricoh MP C306/406/307/407",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-407-c-ricoh-mp-c306-406-307-407",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "407 C",
+      "name": "Ricoh",
+      "description": "Ricoh MP C306/406/307/407",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-407-m-ricoh-mp-c306-406-307-407",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "407 M",
+      "name": "Ricoh",
+      "description": "Ricoh MP C306/406/307/407",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-407-y-ricoh-mp-c306-406-307-407",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "407 Y",
+      "name": "Ricoh",
+      "description": "Ricoh MP C306/406/307/407",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-sp-c430-b-spc-c430-431dn-24k",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "SP C430 B",
+      "name": "Ricoh",
+      "description": "SPC C430/431DN 24k",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-sp-c430c-spc-c430-431dn-21k",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "SP C430C",
+      "name": "Ricoh",
+      "description": "SPC C430/431DN 21k",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-sp-c430m-spc-c430-431dn-21k",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "SP C430M",
+      "name": "Ricoh",
+      "description": "SPC C430/431DN 21k",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-sp-c430y-spc-c430-431dn-21k",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "SP C430Y",
+      "name": "Ricoh",
+      "description": "SPC C430/431DN 21k",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-c2003-b-mp-c2003-mp-c2503-c2004-2504-2011",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "C2003 B",
+      "name": "Ricoh",
+      "description": "MP C2003/MP C2503/C2004/2504/2011",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-c2003-c-mp-c2003-mp-c2503-c2004-2504-2011",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "C2003 C",
+      "name": "Ricoh",
+      "description": "MP C2003/MP C2503/C2004/2504/2011",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-c2003-m-mp-c2003-mp-c2503-c2004-2504-2011",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "C2003 M",
+      "name": "Ricoh",
+      "description": "MP C2003/MP C2503/C2004/2504/2011",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-c2003-y-mp-c2003-mp-c2503-c2004-2504-2011",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "C2003 Y",
+      "name": "Ricoh",
+      "description": "MP C2003/MP C2503/C2004/2504/2011",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "ricoh-mp301-mp301-301sp-301spf",
+      "brand": "Ricoh",
+      "family": "Ricoh",
+      "sku": "MP301",
+      "name": "Ricoh",
+      "description": "MP301/301SP/301SPF",
+      "sourceSheet": "Ricoh",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn321-b-konica-minolta-bizhub-c227-287-c224-284-364",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN321 B",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C227/287/C224/284/364",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn321-c-konica-minolta-bizhub-c227-287-c224-284-364",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN321 C",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C227/287/C224/284/364",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn321-m-konica-minolta-bizhub-c227-287-c224-284-364",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN321 M",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C227/287/C224/284/364",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn321-y-konica-minolta-bizhub-c227-287-c224-284-364",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN321 Y",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C227/287/C224/284/364",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-b-16k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 B 16k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-c-14-k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 C 14 k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-m-14k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 M 14k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-y-14-k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 Y 14 k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-b-27k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 B 27k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-c-23k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 C 23k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-m-23k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 M 23k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "minolta-tn512-y-23k-konica-minolta-bizhub-c454e-c554e-c258-c308-c368",
+      "brand": "Minolta",
+      "family": "Minolta",
+      "sku": "TN512 Y 23k",
+      "name": "Minolta",
+      "description": "Konica Minolta Bizhub C454E/C554E/C258/C308/C368",
+      "sourceSheet": "Minolta",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk1150-m2135dn-m2635dn-m2735dw-p2235dn",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK1150",
+      "name": "Kyocera",
+      "description": "M2135dn/M2635dn/M2735dw/P2235dn",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk1170-p4026-4026i",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK1170",
+      "name": "Kyocera",
+      "description": "P4026/4026i",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk3060-ecosys-m3145idm-m3645idm-m3145idm-m3645idm",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK3060",
+      "name": "Kyocera",
+      "description": "Ecosys M3145idm/M3645idm/M3145idm/M3645idm",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk3100-fs-2100dn-2100d-ecosys-m3040dn-m3549dn-fs2100dn",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK3100",
+      "name": "Kyocera",
+      "description": "FS-2100DN/2100D/ECOSYS M3040dn/M3549dn/FS2100DN",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk3130-fs-4200dn-4300-m2550",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK3130",
+      "name": "Kyocera",
+      "description": "FS-4200dn/4300/m2550",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk3160-p3045-3050-3055-3060-12-5k",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK3160",
+      "name": "Kyocera",
+      "description": "P3045/3050/3055/3060 12.5k",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk6305-ecosys-3500-35k",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK6305",
+      "name": "Kyocera",
+      "description": "Ecosys 3500 35k",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk7125-taskalfa-3212-20k",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK7125",
+      "name": "Kyocera",
+      "description": "Taskalfa 3212! 20k",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5240-b-km02560-3040-3060",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5240 B",
+      "name": "Kyocera",
+      "description": "KM02560/3040/3060",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5240-c-km02560-3040-3060",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5240 C",
+      "name": "Kyocera",
+      "description": "KM02560/3040/3060",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5240-m-km02560-3040-3060",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5240 M",
+      "name": "Kyocera",
+      "description": "KM02560/3040/3060",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5240-y-km02560-3040-3060",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5240 Y",
+      "name": "Kyocera",
+      "description": "KM02560/3040/3060",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5270-b-m6230cidn-m6630cidn-p6230cdn",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5270 B",
+      "name": "Kyocera",
+      "description": "M6230cidn/M6630cidn/P6230cdn",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5270-c-m6230cidn-m6630cidn-p6230cdn",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5270 C",
+      "name": "Kyocera",
+      "description": "M6230cidn/M6630cidn/P6230cdn",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5270-m-m6230cidn-m6630cidn-p6230cdn",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5270 M",
+      "name": "Kyocera",
+      "description": "M6230cidn/M6630cidn/P6230cdn",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "kyocera-tk5270-y-m6230cidn-m6630cidn-p6230cdn",
+      "brand": "Kyocera",
+      "family": "Kyocera",
+      "sku": "TK5270 Y",
+      "name": "Kyocera",
+      "description": "M6230cidn/M6630cidn/P6230cdn",
+      "sourceSheet": "Kyocera",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "dell-b1160-b1160",
+      "brand": "Dell",
+      "family": "Dell",
+      "sku": "B1160",
+      "name": "Dell",
+      "description": "B1160",
+      "sourceSheet": "DELL",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "oki-oki-b412-b412-432-512-m472-mb492dn-mb562dnw-3k",
+      "brand": "OKI",
+      "family": "Oki",
+      "sku": "OKI B412",
+      "name": "OKI",
+      "description": "B412/432/512/M472/MB492dn/MB562dnw 3k",
+      "sourceSheet": "OKI",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    },
+    {
+      "id": "oki-oki-b721-731-18k-b412-432-512-m472-mb492dn-mb562dnw-18k",
+      "brand": "OKI",
+      "family": "Oki",
+      "sku": "OKI B721/731 18k",
+      "name": "OKI",
+      "description": "B412/432/512/M472/MB492dn/MB562dnw 18k",
+      "sourceSheet": "OKI",
+      "type": "print-consumable",
+      "channelTags": [
+        "catalog"
+      ]
+    }
+  ]
+}

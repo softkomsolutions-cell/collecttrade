@@ -14,20 +14,57 @@ app.use(express.json());
 const PORT = Number(process.env.PORT || 5000);
 const AUTH_SECRET =
   process.env.AUTH_SECRET || "collecttrade-local-development-secret";
+const CONNECTOR_SECRET = process.env.CONNECTOR_SECRET || AUTH_SECRET;
 const ENGINE_TICK_MS = 5000;
 const MARKET_REFRESH_MS = 60 * 1000;
 const NEWS_REFRESH_MS = 10 * 60 * 1000;
-const HISTORY_LIMIT = 96;
+const HISTORY_LIMIT = 240;
 const DATA_DIR = path.join(__dirname, "data");
 const STORE_FILE = path.join(DATA_DIR, "app-store.json");
+const PRODUCT_CATALOG_FILE = path.join(DATA_DIR, "product-catalog.json");
+const SHARE_STATUS_FILE = path.join(DATA_DIR, "share-status.json");
+const FRONTEND_DIST_DIR = path.join(__dirname, "..", "frontend", "dist");
+const FRONTEND_INDEX_FILE = path.join(FRONTEND_DIST_DIR, "index.html");
 const TWELVE_DATA_API_KEY = process.env.TWELVE_DATA_API_KEY || "";
 const TWELVE_DATA_BASE_URL = "https://api.twelvedata.com";
 const TWELVE_DATA_INTERVAL = process.env.TWELVE_DATA_INTERVAL || "1h";
+const VALR_BASE_URL = "https://api.valr.com";
+const BTC_FIBONACCI_REPORT = {
+  reportDate: "2026-04-27",
+  sourceLabel: "Bitcoin Fibonacci Analysis 260429 110626",
+  swingLow: 49000,
+  swingHigh: 126199,
+  immediateResistance: 78490,
+  psychologicalBarrier: 80000,
+  technicalPivot: 82700,
+  correctionZoneLow: 72000,
+  correctionZoneHigh: 74000,
+  majorSupport: 67000,
+};
 
 const DEFAULT_SETTINGS = {
   preferredRegion: "south-africa",
   timezone: "Africa/Johannesburg",
   riskMode: "balanced",
+  executionProfiles: {
+    forex: {
+      mode: "paper",
+      providerId: "saxo",
+    },
+    etfs: {
+      mode: "paper",
+      providerId: "ibkr",
+    },
+    crypto: {
+      mode: "paper",
+      providerId: "valr",
+      pair: "BTCUSDT",
+    },
+    jse: {
+      mode: "paper",
+      providerId: "easyequities",
+    },
+  },
 };
 
 const DEFAULT_TARGETS = [
@@ -37,80 +74,313 @@ const DEFAULT_TARGETS = [
   "Retired LEGO set spreads",
 ];
 
-const COLLECTIBLES = [
+const PRINT_SERVICE_PRESETS = [
   {
-    id: "lego-10316",
-    name: "LEGO The Lord of the Rings: Rivendell",
-    category: "LEGO",
-    venue: "Local collectors / international resale",
-    market: "Retired premium sets",
-    status: "Accumulating",
-    price: 10999,
-    changePercent: 8.2,
-    confidence: 86,
-    note: "Large-format display set with persistent collector demand and limited local supply.",
+    id: "business-cards",
+    label: "Business Cards",
+    size: "90 x 50 mm",
+    finish: "Matt or gloss",
   },
   {
-    id: "lego-10294",
-    name: "LEGO Titanic",
-    category: "LEGO",
-    venue: "Collector resale desks",
-    market: "High-ticket sealed inventory",
-    status: "Hold",
-    price: 12999,
-    changePercent: 4.7,
-    confidence: 74,
-    note: "Premium shelf piece with slower turnover but strong headline appeal.",
+    id: "flyers",
+    label: "Flyers",
+    size: "A5 or A6",
+    finish: "Full colour single or double sided",
   },
   {
-    id: "pokemon-151",
-    name: "Pokemon Scarlet & Violet 151 Elite Trainer Box",
-    category: "Pokemon",
-    venue: "Sealed box flow",
-    market: "TCG sealed",
-    status: "Buy",
-    price: 2499,
-    changePercent: 12.4,
-    confidence: 91,
-    note: "Nostalgia set with broad casual demand and deep sealed liquidity.",
+    id: "brochures",
+    label: "Brochures",
+    size: "A4 folded",
+    finish: "Multi-panel marketing handout",
   },
   {
-    id: "pokemon-prismatic",
-    name: "Pokemon Prismatic Evolutions Booster Bundle",
-    category: "Pokemon",
-    venue: "Launch allocation flips",
-    market: "TCG sealed",
-    status: "Watch",
-    price: 1499,
-    changePercent: 6.1,
-    confidence: 67,
-    note: "Fast-moving launch product with attractive spread when allocation is tight.",
+    id: "catalogues",
+    label: "Catalogues",
+    size: "A4 saddle stitch",
+    finish: "Multi-page product catalogue",
   },
   {
-    id: "pokemon-zard-psa10",
-    name: "Charizard ex Special Illustration PSA 10",
-    category: "Pokemon",
-    venue: "Graded singles desk",
-    market: "TCG slabs",
-    status: "Hold",
-    price: 8999,
-    changePercent: 3.3,
-    confidence: 72,
-    note: "Icon-card grading premium with thinner liquidity but durable buyer interest.",
-  },
-  {
-    id: "onepiece-op05",
-    name: "One Piece OP-05 Awakening of the New Era Booster Box",
-    category: "TCG",
-    venue: "Sealed case trade",
-    market: "Anime TCG",
-    status: "Buy",
-    price: 4199,
-    changePercent: 9.5,
-    confidence: 79,
-    note: "Broadening collector base and healthy international comps.",
+    id: "stickers",
+    label: "Labels / Stickers",
+    size: "Custom cut",
+    finish: "Indoor or outdoor adhesive stock",
   },
 ];
+
+const CONNECTOR_PROVIDERS = [
+  {
+    id: "valr",
+    name: "VALR",
+    desk: "crypto",
+    authType: "apiKey",
+    availability: "live",
+    capabilities: ["balances", "spot orders"],
+    docsUrl: "https://docs.valr.com/",
+    notes:
+      "Use a VALR API key with View access for sync and Trade access when you are ready to route live orders.",
+  },
+  {
+    id: "ibkr",
+    name: "Interactive Brokers",
+    desk: "etfs",
+    authType: "gateway",
+    availability: "manual_setup",
+    capabilities: ["accounts", "positions", "orders"],
+    docsUrl: "https://ibkrcampus.com/campus/ibkr-api-page/webapi-doc/",
+    notes:
+      "Requires Client Portal / Web API gateway or OAuth setup before live account sync can run from this app.",
+  },
+  {
+    id: "saxo",
+    name: "Saxo Bank",
+    desk: "forex",
+    authType: "oauth2",
+    availability: "manual_setup",
+    capabilities: ["accounts", "positions", "orders"],
+    docsUrl: "https://developer.saxobank.com/openapi/learn/",
+    notes:
+      "Requires OpenAPI app credentials plus an OAuth session flow before we can run live account sync here.",
+  },
+  {
+    id: "easyequities",
+    name: "EasyEquities",
+    desk: "jse",
+    authType: "manual",
+    availability: "unsupported",
+    capabilities: ["manual tracking"],
+    docsUrl: "https://www.easyequities.co.za/",
+    notes:
+      "No public trading API is currently wired here, so this lane stays manual until a supported integration path exists.",
+  },
+];
+
+const CONNECTOR_PROVIDER_MAP = Object.fromEntries(
+  CONNECTOR_PROVIDERS.map((provider) => [provider.id, provider]),
+);
+
+function loadProductCatalog() {
+  try {
+    if (!fs.existsSync(PRODUCT_CATALOG_FILE)) {
+      return {
+        generatedAt: null,
+        sourceFile: PRODUCT_CATALOG_FILE,
+        sourceLabel: path.basename(PRODUCT_CATALOG_FILE),
+        items: [],
+      };
+    }
+
+    const payload = JSON.parse(fs.readFileSync(PRODUCT_CATALOG_FILE, "utf8"));
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+    return {
+      generatedAt: payload?.generatedAt ? toUtcIso(payload.generatedAt) : null,
+      sourceFile: String(payload?.sourceFile || PRODUCT_CATALOG_FILE),
+      sourceLabel: path.basename(String(payload?.sourceFile || PRODUCT_CATALOG_FILE)),
+      items: items
+      .map((item, index) => ({
+        id: String(item?.id || `catalog-${index + 1}`).trim(),
+        brand: String(item?.brand || "").trim() || "Unknown",
+        family: String(item?.family || item?.brand || "").trim() || "General",
+        sku: String(item?.sku || "").trim(),
+        name: String(item?.name || item?.brand || "").trim() || "Product",
+        description: String(item?.description || "").trim(),
+        type: "catalog",
+        sourceSheet: String(item?.sourceSheet || item?.brand || "").trim(),
+        channelTags: Array.isArray(item?.channelTags) ? item.channelTags : ["catalog"],
+      }))
+      .filter((item) => item.id && item.sku),
+    };
+  } catch (error) {
+    console.warn("Failed to load product catalog.", error.message);
+    return {
+      generatedAt: null,
+      sourceFile: PRODUCT_CATALOG_FILE,
+      sourceLabel: path.basename(PRODUCT_CATALOG_FILE),
+      items: [],
+    };
+  }
+}
+
+const PRODUCT_CATALOG_DATA = loadProductCatalog();
+const PRODUCT_CATALOG = PRODUCT_CATALOG_DATA.items;
+const PRODUCT_CATALOG_BRANDS = uniqueStrings(PRODUCT_CATALOG.map((item) => item.brand)).sort();
+const PRODUCT_CATALOG_FAMILIES = uniqueStrings(PRODUCT_CATALOG.map((item) => item.family)).sort();
+const TRADEABLE_COLLECTIBLES = [
+  {
+    id: "lego-star-wars-75252",
+    brand: "LEGO",
+    name: "Star Wars Imperial Star Destroyer",
+    category: "LEGO Retired Set",
+    market: "Global Collectibles",
+    sku: "75252",
+    description: "Large retired UCS set with steady sealed-box demand and collector liquidity.",
+    thesis: "Retired LEGO flagships usually tighten in supply before the next repricing leg.",
+    venue: "Private market / eBay",
+    price: 26999,
+    changePercent: 4.8,
+    liquidity: "Medium",
+  },
+  {
+    id: "lego-icons-10305",
+    brand: "LEGO",
+    name: "Lion Knights' Castle",
+    category: "LEGO Icons",
+    market: "South Africa / Global",
+    sku: "10305",
+    description: "Prestige castle set with broad AFOL demand and gift-market support.",
+    thesis: "Premium display sets tend to hold price better when local stock gets patchy.",
+    venue: "Retail / collector resale",
+    price: 8299,
+    changePercent: 2.9,
+    liquidity: "High",
+  },
+  {
+    id: "pokemon-151-booster-bundle",
+    brand: "Pokemon",
+    name: "Scarlet & Violet 151 Booster Bundle",
+    category: "Sealed Pokemon",
+    market: "TCG Secondary",
+    sku: "PKM-151-BUNDLE",
+    description: "Nostalgia-driven sealed product with strong rip-or-hold demand.",
+    thesis: "151 sealed supply keeps thinning, which supports incremental repricing on clean stock.",
+    venue: "Card stores / marketplaces",
+    price: 1199,
+    changePercent: 6.4,
+    liquidity: "High",
+  },
+  {
+    id: "pokemon-charizard-psa10",
+    brand: "Pokemon",
+    name: "Charizard ex PSA 10",
+    category: "Graded Pokemon",
+    market: "TCG Graded",
+    sku: "PKM-CHAR-PSA10",
+    description: "Flagship graded card with deep demand and fast discoverability.",
+    thesis: "Top-slab Charizard inventory moves quickly whenever risk appetite returns to cards.",
+    venue: "Auction / slab marketplace",
+    price: 18450,
+    changePercent: -1.7,
+    liquidity: "Medium",
+  },
+  {
+    id: "funko-freddy-lebron",
+    brand: "Funko",
+    name: "Freddy Funko as LeBron",
+    category: "Limited Pop",
+    market: "Convention Exclusives",
+    sku: "FUNKO-FREDDY-LBJ",
+    description: "Low-pop convention exclusive with thinner liquidity but higher squeeze risk.",
+    thesis: "Thin float makes it volatile, but scarcity can create sharp repricing windows.",
+    venue: "Collector marketplaces",
+    price: 7350,
+    changePercent: 9.1,
+    liquidity: "Low",
+  },
+  {
+    id: "mtg-lotr-collector-box",
+    brand: "Magic",
+    name: "LOTR Collector Booster Box",
+    category: "Sealed TCG",
+    market: "MTG Secondary",
+    sku: "MTG-LOTR-CBB",
+    description: "Premium sealed TCG product with crossover appeal and strong global demand.",
+    thesis: "Premium sealed boxes often reprice faster than singles when supply tightens.",
+    venue: "TCG stores / online resale",
+    price: 9699,
+    changePercent: 3.6,
+    liquidity: "Medium",
+  },
+];
+const OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES = [
+  {
+    id: "lego-za-minifigures",
+    brand: "LEGO",
+    sourceName: "Official LEGO ZA",
+    title: "LEGO Minifigures",
+    url: "https://www.lego.com/en-za/themes/minifigures",
+    aboutUrl: "https://www.lego.com/en-za/themes/minifigures/about",
+    summary:
+      "Official South African LEGO Minifigures hub with current series, themed releases, and collectible guidance.",
+    notes: [
+      "The current LEGO ZA minifigures theme page shows 16 products.",
+      "The page frames minifigures as collectible, display-friendly, and giftable.",
+      "Use this shelf as a retail anchor, not as a resale pricing source.",
+    ],
+    highlights: [
+      {
+        id: "lego-minifigures-series-29",
+        name: "Series 29",
+        category: "Mystery box minifigure",
+        status: "New",
+        age: "6+",
+        pieces: 8,
+        url: "https://www.lego.com/en-za/themes/minifigures",
+        note:
+          "Current featured series on the official LEGO ZA minifigures pages.",
+      },
+      {
+        id: "lego-animals-series-28",
+        name: "Animals Series 28",
+        category: "Mystery box minifigure",
+        status: "Current",
+        age: "5+",
+        pieces: 7,
+        url: "https://www.lego.com/en-za/product/animals-series-28-71051",
+        note:
+          "Animal-themed collectible series referenced on the official ZA minifigures shelf.",
+      },
+      {
+        id: "lego-marvel-series-2",
+        name: "LEGO Minifigures Marvel Series 2",
+        category: "Licensed minifigure",
+        status: "Current",
+        age: "5+",
+        pieces: 10,
+        url: "https://www.lego.com/en-za/product/lego-minifigures-marvel-series-2-71039",
+        note:
+          "Official LEGO ZA page highlights 12 Marvel characters including X-Men '97 and Moon Knight figures.",
+      },
+      {
+        id: "lego-minifigures-series-24-6-pack",
+        name: "LEGO Minifigures Series 24 6 Pack",
+        category: "Multipack",
+        status: "Last Chance",
+        age: "5+",
+        pieces: 51,
+        url: "https://www.lego.com/en-za/product/lego-minifigures-series-24-6-pack-66733",
+        note:
+          "Official ZA listing positions this as a 6-pack random selection from the 12-character Series 24 lineup.",
+      },
+      {
+        id: "lego-minifigures-series-25",
+        name: "LEGO Minifigures Series 25",
+        category: "Mystery box minifigure",
+        status: "Current",
+        age: "5+",
+        pieces: 9,
+        url: "https://www.lego.com/en-za/product/lego-minifigures-series-25-71045",
+        note:
+          "Official ZA product page spotlights 12 collectible characters and quick-build gift appeal.",
+      },
+      {
+        id: "lego-dnd-minifigures",
+        name: "Dungeons & Dragons",
+        category: "Licensed minifigure",
+        status: "Exclusive",
+        age: "5+",
+        pieces: 9,
+        url: "https://www.lego.com/en-za/product/dungeons-dragons-71047",
+        note:
+          "Official ZA shelf flags this minifigure release as an exclusive collectible line.",
+      },
+    ],
+  },
+];
+const TRADEABLE_COLLECTIBLE_CATEGORIES = uniqueStrings(
+  TRADEABLE_COLLECTIBLES.map((item) => item.category),
+).sort();
+const TRADEABLE_COLLECTIBLE_BRANDS = uniqueStrings(
+  TRADEABLE_COLLECTIBLES.map((item) => item.brand),
+).sort();
 
 const NEWS_SOURCES = [
   {
@@ -149,6 +419,7 @@ const MARKETS = [
   {
     ticker: "USDZAR",
     label: "USD/ZAR",
+    desk: "forex",
     region: "south-africa",
     providerSymbol: "USD/ZAR",
     basePrice: 18.42,
@@ -160,6 +431,7 @@ const MARKETS = [
   {
     ticker: "EURUSD",
     label: "EUR/USD",
+    desk: "forex",
     region: "global",
     providerSymbol: "EUR/USD",
     basePrice: 1.086,
@@ -169,8 +441,45 @@ const MARKETS = [
     maxPrice: 1.22,
   },
   {
+    ticker: "SPY",
+    label: "SPDR S&P 500 ETF",
+    desk: "etfs",
+    region: "global",
+    providerSymbol: "SPY",
+    basePrice: 518.4,
+    drift: 0.0002,
+    volatility: 0.0032,
+    minPrice: 380,
+    maxPrice: 650,
+  },
+  {
+    ticker: "QQQ",
+    label: "Invesco QQQ",
+    desk: "etfs",
+    region: "global",
+    providerSymbol: "QQQ",
+    basePrice: 443.2,
+    drift: 0.00024,
+    volatility: 0.0042,
+    minPrice: 280,
+    maxPrice: 560,
+  },
+  {
+    ticker: "GLD",
+    label: "SPDR Gold Shares",
+    desk: "etfs",
+    region: "global",
+    providerSymbol: "GLD",
+    basePrice: 219.8,
+    drift: 0.00012,
+    volatility: 0.0028,
+    minPrice: 150,
+    maxPrice: 300,
+  },
+  {
     ticker: "BTCUSD",
     label: "BTC/USD",
+    desk: "crypto",
     region: "global",
     providerSymbol: "BTC/USD",
     basePrice: 64800,
@@ -182,6 +491,7 @@ const MARKETS = [
   {
     ticker: "JSE40",
     label: "JSE Top 40",
+    desk: "jse",
     region: "south-africa",
     providerSymbol: process.env.TWELVE_DATA_JSE_SYMBOL || "JTOPI",
     exchange: "JSE",
@@ -193,6 +503,16 @@ const MARKETS = [
   },
 ];
 
+const VALR_SIGNAL_MARKET_MAP = {
+  BTCUSD: {
+    defaultPair: "BTCUSDT",
+    supportedPairs: ["BTCUSDT", "BTCUSDC", "BTCZAR"],
+    baseAsset: "BTC",
+  },
+};
+
+const VALR_PAIR_CACHE_MS = 6 * 60 * 60 * 1000;
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -202,7 +522,7 @@ function clamp(value, min, max) {
 }
 
 function roundPrice(ticker, value) {
-  if (ticker === "BTCUSD" || ticker === "JSE40") {
+  if (["BTCUSD", "JSE40", "SPY", "QQQ", "GLD"].includes(ticker)) {
     return Number(value.toFixed(2));
   }
 
@@ -215,6 +535,378 @@ function roundPrice(ticker, value) {
 
 function uniqueStrings(values) {
   return [...new Set((values || []).map((value) => String(value).trim()).filter(Boolean))];
+}
+
+function sanitizeOptionalText(value, maxLength = 160) {
+  const text = String(value || "").trim();
+  return text ? text.slice(0, maxLength) : "";
+}
+
+function sanitizeRequestChannel(value) {
+  return value === "email" ? "email" : "phone";
+}
+
+function sanitizeRequestType(value) {
+  return value === "printing" ? "printing" : "catalog";
+}
+
+function sanitizeRequestStatus(value) {
+  const allowed = new Set(["new", "quoted", "in-progress", "completed", "cancelled"]);
+  return allowed.has(value) ? value : "new";
+}
+
+function sanitizeRequestPriority(value) {
+  const allowed = new Set(["normal", "priority", "rush"]);
+  return allowed.has(value) ? value : "normal";
+}
+
+function sanitizeRequestReference(value, requestNumericId) {
+  const text = sanitizeOptionalText(value, 40).toUpperCase();
+  if (text) {
+    return text;
+  }
+
+  if (Number.isFinite(Number(requestNumericId))) {
+    return `REQ-${String(Math.trunc(Number(requestNumericId))).padStart(5, "0")}`;
+  }
+
+  return "";
+}
+
+function sanitizeQuoteAmount(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return null;
+  }
+
+  return Number(amount.toFixed(2));
+}
+
+function sanitizeFollowUpAt(value) {
+  const text = String(value || "").trim();
+  return text ? toUtcIso(text) : null;
+}
+
+function sanitizePrintDetails(input) {
+  return {
+    serviceType: sanitizeOptionalText(input?.serviceType, 80),
+    size: sanitizeOptionalText(input?.size, 60),
+    colorMode: sanitizeOptionalText(input?.colorMode, 60),
+    stock: sanitizeOptionalText(input?.stock, 80),
+    finish: sanitizeOptionalText(input?.finish, 80),
+    dueDate: sanitizeOptionalText(input?.dueDate, 40),
+  };
+}
+
+function sanitizeCatalogSelection(input) {
+  if (!input || typeof input !== "object") {
+    return null;
+  }
+
+  return {
+    itemId: sanitizeOptionalText(input?.itemId, 120),
+    sku: sanitizeOptionalText(input?.sku, 120),
+    brand: sanitizeOptionalText(input?.brand, 80),
+    family: sanitizeOptionalText(input?.family, 120),
+    name: sanitizeOptionalText(input?.name, 120),
+    sourceSheet: sanitizeOptionalText(input?.sourceSheet, 120),
+    description: sanitizeOptionalText(input?.description, 220),
+  };
+}
+
+function sanitizeIntakeRequest(input) {
+  const requestType = sanitizeRequestType(input?.requestType);
+  const requestNumericId = Number.isFinite(Number(input?.id)) ? Number(input.id) : null;
+  return {
+    id: requestNumericId,
+    reference: sanitizeRequestReference(input?.reference, requestNumericId),
+    channel: sanitizeRequestChannel(input?.channel),
+    requestType,
+    status: sanitizeRequestStatus(input?.status),
+    priority: sanitizeRequestPriority(input?.priority),
+    customerName: sanitizeOptionalText(input?.customerName, 120),
+    company: sanitizeOptionalText(input?.company, 120),
+    contactEmail: sanitizeOptionalText(input?.contactEmail, 120),
+    contactPhone: sanitizeOptionalText(input?.contactPhone, 40),
+    subject: sanitizeOptionalText(input?.subject, 140),
+    quantity: Number.isFinite(Number(input?.quantity)) ? Math.max(1, Math.trunc(Number(input.quantity))) : 1,
+    notes: sanitizeOptionalText(input?.notes, 400),
+    quotedAmount: sanitizeQuoteAmount(input?.quotedAmount),
+    followUpAt: sanitizeFollowUpAt(input?.followUpAt),
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : null,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : null,
+    catalogSelection:
+      requestType === "catalog" ? sanitizeCatalogSelection(input?.catalogSelection) : null,
+    printDetails:
+      requestType === "printing" ? sanitizePrintDetails(input?.printDetails) : sanitizePrintDetails({}),
+  };
+}
+
+function sanitizeUserRole(value, fallbackOwner = false) {
+  if (fallbackOwner) {
+    return "owner";
+  }
+
+  if (value === "owner" || value === "partner") {
+    return value;
+  }
+
+  return "partner";
+}
+
+function isSystemAccountEmail(email) {
+  const normalized = normalizeEmail(email);
+  return (
+    normalized.endsWith("@collecttrade.local") ||
+    normalized.endsWith("@example.com")
+  );
+}
+
+function resolvePreferredOwnerId(records) {
+  const nonSystemOwner = records.find(
+    (user) => user?.role === "owner" && !isSystemAccountEmail(user?.email),
+  );
+  if (nonSystemOwner?.id) {
+    return nonSystemOwner.id;
+  }
+
+  const firstRealAccount = records.find((user) => !isSystemAccountEmail(user?.email));
+  if (firstRealAccount?.id) {
+    return firstRealAccount.id;
+  }
+
+  return records[0]?.id || null;
+}
+
+function sanitizeUserRecord(input, index = 0, preferredOwnerId = null) {
+  return {
+    id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
+    name: sanitizeOptionalText(input?.name, 120) || `Collecttrade User ${index + 1}`,
+    email: normalizeEmail(input?.email),
+    passwordSalt: String(input?.passwordSalt || ""),
+    passwordHash: String(input?.passwordHash || ""),
+    role: sanitizeUserRole(
+      input?.role,
+      Boolean(preferredOwnerId && preferredOwnerId === (sanitizeOptionalText(input?.id, 80) || "")),
+    ),
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : nowIso(),
+    lastLoginAt: input?.lastLoginAt
+      ? toUtcIso(input.lastLoginAt)
+      : input?.createdAt
+        ? toUtcIso(input.createdAt)
+        : nowIso(),
+  };
+}
+
+function sanitizeFeedbackType(value) {
+  return ["bug", "ux", "improvement", "content"].includes(value) ? value : "bug";
+}
+
+function sanitizeFeedbackSeverity(value) {
+  return ["low", "medium", "high"].includes(value) ? value : "medium";
+}
+
+function sanitizeFeedbackStatus(value) {
+  return ["new", "reviewing", "planned", "resolved"].includes(value) ? value : "new";
+}
+
+function sanitizeFeedbackItem(input) {
+  return {
+    id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
+    title: sanitizeOptionalText(input?.title, 140),
+    type: sanitizeFeedbackType(input?.type),
+    severity: sanitizeFeedbackSeverity(input?.severity),
+    area: sanitizeOptionalText(input?.area, 80) || "general",
+    notes: sanitizeOptionalText(input?.notes, 800),
+    status: sanitizeFeedbackStatus(input?.status),
+    authorUserId: sanitizeOptionalText(input?.authorUserId, 80),
+    authorName: sanitizeOptionalText(input?.authorName, 120),
+    authorEmail: sanitizeOptionalText(input?.authorEmail, 120),
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : null,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : null,
+    resolutionNote: sanitizeOptionalText(input?.resolutionNote, 400),
+  };
+}
+
+function sortFeedbackItems(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = Date.parse(left.updatedAt || left.createdAt || 0) || 0;
+    const rightTime = Date.parse(right.updatedAt || right.createdAt || 0) || 0;
+    return rightTime - leftTime;
+  });
+}
+
+function buildFeedbackSummary(items) {
+  const total = items.length;
+  const open = items.filter((item) => item.status !== "resolved").length;
+  const newItems = items.filter((item) => item.status === "new").length;
+  const reviewing = items.filter((item) => item.status === "reviewing").length;
+  const planned = items.filter((item) => item.status === "planned").length;
+  const resolved = items.filter((item) => item.status === "resolved").length;
+  const highSeverity = items.filter((item) => item.severity === "high").length;
+
+  return {
+    total,
+    open,
+    newItems,
+    reviewing,
+    planned,
+    resolved,
+    highSeverity,
+  };
+}
+
+function connectorBaselineStatus(providerId) {
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  if (!provider) {
+    return "not_configured";
+  }
+
+  if (provider.availability === "manual_setup") {
+    return "manual_setup";
+  }
+
+  if (provider.availability === "unsupported") {
+    return "unsupported";
+  }
+
+  return "not_configured";
+}
+
+function defaultConnectorRecord(providerId) {
+  return {
+    configured: false,
+    status: connectorBaselineStatus(providerId),
+    lastTestAt: null,
+    lastSyncAt: null,
+    lastError: null,
+    config: {},
+    authBlob: null,
+    accountSnapshot: null,
+  };
+}
+
+function defaultConnectorsState() {
+  return Object.fromEntries(
+    CONNECTOR_PROVIDERS.map((provider) => [provider.id, defaultConnectorRecord(provider.id)]),
+  );
+}
+
+function sanitizeValrPair(value, fallback = VALR_SIGNAL_MARKET_MAP.BTCUSD.defaultPair) {
+  const candidate = String(value || "").trim().toUpperCase();
+  return VALR_SIGNAL_MARKET_MAP.BTCUSD.supportedPairs.includes(candidate)
+    ? candidate
+    : fallback;
+}
+
+function sanitizeConnectorConfig(providerId, input) {
+  if (providerId === "valr") {
+    return {
+      subAccountId: String(input?.subAccountId || "").trim().slice(0, 120),
+      preferredPair: sanitizeValrPair(input?.preferredPair),
+    };
+  }
+
+  return {};
+}
+
+function sanitizeExecutionProfile(desk, input) {
+  const defaults = DEFAULT_SETTINGS.executionProfiles[desk];
+  if (!defaults) {
+    return null;
+  }
+
+  if (desk === "crypto") {
+    return {
+      mode: input?.mode === "live" ? "live" : "paper",
+      providerId: "valr",
+      pair: sanitizeValrPair(input?.pair, defaults.pair),
+    };
+  }
+
+  return {
+    mode: "paper",
+    providerId: defaults.providerId,
+  };
+}
+
+function sanitizeExecutionProfiles(input) {
+  return Object.fromEntries(
+    Object.keys(DEFAULT_SETTINGS.executionProfiles).map((desk) => [
+      desk,
+      sanitizeExecutionProfile(desk, input?.[desk]),
+    ]),
+  );
+}
+
+function sanitizeBalanceEntry(entry) {
+  const currency = String(entry?.currency || entry?.asset || entry?.symbol || "").trim().toUpperCase();
+  if (!currency) {
+    return null;
+  }
+
+  const available = Number(entry?.available ?? entry?.availableBalance ?? 0);
+  const reserved = Number(entry?.reserved ?? entry?.reservedBalance ?? entry?.locked ?? 0);
+  const total = Number(entry?.total ?? available + reserved);
+
+  if (![available, reserved, total].every(Number.isFinite)) {
+    return null;
+  }
+
+  return {
+    currency,
+    available: Number(available.toFixed(8)),
+    reserved: Number(reserved.toFixed(8)),
+    total: Number(total.toFixed(8)),
+  };
+}
+
+function sanitizeAccountSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") {
+    return null;
+  }
+
+  const balances = Array.isArray(snapshot.balances)
+    ? snapshot.balances.map(sanitizeBalanceEntry).filter(Boolean).slice(0, 40)
+    : [];
+  const fundedAssets = balances.filter((entry) => Math.abs(entry.total) > 0).length;
+
+  return {
+    fetchedAt: snapshot.fetchedAt ? toUtcIso(snapshot.fetchedAt) : null,
+    balances,
+    totalAssets:
+      Number.isFinite(Number(snapshot.totalAssets)) ? Number(snapshot.totalAssets) : balances.length,
+    fundedAssets,
+  };
+}
+
+function sanitizeConnectorRecord(providerId, input) {
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  const defaults = defaultConnectorRecord(providerId);
+  if (!provider) {
+    return defaults;
+  }
+
+  const authBlob = typeof input?.authBlob === "string" ? input.authBlob : null;
+  const configured = Boolean(authBlob);
+  const baselineStatus = connectorBaselineStatus(providerId);
+  const requestedStatus =
+    typeof input?.status === "string" && input.status.trim() ? input.status.trim() : baselineStatus;
+
+  return {
+    configured,
+    status: configured ? requestedStatus : baselineStatus,
+    lastTestAt: input?.lastTestAt ? toUtcIso(input.lastTestAt) : null,
+    lastSyncAt: input?.lastSyncAt ? toUtcIso(input.lastSyncAt) : null,
+    lastError: input?.lastError ? String(input.lastError).slice(0, 220) : null,
+    config: sanitizeConnectorConfig(providerId, input?.config),
+    authBlob,
+    accountSnapshot: sanitizeAccountSnapshot(input?.accountSnapshot),
+  };
 }
 
 function sanitizeSettings(input) {
@@ -231,14 +923,17 @@ function sanitizeSettings(input) {
     preferredRegion,
     riskMode,
     timezone: "Africa/Johannesburg",
+    executionProfiles: sanitizeExecutionProfiles(input?.executionProfiles),
   };
 }
 
 function defaultUserState() {
   return {
     trades: [],
-    settings: { ...DEFAULT_SETTINGS },
+    intakeRequests: [],
+    settings: sanitizeSettings(DEFAULT_SETTINGS),
     newsTargets: [...DEFAULT_TARGETS],
+    connectors: defaultConnectorsState(),
   };
 }
 
@@ -253,14 +948,17 @@ function loadStore() {
     return {
       users: [],
       userStates: {},
-      settings: { ...DEFAULT_SETTINGS },
+      settings: sanitizeSettings(DEFAULT_SETTINGS),
       trades: [],
       newsTargets: [...DEFAULT_TARGETS],
+      feedbackItems: [],
     };
   }
 
   try {
     const parsed = JSON.parse(fs.readFileSync(STORE_FILE, "utf8"));
+    const rawUsers = Array.isArray(parsed.users) ? parsed.users : [];
+    const preferredOwnerId = resolvePreferredOwnerId(rawUsers);
     const userStates = Object.fromEntries(
       Object.entries(parsed.userStates || {}).map(([userId, state]) => [
         userId,
@@ -270,25 +968,40 @@ function loadStore() {
           settings: sanitizeSettings(state?.settings),
           newsTargets: uniqueStrings(state?.newsTargets || DEFAULT_TARGETS),
           trades: Array.isArray(state?.trades) ? state.trades : [],
+          intakeRequests: Array.isArray(state?.intakeRequests)
+            ? state.intakeRequests.map(sanitizeIntakeRequest)
+            : [],
+          connectors: Object.fromEntries(
+            CONNECTOR_PROVIDERS.map((provider) => [
+              provider.id,
+              sanitizeConnectorRecord(provider.id, state?.connectors?.[provider.id]),
+            ]),
+          ),
         },
       ]),
     );
 
     return {
-      users: Array.isArray(parsed.users) ? parsed.users : [],
+      users: rawUsers.map((user, index) => sanitizeUserRecord(user, index, preferredOwnerId)),
       userStates,
       settings: sanitizeSettings(parsed.settings),
       trades: Array.isArray(parsed.trades) ? parsed.trades : [],
       newsTargets: uniqueStrings(parsed.newsTargets || DEFAULT_TARGETS),
+      feedbackItems: sortFeedbackItems(
+        Array.isArray(parsed.feedbackItems)
+          ? parsed.feedbackItems.map(sanitizeFeedbackItem).filter((item) => item.title && item.notes)
+          : [],
+      ),
     };
   } catch (error) {
     console.warn("Failed to parse store, starting fresh.", error.message);
     return {
       users: [],
       userStates: {},
-      settings: { ...DEFAULT_SETTINGS },
+      settings: sanitizeSettings(DEFAULT_SETTINGS),
       trades: [],
       newsTargets: [...DEFAULT_TARGETS],
+      feedbackItems: [],
     };
   }
 }
@@ -299,6 +1012,7 @@ let userStates = store.userStates;
 let guestTrades = store.trades;
 let guestTargets = store.newsTargets;
 let appSettings = store.settings;
+let feedbackItems = store.feedbackItems || [];
 
 function maxTradeId() {
   const stateTrades = Object.values(userStates).flatMap((state) => state.trades || []);
@@ -309,6 +1023,13 @@ function maxTradeId() {
 }
 
 let tradeId = maxTradeId() + 1;
+
+function maxRequestId() {
+  const stateRequests = Object.values(userStates).flatMap((state) => state.intakeRequests || []);
+  return stateRequests.reduce((max, request) => Math.max(max, Number(request.id || 0)), 0);
+}
+
+let requestId = maxRequestId() + 1;
 
 function persistStore() {
   ensureDataDir();
@@ -321,6 +1042,7 @@ function persistStore() {
         settings: appSettings,
         trades: guestTrades,
         newsTargets: guestTargets,
+        feedbackItems,
       },
       null,
       2,
@@ -334,6 +1056,14 @@ function getUserState(userId) {
     persistStore();
   }
 
+  if (!userStates[userId].connectors) {
+    userStates[userId].connectors = defaultConnectorsState();
+  }
+
+  if (!Array.isArray(userStates[userId].intakeRequests)) {
+    userStates[userId].intakeRequests = [];
+  }
+
   return userStates[userId];
 }
 
@@ -342,8 +1072,115 @@ function publicUser(user) {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: sanitizeUserRole(user.role),
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
+  };
+}
+
+const CONNECTOR_CIPHER_KEY = crypto.createHash("sha256").update(CONNECTOR_SECRET).digest();
+
+function encryptConnectorPayload(payload) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", CONNECTOR_CIPHER_KEY, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(JSON.stringify(payload), "utf8"),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("base64url")}.${tag.toString("base64url")}.${encrypted.toString("base64url")}`;
+}
+
+function decryptConnectorPayload(blob) {
+  if (!blob || typeof blob !== "string") {
+    return null;
+  }
+
+  const [ivRaw, tagRaw, dataRaw] = blob.split(".");
+  if (!ivRaw || !tagRaw || !dataRaw) {
+    return null;
+  }
+
+  try {
+    const decipher = crypto.createDecipheriv(
+      "aes-256-gcm",
+      CONNECTOR_CIPHER_KEY,
+      Buffer.from(ivRaw, "base64url"),
+    );
+    decipher.setAuthTag(Buffer.from(tagRaw, "base64url"));
+    const decrypted = Buffer.concat([
+      decipher.update(Buffer.from(dataRaw, "base64url")),
+      decipher.final(),
+    ]);
+    return JSON.parse(decrypted.toString("utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function maskValue(value, head = 6, tail = 4) {
+  const stringValue = String(value || "").trim();
+  if (!stringValue) {
+    return "";
+  }
+
+  if (stringValue.length <= head + tail) {
+    return `${stringValue.slice(0, Math.max(2, head - 2))}...`;
+  }
+
+  return `${stringValue.slice(0, head)}...${stringValue.slice(-tail)}`;
+}
+
+function connectorCredentials(record) {
+  return decryptConnectorPayload(record?.authBlob) || {};
+}
+
+function connectorStateForUser(userState, providerId) {
+  if (!userState.connectors) {
+    userState.connectors = defaultConnectorsState();
+  }
+
+  if (!userState.connectors[providerId]) {
+    userState.connectors[providerId] = defaultConnectorRecord(providerId);
+  }
+
+  userState.connectors[providerId] = sanitizeConnectorRecord(
+    providerId,
+    userState.connectors[providerId],
+  );
+  return userState.connectors[providerId];
+}
+
+function buildConnectorView(providerId, rawState) {
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  const state = sanitizeConnectorRecord(providerId, rawState);
+  const credentials = connectorCredentials(state);
+  const maskedConfig =
+    providerId === "valr"
+      ? {
+          subAccountId: state.config.subAccountId || "",
+          preferredPair: state.config.preferredPair || VALR_SIGNAL_MARKET_MAP.BTCUSD.defaultPair,
+          apiKeyMasked: credentials.apiKey ? maskValue(credentials.apiKey) : "",
+          hasSecret: Boolean(credentials.apiSecret),
+        }
+      : state.config;
+
+  return {
+    id: provider.id,
+    name: provider.name,
+    desk: provider.desk,
+    authType: provider.authType,
+    availability: provider.availability,
+    capabilities: provider.capabilities,
+    docsUrl: provider.docsUrl,
+    notes: provider.notes,
+    configured: state.configured,
+    status: state.status,
+    lastTestAt: state.lastTestAt,
+    lastSyncAt: state.lastSyncAt,
+    lastError: state.lastError,
+    config: maskedConfig,
+    accountSnapshot: state.accountSnapshot,
   };
 }
 
@@ -461,6 +1298,37 @@ function ema(values, period) {
   return result;
 }
 
+function sma(values, period) {
+  if (values.length < period) {
+    return values.map((_, index) => {
+      if (index < period - 1) {
+        return null;
+      }
+
+      const window = values.slice(index - period + 1, index + 1);
+      return window.reduce((sum, value) => sum + value, 0) / period;
+    });
+  }
+
+  const result = new Array(values.length).fill(null);
+
+  for (let index = period - 1; index < values.length; index += 1) {
+    const window = values.slice(index - period + 1, index + 1);
+    result[index] = window.reduce((sum, value) => sum + value, 0) / period;
+  }
+
+  return result;
+}
+
+function average(values) {
+  const numeric = values.filter((value) => Number.isFinite(Number(value))).map(Number);
+  if (!numeric.length) {
+    return null;
+  }
+
+  return numeric.reduce((sum, value) => sum + value, 0) / numeric.length;
+}
+
 function rsi(values, period = 14) {
   if (values.length < period + 1) {
     return values.map(() => 50);
@@ -503,6 +1371,51 @@ function rsi(values, period = 14) {
   return output;
 }
 
+function mfi(points, period = 14) {
+  if (!Array.isArray(points) || points.length < period + 1) {
+    return Array.isArray(points) ? points.map(() => 50) : [];
+  }
+
+  const output = new Array(period).fill(50);
+
+  for (let index = period; index < points.length; index += 1) {
+    let positiveFlow = 0;
+    let negativeFlow = 0;
+
+    for (let lookback = index - period + 1; lookback <= index; lookback += 1) {
+      const previousPrice = Number(points[lookback - 1]?.value);
+      const currentPrice = Number(points[lookback]?.value);
+      const volume = Number(points[lookback]?.volume);
+
+      if (!Number.isFinite(previousPrice) || !Number.isFinite(currentPrice) || !Number.isFinite(volume) || volume <= 0) {
+        continue;
+      }
+
+      const rawFlow = currentPrice * volume;
+      if (currentPrice > previousPrice) {
+        positiveFlow += rawFlow;
+      } else if (currentPrice < previousPrice) {
+        negativeFlow += rawFlow;
+      }
+    }
+
+    if (positiveFlow === 0 && negativeFlow === 0) {
+      output.push(50);
+      continue;
+    }
+
+    if (negativeFlow === 0) {
+      output.push(100);
+      continue;
+    }
+
+    const moneyRatio = positiveFlow / negativeFlow;
+    output.push(100 - 100 / (1 + moneyRatio));
+  }
+
+  return output;
+}
+
 function signFromDiff(value) {
   if (value > 0) {
     return 1;
@@ -529,19 +1442,428 @@ function countRecentBraids(diffSeries) {
   return changes;
 }
 
+function summarizeRsiSignal(value) {
+  if (value >= 70) {
+    return "Overbought";
+  }
+
+  if (value >= 60) {
+    return "Bullish";
+  }
+
+  if (value <= 30) {
+    return "Oversold";
+  }
+
+  if (value <= 40) {
+    return "Bearish";
+  }
+
+  return "Neutral";
+}
+
+function summarizeMfiSignal(value) {
+  if (value >= 80) {
+    return "Overbought";
+  }
+
+  if (value >= 65) {
+    return "Elevated";
+  }
+
+  if (value <= 20) {
+    return "Oversold";
+  }
+
+  if (value <= 35) {
+    return "Soft";
+  }
+
+  return "Neutral";
+}
+
+function summarizeTechnicalBias(score) {
+  if (score >= 5) {
+    return "Strong Buy";
+  }
+
+  if (score >= 2) {
+    return "Buy";
+  }
+
+  if (score <= -5) {
+    return "Strong Sell";
+  }
+
+  if (score <= -2) {
+    return "Sell";
+  }
+
+  return "Neutral";
+}
+
+function formatIntervalLabel(interval) {
+  return String(interval || "")
+    .replace(/^(\d+)([a-z]+)$/i, (_match, amount, unit) => `${amount}${unit.toUpperCase()}`);
+}
+
+function aggregateSeries(series, bucketSize) {
+  if (!Array.isArray(series) || bucketSize <= 1) {
+    return series;
+  }
+
+  const aggregated = [];
+  for (let index = 0; index < series.length; index += bucketSize) {
+    const bucket = series.slice(index, index + bucketSize);
+    const finalPoint = bucket[bucket.length - 1];
+    if (finalPoint) {
+      aggregated.push(finalPoint);
+    }
+  }
+
+  return aggregated;
+}
+
+function buildBtcFibonacciProfile(currentPrice, volumeProfile) {
+  const range = BTC_FIBONACCI_REPORT.swingHigh - BTC_FIBONACCI_REPORT.swingLow;
+  const extension1272 = BTC_FIBONACCI_REPORT.swingLow + range * 1.272;
+  const extension1618 = BTC_FIBONACCI_REPORT.swingLow + range * 1.618;
+  const distanceToImmediate =
+    ((BTC_FIBONACCI_REPORT.immediateResistance - currentPrice) / currentPrice) * 100;
+  const distanceToPivot =
+    ((BTC_FIBONACCI_REPORT.technicalPivot - currentPrice) / currentPrice) * 100;
+
+  return {
+    reportDate: BTC_FIBONACCI_REPORT.reportDate,
+    sourceLabel: BTC_FIBONACCI_REPORT.sourceLabel,
+    anchorSwing: {
+      low: BTC_FIBONACCI_REPORT.swingLow,
+      high: BTC_FIBONACCI_REPORT.swingHigh,
+    },
+    retracement618: {
+      label: "61.8% Retracement",
+      price: BTC_FIBONACCI_REPORT.immediateResistance,
+      note: "Most critical near-term level from the report.",
+    },
+    psychologicalBarrier: {
+      label: "Psychological Barrier",
+      price: BTC_FIBONACCI_REPORT.psychologicalBarrier,
+      note: "Expect heavy volatility and resting sell orders around this round number.",
+    },
+    technicalPivot: {
+      label: "Technical Pivot",
+      price: BTC_FIBONACCI_REPORT.technicalPivot,
+      note: "Primary short-term take-profit area for laddered exits.",
+    },
+    correctionZone: {
+      low: BTC_FIBONACCI_REPORT.correctionZoneLow,
+      high: BTC_FIBONACCI_REPORT.correctionZoneHigh,
+      note: "Likely retracement zone if BTC loses the 61.8% level cleanly.",
+    },
+    majorSupport: {
+      price: BTC_FIBONACCI_REPORT.majorSupport,
+      note: "Bullish structure is at real risk if this floor breaks.",
+    },
+    extensions: [
+      {
+        label: "127.2% Extension",
+        price: Number(extension1272.toFixed(2)),
+        note: "Often marks the first pause after a major breakout.",
+      },
+      {
+        label: "161.8% Extension",
+        price: Number(extension1618.toFixed(2)),
+        note: "Classic institutional target for the broader cycle extension.",
+      },
+    ],
+    ladderedExit: [
+      {
+        label: "Trim 10%",
+        price: BTC_FIBONACCI_REPORT.psychologicalBarrier,
+      },
+      {
+        label: "Trim 20-30%",
+        price: BTC_FIBONACCI_REPORT.technicalPivot,
+      },
+    ],
+    currentContext:
+      volumeProfile?.stance === "Take Profit Watch"
+        ? "Fib resistance and the volume warning are lining up, which supports taking something off into strength."
+        : distanceToImmediate <= 0
+          ? "BTC is already through the 61.8% level, so the next Fib decision point is whether it can hold above it cleanly."
+          : distanceToImmediate <= 2
+            ? "BTC is close enough to the 61.8% retracement that the next reaction matters more than fresh chasing."
+            : "BTC is still working toward the next Fib resistance cluster rather than trading directly into it.",
+    distanceToImmediateResistancePct: Number(distanceToImmediate.toFixed(2)),
+    distanceToTechnicalPivotPct: Number(distanceToPivot.toFixed(2)),
+  };
+}
+
+function buildVolumeProfile(market, points, closes, ema8Series, ema21Series, mfiSeries) {
+  const recentClose = closes.at(-1) ?? market.basePrice;
+  const lookbackClose = closes.at(-7) ?? recentClose;
+  const recentHigh = Math.max(...closes.slice(-30));
+  const supportWindow = closes.slice(-24);
+  const recentSupport = supportWindow.length ? Math.min(...supportWindow) : recentClose;
+  const recentVolumeAvg = average(points.slice(-6).map((point) => point?.volume));
+  const priorVolumeAvg = average(points.slice(-12, -6).map((point) => point?.volume));
+  const volumeAvailable = Number.isFinite(recentVolumeAvg) && Number.isFinite(priorVolumeAvg) && priorVolumeAvg > 0;
+  const priceChange = lookbackClose ? (recentClose - lookbackClose) / lookbackClose : 0;
+  const volumeChange = volumeAvailable ? (recentVolumeAvg - priorVolumeAvg) / priorVolumeAvg : null;
+  const resistanceDistance = recentHigh ? (recentHigh - recentClose) / recentClose : null;
+  const nearResistance =
+    Number.isFinite(resistanceDistance) &&
+    resistanceDistance >= 0 &&
+    resistanceDistance <= Math.max(market.volatility * 6, 0.018);
+  const emaTrendUp = ema8Series.at(-1) > ema21Series.at(-1);
+  const emaTrendDown = ema8Series.at(-1) < ema21Series.at(-1);
+  const mfiValue = Number((mfiSeries.at(-1) ?? 50).toFixed(1));
+  const fadingRallyVolume =
+    volumeAvailable &&
+    priceChange > market.volatility * 2 &&
+    volumeChange < -0.08;
+  const confirmingRallyVolume =
+    volumeAvailable &&
+    priceChange > market.volatility * 2 &&
+    volumeChange > 0.08;
+  const heavySellPressure =
+    volumeAvailable &&
+    priceChange < -market.volatility * 2 &&
+    volumeChange > 0.05;
+  const followThrough =
+    fadingRallyVolume && nearResistance
+      ? "Weak"
+      : heavySellPressure
+        ? "Selling pressure"
+        : confirmingRallyVolume
+          ? "Healthy"
+          : volumeAvailable
+            ? "Mixed"
+            : "Price-only estimate";
+
+  let stance = "Wait";
+  let tone = "muted";
+  let narrative = "Participation is mixed, so the safer move is to wait for cleaner confirmation.";
+  let recommendation = "Let price either pull back into support or prove it can break resistance with better participation.";
+
+  if (!volumeAvailable) {
+    if (nearResistance && mfiValue >= 65) {
+      stance = "Take Profit Watch";
+      tone = "warning";
+      narrative = "Price is pressing into recent highs, but the feed is missing clean candle-volume data, so this is a structure-based caution rather than a full conviction breakout.";
+      recommendation = "Protect some profit or tighten risk rather than adding fresh size into resistance.";
+    } else if (emaTrendDown) {
+      stance = "Short Watch";
+      tone = "negative";
+      narrative = "Price structure is leaning weaker, but this still needs better confirmation before it becomes a confident short.";
+      recommendation = "Wait for price to stay below the fast EMA before pressing the short side.";
+    }
+  } else if (fadingRallyVolume && (nearResistance || mfiValue >= 65)) {
+    stance = "Take Profit Watch";
+    tone = "warning";
+    narrative = "Price is still elevated, but participation is fading into nearby resistance, which raises the risk of an exhaustion move rather than a clean continuation.";
+    recommendation = "Scale some profit or tighten stops instead of adding fresh size here.";
+  } else if (emaTrendDown && (heavySellPressure || mfiValue <= 40)) {
+    stance = "Short Watch";
+    tone = "negative";
+    narrative = "Momentum is slipping and sellers are starting to show better follow-through, which raises the odds of a deeper washout if support gives way.";
+    recommendation = "Wait for a confirmed loss of the fast EMA before pressing shorts or looking for a lower re-entry.";
+  } else if (emaTrendUp && confirmingRallyVolume && mfiValue < 75) {
+    stance = "Trend Confirmed";
+    tone = "positive";
+    narrative = "Price and participation are moving together, which lowers the risk of a hollow breakout and keeps the trend healthier.";
+    recommendation = "Momentum is being confirmed, so pullbacks are cleaner than outright profit taking.";
+  }
+
+  return {
+    stance,
+    tone,
+    narrative,
+    recommendation,
+    rallyParticipation: !volumeAvailable
+      ? "Unavailable"
+      : fadingRallyVolume
+        ? "Fading"
+        : confirmingRallyVolume
+          ? "Confirming"
+          : "Mixed",
+    followThrough,
+    priceChangePercent: Number((priceChange * 100).toFixed(2)),
+    volumeChangePercent:
+      Number.isFinite(volumeChange) ? Number((volumeChange * 100).toFixed(1)) : null,
+    recentVolumeAvg: Number.isFinite(recentVolumeAvg) ? Number(recentVolumeAvg.toFixed(0)) : null,
+    priorVolumeAvg: Number.isFinite(priorVolumeAvg) ? Number(priorVolumeAvg.toFixed(0)) : null,
+    resistanceLevel: Number.isFinite(recentHigh) ? roundPrice(market.ticker, recentHigh) : null,
+    supportLevel: Number.isFinite(recentSupport) ? roundPrice(market.ticker, recentSupport) : null,
+    mfi: {
+      period: 14,
+      value: mfiValue,
+      signal: summarizeMfiSignal(mfiValue),
+    },
+    dataQuality: volumeAvailable ? "price-and-volume" : "price-only",
+    derivativeContext:
+      "Derivatives pressure still needs an exchange-level funding/open-interest feed; this panel is based on price and candle volume only.",
+  };
+}
+
+function buildTechnicalSummary(
+  market,
+  points,
+  closes,
+  ema8Series,
+  ema21Series,
+  rsiSeries,
+  mfiSeries,
+  lastClose,
+  intervalLabel = TWELVE_DATA_INTERVAL,
+) {
+  const movingAveragePeriods = [5, 10, 20, 50, 100, 200];
+  const threshold = lastClose * Math.max(market.volatility * 0.12, 0.0003);
+  const rsiValue = Number((rsiSeries.at(-1) ?? 50).toFixed(1));
+  const volumeProfile = buildVolumeProfile(
+    market,
+    points,
+    closes,
+    ema8Series,
+    ema21Series,
+    mfiSeries,
+  );
+
+  const movingAverages = movingAveragePeriods.map((period) => {
+    const series = sma(closes, period);
+    const rawValue = series.at(-1);
+
+    if (typeof rawValue !== "number" || !Number.isFinite(rawValue)) {
+      return {
+        period,
+        label: `MA${period}`,
+        value: null,
+        signal: "Unavailable",
+      };
+    }
+
+    const roundedValue = roundPrice(market.ticker, rawValue);
+    const delta = lastClose - rawValue;
+    const signal =
+      Math.abs(delta) <= threshold ? "Neutral" : delta > 0 ? "Buy" : "Sell";
+
+    return {
+      period,
+      label: `MA${period}`,
+      value: roundedValue,
+      signal,
+    };
+  });
+
+  const buyCount = movingAverages.filter((entry) => entry.signal === "Buy").length;
+  const sellCount = movingAverages.filter((entry) => entry.signal === "Sell").length;
+  const neutralCount = movingAverages.filter((entry) => entry.signal === "Neutral").length;
+  const score =
+    buyCount -
+    sellCount +
+    (rsiValue >= 60 ? 1 : 0) -
+    (rsiValue <= 40 ? 1 : 0);
+  const summary = summarizeTechnicalBias(score);
+
+  return {
+    interval: intervalLabel,
+    summary,
+    narrative: `Based on moving averages, RSI, and money flow, the ${intervalLabel} buy/sell signal for ${market.label} is ${summary}.`,
+    buyCount,
+    sellCount,
+    neutralCount,
+    rsi: {
+      period: 14,
+      value: rsiValue,
+      signal: summarizeRsiSignal(rsiValue),
+    },
+    mfi: volumeProfile.mfi,
+    volumeProfile,
+    movingAverages,
+  };
+}
+
+function buildTechnicalTimeframes(market, series) {
+  const timeframes = [
+    {
+      id: "1h",
+      label: formatIntervalLabel(TWELVE_DATA_INTERVAL),
+      bucketSize: 1,
+    },
+    {
+      id: "4h",
+      label: "4H",
+      bucketSize: 4,
+    },
+    {
+      id: "1d",
+      label: "1D",
+      bucketSize: 24,
+    },
+  ];
+
+  return timeframes.map((timeframe) => {
+    const timeframeSeries = aggregateSeries(series, timeframe.bucketSize);
+    const closes = timeframeSeries.map((point) => point.value);
+    const ema8Series = ema(closes, 8);
+    const ema21Series = ema(closes, 21);
+    const rsiSeries = rsi(closes, 14);
+    const mfiSeries = mfi(timeframeSeries, 14);
+    const lastClose = closes.at(-1) ?? series.at(-1)?.value ?? market.basePrice;
+    return {
+      id: timeframe.id,
+      label: timeframe.label,
+      ...buildTechnicalSummary(
+        market,
+        timeframeSeries,
+        closes,
+        ema8Series,
+        ema21Series,
+        rsiSeries,
+        mfiSeries,
+        lastClose,
+        timeframe.label,
+      ),
+    };
+  });
+}
+
+function marketBaseVolume(market) {
+  if (market.desk === "crypto") {
+    return 72000;
+  }
+
+  if (market.desk === "etfs") {
+    return 8500000;
+  }
+
+  if (market.desk === "jse") {
+    return 540000;
+  }
+
+  return 180000;
+}
+
 function buildSeedSeries(market) {
   const series = [];
   let price = market.basePrice;
   const start = Date.now() - HISTORY_LIMIT * 60 * 60 * 1000;
+  const baseVolume = marketBaseVolume(market);
 
   for (let index = 0; index < HISTORY_LIMIT; index += 1) {
     const cycle = Math.sin(index / 5 + market.basePrice) * market.volatility * 0.42;
     const wobble = Math.cos(index / 7 + market.basePrice) * market.volatility * 0.21;
+    const volumeCycle =
+      1 +
+      Math.abs(cycle + wobble) * 38 +
+      Math.sin(index / 8 + market.basePrice) * 0.18 +
+      (Math.random() - 0.5) * 0.12;
     price = price * (1 + market.drift + cycle + wobble);
     price = clamp(price, market.minPrice, market.maxPrice);
     series.push({
       time: new Date(start + index * 60 * 60 * 1000).toISOString(),
       value: roundPrice(market.ticker, price),
+      volume: Math.max(1, Math.round(baseVolume * Math.max(0.35, volumeCycle))),
     });
   }
 
@@ -583,6 +1905,7 @@ let marketDataMeta = {
   sourceStatus: MARKETS.map((market) => ({
     ticker: market.ticker,
     label: market.label,
+    desk: market.desk,
     provider: TWELVE_DATA_API_KEY ? "Twelve Data" : "Simulator",
     status: TWELVE_DATA_API_KEY ? "pending" : "simulated",
     points: marketSeries[market.ticker].length,
@@ -609,13 +1932,62 @@ function sanitizeOrderNote(value) {
   return String(value || "").trim().slice(0, 240);
 }
 
-function parseQuantity(value) {
-  const quantity = Number.parseInt(value, 10);
-  if (!Number.isFinite(quantity) || quantity < 1 || quantity > 1000) {
+function truncateDecimals(value, decimals = 8) {
+  const factor = 10 ** decimals;
+  return Math.trunc(Number(value) * factor) / factor;
+}
+
+function parseTradeQuantity(value, options = {}) {
+  const allowFractional = Boolean(options.allowFractional);
+  const max = Number.isFinite(Number(options.max)) ? Number(options.max) : 1000000;
+  const quantity = Number(value);
+  if (!Number.isFinite(quantity) || quantity <= 0 || quantity > max) {
     return null;
   }
 
-  return quantity;
+  if (!allowFractional && !Number.isInteger(quantity)) {
+    return null;
+  }
+
+  const normalized = allowFractional
+    ? truncateDecimals(quantity, 8)
+    : Math.trunc(quantity);
+
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return null;
+  }
+
+  return Number(normalized.toFixed(8));
+}
+
+function normalizeStoredQuantity(value) {
+  const quantity = Number(value);
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return 1;
+  }
+
+  return Number(truncateDecimals(quantity, 8).toFixed(8));
+}
+
+function quantityPolicyForTrade(input = {}) {
+  if (input.assetClass === "collectible") {
+    return {
+      allowFractional: false,
+      max: 1000,
+    };
+  }
+
+  if (input.executionProvider === "valr" || input.desk === "crypto" || input.marketTicker === "BTCUSD") {
+    return {
+      allowFractional: true,
+      max: 100,
+    };
+  }
+
+  return {
+    allowFractional: false,
+    max: 1000,
+  };
 }
 
 function normalizeTradePrice(trade, value) {
@@ -631,13 +2003,43 @@ function normalizeTradePrice(trade, value) {
   return roundPrice(trade.marketTicker, numeric);
 }
 
+function sanitizeTradePlanValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return null;
+  }
+
+  return numeric;
+}
+
+function applyTradePlan(trade) {
+  const stopPrice = normalizeTradePrice(trade, sanitizeTradePlanValue(trade.stopPrice));
+  const targetPrice = normalizeTradePrice(trade, sanitizeTradePlanValue(trade.targetPrice));
+  const riskBudgetRaw = sanitizeTradePlanValue(trade.riskBudget);
+  const quantity = normalizeStoredQuantity(trade.quantity);
+  const riskPerUnit = stopPrice != null ? Math.abs(trade.entryPrice - stopPrice) : null;
+  const rewardPerUnit = targetPrice != null ? Math.abs(targetPrice - trade.entryPrice) : null;
+
+  trade.stopPrice = stopPrice;
+  trade.targetPrice = targetPrice;
+  trade.riskBudget = riskBudgetRaw != null ? Number(riskBudgetRaw.toFixed(2)) : null;
+  trade.riskAmount =
+    riskPerUnit != null ? Number((riskPerUnit * quantity).toFixed(2)) : null;
+  trade.rewardAmount =
+    rewardPerUnit != null ? Number((rewardPerUnit * quantity).toFixed(2)) : null;
+  trade.riskRewardRatio =
+    riskPerUnit && rewardPerUnit
+      ? Number((rewardPerUnit / riskPerUnit).toFixed(2))
+      : null;
+}
+
 function updateTradeValuation(trade, price) {
   const normalizedPrice = normalizeTradePrice(trade, price);
   if (normalizedPrice == null) {
     return false;
   }
 
-  const quantity = parseQuantity(trade.quantity) || 1;
+  const quantity = normalizeStoredQuantity(trade.quantity);
   const direction = trade.side === "SELL" ? -1 : 1;
   const pnlPercent =
     ((normalizedPrice - trade.entryPrice) / trade.entryPrice) * 100 * direction;
@@ -666,12 +2068,61 @@ function updateTradeValuation(trade, price) {
   return changed;
 }
 
+function buildSignalTradePlan(market, lastClose, ema8Now, ema21Now, closes) {
+  const lookback = Math.min(12, closes.length);
+  const recentWindow = closes.slice(-lookback);
+  const recentLow = Math.min(...recentWindow);
+  const recentHigh = Math.max(...recentWindow);
+  const structureBuffer = Math.max(
+    lastClose * market.volatility * 0.8,
+    Math.abs(ema8Now - ema21Now) * 0.75,
+    lastClose * 0.001,
+  );
+  const support = Math.min(recentLow, ema21Now);
+  const resistance = Math.max(recentHigh, ema21Now);
+  const buyStopRaw = Math.max(0.00001, support - structureBuffer);
+  const sellStopRaw = resistance + structureBuffer;
+  const buyStop = roundPrice(market.ticker, buyStopRaw);
+  const sellStop = roundPrice(market.ticker, sellStopRaw);
+  const buyRisk = Math.max(lastClose - buyStop, structureBuffer);
+  const sellRisk = Math.max(sellStop - lastClose, structureBuffer);
+  const buyTarget = roundPrice(
+    market.ticker,
+    Math.max(resistance + structureBuffer, lastClose + buyRisk * 2),
+  );
+  const sellTarget = roundPrice(
+    market.ticker,
+    Math.max(0.00001, Math.min(support - structureBuffer, lastClose - sellRisk * 2)),
+  );
+
+  return {
+    lookback,
+    recentLow: roundPrice(market.ticker, recentLow),
+    recentHigh: roundPrice(market.ticker, recentHigh),
+    support: roundPrice(market.ticker, support),
+    resistance: roundPrice(market.ticker, resistance),
+    buy: {
+      stopPrice: buyStop,
+      targetPrice: buyTarget,
+      rationale: "Stop below recent support and the 21 EMA buffer. Target recent highs or a 2R push.",
+      source: "Recent swing low + EMA21",
+    },
+    sell: {
+      stopPrice: sellStop,
+      targetPrice: sellTarget,
+      rationale: "Stop above recent resistance and the 21 EMA buffer. Target recent lows or a 2R flush.",
+      source: "Recent swing high + EMA21",
+    },
+  };
+}
+
 function classifySignal(market, series) {
   const closes = series.map((point) => point.value);
   const timestamps = series.map((point) => point.time);
   const ema8Series = ema(closes, 8);
   const ema21Series = ema(closes, 21);
   const rsiSeries = rsi(closes, 14);
+  const mfiSeries = mfi(series, 14);
 
   const lastIndex = closes.length - 1;
   const lastClose = closes[lastIndex];
@@ -754,10 +2205,43 @@ function classifySignal(market, series) {
     42,
     95,
   );
+  const technicalTimeframes = buildTechnicalTimeframes(market, series);
+  const primaryTechnicalSummary =
+    technicalTimeframes[0] ||
+    buildTechnicalSummary(
+      market,
+      series,
+      closes,
+      ema8Series,
+      ema21Series,
+      rsiSeries,
+      mfiSeries,
+      lastClose,
+      formatIntervalLabel(TWELVE_DATA_INTERVAL),
+    );
+  const technicalSummary = {
+    ...primaryTechnicalSummary,
+    timeframes: technicalTimeframes,
+  };
+  if (market.ticker === "BTCUSD") {
+    technicalSummary.fibonacci = buildBtcFibonacciProfile(
+      lastClose,
+      technicalSummary.volumeProfile,
+    );
+  }
+
+  if (market.ticker === "BTCUSD" && technicalSummary.volumeProfile?.stance === "Take Profit Watch") {
+    thesis = `${thesis} Volume participation is fading into nearby resistance, so protect profit instead of adding fresh size.`;
+  } else if (market.ticker === "BTCUSD" && technicalSummary.volumeProfile?.stance === "Short Watch") {
+    thesis = `${thesis} If price loses the fast EMA with better selling pressure, it becomes a short-watch setup rather than a fresh long.`;
+  }
+
+  const tradePlan = buildSignalTradePlan(market, lastClose, ema8Now, ema21Now, closes);
 
   return {
     ticker: market.ticker,
     label: market.label,
+    desk: market.desk,
     headline: `${market.label}: ${setup}`,
     region: market.region,
     action,
@@ -765,6 +2249,8 @@ function classifySignal(market, series) {
     thesis,
     confidence,
     rsi: Number(rsiSeries.at(-1).toFixed(1)),
+    technicalSummary,
+    tradePlan,
     price: roundPrice(market.ticker, lastClose),
     ema8: roundPrice(market.ticker, ema8Now),
     ema21: roundPrice(market.ticker, ema21Now),
@@ -802,12 +2288,19 @@ function updateTradeMetrics(trade, signal) {
     (trade.side === "BUY" && currentPrice < signal.ema8) ||
     (trade.side === "SELL" && currentPrice > signal.ema8);
 
-  if (shouldClose) {
+  if (shouldClose && trade.executionMode !== "live") {
     trade.status = "closed";
     trade.exitPrice = currentPrice;
     trade.closedAt = nowIso();
     trade.exitReason = "Price closed through the 8 EMA";
     changed = true;
+  } else if (shouldClose && trade.executionMode === "live") {
+    const exitAlert = signal.exitRule || "EMA exit condition reached.";
+    if (trade.exitAlert !== exitAlert) {
+      trade.exitAlert = exitAlert;
+      trade.exitAlertAt = nowIso();
+      changed = true;
+    }
   }
 
   if (changed) {
@@ -833,6 +2326,15 @@ function tickMarket(market, previousPrice, signal) {
   );
 
   return roundPrice(market.ticker, nextPrice);
+}
+
+function tickMarketVolume(market, previousVolume, signal) {
+  const baseline = Number(previousVolume) || marketBaseVolume(market);
+  const directionalBias =
+    signal?.action === "BUY" || signal?.action === "SELL" ? 1.04 : 0.99;
+  const cycle = 1 + Math.sin(Date.now() / 240000 + market.basePrice) * 0.16;
+  const noise = 1 + (Math.random() - 0.5) * 0.18;
+  return Math.max(1, Math.round(baseline * directionalBias * cycle * noise));
 }
 
 function rebuildSignalsFromSeries() {
@@ -877,6 +2379,7 @@ function engineTick() {
     const nextPoint = {
       time: nowIso(),
       value: tickMarket(market, previousPoint.value, previousSignal),
+      volume: tickMarketVolume(market, previousPoint.volume, previousSignal),
     };
 
     marketSeries[market.ticker] = [...series.slice(-(HISTORY_LIMIT - 1)), nextPoint];
@@ -914,6 +2417,7 @@ async function fetchTwelveDataSeries(market) {
     .map((entry) => ({
       time: toUtcIso(entry.datetime),
       value: roundPrice(market.ticker, Number(entry.close)),
+      volume: Number.isFinite(Number(entry.volume)) ? Number(entry.volume) : null,
     }))
     .filter((entry) => Number.isFinite(entry.value));
 
@@ -934,6 +2438,7 @@ async function refreshMarketDataOnce() {
       sourceStatus: MARKETS.map((market) => ({
         ticker: market.ticker,
         label: market.label,
+        desk: market.desk,
         provider: "Simulator",
         status: "simulated",
         points: marketSeries[market.ticker].length,
@@ -967,6 +2472,7 @@ async function refreshMarketDataOnce() {
       statuses.push({
         ticker: market.ticker,
         label: market.label,
+        desk: market.desk,
         provider: "Twelve Data",
         status: "live",
         points: result.value.points.length,
@@ -979,6 +2485,7 @@ async function refreshMarketDataOnce() {
     statuses.push({
       ticker: market.ticker,
       label: market.label,
+      desk: market.desk,
       provider: "Simulator fallback",
       status: "fallback",
       points: marketSeries[market.ticker].length,
@@ -1035,6 +2542,18 @@ function detectMarketTicker(title) {
   const headline = String(title || "").toLowerCase();
   if (/rand|zar|jse|south africa|sa\b/.test(headline)) {
     return "USDZAR";
+  }
+
+  if (/spy|s&p 500|s&p500|spdr/.test(headline)) {
+    return "SPY";
+  }
+
+  if (/qqq|nasdaq 100|nasdaq-100/.test(headline)) {
+    return "QQQ";
+  }
+
+  if (/gold|bullion|gld/.test(headline)) {
+    return "GLD";
   }
 
   if (/bitcoin|crypto|ethereum|coin/.test(headline)) {
@@ -1151,8 +2670,12 @@ function filterNewsByRegion(region) {
   return newsItems.filter((item) => item.region === region);
 }
 
-function findCollectibleById(collectibleId) {
-  return COLLECTIBLES.find((item) => item.id === collectibleId);
+function findCatalogItemById(collectibleId) {
+  return PRODUCT_CATALOG.find((item) => item.id === collectibleId);
+}
+
+function findTradeableCollectibleById(collectibleId) {
+  return TRADEABLE_COLLECTIBLES.find((item) => item.id === collectibleId);
 }
 
 function collectionForRequest(req) {
@@ -1165,6 +2688,359 @@ function targetsForRequest(req) {
 
 function settingsForRequest(req) {
   return req.userState ? req.userState.settings : appSettings;
+}
+
+function normalizeValrBalances(payload) {
+  const entries = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload?.balances)
+        ? payload.balances
+        : [];
+
+  return entries
+    .map((entry) => ({
+      currency: entry?.currency || entry?.asset || entry?.symbol,
+      available: entry?.available ?? entry?.availableBalance,
+      reserved: entry?.reserved ?? entry?.reservedBalance ?? entry?.locked,
+      total: entry?.total,
+    }))
+    .map(sanitizeBalanceEntry)
+    .filter(Boolean)
+    .sort((left, right) => Math.abs(right.total) - Math.abs(left.total));
+}
+
+async function valrRequest(record, method, endpointPath, body = null) {
+  const credentials = connectorCredentials(record);
+  if (!credentials.apiKey || !credentials.apiSecret) {
+    throw new Error("connector_not_configured");
+  }
+
+  const payloadBody = body ? JSON.stringify(body) : "";
+  const timestamp = Date.now().toString();
+  const signature = crypto
+    .createHmac("sha512", credentials.apiSecret)
+    .update(timestamp)
+    .update(method.toUpperCase())
+    .update(endpointPath)
+    .update(payloadBody);
+
+  if (record.config.subAccountId) {
+    signature.update(record.config.subAccountId);
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    "X-VALR-API-KEY": credentials.apiKey,
+    "X-VALR-SIGNATURE": signature.digest("hex"),
+    "X-VALR-TIMESTAMP": timestamp,
+  };
+
+  if (record.config.subAccountId) {
+    headers["X-VALR-SUB-ACCOUNT-ID"] = record.config.subAccountId;
+  }
+
+  const response = await fetch(`${VALR_BASE_URL}${endpointPath}`, {
+    method,
+    headers,
+    body: payloadBody || undefined,
+  });
+  const responseText = await response.text();
+  let data = null;
+  if (responseText) {
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { message: responseText };
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data?.errorCode ||
+        data?.message ||
+        data?.error ||
+        `VALR responded with ${response.status}`,
+    );
+  }
+
+  return data;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function formatDecimalString(value, decimals = 8) {
+  const normalized = truncateDecimals(value, decimals);
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return "";
+  }
+
+  return normalized.toFixed(decimals).replace(/\.?0+$/, "");
+}
+
+function buildCustomerOrderId(prefix = "CT") {
+  return `${prefix}-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`
+    .toUpperCase()
+    .slice(0, 50);
+}
+
+let valrPairsCache = {
+  fetchedAt: 0,
+  pairs: {},
+};
+
+async function getValrPairsMap(force = false) {
+  const isFresh = Date.now() - valrPairsCache.fetchedAt < VALR_PAIR_CACHE_MS;
+  if (!force && isFresh && Object.keys(valrPairsCache.pairs).length) {
+    return valrPairsCache.pairs;
+  }
+
+  const response = await fetch(`${VALR_BASE_URL}/v1/public/pairs`);
+  if (!response.ok) {
+    throw new Error(`VALR pair catalog unavailable (${response.status})`);
+  }
+
+  const payload = await response.json();
+  const pairs = Object.fromEntries(
+    (Array.isArray(payload) ? payload : [])
+      .filter((entry) => entry?.symbol)
+      .map((entry) => [
+        String(entry.symbol).toUpperCase(),
+        {
+          symbol: String(entry.symbol).toUpperCase(),
+          active: Boolean(entry.active),
+          currencyPairType: String(entry.currencyPairType || "SPOT").toUpperCase(),
+          baseCurrency: String(entry.baseCurrency || "").toUpperCase(),
+          quoteCurrency: String(entry.quoteCurrency || "").toUpperCase(),
+          minBaseAmount: Number(entry.minBaseAmount),
+          maxBaseAmount: Number(entry.maxBaseAmount),
+          minQuoteAmount: Number(entry.minQuoteAmount),
+          maxQuoteAmount: Number(entry.maxQuoteAmount),
+          baseDecimalPlaces: Number(entry.baseDecimalPlaces || 8),
+        },
+      ]),
+  );
+
+  valrPairsCache = {
+    fetchedAt: Date.now(),
+    pairs,
+  };
+
+  return pairs;
+}
+
+function executionProfileForDesk(userState, desk) {
+  return sanitizeExecutionProfiles(userState?.settings?.executionProfiles)?.[desk] ||
+    DEFAULT_SETTINGS.executionProfiles[desk] ||
+    { mode: "paper", providerId: null };
+}
+
+function selectValrExecutionPair(signal, requestedPair, pairMap) {
+  const signalMapping = VALR_SIGNAL_MARKET_MAP[signal?.ticker];
+  if (!signalMapping) {
+    throw new Error("live_execution_not_supported");
+  }
+
+  const pair = sanitizeValrPair(requestedPair, signalMapping.defaultPair);
+  if (!signalMapping.supportedPairs.includes(pair)) {
+    throw new Error("live_pair_unsupported");
+  }
+
+  const pairMeta = pairMap[pair];
+  if (!pairMeta || !pairMeta.active || pairMeta.currencyPairType !== "SPOT") {
+    throw new Error("live_pair_unavailable");
+  }
+
+  return {
+    pair,
+    pairMeta,
+    signalMapping,
+  };
+}
+
+function normalizeValrOrderStatus(payload) {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const toNumberOrNull = (value) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  };
+
+  return {
+    orderId: payload.orderId || payload.id || null,
+    orderStatusType: String(payload.orderStatusType || payload.status || "").trim() || null,
+    currencyPair: String(payload.currencyPair || payload.pair || "").trim().toUpperCase() || null,
+    originalQuantity: toNumberOrNull(payload.originalQuantity),
+    remainingQuantity: toNumberOrNull(payload.remainingQuantity),
+    orderSide: String(payload.orderSide || payload.side || "").trim().toUpperCase() || null,
+    orderType: String(payload.orderType || "market").trim(),
+    failedReason: String(payload.failedReason || "").trim(),
+    orderUpdatedAt: payload.orderUpdatedAt ? toUtcIso(payload.orderUpdatedAt) : null,
+    orderCreatedAt: payload.orderCreatedAt ? toUtcIso(payload.orderCreatedAt) : null,
+    customerOrderId: String(payload.customerOrderId || "").trim() || null,
+    timeInForce: String(payload.timeInForce || "").trim() || null,
+  };
+}
+
+async function fetchValrOrderStatus(record, pair, customerOrderId) {
+  const endpointPath =
+    `/v1/orders/${encodeURIComponent(pair)}/customerorderid/${encodeURIComponent(customerOrderId)}`;
+  return normalizeValrOrderStatus(await valrRequest(record, "GET", endpointPath));
+}
+
+async function pollValrOrderStatus(record, pair, customerOrderId, attempts = 4, delayMs = 350) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const status = await fetchValrOrderStatus(record, pair, customerOrderId);
+      if (status) {
+        return status;
+      }
+    } catch (error) {
+      if (!String(error.message || "").startsWith("Invalid Order")) {
+        throw error;
+      }
+    }
+
+    if (attempt < attempts - 1) {
+      await sleep(delayMs);
+    }
+  }
+
+  return null;
+}
+
+async function placeValrMarketOrder(record, signal, side, quantity, preferredPair) {
+  const pairMap = await getValrPairsMap();
+  const { pair, pairMeta } = selectValrExecutionPair(signal, preferredPair, pairMap);
+  const baseDecimalPlaces = Number.isFinite(pairMeta.baseDecimalPlaces)
+    ? pairMeta.baseDecimalPlaces
+    : 8;
+  const normalizedQuantity = truncateDecimals(quantity, baseDecimalPlaces);
+
+  if (!Number.isFinite(normalizedQuantity) || normalizedQuantity <= 0) {
+    throw new Error("invalid_quantity");
+  }
+
+  if (Number.isFinite(pairMeta.minBaseAmount) && normalizedQuantity < pairMeta.minBaseAmount) {
+    throw new Error("live_quantity_below_minimum");
+  }
+
+  if (Number.isFinite(pairMeta.maxBaseAmount) && normalizedQuantity > pairMeta.maxBaseAmount) {
+    throw new Error("live_quantity_above_maximum");
+  }
+
+  const baseAmount = formatDecimalString(normalizedQuantity, baseDecimalPlaces);
+  const customerOrderId = buildCustomerOrderId("CT");
+  const acceptance = await valrRequest(record, "POST", "/v1/orders/market", {
+    side,
+    baseAmount,
+    pair,
+    customerOrderId,
+    allowMargin: false,
+  });
+  const status = await pollValrOrderStatus(record, pair, customerOrderId);
+
+  if (status?.orderStatusType === "Failed") {
+    throw new Error(status.failedReason || "live_order_failed");
+  }
+
+  return {
+    pair,
+    baseAmount,
+    acceptance,
+    status,
+    pairMeta,
+  };
+}
+
+async function syncValrAccount(record) {
+  const balances = normalizeValrBalances(
+    await valrRequest(record, "GET", "/v1/account/balances"),
+  );
+  const fundedAssets = balances.filter((entry) => Math.abs(entry.total) > 0);
+  const snapshot = {
+    fetchedAt: nowIso(),
+    balances,
+    totalAssets: balances.length,
+    fundedAssets: fundedAssets.length,
+  };
+
+  return {
+    snapshot,
+    detail:
+      fundedAssets.length > 0
+        ? `Retrieved ${fundedAssets.length} funded assets from VALR.`
+        : "Retrieved balances from VALR.",
+  };
+}
+
+async function testConnector(providerId, record) {
+  if (providerId === "valr") {
+    const { detail } = await syncValrAccount(record);
+    return {
+      status: "online",
+      detail,
+    };
+  }
+
+  if (providerId === "easyequities") {
+    return {
+      status: "unsupported",
+      detail: "No public EasyEquities trading API is wired into Collecttrade yet.",
+    };
+  }
+
+  return {
+    status: "manual_setup",
+    detail: "This provider needs its dedicated OAuth or gateway flow before live testing can run here.",
+  };
+}
+
+async function syncConnectorAccount(providerId, record) {
+  if (providerId === "valr") {
+    const { snapshot, detail } = await syncValrAccount(record);
+    return {
+      status: "online",
+      snapshot,
+      detail,
+    };
+  }
+
+  throw new Error("sync_not_supported");
+}
+
+function connectorFleetSummary() {
+  const providerStats = CONNECTOR_PROVIDERS.map((provider) => {
+    const records = Object.values(userStates)
+      .map((state) => sanitizeConnectorRecord(provider.id, state.connectors?.[provider.id]))
+      .filter((record) => record.configured || provider.availability !== "live");
+
+    return {
+      id: provider.id,
+      name: provider.name,
+      configured: records.filter((record) => record.configured).length,
+      online: records.filter((record) => record.status === "online").length,
+      errors: records.filter((record) => record.lastError).length,
+    };
+  });
+
+  const configured = providerStats.reduce((sum, provider) => sum + provider.configured, 0);
+  const online = providerStats.reduce((sum, provider) => sum + provider.online, 0);
+  const errors = providerStats.reduce((sum, provider) => sum + provider.errors, 0);
+
+  return {
+    configured,
+    online,
+    errors,
+    providers: providerStats,
+  };
 }
 
 function createTrade(signal, side, userId, overrides = {}) {
@@ -1185,44 +3061,72 @@ function createTrade(signal, side, userId, overrides = {}) {
     ...overrides,
   };
 
-  trade.quantity = parseQuantity(trade.quantity) || 1;
+  trade.quantity = parseTradeQuantity(
+    trade.quantity,
+    quantityPolicyForTrade({
+      assetClass: trade.assetClass,
+      desk: signal.desk,
+      executionProvider: trade.executionProvider,
+      marketTicker: trade.marketTicker,
+    }),
+  ) || 1;
   trade.orderNote = sanitizeOrderNote(trade.orderNote);
   trade.unitLabel =
     trade.unitLabel || (trade.assetClass === "collectible" ? "items" : "units");
   updateTradeValuation(trade, trade.currentPrice ?? trade.entryPrice);
+  applyTradePlan(trade);
   return trade;
 }
 
 function createCollectibleTrade(item, side, userId, overrides = {}) {
-  const entryPrice = Number(item.price);
-  const markedPrice = Number((item.price * (1 + item.changePercent / 100)).toFixed(2));
+  const entryPrice = Number(item.price || 0);
+  const markedPrice = Number((entryPrice * (1 + Number(item.changePercent || 0) / 100)).toFixed(2));
 
   return createTrade(
     {
       ticker: `COLLECTIBLE:${item.id}`,
-      label: item.name,
+      label: item.name || `${item.brand} ${item.sku}`,
       price: entryPrice,
-      setup: `${item.category} collector flow`,
+      setup: `${item.category || item.family || item.brand} collectible setup`,
     },
     side,
     userId,
     {
       assetClass: "collectible",
       collectibleId: item.id,
-      category: item.category,
+      category: item.category || item.brand || "Collectible",
       marketTicker: `COLLECTIBLE:${item.id}`,
       currentPrice: markedPrice,
-      market: item.market,
-      venue: item.venue,
-      note: item.note,
+      market: item.market || item.family || item.brand,
+      venue: item.venue || item.sourceSheet || "Collectibles",
+      note: item.note || item.thesis || item.description || "",
       unitLabel: "items",
       ...overrides,
     },
   );
 }
 
+function createIntakeRequest(userId, input) {
+  const request = sanitizeIntakeRequest({
+    ...input,
+    id: requestId++,
+    status: "new",
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  });
+
+  return {
+    ...request,
+    owner: userId,
+  };
+}
+
 function findTradeById(trades, tradeIdToFind) {
   return trades.find((trade) => String(trade.id) === String(tradeIdToFind));
+}
+
+function findIntakeRequestById(requests, requestIdToFind) {
+  return requests.find((request) => String(request.id) === String(requestIdToFind));
 }
 
 function closeTrade(trade, exitReason, signal) {
@@ -1244,12 +3148,25 @@ function buildHealth() {
   const openTrades = Object.values(userStates)
     .flatMap((state) => state.trades)
     .filter((trade) => trade.status === "open").length;
+  const openRequests = Object.values(userStates)
+    .flatMap((state) => state.intakeRequests || [])
+    .filter((request) => request.status !== "completed" && request.status !== "cancelled").length;
+  const connectorSummary = connectorFleetSummary();
   const marketServiceStatus =
     marketDataMeta.mode === "live"
       ? "online"
       : marketDataMeta.mode === "hybrid"
         ? "degraded"
         : "simulated";
+  const connectorServiceStatus =
+    connectorSummary.online > 0
+      ? "online"
+      : connectorSummary.configured > 0
+        ? connectorSummary.errors > 0
+          ? "degraded"
+          : "pending"
+        : "pending";
+  const productionFrontendReady = fs.existsSync(FRONTEND_INDEX_FILE);
 
   return {
     ok: true,
@@ -1258,13 +3175,23 @@ function buildHealth() {
       engine: "online",
       marketData: marketServiceStatus,
       news: newsMeta.lastError ? "degraded" : "online",
+      connectors: connectorServiceStatus,
       persistence: "online",
     },
     metrics: {
       userCount: users.length,
       openTrades,
+      openRequests,
       newsItems: newsItems.length,
+      catalogItems: PRODUCT_CATALOG.length,
+      catalogImportedAt: PRODUCT_CATALOG_DATA.generatedAt,
+      catalogSourceLabel: PRODUCT_CATALOG_DATA.sourceLabel,
+      feedbackItems: feedbackItems.length,
+      unresolvedFeedbackItems: feedbackItems.filter((item) => item.status !== "resolved").length,
+      productionFrontendReady,
       preferredRegion: appSettings.preferredRegion,
+      configuredConnectors: connectorSummary.configured,
+      onlineConnectors: connectorSummary.online,
       marketDataProvider: marketDataMeta.provider,
       marketDataMode: marketDataMeta.mode,
       marketDataInterval: marketDataMeta.interval,
@@ -1275,10 +3202,54 @@ function buildHealth() {
     },
     sources: newsMeta.sourceStatus,
     marketSources: marketDataMeta.sourceStatus,
+    connectors: connectorSummary.providers,
   };
 }
 
+function defaultShareStatus() {
+  return {
+    status: "local_only",
+    provider: null,
+    publicUrl: null,
+    localUrl: `http://127.0.0.1:${PORT}`,
+    startedAt: null,
+    lastHeartbeatAt: null,
+    notes:
+      "Run npm run partner:share to generate a temporary public partner-testing link.",
+  };
+}
+
+function readShareStatus() {
+  const fallback = defaultShareStatus();
+
+  try {
+    if (!fs.existsSync(SHARE_STATUS_FILE)) {
+      return fallback;
+    }
+
+    const parsed = JSON.parse(fs.readFileSync(SHARE_STATUS_FILE, "utf8"));
+    return {
+      ...fallback,
+      ...parsed,
+      status: sanitizeOptionalText(parsed?.status, 40) || fallback.status,
+      provider: sanitizeOptionalText(parsed?.provider, 80),
+      publicUrl: sanitizeOptionalText(parsed?.publicUrl, 240),
+      localUrl: sanitizeOptionalText(parsed?.localUrl, 240) || fallback.localUrl,
+      startedAt: parsed?.startedAt ? toUtcIso(parsed.startedAt) : null,
+      lastHeartbeatAt: parsed?.lastHeartbeatAt ? toUtcIso(parsed.lastHeartbeatAt) : null,
+      notes: sanitizeOptionalText(parsed?.notes, 240) || fallback.notes,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 app.get("/", (_req, res) => {
+  if (fs.existsSync(FRONTEND_INDEX_FILE)) {
+    res.sendFile(FRONTEND_INDEX_FILE);
+    return;
+  }
+
   res
     .status(200)
     .type("html")
@@ -1381,6 +3352,9 @@ app.post("/api/auth/register", (req, res) => {
     email,
     passwordSalt,
     passwordHash: hashPassword(password, passwordSalt),
+    role: users.length === 0 || users.every((candidate) => isSystemAccountEmail(candidate.email))
+      ? "owner"
+      : "partner",
     createdAt: nowIso(),
     lastLoginAt: nowIso(),
   };
@@ -1466,10 +3440,220 @@ app.get("/api/news", optionalAuth, (req, res) => {
   });
 });
 
+app.get("/api/catalog", (_req, res) => {
+  const query = sanitizeOptionalText(_req.query.q, 120).toLowerCase();
+  const brand = sanitizeOptionalText(_req.query.brand, 80);
+  const family = sanitizeOptionalText(_req.query.family, 120);
+  const filtered = PRODUCT_CATALOG.filter((item) => {
+    const brandMatch = !brand || item.brand.toLowerCase() === brand.toLowerCase();
+    const familyMatch = !family || item.family.toLowerCase() === family.toLowerCase();
+    const queryMatch =
+      !query ||
+      [item.sku, item.brand, item.family, item.description, item.sourceSheet]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    return brandMatch && familyMatch && queryMatch;
+  });
+
+  res.json({
+    updatedAt: PRODUCT_CATALOG_DATA.generatedAt || nowIso(),
+    generatedAt: PRODUCT_CATALOG_DATA.generatedAt,
+    items: filtered,
+    count: PRODUCT_CATALOG.length,
+    brands: PRODUCT_CATALOG_BRANDS,
+    families: PRODUCT_CATALOG_FAMILIES,
+    brandCount: PRODUCT_CATALOG_BRANDS.length,
+    familyCount: PRODUCT_CATALOG_FAMILIES.length,
+    printPresets: PRINT_SERVICE_PRESETS,
+    sourceFile: PRODUCT_CATALOG_DATA.sourceFile,
+    sourceLabel: PRODUCT_CATALOG_DATA.sourceLabel,
+  });
+});
+
 app.get("/api/collectibles", (_req, res) => {
   res.json({
     updatedAt: nowIso(),
-    items: COLLECTIBLES,
+    categories: TRADEABLE_COLLECTIBLE_CATEGORIES,
+    brands: TRADEABLE_COLLECTIBLE_BRANDS,
+    items: TRADEABLE_COLLECTIBLES,
+    referenceShelves: OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES,
+  });
+});
+
+app.get("/api/feedback", requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    items: feedbackItems,
+    summary: buildFeedbackSummary(feedbackItems),
+    permissions: {
+      canManage: req.user.role === "owner",
+    },
+  });
+});
+
+app.get("/api/share-status", requireAuth, (_req, res) => {
+  res.json({
+    ok: true,
+    share: readShareStatus(),
+  });
+});
+
+app.post("/api/feedback", requireAuth, (req, res) => {
+  const title = sanitizeOptionalText(req.body?.title, 140);
+  const notes = sanitizeOptionalText(req.body?.notes, 800);
+
+  if (title.length < 6) {
+    res.status(400).json({ ok: false, error: "feedback_title_too_short" });
+    return;
+  }
+
+  if (notes.length < 12) {
+    res.status(400).json({ ok: false, error: "feedback_notes_too_short" });
+    return;
+  }
+
+  const item = sanitizeFeedbackItem({
+    id: crypto.randomUUID(),
+    title,
+    type: req.body?.type,
+    severity: req.body?.severity,
+    area: req.body?.area,
+    notes,
+    status: "new",
+    authorUserId: req.user.id,
+    authorName: req.user.name,
+    authorEmail: req.user.email,
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  });
+
+  feedbackItems = sortFeedbackItems([item, ...feedbackItems]);
+  persistStore();
+
+  res.status(201).json({
+    ok: true,
+    item,
+    items: feedbackItems,
+    summary: buildFeedbackSummary(feedbackItems),
+    permissions: {
+      canManage: req.user.role === "owner",
+    },
+  });
+});
+
+app.patch("/api/feedback/:feedbackId", requireAuth, (req, res) => {
+  if (req.user.role !== "owner") {
+    res.status(403).json({ ok: false, error: "feedback_admin_required" });
+    return;
+  }
+
+  const item = feedbackItems.find((entry) => entry.id === req.params.feedbackId);
+  if (!item) {
+    res.status(404).json({ ok: false, error: "unknown_feedback" });
+    return;
+  }
+
+  item.status = sanitizeFeedbackStatus(req.body?.status || item.status);
+  item.resolutionNote = sanitizeOptionalText(req.body?.resolutionNote, 400);
+  item.updatedAt = nowIso();
+  feedbackItems = sortFeedbackItems(feedbackItems);
+  persistStore();
+
+  res.json({
+    ok: true,
+    item,
+    items: feedbackItems,
+    summary: buildFeedbackSummary(feedbackItems),
+    permissions: {
+      canManage: true,
+    },
+  });
+});
+
+app.get("/api/intake", requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    items: req.userState.intakeRequests,
+    printPresets: PRINT_SERVICE_PRESETS,
+  });
+});
+
+app.post("/api/intake", requireAuth, (req, res) => {
+  const request = createIntakeRequest(req.user.id, req.body);
+
+  if (!request.customerName) {
+    res.status(400).json({ ok: false, error: "customer_name_required" });
+    return;
+  }
+
+  if (request.channel === "email" && !request.contactEmail) {
+    res.status(400).json({ ok: false, error: "contact_email_required" });
+    return;
+  }
+
+  if (request.channel === "phone" && !request.contactPhone) {
+    res.status(400).json({ ok: false, error: "contact_phone_required" });
+    return;
+  }
+
+  if (request.requestType === "catalog") {
+    const selection = request.catalogSelection;
+    const selectedItem = selection?.itemId ? findCatalogItemById(selection.itemId) : null;
+    if (!selectedItem) {
+      res.status(400).json({ ok: false, error: "catalog_item_required" });
+      return;
+    }
+
+    request.catalogSelection = {
+      itemId: selectedItem.id,
+      sku: selectedItem.sku,
+      brand: selectedItem.brand,
+      family: selectedItem.family,
+      name: selectedItem.name,
+      sourceSheet: selectedItem.sourceSheet,
+      description: selectedItem.description,
+    };
+  } else if (!request.printDetails.serviceType) {
+    res.status(400).json({ ok: false, error: "print_service_required" });
+    return;
+  }
+
+  req.userState.intakeRequests.unshift(request);
+  persistStore();
+
+  res.status(201).json({
+    ok: true,
+    request,
+    items: req.userState.intakeRequests,
+  });
+});
+
+app.patch("/api/intake/:requestId", requireAuth, (req, res) => {
+  const request = findIntakeRequestById(req.userState.intakeRequests, req.params.requestId);
+  if (!request) {
+    res.status(404).json({ ok: false, error: "unknown_request" });
+    return;
+  }
+
+  request.status = sanitizeRequestStatus(req.body?.status ?? request.status);
+  request.priority = sanitizeRequestPriority(req.body?.priority ?? request.priority);
+  request.notes = sanitizeOptionalText(req.body?.notes ?? request.notes, 400);
+  request.quotedAmount =
+    req.body?.quotedAmount === null || req.body?.quotedAmount === ""
+      ? null
+      : sanitizeQuoteAmount(req.body?.quotedAmount ?? request.quotedAmount);
+  request.followUpAt =
+    req.body?.followUpAt === null || req.body?.followUpAt === ""
+      ? null
+      : sanitizeFollowUpAt(req.body?.followUpAt ?? request.followUpAt);
+  request.updatedAt = nowIso();
+  persistStore();
+
+  res.json({
+    ok: true,
+    request,
+    items: req.userState.intakeRequests,
   });
 });
 
@@ -1477,11 +3661,13 @@ app.get("/api/portfolio", requireAuth, (req, res) => {
   res.json(req.userState.trades);
 });
 
-app.post("/api/trades", requireAuth, (req, res) => {
+app.post("/api/trades", requireAuth, async (req, res) => {
   const marketTicker = String(req.body?.marketTicker || "").toUpperCase();
   const side = String(req.body?.side || "").toUpperCase();
-  const quantity = parseQuantity(req.body?.quantity);
   const orderNote = sanitizeOrderNote(req.body?.orderNote);
+  const stopPrice = sanitizeTradePlanValue(req.body?.stopPrice);
+  const targetPrice = sanitizeTradePlanValue(req.body?.targetPrice);
+  const riskBudget = sanitizeTradePlanValue(req.body?.riskBudget);
   const signal = latestSignals.find((candidate) => candidate.ticker === marketTicker);
 
   if (!signal) {
@@ -1494,27 +3680,117 @@ app.post("/api/trades", requireAuth, (req, res) => {
     return;
   }
 
+  const executionProfile = executionProfileForDesk(req.userState, signal.desk);
+  const quantity = parseTradeQuantity(
+    req.body?.quantity,
+    quantityPolicyForTrade({
+      assetClass: "market",
+      desk: signal.desk,
+      executionProvider: executionProfile.providerId,
+    }),
+  );
+
   if (!quantity) {
     res.status(400).json({ ok: false, error: "invalid_quantity" });
     return;
   }
 
-  const trade = createTrade(signal, side, req.user.id, {
-    quantity,
-    orderNote,
-  });
-  req.userState.trades.unshift(trade);
-  persistStore();
+  try {
+    let trade = null;
 
-  res.status(201).json({ ok: true, trade, portfolio: req.userState.trades });
+    if (executionProfile.mode === "live") {
+      if (signal.desk !== "crypto" || executionProfile.providerId !== "valr") {
+        res.status(400).json({ ok: false, error: "live_execution_not_supported" });
+        return;
+      }
+
+      const connector = connectorStateForUser(req.userState, "valr");
+      if (!connector.configured) {
+        res.status(400).json({ ok: false, error: "connector_not_configured" });
+        return;
+      }
+
+      const liveOrder = await placeValrMarketOrder(
+        connector,
+        signal,
+        side,
+        quantity,
+        connector.config.preferredPair || executionProfile.pair,
+      );
+      const remoteStatus = liveOrder.status;
+      connector.status = "online";
+      connector.lastTestAt = nowIso();
+      connector.lastError = null;
+
+      trade = createTrade(signal, side, req.user.id, {
+        quantity: Number(liveOrder.baseAmount),
+        orderNote,
+        stopPrice,
+        targetPrice,
+        riskBudget,
+        executionMode: "live",
+        executionProvider: "valr",
+        executionLabel: "VALR",
+        executionPair: liveOrder.pair,
+        remoteOrderId: remoteStatus?.orderId || liveOrder.acceptance?.id || null,
+        remoteCustomerOrderId:
+          remoteStatus?.customerOrderId || liveOrder.acceptance?.customerOrderId || null,
+        remoteStatus: remoteStatus?.orderStatusType || "Accepted",
+        remoteStatusAt: remoteStatus?.orderUpdatedAt || nowIso(),
+        remoteFailedReason: remoteStatus?.failedReason || "",
+        unitLabel: liveOrder.pairMeta.baseCurrency || "units",
+      });
+    } else {
+      trade = createTrade(signal, side, req.user.id, {
+        quantity,
+        orderNote,
+        stopPrice,
+        targetPrice,
+        riskBudget,
+        executionMode: "paper",
+        executionProvider: executionProfile.providerId,
+        executionLabel: "Collecttrade Paper",
+      });
+    }
+
+    req.userState.trades.unshift(trade);
+    persistStore();
+
+    res.status(201).json({
+      ok: true,
+      trade,
+      portfolio: req.userState.trades,
+      execution: {
+        mode: trade.executionMode || "paper",
+        providerId: trade.executionProvider || null,
+        pair: trade.executionPair || null,
+        remoteStatus: trade.remoteStatus || null,
+      },
+    });
+  } catch (error) {
+    const connector = connectorStateForUser(req.userState, "valr");
+    if (executionProfile.mode === "live" && connector.configured) {
+      connector.status = "error";
+      connector.lastError = error.message;
+      connector.lastTestAt = nowIso();
+      persistStore();
+    }
+
+    res.status(400).json({
+      ok: false,
+      error: error.message || "trade_execution_failed",
+    });
+  }
 });
 
 app.post("/api/collectibles/trades", requireAuth, (req, res) => {
   const collectibleId = String(req.body?.collectibleId || "").trim();
-  const side = String(req.body?.side || "BUY").toUpperCase();
-  const quantity = parseQuantity(req.body?.quantity);
+  const side = String(req.body?.side || "").toUpperCase();
   const orderNote = sanitizeOrderNote(req.body?.orderNote);
-  const item = findCollectibleById(collectibleId);
+  const stopPrice = sanitizeTradePlanValue(req.body?.stopPrice);
+  const targetPrice = sanitizeTradePlanValue(req.body?.targetPrice);
+  const riskBudget = sanitizeTradePlanValue(req.body?.riskBudget);
+  const item = findTradeableCollectibleById(collectibleId);
 
   if (!item) {
     res.status(400).json({ ok: false, error: "unknown_collectible" });
@@ -1526,6 +3802,11 @@ app.post("/api/collectibles/trades", requireAuth, (req, res) => {
     return;
   }
 
+  const quantity = parseTradeQuantity(
+    req.body?.quantity,
+    quantityPolicyForTrade({ assetClass: "collectible" }),
+  );
+
   if (!quantity) {
     res.status(400).json({ ok: false, error: "invalid_quantity" });
     return;
@@ -1534,7 +3815,14 @@ app.post("/api/collectibles/trades", requireAuth, (req, res) => {
   const trade = createCollectibleTrade(item, side, req.user.id, {
     quantity,
     orderNote,
+    stopPrice,
+    targetPrice,
+    riskBudget,
+    executionMode: "paper",
+    executionProvider: "collecttrade",
+    executionLabel: "Collecttrade Paper",
   });
+
   req.userState.trades.unshift(trade);
   persistStore();
 
@@ -1542,10 +3830,16 @@ app.post("/api/collectibles/trades", requireAuth, (req, res) => {
     ok: true,
     trade,
     portfolio: req.userState.trades,
+    execution: {
+      mode: trade.executionMode || "paper",
+      providerId: trade.executionProvider || "collecttrade",
+      pair: null,
+      remoteStatus: null,
+    },
   });
 });
 
-app.post("/api/trades/:tradeId/close", requireAuth, (req, res) => {
+app.post("/api/trades/:tradeId/close", requireAuth, async (req, res) => {
   const trade = findTradeById(req.userState.trades, req.params.tradeId);
   const orderNote = sanitizeOrderNote(req.body?.orderNote);
 
@@ -1563,15 +3857,76 @@ app.post("/api/trades/:tradeId/close", requireAuth, (req, res) => {
     trade.assetClass === "market"
       ? latestSignals.find((candidate) => candidate.ticker === trade.marketTicker)
       : null;
-  const exitReason = orderNote ? `Manual close: ${orderNote}` : "Manual close";
-  closeTrade(trade, exitReason, signal);
-  persistStore();
 
-  res.json({
-    ok: true,
-    trade,
-    portfolio: req.userState.trades,
-  });
+  try {
+    if (trade.executionMode === "live" && trade.executionProvider === "valr") {
+      const connector = connectorStateForUser(req.userState, "valr");
+      if (!connector.configured) {
+        res.status(400).json({ ok: false, error: "connector_not_configured" });
+        return;
+      }
+
+      const closeSide = trade.side === "BUY" ? "SELL" : "BUY";
+      const liveSignal = signal || { ticker: trade.marketTicker, desk: "crypto" };
+      const liveOrder = await placeValrMarketOrder(
+        connector,
+        liveSignal,
+        closeSide,
+        normalizeStoredQuantity(trade.quantity),
+        trade.executionPair ||
+          connector.config.preferredPair ||
+          executionProfileForDesk(req.userState, "crypto").pair,
+      );
+      const remoteStatus = liveOrder.status;
+      connector.status = "online";
+      connector.lastTestAt = nowIso();
+      connector.lastError = null;
+      closeTrade(
+        trade,
+        orderNote ? `Manual live close: ${orderNote}` : "Manual live close",
+        signal,
+      );
+      trade.closeExecutionMode = "live";
+      trade.closeExecutionProvider = "valr";
+      trade.closeExecutionPair = liveOrder.pair;
+      trade.closeRemoteOrderId = remoteStatus?.orderId || liveOrder.acceptance?.id || null;
+      trade.closeRemoteCustomerOrderId =
+        remoteStatus?.customerOrderId || liveOrder.acceptance?.customerOrderId || null;
+      trade.closeRemoteStatus = remoteStatus?.orderStatusType || "Accepted";
+      trade.closeRemoteStatusAt = remoteStatus?.orderUpdatedAt || nowIso();
+      trade.closeRemoteFailedReason = remoteStatus?.failedReason || "";
+    } else {
+      const exitReason = orderNote ? `Manual close: ${orderNote}` : "Manual close";
+      closeTrade(trade, exitReason, signal);
+    }
+
+    persistStore();
+
+    res.json({
+      ok: true,
+      trade,
+      portfolio: req.userState.trades,
+      execution: {
+        mode: trade.closeExecutionMode || trade.executionMode || "paper",
+        providerId: trade.closeExecutionProvider || trade.executionProvider || null,
+        pair: trade.closeExecutionPair || trade.executionPair || null,
+        remoteStatus: trade.closeRemoteStatus || null,
+      },
+    });
+  } catch (error) {
+    if (trade.executionMode === "live" && trade.executionProvider === "valr") {
+      const connector = connectorStateForUser(req.userState, "valr");
+      connector.status = connector.configured ? "error" : connectorBaselineStatus("valr");
+      connector.lastError = error.message;
+      connector.lastTestAt = nowIso();
+      persistStore();
+    }
+
+    res.status(400).json({
+      ok: false,
+      error: error.message || "trade_close_failed",
+    });
+  }
 });
 
 app.get("/api/settings", requireAuth, (req, res) => {
@@ -1591,6 +3946,150 @@ app.put("/api/settings", requireAuth, (req, res) => {
   res.json({
     ok: true,
     settings: req.userState.settings,
+  });
+});
+
+app.get("/api/connectors", requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    providers: CONNECTOR_PROVIDERS.map((provider) =>
+      buildConnectorView(provider.id, connectorStateForUser(req.userState, provider.id)),
+    ),
+  });
+});
+
+app.put("/api/connectors/:providerId", requireAuth, (req, res) => {
+  const providerId = String(req.params.providerId || "").trim().toLowerCase();
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  if (!provider) {
+    res.status(404).json({ ok: false, error: "unknown_connector" });
+    return;
+  }
+
+  if (providerId !== "valr") {
+    res.status(400).json({ ok: false, error: "manual_connector_setup" });
+    return;
+  }
+
+  const connector = connectorStateForUser(req.userState, providerId);
+  const existingCredentials = connectorCredentials(connector);
+  const nextCredentials = {
+    apiKey: String(req.body?.apiKey || existingCredentials.apiKey || "").trim(),
+    apiSecret: String(req.body?.apiSecret || existingCredentials.apiSecret || "").trim(),
+  };
+
+  if (!nextCredentials.apiKey || !nextCredentials.apiSecret) {
+    res.status(400).json({ ok: false, error: "connector_credentials_required" });
+    return;
+  }
+
+  connector.config = sanitizeConnectorConfig(providerId, {
+    ...connector.config,
+    ...req.body,
+  });
+  connector.authBlob = encryptConnectorPayload(nextCredentials);
+  connector.configured = true;
+  connector.status = "configured";
+  connector.lastTestAt = null;
+  connector.lastSyncAt = null;
+  connector.lastError = null;
+  connector.accountSnapshot = null;
+  persistStore();
+
+  res.json({
+    ok: true,
+    provider: buildConnectorView(providerId, connector),
+  });
+});
+
+app.post("/api/connectors/:providerId/test", requireAuth, async (req, res) => {
+  const providerId = String(req.params.providerId || "").trim().toLowerCase();
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  if (!provider) {
+    res.status(404).json({ ok: false, error: "unknown_connector" });
+    return;
+  }
+
+  const connector = connectorStateForUser(req.userState, providerId);
+
+  try {
+    const result = await testConnector(providerId, connector);
+    connector.status = result.status;
+    connector.lastTestAt = nowIso();
+    connector.lastError = null;
+    persistStore();
+
+    res.json({
+      ok: true,
+      detail: result.detail,
+      provider: buildConnectorView(providerId, connector),
+    });
+  } catch (error) {
+    connector.status = connector.configured ? "error" : connectorBaselineStatus(providerId);
+    connector.lastTestAt = nowIso();
+    connector.lastError = error.message;
+    persistStore();
+
+    res.status(400).json({
+      ok: false,
+      error: error.message || "connector_test_failed",
+      provider: buildConnectorView(providerId, connector),
+    });
+  }
+});
+
+app.post("/api/connectors/:providerId/sync", requireAuth, async (req, res) => {
+  const providerId = String(req.params.providerId || "").trim().toLowerCase();
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  if (!provider) {
+    res.status(404).json({ ok: false, error: "unknown_connector" });
+    return;
+  }
+
+  const connector = connectorStateForUser(req.userState, providerId);
+
+  try {
+    const result = await syncConnectorAccount(providerId, connector);
+    connector.status = result.status;
+    connector.lastTestAt = nowIso();
+    connector.lastSyncAt = nowIso();
+    connector.lastError = null;
+    connector.accountSnapshot = sanitizeAccountSnapshot(result.snapshot);
+    persistStore();
+
+    res.json({
+      ok: true,
+      detail: result.detail,
+      provider: buildConnectorView(providerId, connector),
+    });
+  } catch (error) {
+    connector.status = connector.configured ? "error" : connectorBaselineStatus(providerId);
+    connector.lastSyncAt = nowIso();
+    connector.lastError = error.message;
+    persistStore();
+
+    res.status(400).json({
+      ok: false,
+      error: error.message || "connector_sync_failed",
+      provider: buildConnectorView(providerId, connector),
+    });
+  }
+});
+
+app.delete("/api/connectors/:providerId", requireAuth, (req, res) => {
+  const providerId = String(req.params.providerId || "").trim().toLowerCase();
+  const provider = CONNECTOR_PROVIDER_MAP[providerId];
+  if (!provider) {
+    res.status(404).json({ ok: false, error: "unknown_connector" });
+    return;
+  }
+
+  req.userState.connectors[providerId] = defaultConnectorRecord(providerId);
+  persistStore();
+
+  res.json({
+    ok: true,
+    provider: buildConnectorView(providerId, req.userState.connectors[providerId]),
   });
 });
 
@@ -1617,6 +4116,13 @@ app.post("/api/news/targets", requireAuth, (req, res) => {
     items: req.userState.newsTargets,
   });
 });
+
+if (fs.existsSync(FRONTEND_INDEX_FILE)) {
+  app.use(express.static(FRONTEND_DIST_DIR));
+  app.get(/^\/(?!api(?:\/|$)).*/, (_req, res) => {
+    res.sendFile(FRONTEND_INDEX_FILE);
+  });
+}
 
 engineTick();
 refreshMarketDataOnce().catch((error) => {

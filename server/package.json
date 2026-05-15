@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "check": "node --check server.js"
+    "build:client": "npm --prefix ../frontend run build",
+    "start:staging": "npm run build:client && node server.js",
+    "check": "node --check server.js",
+    "catalog:import": "python import_catalog.py"
   },
   "keywords": [],
   "author": "",

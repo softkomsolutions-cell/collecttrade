@@ -1,0 +1,20 @@
+{
+  "name": "collecttrade",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix frontend ci && npm --prefix server ci",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build": "npm --prefix frontend run build",
+    "check": "npm --prefix frontend run lint && npm --prefix server run check",
+    "partner:staging": "npm --prefix frontend run build && npm --prefix server start",
+    "partner:share": "node scripts/partner-share.mjs",
+    "render:smoke": "node scripts/render-smoke-test.mjs",
+    "partner:compose": "docker compose up --build -d",
+    "partner:compose:down": "docker compose down",
+    "partner:compose:logs": "docker compose logs -f collecttrade"
+  },
+  "dependencies": {
+    "localtunnel": "2.0.2"
+  }
+}
