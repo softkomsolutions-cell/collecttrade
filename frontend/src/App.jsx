@@ -117,6 +117,7 @@ const EMPTY_COLLECTIBLES_RESPONSE = {
 
 const EMPTY_COLLECTIBLE_PORTFOLIO = {
   items: [],
+  transactions: [],
   summary: {},
 };
 
@@ -816,6 +817,7 @@ export default function App() {
           ...EMPTY_COLLECTIBLE_PORTFOLIO,
           ...collectiblePortfolioData,
           items: collectiblePortfolioData.items || [],
+          transactions: collectiblePortfolioData.transactions || [],
           summary: collectiblePortfolioData.summary || {},
         });
         setCollectibleImports(collectibleImportsData.items || []);

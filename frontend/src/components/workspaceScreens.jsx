@@ -1957,11 +1957,13 @@ export function CollectiblesScreen({
   const [importStatus, setImportStatus] = useState("");
   const [revalueBusyId, setRevalueBusyId] = useState("");
   const [portfolioStatus, setPortfolioStatus] = useState("");
+  const [saleBusyId, setSaleBusyId] = useState("");
   const officialShelves = collectiblesResponse.referenceShelves || [];
   const partnerSources = collectiblesResponse.partnerSources || [];
   const legoReferenceShelf =
     officialShelves.find((shelf) => shelf.brand === "LEGO") || officialShelves[0] || null;
   const collectibleHoldings = collectiblePortfolio.items || [];
+  const collectibleTransactions = collectiblePortfolio.transactions || [];
   const collectibleSummary = collectiblePortfolio.summary || {};
   const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
   const queueImport = async (sourceId) => {
@@ -2014,6 +2016,38 @@ export function CollectiblesScreen({
       setPortfolioStatus("The holding could not be refreshed. Please try again.");
     } finally {
       setRevalueBusyId("");
+    }
+  };
+  const recordSale = async (holding) => {
+    const quantity = window.prompt(`How many ${holding.name} items were sold?`, "1");
+    if (!quantity) return;
+    const unitPriceZAR = window.prompt("Sale price per item in ZAR?");
+    if (!unitPriceZAR) return;
+
+    setSaleBusyId(holding.id);
+    setPortfolioStatus("");
+    try {
+      const response = await fetch(`/api/collectibles/portfolio/${holding.id}/sell`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          quantity: Number(quantity),
+          unitPriceZAR: Number(unitPriceZAR),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "collectible_sale_failed");
+      }
+      setPortfolioStatus("Sale recorded. Portfolio performance has been updated.");
+      await refreshContext();
+    } catch {
+      setPortfolioStatus("The sale could not be recorded. Check the quantity and price.");
+    } finally {
+      setSaleBusyId("");
     }
   };
   const groupedCollectibles = [
@@ -2168,6 +2202,14 @@ export function CollectiblesScreen({
             <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
           </div>
           <div className="summaryCard">
+            <span>Unrealized gain</span>
+            <strong>{formatZar(collectibleSummary.unrealizedPnlZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Realized gain</span>
+            <strong>{formatZar(collectibleSummary.realizedPnlZAR)}</strong>
+          </div>
+          <div className="summaryCard">
             <span>5 year scenario</span>
             <strong>{formatZar(collectibleSummary.projectedFiveYearsZAR)}</strong>
           </div>
@@ -2208,6 +2250,14 @@ export function CollectiblesScreen({
                   >
                     {revalueBusyId === holding.id ? "Refreshing..." : "Refresh Valuation"}
                   </button>
+                  <button
+                    className="ghostButton"
+                    type="button"
+                    disabled={saleBusyId === holding.id}
+                    onClick={() => recordSale(holding)}
+                  >
+                    {saleBusyId === holding.id ? "Recording..." : "Record Sale"}
+                  </button>
                 </div>
               </article>
             ))}
@@ -2219,6 +2269,56 @@ export function CollectiblesScreen({
           />
         )}
         {portfolioStatus ? <div className="statusBanner">{portfolioStatus}</div> : null}
+      </section>
+
+      <section className="panel" id="collectibles-transactions">
+        <div className="panelHeader">
+          <div>
+            <h2>Investment Activity</h2>
+            <p>
+              Purchases and exits stay together so each collectible has an investment trail from
+              acquisition through sale.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Transactions</span>
+            <strong>{collectibleTransactions.length}</strong>
+          </div>
+        </div>
+
+        {collectibleTransactions.length ? (
+          <div className="collectibleReferenceGrid">
+            {collectibleTransactions.map((transaction) => (
+              <article className="collectibleReferenceCard" key={transaction.id}>
+                <div className="collectibleReferenceTop">
+                  <span>{transaction.categoryLabel}</span>
+                  <strong>{transaction.type === "sale" ? "Sold" : "Purchased"}</strong>
+                </div>
+                <h3>{transaction.name}</h3>
+                <p>
+                  {transaction.identifier} | Quantity {transaction.quantity}
+                </p>
+                <div className="collectibleReferenceMeta">
+                  <div>
+                    <span>{transaction.type === "sale" ? "Sale value" : "Cost"}</span>
+                    <strong>{formatZar(transaction.totalValueZAR)}</strong>
+                  </div>
+                  {transaction.type === "sale" ? (
+                    <div>
+                      <span>Realized gain</span>
+                      <strong>{formatZar(transaction.realizedPnlZAR)}</strong>
+                    </div>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No investment activity yet"
+            body="Saved valuations become purchase records and appear here automatically."
+          />
+        )}
       </section>
 
       <section className="panel" id="collectibles-partner-sources">

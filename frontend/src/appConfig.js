@@ -39,22 +39,22 @@ export const NAV_ITEMS = [
     id: "collectibles",
     label: "Collectibles",
     glyph: "CL",
-    section: "Market",
-    hint: "Valuation, evidence, and inventory",
+    section: "Investment",
+    hint: "Value, buy, track, and sell collectibles",
   },
   {
     id: "portfolio",
     label: "Portfolio",
     glyph: "PF",
-    section: "Market",
-    hint: "Collectible positions and history",
+    section: "Investment",
+    hint: "Collection performance and activity",
   },
   {
     id: "home",
     label: "Home",
     glyph: "HM",
-    section: "Market",
-    hint: "Workspace hub and quick launch",
+    section: "Investment",
+    hint: "Collectibles investment workspace",
   },
   {
     id: "news",
@@ -101,7 +101,7 @@ export const NAV_ITEMS = [
 ];
 
 export const NAV_GROUPS = [
-  { id: "market", label: "Collectibles Workspaces" },
+  { id: "investment", label: "Collectibles Investment" },
   { id: "background", label: "Background Market Tools" },
   { id: "platform", label: "Platform Control" },
 ];
@@ -153,6 +153,7 @@ export const PAGE_SECTION_LINKS = {
   collectibles: [
     { id: "collectibles-valuation", label: "Valuation" },
     { id: "collectibles-portfolio", label: "My Collection" },
+    { id: "collectibles-transactions", label: "Activity" },
     { id: "collectibles-partner-sources", label: "Partner Sources" },
     { id: "collectibles-focus", label: "Focus" },
     { id: "collectibles-reference", label: "Reference" },

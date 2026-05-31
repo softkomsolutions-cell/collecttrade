@@ -993,6 +993,7 @@ function defaultUserState() {
     trades: [],
     intakeRequests: [],
     collectibleHoldings: [],
+    collectibleTransactions: [],
     collectibleImports: [],
     settings: sanitizeSettings(DEFAULT_SETTINGS),
     newsTargets: [...DEFAULT_TARGETS],
@@ -1063,8 +1064,32 @@ function sanitizeCollectibleImport(input) {
   };
 }
 
-function summarizeCollectibleHoldings(items) {
-  return items.reduce(
+function sanitizeCollectibleTransaction(input) {
+  const createdAt = input?.createdAt ? toUtcIso(input.createdAt) : nowIso();
+  const quantity = Math.max(1, Math.round(Number(input?.quantity || 1)));
+  const unitPriceZAR = Number(input?.unitPriceZAR || 0);
+  const unitCostZAR = Number(input?.unitCostZAR || 0);
+
+  return {
+    id: cleanCollectibleText(input?.id, 80) || crypto.randomUUID(),
+    holdingId: cleanCollectibleText(input?.holdingId, 80),
+    type: input?.type === "sale" ? "sale" : "purchase",
+    category: cleanCollectibleText(input?.category, 40) || "other",
+    categoryLabel: cleanCollectibleText(input?.categoryLabel, 80) || "Other Collectible",
+    identifier: cleanCollectibleText(input?.identifier, 140),
+    name: cleanCollectibleText(input?.name, 220) || "Collectible",
+    quantity,
+    unitPriceZAR,
+    unitCostZAR,
+    totalValueZAR: Number(input?.totalValueZAR ?? unitPriceZAR * quantity),
+    realizedPnlZAR: Number(input?.realizedPnlZAR ?? (unitPriceZAR - unitCostZAR) * quantity),
+    notes: cleanCollectibleText(input?.notes, 500),
+    createdAt,
+  };
+}
+
+function summarizeCollectibleHoldings(items, transactions = []) {
+  const summary = items.reduce(
     (summary, item) => {
       const quantity = Math.max(1, Number(item.quantity || 1));
       summary.holdingCount += 1;
@@ -1086,6 +1111,14 @@ function summarizeCollectibleHoldings(items) {
       projectedTenYearsZAR: 0,
     },
   );
+
+  summary.unrealizedPnlZAR = summary.currentValueZAR - summary.purchaseValueZAR;
+  summary.realizedPnlZAR = transactions
+    .filter((transaction) => transaction.type === "sale")
+    .reduce((total, transaction) => total + Number(transaction.realizedPnlZAR || 0), 0);
+  summary.purchaseCount = transactions.filter((transaction) => transaction.type === "purchase").length;
+  summary.saleCount = transactions.filter((transaction) => transaction.type === "sale").length;
+  return summary;
 }
 
 function ensureDataDir() {
@@ -1124,6 +1157,9 @@ function loadStore() {
             : [],
           collectibleHoldings: Array.isArray(state?.collectibleHoldings)
             ? state.collectibleHoldings.map(sanitizeCollectibleHolding)
+            : [],
+          collectibleTransactions: Array.isArray(state?.collectibleTransactions)
+            ? state.collectibleTransactions.map(sanitizeCollectibleTransaction)
             : [],
           collectibleImports: Array.isArray(state?.collectibleImports)
             ? state.collectibleImports.map(sanitizeCollectibleImport)
@@ -1227,6 +1263,10 @@ function getUserState(userId) {
 
   if (!Array.isArray(userStates[userId].collectibleImports)) {
     userStates[userId].collectibleImports = [];
+  }
+
+  if (!Array.isArray(userStates[userId].collectibleTransactions)) {
+    userStates[userId].collectibleTransactions = [];
   }
 
   return userStates[userId];
@@ -3678,10 +3718,12 @@ app.post("/api/collectibles/valuation", async (req, res) => {
 
 app.get("/api/collectibles/portfolio", requireAuth, (req, res) => {
   const items = req.userState.collectibleHoldings || [];
+  const transactions = req.userState.collectibleTransactions || [];
   res.json({
     ok: true,
     items,
-    summary: summarizeCollectibleHoldings(items),
+    transactions,
+    summary: summarizeCollectibleHoldings(items, transactions),
   });
 });
 
@@ -3705,11 +3747,29 @@ app.post("/api/collectibles/portfolio", requireAuth, async (req, res) => {
       },
     });
     req.userState.collectibleHoldings.unshift(holding);
+    req.userState.collectibleTransactions.unshift(
+      sanitizeCollectibleTransaction({
+        holdingId: holding.id,
+        type: "purchase",
+        category: holding.category,
+        categoryLabel: holding.categoryLabel,
+        identifier: holding.identifier,
+        name: holding.name,
+        quantity,
+        unitPriceZAR: holding.purchasePriceZAR,
+        unitCostZAR: holding.purchasePriceZAR,
+        realizedPnlZAR: 0,
+        notes: "Purchase recorded from the collectibles valuation desk.",
+      }),
+    );
     persistStore();
     res.status(201).json({
       ok: true,
       item: holding,
-      summary: summarizeCollectibleHoldings(req.userState.collectibleHoldings),
+      summary: summarizeCollectibleHoldings(
+        req.userState.collectibleHoldings,
+        req.userState.collectibleTransactions,
+      ),
     });
   } catch (error) {
     const message = String(error?.message || "collectible_save_failed");
@@ -3743,7 +3803,10 @@ app.post("/api/collectibles/portfolio/:holdingId/revalue", requireAuth, async (r
     res.json({
       ok: true,
       item: refreshed,
-      summary: summarizeCollectibleHoldings(req.userState.collectibleHoldings),
+      summary: summarizeCollectibleHoldings(
+        req.userState.collectibleHoldings,
+        req.userState.collectibleTransactions,
+      ),
     });
   } catch (error) {
     res.status(400).json({
@@ -3751,6 +3814,61 @@ app.post("/api/collectibles/portfolio/:holdingId/revalue", requireAuth, async (r
       error: String(error?.message || "collectible_revalue_failed"),
     });
   }
+});
+
+app.post("/api/collectibles/portfolio/:holdingId/sell", requireAuth, (req, res) => {
+  const holdingIndex = req.userState.collectibleHoldings.findIndex(
+    (holding) => holding.id === req.params.holdingId,
+  );
+  if (holdingIndex < 0) {
+    return res.status(404).json({ ok: false, error: "collectible_holding_not_found" });
+  }
+
+  const holding = req.userState.collectibleHoldings[holdingIndex];
+  const quantity = Math.round(Number(req.body?.quantity || 0));
+  const unitPriceZAR = Number(req.body?.unitPriceZAR || 0);
+  if (!Number.isFinite(quantity) || quantity < 1 || quantity > holding.quantity) {
+    return res.status(400).json({ ok: false, error: "collectible_sale_quantity_invalid" });
+  }
+  if (!Number.isFinite(unitPriceZAR) || unitPriceZAR <= 0) {
+    return res.status(400).json({ ok: false, error: "collectible_sale_price_required" });
+  }
+
+  const transaction = sanitizeCollectibleTransaction({
+    holdingId: holding.id,
+    type: "sale",
+    category: holding.category,
+    categoryLabel: holding.categoryLabel,
+    identifier: holding.identifier,
+    name: holding.name,
+    quantity,
+    unitPriceZAR,
+    unitCostZAR: holding.purchasePriceZAR,
+    notes: cleanCollectibleText(req.body?.notes, 500) || "Sale recorded from My Collection.",
+  });
+  req.userState.collectibleTransactions.unshift(transaction);
+
+  if (quantity === holding.quantity) {
+    req.userState.collectibleHoldings.splice(holdingIndex, 1);
+  } else {
+    req.userState.collectibleHoldings[holdingIndex] = sanitizeCollectibleHolding({
+      ...holding,
+      quantity: holding.quantity - quantity,
+      updatedAt: nowIso(),
+    });
+  }
+
+  persistStore();
+  res.json({
+    ok: true,
+    transaction,
+    items: req.userState.collectibleHoldings,
+    transactions: req.userState.collectibleTransactions,
+    summary: summarizeCollectibleHoldings(
+      req.userState.collectibleHoldings,
+      req.userState.collectibleTransactions,
+    ),
+  });
 });
 
 app.get("/api/collectibles/imports", requireAuth, (req, res) => {
