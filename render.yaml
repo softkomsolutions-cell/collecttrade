@@ -22,6 +22,18 @@ services:
         value: 1h
       - key: TWELVE_DATA_JSE_SYMBOL
         value: JTOPI
+      - key: BRICKECONOMY_API_KEY
+        sync: false
+      - key: BRICKLINK_CONSUMER_KEY
+        sync: false
+      - key: BRICKLINK_CONSUMER_SECRET
+        sync: false
+      - key: BRICKLINK_TOKEN
+        sync: false
+      - key: BRICKLINK_TOKEN_SECRET
+        sync: false
+      - key: USD_ZAR_RATE
+        value: "17.8"
     disk:
       name: collecttrade-data
       mountPath: /app/server/data

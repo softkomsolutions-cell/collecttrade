@@ -111,6 +111,182 @@ function buildPerformancePoints(trades) {
     });
 }
 
+function formatZar(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric)
+    ? `R${numeric.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`
+    : "--";
+}
+
+function legoErrorMessage(error) {
+  const messages = {
+    lego_market_data_unavailable:
+      "No live source or saved beta benchmark is available for that set yet.",
+    lego_set_number_required: "Enter a valid LEGO set number.",
+    purchase_price_required: "Enter the price you paid in rand.",
+  };
+  return messages[error] || "The LEGO valuation could not be completed. Please try again.";
+}
+
+function LegoValuationPanel() {
+  const [setNum, setSetNum] = useState("40766");
+  const [purchasePriceZAR, setPurchasePriceZAR] = useState("65");
+  const [valuation, setValuation] = useState(null);
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setStatus("");
+
+    try {
+      const response = await fetch("/api/lego/valuation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          setNum,
+          purchasePriceZAR: Number(purchasePriceZAR),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "lego_valuation_failed");
+      }
+      setValuation(payload);
+    } catch (error) {
+      setValuation(null);
+      setStatus(legoErrorMessage(error.message));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="panel legoValuationPanel" id="lego-valuation">
+      <div className="panelHeader">
+        <div>
+          <span className="legoPanelEyebrow">LEGO Beta Flagship</span>
+          <h2>Rate This Purchase</h2>
+          <p>
+            Enter the LEGO set and your purchase price. Collecttrade blends configured market
+            sources, protects API budgets, and returns the 1, 5, and 10 year scenario.
+          </p>
+        </div>
+        <div className="headerStatus">
+          <span>Workflow</span>
+          <strong>BrickLink + BrickEconomy</strong>
+        </div>
+      </div>
+
+      <form className="legoValuationForm" onSubmit={handleSubmit}>
+        <label>
+          <span>LEGO set number</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={setNum}
+            onChange={(event) => setSetNum(event.target.value)}
+            placeholder="40766"
+          />
+        </label>
+        <label>
+          <span>Purchase price (ZAR)</span>
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            value={purchasePriceZAR}
+            onChange={(event) => setPurchasePriceZAR(event.target.value)}
+            placeholder="65"
+          />
+        </label>
+        <button className="primaryButton" type="submit" disabled={busy}>
+          {busy ? "Analyzing..." : "Get Valuation"}
+        </button>
+      </form>
+
+      {status ? <div className="statusBanner">{status}</div> : null}
+
+      {valuation ? (
+        <div className="legoValuationResult">
+          <div className="legoValuationHeadline">
+            <div>
+              <span>LEGO {valuation.setNum}</span>
+              <h3>{valuation.name}</h3>
+              <p>
+                {valuation.rarity} | {valuation.confidence === "live" ? "Live market data" : "Beta benchmark"}
+              </p>
+            </div>
+            <div className="legoScore">
+              <strong>{valuation.score}</strong>
+              <span>/ 10</span>
+              <small>{valuation.recommendation}</small>
+            </div>
+          </div>
+
+          <div className="legoMetricGrid">
+            <div>
+              <span>You paid</span>
+              <strong>{formatZar(valuation.purchasePriceZAR)}</strong>
+            </div>
+            <div>
+              <span>Current estimate</span>
+              <strong>{formatZar(valuation.currentValueZAR)}</strong>
+            </div>
+            <div>
+              <span>Current gain</span>
+              <strong>{formatZar(valuation.profitZAR)}</strong>
+            </div>
+            <div>
+              <span>Cost multiple</span>
+              <strong>{valuation.multiplier}x</strong>
+            </div>
+          </div>
+
+          <div className="legoProjectionGrid">
+            <div>
+              <span>1 year</span>
+              <strong>{formatZar(valuation.projections.oneYear)}</strong>
+            </div>
+            <div>
+              <span>5 years</span>
+              <strong>{formatZar(valuation.projections.fiveYears)}</strong>
+            </div>
+            <div>
+              <span>10 years</span>
+              <strong>{formatZar(valuation.projections.tenYears)}</strong>
+            </div>
+          </div>
+
+          <div className="legoValuationDetailGrid">
+            <div>
+              <span>Investment Notes</span>
+              {(valuation.notes || []).map((note) => (
+                <p key={note}>{note}</p>
+              ))}
+            </div>
+            <div>
+              <span>Pricing Sources</span>
+              {(valuation.sources || []).map((source) => (
+                <p key={source.id}>
+                  <strong>{source.label}</strong>
+                  <small>{source.status}</small>
+                </p>
+              ))}
+            </div>
+          </div>
+
+          <div className="legoProjectionNote">
+            Projections use a {valuation.projections.annualGrowthPercent}% annual scenario and are
+            estimates, not guaranteed returns. USD/ZAR reference: {valuation.usdZarRate}.
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function buildDeskExposureItems(trades) {
   const buckets = new Map();
 
@@ -1656,6 +1832,8 @@ export function CollectiblesScreen({
         hint="Keep trading, verification, and portfolio review in one tidy flow."
         actions={collectibleActions}
       />
+
+      <LegoValuationPanel />
 
       <section className="summaryGrid">
         <div className="summaryCard">

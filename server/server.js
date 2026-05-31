@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const Parser = require("rss-parser");
+const { getLegoStatus, getLegoValuation } = require("./services/legoValuation");
 
 const app = express();
 const parser = new Parser();
@@ -3479,6 +3480,44 @@ app.get("/api/collectibles", (_req, res) => {
     items: TRADEABLE_COLLECTIBLES,
     referenceShelves: OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES,
   });
+});
+
+app.get("/api/lego/status", (_req, res) => {
+  res.json(getLegoStatus());
+});
+
+app.post("/api/lego/valuation", async (req, res) => {
+  try {
+    const valuation = await getLegoValuation(req.body);
+    res.json(valuation);
+  } catch (error) {
+    const knownErrors = new Set([
+      "lego_set_number_required",
+      "purchase_price_required",
+      "lego_market_data_unavailable",
+    ]);
+    const message = String(error?.message || "lego_valuation_failed");
+    res.status(knownErrors.has(message) ? 400 : 500).json({
+      ok: false,
+      error: message,
+    });
+  }
+});
+
+app.get("/api/lego/test-janeausten", async (_req, res) => {
+  try {
+    res.json(
+      await getLegoValuation({
+        setNum: "40766",
+        purchasePriceZAR: 65,
+      }),
+    );
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: String(error?.message || "lego_valuation_failed"),
+    });
+  }
 });
 
 app.get("/api/feedback", requireAuth, (req, res) => {

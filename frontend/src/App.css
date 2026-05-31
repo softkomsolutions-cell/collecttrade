@@ -659,6 +659,174 @@
   line-height: 1.6;
 }
 
+.legoValuationPanel {
+  display: grid;
+  gap: 18px;
+  border-color: rgba(255, 191, 114, 0.24);
+  background:
+    linear-gradient(135deg, rgba(255, 191, 114, 0.07), transparent 46%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.legoPanelEyebrow,
+.legoValuationForm span,
+.legoMetricGrid span,
+.legoProjectionGrid span,
+.legoValuationDetailGrid > div > span {
+  color: #ffbf72;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.legoValuationForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.legoValuationForm label {
+  display: grid;
+  gap: 8px;
+}
+
+.legoValuationForm .primaryButton {
+  min-height: 48px;
+}
+
+.legoValuationResult,
+.legoValuationDetailGrid > div {
+  display: grid;
+  gap: 14px;
+}
+
+.legoValuationHeadline {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 191, 114, 0.16);
+}
+
+.legoValuationHeadline span,
+.legoValuationHeadline p,
+.legoValuationDetailGrid p,
+.legoValuationDetailGrid small,
+.legoProjectionNote {
+  color: #8da2c8;
+}
+
+.legoValuationHeadline h3 {
+  margin: 8px 0;
+  color: #f5f7fb;
+  font-size: 24px;
+}
+
+.legoValuationHeadline p,
+.legoValuationDetailGrid p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.legoScore {
+  min-width: 142px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 212, 106, 0.2);
+  background: rgba(0, 212, 106, 0.08);
+  text-align: right;
+}
+
+.legoScore strong {
+  color: #00d46a;
+  font-size: 42px;
+}
+
+.legoScore span {
+  color: #8da2c8;
+  font-size: 17px;
+}
+
+.legoScore small {
+  display: block;
+  margin-top: 4px;
+  color: #00d46a;
+}
+
+.legoMetricGrid,
+.legoProjectionGrid,
+.legoValuationDetailGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.legoMetricGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.legoProjectionGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.legoValuationDetailGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.legoMetricGrid div,
+.legoProjectionGrid div,
+.legoValuationDetailGrid > div {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.legoMetricGrid div,
+.legoProjectionGrid div {
+  display: grid;
+  gap: 8px;
+}
+
+.legoMetricGrid strong,
+.legoProjectionGrid strong {
+  color: #f5f7fb;
+  font-size: 18px;
+}
+
+.legoValuationDetailGrid p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.legoValuationDetailGrid p strong {
+  color: #f5f7fb;
+}
+
+.legoProjectionNote {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .legoValuationForm,
+  .legoMetricGrid,
+  .legoValuationDetailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .legoValuationHeadline {
+    display: grid;
+  }
+
+  .legoScore {
+    min-width: 0;
+    text-align: left;
+  }
+}
+
 .toolCard,
 .toolBullet {
   border-radius: 18px;

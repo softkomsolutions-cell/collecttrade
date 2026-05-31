@@ -185,8 +185,34 @@ The backend supports the following environment variables:
 - `TWELVE_DATA_API_KEY`
 - `TWELVE_DATA_INTERVAL`
 - `TWELVE_DATA_JSE_SYMBOL`
+- `BRICKECONOMY_API_KEY`
+- `BRICKLINK_CONSUMER_KEY`
+- `BRICKLINK_CONSUMER_SECRET`
+- `BRICKLINK_TOKEN`
+- `BRICKLINK_TOKEN_SECRET`
+- `USD_ZAR_RATE`
 
 Use `server/.env.example` as the template.
+
+## LEGO Valuation Beta
+
+The Collectibles workspace includes a LEGO-first purchase analyzer. Enter a set number and the
+price paid in ZAR to generate:
+
+1. a current sealed-set estimate
+2. the cost multiple and current gain
+3. an investment score and recommendation
+4. 1, 5, and 10 year projection scenarios
+5. a visible source breakdown
+
+Configured sources are used in this order:
+
+1. BrickLink sold and stock price guides through signed OAuth 1.0a requests
+2. BrickEconomy set data through its `x-apikey` header
+3. a clearly labeled Collecttrade benchmark for the Jane Austen beta example only
+
+The backend caches source responses and preserves a reserve portion of each configured daily
+budget. Use `/api/lego/status` to review source readiness and quota state.
 
 ## Partner Testing Flow
 
