@@ -13,6 +13,21 @@ The app is split into:
 - `frontend/` - React + Vite product UI
 - `server/` - Node.js API, auth, signal engine, news aggregation, portfolio logic, connectors, and shared feedback board
 
+## Collectibles Partner Beta
+
+The primary beta workflow is available from `Collectibles`:
+
+1. Rate a purchase with the amount paid and a collectible category.
+2. Use connected BrickLink / BrickEconomy pricing for LEGO when credentials are configured.
+3. Use documented comparable-sale inputs for whiskey, stamps, puzzles, cards, coins, comics, and other legitimate collectibles.
+4. Review the score, current estimate, gain, multiple, notes, sources, and 1 / 5 / 10 year scenario values.
+5. Save the rated purchase to `My Collectibles Portfolio`.
+6. Refresh a saved holding when newer evidence is available.
+7. Open Gavin's shared source documents or queue them for reviewed import.
+
+Shared PDFs and Dropbox folders enter an import-review queue. The beta deliberately does not
+silently trust document contents or import holdings without identifier and evidence review.
+
 ## Repo Layout
 
 ```text

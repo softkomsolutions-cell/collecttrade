@@ -115,6 +115,11 @@ const EMPTY_COLLECTIBLES_RESPONSE = {
   partnerSources: [],
 };
 
+const EMPTY_COLLECTIBLE_PORTFOLIO = {
+  items: [],
+  summary: {},
+};
+
 const EMPTY_FEEDBACK_RESPONSE = {
   items: [],
   summary: {},
@@ -587,13 +592,16 @@ export default function App() {
     introId: initialLaunchPreference?.introId || defaultIntroIdForPage(initialPage),
     sectionId:
       initialLaunchPreference?.sectionId || PAGE_SECTION_LINKS[normalizePage(initialPage)]?.[0]?.id,
-    landingId: initialLaunchPreference?.landingId || initialLaunchPreference?.introId || "news",
+    landingId:
+      initialLaunchPreference?.landingId || initialLaunchPreference?.introId || "collectibles",
   });
   const [pendingSectionTarget, setPendingSectionTarget] = useState(null);
 
   const [signalsResponse, setSignalsResponse] = useState(EMPTY_SIGNALS_RESPONSE);
   const [newsResponse, setNewsResponse] = useState(EMPTY_NEWS_RESPONSE);
   const [collectiblesResponse, setCollectiblesResponse] = useState(EMPTY_COLLECTIBLES_RESPONSE);
+  const [collectiblePortfolio, setCollectiblePortfolio] = useState(EMPTY_COLLECTIBLE_PORTFOLIO);
+  const [collectibleImports, setCollectibleImports] = useState([]);
   const [health, setHealth] = useState(EMPTY_HEALTH);
   const [portfolio, setPortfolio] = useState([]);
   const [targets, setTargets] = useState([]);
@@ -631,6 +639,8 @@ export default function App() {
     setAuthStatus("");
     setSplashVisible(false);
     setPortfolio([]);
+    setCollectiblePortfolio(EMPTY_COLLECTIBLE_PORTFOLIO);
+    setCollectibleImports([]);
     setTargets([]);
     setConnectors([]);
     setFeedbackResponse(EMPTY_FEEDBACK_RESPONSE);
@@ -761,6 +771,8 @@ export default function App() {
           connectorsData,
           feedbackData,
           shareData,
+          collectiblePortfolioData,
+          collectibleImportsData,
         ] = await Promise.all([
           requestJson("/api/portfolio", { token: tokenOverride }),
           requestJson("/api/settings", { token: tokenOverride }),
@@ -768,6 +780,8 @@ export default function App() {
           requestJson("/api/connectors", { token: tokenOverride }),
           requestJson("/api/feedback", { token: tokenOverride }),
           requestJson("/api/share-status", { token: tokenOverride }),
+          requestJson("/api/collectibles/portfolio", { token: tokenOverride }),
+          requestJson("/api/collectibles/imports", { token: tokenOverride }),
         ]);
 
         setPortfolio(Array.isArray(portfolioData) ? portfolioData : []);
@@ -798,6 +812,13 @@ export default function App() {
           ...EMPTY_SHARE_STATUS,
           ...(shareData.share || {}),
         });
+        setCollectiblePortfolio({
+          ...EMPTY_COLLECTIBLE_PORTFOLIO,
+          ...collectiblePortfolioData,
+          items: collectiblePortfolioData.items || [],
+          summary: collectiblePortfolioData.summary || {},
+        });
+        setCollectibleImports(collectibleImportsData.items || []);
       } catch (error) {
         if (error.status === 401) {
           clearSession();
@@ -1916,11 +1937,15 @@ export default function App() {
           collectibleCategory={collectibleCategory}
           collectibleQuery={collectibleQuery}
           collectibles={collectibles}
+          collectibleImports={collectibleImports}
+          collectiblePortfolio={collectiblePortfolio}
           collectiblesResponse={collectiblesResponse}
           filteredCollectibles={filteredCollectibles}
           handleCollectibleSelect={handleCollectibleSelect}
           jumpToPageSection={jumpToPageSection}
           openCollectibleTicket={openCollectibleTicket}
+          authToken={authToken}
+          refreshContext={refreshContext}
           setCollectibleBrand={setCollectibleBrand}
           setCollectibleCategory={setCollectibleCategory}
           setCollectibleQuery={setCollectibleQuery}

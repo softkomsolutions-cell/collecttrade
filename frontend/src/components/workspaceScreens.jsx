@@ -208,7 +208,7 @@ function collectibleErrorMessage(error) {
   return messages[error] || "The collectible valuation could not be completed. Please try again.";
 }
 
-function CollectibleValuationPanel() {
+function CollectibleValuationPanel({ authToken, onSaved }) {
   const [category, setCategory] = useState("lego");
   const [identifier, setIdentifier] = useState("40766");
   const [itemName, setItemName] = useState("");
@@ -218,6 +218,7 @@ function CollectibleValuationPanel() {
   const [rarity, setRarity] = useState("");
   const [provenance, setProvenance] = useState("");
   const [evidenceNotes, setEvidenceNotes] = useState("");
+  const [quantity, setQuantity] = useState("1");
   const [valuation, setValuation] = useState(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -225,6 +226,18 @@ function CollectibleValuationPanel() {
     COLLECTIBLE_VALUATION_CATEGORIES.find((profile) => profile.id === category) ||
     COLLECTIBLE_VALUATION_CATEGORIES[0];
   const appraisalMode = activeProfile.mode === "appraisal";
+  const requestPayload = {
+    category,
+    identifier,
+    itemName,
+    purchasePriceZAR: Number(purchasePriceZAR),
+    currentMarketValueZAR: Number(currentMarketValueZAR),
+    condition,
+    rarity,
+    provenance,
+    evidenceNotes,
+    quantity: Number(quantity),
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -235,17 +248,7 @@ function CollectibleValuationPanel() {
       const response = await fetch("/api/collectibles/valuation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category,
-          identifier,
-          itemName,
-          purchasePriceZAR: Number(purchasePriceZAR),
-          currentMarketValueZAR: Number(currentMarketValueZAR),
-          condition,
-          rarity,
-          provenance,
-          evidenceNotes,
-        }),
+        body: JSON.stringify(requestPayload),
       });
       const payload = await response.json();
       if (!response.ok) {
@@ -254,6 +257,32 @@ function CollectibleValuationPanel() {
       setValuation(payload);
     } catch (error) {
       setValuation(null);
+      setStatus(collectibleErrorMessage(error.message));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setBusy(true);
+    setStatus("");
+
+    try {
+      const response = await fetch("/api/collectibles/portfolio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(requestPayload),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "collectible_save_failed");
+      }
+      setStatus("Saved to your collectibles portfolio.");
+      await onSaved();
+    } catch (error) {
       setStatus(collectibleErrorMessage(error.message));
     } finally {
       setBusy(false);
@@ -325,6 +354,16 @@ function CollectibleValuationPanel() {
             value={purchasePriceZAR}
             onChange={(event) => setPurchasePriceZAR(event.target.value)}
             placeholder="65"
+          />
+        </label>
+        <label>
+          <span>Quantity</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={quantity}
+            onChange={(event) => setQuantity(event.target.value)}
           />
         </label>
         {appraisalMode ? (
@@ -463,6 +502,11 @@ function CollectibleValuationPanel() {
             Projections use a {valuation.projections.annualGrowthPercent}% annual scenario and are
             estimates, not guaranteed returns.
             {valuation.usdZarRate ? ` USD/ZAR reference: ${valuation.usdZarRate}.` : ""}
+          </div>
+          <div className="panelActions">
+            <button className="primaryButton" type="button" disabled={busy} onClick={handleSave}>
+              {busy ? "Saving..." : "Save to My Collection"}
+            </button>
           </div>
         </div>
       ) : null}
@@ -1892,8 +1936,11 @@ export function CollectiblesScreen({
   activeCollectible,
   activePageSections,
   appSettings,
+  authToken,
   collectibleBrand,
   collectibleCategory,
+  collectibleImports,
+  collectiblePortfolio,
   collectibleQuery,
   collectibles,
   collectiblesResponse,
@@ -1901,14 +1948,74 @@ export function CollectiblesScreen({
   handleCollectibleSelect,
   jumpToPageSection,
   openCollectibleTicket,
+  refreshContext,
   setCollectibleBrand,
   setCollectibleCategory,
   setCollectibleQuery,
 }) {
+  const [importBusyId, setImportBusyId] = useState("");
+  const [importStatus, setImportStatus] = useState("");
+  const [revalueBusyId, setRevalueBusyId] = useState("");
+  const [portfolioStatus, setPortfolioStatus] = useState("");
   const officialShelves = collectiblesResponse.referenceShelves || [];
   const partnerSources = collectiblesResponse.partnerSources || [];
   const legoReferenceShelf =
     officialShelves.find((shelf) => shelf.brand === "LEGO") || officialShelves[0] || null;
+  const collectibleHoldings = collectiblePortfolio.items || [];
+  const collectibleSummary = collectiblePortfolio.summary || {};
+  const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
+  const queueImport = async (sourceId) => {
+    setImportBusyId(sourceId);
+    setImportStatus("");
+
+    try {
+      const response = await fetch("/api/collectibles/imports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ sourceId }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "collectible_source_import_failed");
+      }
+      setImportStatus(
+        payload.duplicate
+          ? "That source is already queued for import review."
+          : "Source queued. Review is required before holdings are imported.",
+      );
+      await refreshContext();
+    } catch {
+      setImportStatus("The source could not be queued. Please try again.");
+    } finally {
+      setImportBusyId("");
+    }
+  };
+  const revalueHolding = async (holdingId) => {
+    setRevalueBusyId(holdingId);
+    setPortfolioStatus("");
+
+    try {
+      const response = await fetch(`/api/collectibles/portfolio/${holdingId}/revalue`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "collectible_revalue_failed");
+      }
+      setPortfolioStatus("Holding refreshed with the latest available evidence.");
+      await refreshContext();
+    } catch {
+      setPortfolioStatus("The holding could not be refreshed. Please try again.");
+    } finally {
+      setRevalueBusyId("");
+    }
+  };
   const groupedCollectibles = [
     ...(collectiblesResponse.brands || [])
       .map((brand) => ({
@@ -1937,6 +2044,13 @@ export function CollectiblesScreen({
       meta: "Start here",
       detail: "Open the valuation workflow for LEGO, whiskey, stamps, puzzles, and more.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
+    },
+    {
+      id: "collection",
+      label: "My Collection",
+      meta: `${collectibleSummary.itemCount || 0}`,
+      detail: "Review saved purchases, current estimates, and long-range projection scenarios.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
     },
     {
       id: "partner-sources",
@@ -2027,7 +2141,85 @@ export function CollectiblesScreen({
         actions={collectibleActions}
       />
 
-      <CollectibleValuationPanel />
+      <CollectibleValuationPanel authToken={authToken} onSaved={refreshContext} />
+
+      <section className="panel" id="collectibles-portfolio">
+        <div className="panelHeader">
+          <div>
+            <h2>My Collectibles Portfolio</h2>
+            <p>
+              Save rated purchases here to track the amount invested, the latest evidence-led
+              estimate, and the same 1, 5, and 10 year scenarios Gavin requested.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Saved items</span>
+            <strong>{collectibleSummary.itemCount || 0}</strong>
+          </div>
+        </div>
+
+        <section className="summaryGrid">
+          <div className="summaryCard">
+            <span>Cost basis</span>
+            <strong>{formatZar(collectibleSummary.purchaseValueZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Current estimate</span>
+            <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>5 year scenario</span>
+            <strong>{formatZar(collectibleSummary.projectedFiveYearsZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>10 year scenario</span>
+            <strong>{formatZar(collectibleSummary.projectedTenYearsZAR)}</strong>
+          </div>
+        </section>
+
+        {collectibleHoldings.length ? (
+          <div className="collectibleReferenceGrid">
+            {collectibleHoldings.map((holding) => (
+              <article className="collectibleReferenceCard" key={holding.id}>
+                <div className="collectibleReferenceTop">
+                  <span>{holding.categoryLabel}</span>
+                  <strong>{holding.score}/10</strong>
+                </div>
+                <h3>{holding.name}</h3>
+                <p>
+                  {holding.identifier} | Quantity {holding.quantity}
+                </p>
+                <div className="collectibleReferenceMeta">
+                  <div>
+                    <span>You paid</span>
+                    <strong>{formatZar(holding.purchasePriceZAR)}</strong>
+                  </div>
+                  <div>
+                    <span>Current</span>
+                    <strong>{formatZar(holding.currentValueZAR)}</strong>
+                  </div>
+                </div>
+                <div className="panelActions">
+                  <button
+                    className="ghostButton"
+                    type="button"
+                    disabled={revalueBusyId === holding.id}
+                    onClick={() => revalueHolding(holding.id)}
+                  >
+                    {revalueBusyId === holding.id ? "Refreshing..." : "Refresh Valuation"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No saved collectibles yet"
+            body="Rate a purchase above and save it to start the partner beta collection."
+          />
+        )}
+        {portfolioStatus ? <div className="statusBanner">{portfolioStatus}</div> : null}
+      </section>
 
       <section className="panel" id="collectibles-partner-sources">
         <div className="panelHeader">
@@ -2036,7 +2228,8 @@ export function CollectiblesScreen({
             <p>
               Keep the shared portfolio documents and market references close to the valuation
               workflow. These links stay as source material until a reviewed import pipeline is
-              ready.
+              ready. Queue a source for reviewed import when it should become part of the working
+              collection.
             </p>
           </div>
           <div className="headerStatus">
@@ -2062,10 +2255,23 @@ export function CollectiblesScreen({
                 >
                   Open Source
                 </button>
+                <button
+                  type="button"
+                  className="ghostButton"
+                  disabled={importBusyId === source.id || queuedSourceIds.has(source.id)}
+                  onClick={() => queueImport(source.id)}
+                >
+                  {queuedSourceIds.has(source.id)
+                    ? "Queued for Review"
+                    : importBusyId === source.id
+                      ? "Queueing..."
+                      : "Queue Import Review"}
+                </button>
               </div>
             </article>
           ))}
         </div>
+        {importStatus ? <div className="statusBanner">{importStatus}</div> : null}
       </section>
 
       <section className="summaryGrid">

@@ -992,10 +992,100 @@ function defaultUserState() {
   return {
     trades: [],
     intakeRequests: [],
+    collectibleHoldings: [],
+    collectibleImports: [],
     settings: sanitizeSettings(DEFAULT_SETTINGS),
     newsTargets: [...DEFAULT_TARGETS],
     connectors: defaultConnectorsState(),
   };
+}
+
+function cleanCollectibleText(value, maxLength = 500) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
+function sanitizeCollectibleHolding(input) {
+  const createdAt = input?.createdAt ? toUtcIso(input.createdAt) : nowIso();
+  const currentValueZAR = Number(input?.currentValueZAR || 0);
+  const purchasePriceZAR = Number(input?.purchasePriceZAR || 0);
+  const quantity = Math.max(1, Math.round(Number(input?.quantity || 1)));
+
+  return {
+    id: cleanCollectibleText(input?.id, 80) || crypto.randomUUID(),
+    category: cleanCollectibleText(input?.category, 40) || "other",
+    categoryLabel: cleanCollectibleText(input?.categoryLabel, 80) || "Other Collectible",
+    identifier: cleanCollectibleText(input?.identifier || input?.setNum, 140),
+    name: cleanCollectibleText(input?.name, 220) || "Collectible",
+    quantity,
+    purchasePriceZAR,
+    currentValueZAR,
+    profitZAR: Number(input?.profitZAR ?? currentValueZAR - purchasePriceZAR),
+    multiplier: Number(input?.multiplier || 0),
+    score: Number(input?.score || 0),
+    recommendation: cleanCollectibleText(input?.recommendation, 80),
+    confidence: cleanCollectibleText(input?.confidence, 80),
+    rarity: cleanCollectibleText(input?.rarity, 140),
+    condition: cleanCollectibleText(input?.condition, 80),
+    projections: input?.projections && typeof input.projections === "object" ? input.projections : {},
+    notes: Array.isArray(input?.notes)
+      ? input.notes.map((note) => cleanCollectibleText(note, 500)).filter(Boolean)
+      : [],
+    sources: Array.isArray(input?.sources) ? input.sources : [],
+    evidenceHint: cleanCollectibleText(input?.evidenceHint, 500),
+    valuationMode: cleanCollectibleText(input?.valuationMode, 80),
+    inputSnapshot:
+      input?.inputSnapshot && typeof input.inputSnapshot === "object" ? input.inputSnapshot : {},
+    createdAt,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : createdAt,
+    lastValuedAt: input?.lastValuedAt ? toUtcIso(input.lastValuedAt) : createdAt,
+  };
+}
+
+function sanitizeCollectibleImport(input) {
+  const source = PARTNER_COLLECTIBLE_SOURCE_LIBRARY.find(
+    (candidate) => candidate.id === input?.sourceId,
+  );
+  const createdAt = input?.createdAt ? toUtcIso(input.createdAt) : nowIso();
+
+  return {
+    id: cleanCollectibleText(input?.id, 80) || crypto.randomUUID(),
+    sourceId: source?.id || cleanCollectibleText(input?.sourceId, 100),
+    title: source?.title || cleanCollectibleText(input?.title, 180),
+    category: source?.category || cleanCollectibleText(input?.category, 80),
+    sourceType: source?.sourceType || cleanCollectibleText(input?.sourceType, 80),
+    url: source?.url || cleanCollectibleText(input?.url, 1200),
+    status: input?.status === "reviewed" ? "reviewed" : "review_required",
+    notes:
+      cleanCollectibleText(input?.notes, 500) ||
+      "Review document contents, reconcile identifiers, and confirm evidence before importing holdings.",
+    createdAt,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : createdAt,
+  };
+}
+
+function summarizeCollectibleHoldings(items) {
+  return items.reduce(
+    (summary, item) => {
+      const quantity = Math.max(1, Number(item.quantity || 1));
+      summary.holdingCount += 1;
+      summary.itemCount += quantity;
+      summary.purchaseValueZAR += Number(item.purchasePriceZAR || 0) * quantity;
+      summary.currentValueZAR += Number(item.currentValueZAR || 0) * quantity;
+      summary.projectedOneYearZAR += Number(item.projections?.oneYear || 0) * quantity;
+      summary.projectedFiveYearsZAR += Number(item.projections?.fiveYears || 0) * quantity;
+      summary.projectedTenYearsZAR += Number(item.projections?.tenYears || 0) * quantity;
+      return summary;
+    },
+    {
+      holdingCount: 0,
+      itemCount: 0,
+      purchaseValueZAR: 0,
+      currentValueZAR: 0,
+      projectedOneYearZAR: 0,
+      projectedFiveYearsZAR: 0,
+      projectedTenYearsZAR: 0,
+    },
+  );
 }
 
 function ensureDataDir() {
@@ -1031,6 +1121,12 @@ function loadStore() {
           trades: Array.isArray(state?.trades) ? state.trades : [],
           intakeRequests: Array.isArray(state?.intakeRequests)
             ? state.intakeRequests.map(sanitizeIntakeRequest)
+            : [],
+          collectibleHoldings: Array.isArray(state?.collectibleHoldings)
+            ? state.collectibleHoldings.map(sanitizeCollectibleHolding)
+            : [],
+          collectibleImports: Array.isArray(state?.collectibleImports)
+            ? state.collectibleImports.map(sanitizeCollectibleImport)
             : [],
           connectors: Object.fromEntries(
             CONNECTOR_PROVIDERS.map((provider) => [
@@ -1123,6 +1219,14 @@ function getUserState(userId) {
 
   if (!Array.isArray(userStates[userId].intakeRequests)) {
     userStates[userId].intakeRequests = [];
+  }
+
+  if (!Array.isArray(userStates[userId].collectibleHoldings)) {
+    userStates[userId].collectibleHoldings = [];
+  }
+
+  if (!Array.isArray(userStates[userId].collectibleImports)) {
+    userStates[userId].collectibleImports = [];
   }
 
   return userStates[userId];
@@ -3570,6 +3674,114 @@ app.post("/api/collectibles/valuation", async (req, res) => {
       error: message,
     });
   }
+});
+
+app.get("/api/collectibles/portfolio", requireAuth, (req, res) => {
+  const items = req.userState.collectibleHoldings || [];
+  res.json({
+    ok: true,
+    items,
+    summary: summarizeCollectibleHoldings(items),
+  });
+});
+
+app.post("/api/collectibles/portfolio", requireAuth, async (req, res) => {
+  try {
+    const quantity = Math.max(1, Math.round(Number(req.body?.quantity || 1)));
+    const valuation = await getCollectibleValuation(req.body);
+    const holding = sanitizeCollectibleHolding({
+      ...valuation,
+      quantity,
+      inputSnapshot: {
+        category: req.body?.category,
+        identifier: req.body?.identifier,
+        itemName: req.body?.itemName,
+        purchasePriceZAR: req.body?.purchasePriceZAR,
+        currentMarketValueZAR: req.body?.currentMarketValueZAR,
+        condition: req.body?.condition,
+        rarity: req.body?.rarity,
+        provenance: req.body?.provenance,
+        evidenceNotes: req.body?.evidenceNotes,
+      },
+    });
+    req.userState.collectibleHoldings.unshift(holding);
+    persistStore();
+    res.status(201).json({
+      ok: true,
+      item: holding,
+      summary: summarizeCollectibleHoldings(req.userState.collectibleHoldings),
+    });
+  } catch (error) {
+    const message = String(error?.message || "collectible_save_failed");
+    res.status(400).json({ ok: false, error: message });
+  }
+});
+
+app.post("/api/collectibles/portfolio/:holdingId/revalue", requireAuth, async (req, res) => {
+  try {
+    const holdingIndex = req.userState.collectibleHoldings.findIndex(
+      (holding) => holding.id === req.params.holdingId,
+    );
+    if (holdingIndex < 0) {
+      return res.status(404).json({ ok: false, error: "collectible_holding_not_found" });
+    }
+
+    const existing = req.userState.collectibleHoldings[holdingIndex];
+    const valuation = await getCollectibleValuation(existing.inputSnapshot);
+    const refreshed = sanitizeCollectibleHolding({
+      ...existing,
+      ...valuation,
+      id: existing.id,
+      quantity: existing.quantity,
+      inputSnapshot: existing.inputSnapshot,
+      createdAt: existing.createdAt,
+      updatedAt: nowIso(),
+      lastValuedAt: nowIso(),
+    });
+    req.userState.collectibleHoldings[holdingIndex] = refreshed;
+    persistStore();
+    res.json({
+      ok: true,
+      item: refreshed,
+      summary: summarizeCollectibleHoldings(req.userState.collectibleHoldings),
+    });
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: String(error?.message || "collectible_revalue_failed"),
+    });
+  }
+});
+
+app.get("/api/collectibles/imports", requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    items: req.userState.collectibleImports || [],
+  });
+});
+
+app.post("/api/collectibles/imports", requireAuth, (req, res) => {
+  const source = PARTNER_COLLECTIBLE_SOURCE_LIBRARY.find(
+    (candidate) => candidate.id === req.body?.sourceId,
+  );
+  if (!source) {
+    return res.status(400).json({ ok: false, error: "collectible_source_not_found" });
+  }
+
+  const existing = req.userState.collectibleImports.find(
+    (candidate) => candidate.sourceId === source.id && candidate.status === "review_required",
+  );
+  if (existing) {
+    return res.json({ ok: true, item: existing, duplicate: true });
+  }
+
+  const item = sanitizeCollectibleImport({
+    sourceId: source.id,
+    notes: req.body?.notes,
+  });
+  req.userState.collectibleImports.unshift(item);
+  persistStore();
+  res.status(201).json({ ok: true, item });
 });
 
 app.post("/api/lego/valuation", async (req, res) => {
