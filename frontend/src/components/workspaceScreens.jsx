@@ -1906,6 +1906,7 @@ export function CollectiblesScreen({
   setCollectibleQuery,
 }) {
   const officialShelves = collectiblesResponse.referenceShelves || [];
+  const partnerSources = collectiblesResponse.partnerSources || [];
   const legoReferenceShelf =
     officialShelves.find((shelf) => shelf.brand === "LEGO") || officialShelves[0] || null;
   const groupedCollectibles = [
@@ -1936,6 +1937,13 @@ export function CollectiblesScreen({
       meta: "Start here",
       detail: "Open the valuation workflow for LEGO, whiskey, stamps, puzzles, and more.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
+    },
+    {
+      id: "partner-sources",
+      label: "Partner Sources",
+      meta: `${partnerSources.length}`,
+      detail: "Open Gavin's portfolio PDFs, shared folders, and LEGO market references.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-partner-sources"),
     },
     {
       id: "inventory",
@@ -2020,6 +2028,45 @@ export function CollectiblesScreen({
       />
 
       <CollectibleValuationPanel />
+
+      <section className="panel" id="collectibles-partner-sources">
+        <div className="panelHeader">
+          <div>
+            <h2>Partner Portfolio Sources</h2>
+            <p>
+              Keep the shared portfolio documents and market references close to the valuation
+              workflow. These links stay as source material until a reviewed import pipeline is
+              ready.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Shared sources</span>
+            <strong>{partnerSources.length}</strong>
+          </div>
+        </div>
+
+        <div className="collectibleReferenceGrid">
+          {partnerSources.map((source) => (
+            <article className="collectibleReferenceCard" key={source.id}>
+              <div className="collectibleReferenceTop">
+                <span>{source.category}</span>
+                <strong>{source.sourceType}</strong>
+              </div>
+              <h3>{source.title}</h3>
+              <p>{source.summary}</p>
+              <div className="panelActions">
+                <button
+                  type="button"
+                  className="ghostButton"
+                  onClick={() => openExternal(source.url)}
+                >
+                  Open Source
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="summaryGrid">
         <div className="summaryCard">

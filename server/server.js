@@ -380,6 +380,62 @@ const OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES = [
     ],
   },
 ];
+const PARTNER_COLLECTIBLE_SOURCE_LIBRARY = [
+  {
+    id: "coolsters-lego-portfolio-v34",
+    category: "LEGO",
+    title: "Coolsters LEGO Portfolio v34",
+    sourceType: "Portfolio PDF",
+    url: "https://www.dropbox.com/scl/fi/ofdj5vif9h8vrzkdb2ish/Coolsters-LEGO-Portfolio-v34.pdf?rlkey=xqy7gdr2ygr2t6okg7wtx74wz&st=pvv553z2&dl=0",
+    summary:
+      "Partner-provided LEGO portfolio reference for collection review, ingestion planning, and valuation reconciliation.",
+  },
+  {
+    id: "coolsters-pokemon-portfolio-v1",
+    category: "Pokemon",
+    title: "Coolsters Pokemon Investment Portfolio v1",
+    sourceType: "Portfolio PDF",
+    url: "https://www.dropbox.com/scl/fi/h50rofunocseab374r42o/Coolsters-Pokemon-Investment-Portfolio-v1.pdf?rlkey=58dpd2rolnbdi2jvi5csxnx6f&st=5lcg3171&dl=0",
+    summary:
+      "Partner-provided Pokemon investment portfolio reference for future card and sealed-product ingestion.",
+  },
+  {
+    id: "partner-collectibles-folder-primary",
+    category: "Shared Library",
+    title: "Partner Collectibles Source Folder",
+    sourceType: "Dropbox folder",
+    url: "https://www.dropbox.com/scl/fo/6ro9jgfd1cn1l6l6lu1r9/AKIN_QzScXLHl46aP3P_ycw?rlkey=zv2ydzwxxcrng9zzcisdh3a05&st=9017yf6v&dl=0",
+    summary:
+      "Shared partner folder for supporting collectible documents, images, and future import candidates.",
+  },
+  {
+    id: "partner-collectibles-folder-secondary",
+    category: "Shared Library",
+    title: "Partner Collectibles Supporting Folder",
+    sourceType: "Dropbox folder",
+    url: "https://www.dropbox.com/scl/fo/fdja3rlln6fo0dho99vx6/ADpxKKg9nlCEI7uYxPIP8AE?rlkey=j5ui54czicdvryd1p141kj5kr&st=8lj9zz4p&dl=0",
+    summary:
+      "Additional partner-provided source folder for collectible research and ingestion planning.",
+  },
+  {
+    id: "brickeconomy",
+    category: "LEGO",
+    title: "BrickEconomy",
+    sourceType: "Market reference",
+    url: "https://www.brickeconomy.com/",
+    summary:
+      "LEGO market valuation and forecast reference used by the connected LEGO workflow when an API key is configured.",
+  },
+  {
+    id: "bricklink",
+    category: "LEGO",
+    title: "BrickLink",
+    sourceType: "Market reference",
+    url: "https://www.bricklink.com/",
+    summary:
+      "LEGO marketplace reference used by the connected OAuth price-guide workflow when credentials are configured.",
+  },
+];
 const TRADEABLE_COLLECTIBLE_CATEGORIES = uniqueStrings(
   TRADEABLE_COLLECTIBLES.map((item) => item.category),
 ).sort();
@@ -3483,6 +3539,7 @@ app.get("/api/collectibles", (_req, res) => {
     brands: TRADEABLE_COLLECTIBLE_BRANDS,
     items: TRADEABLE_COLLECTIBLES,
     referenceShelves: OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES,
+    partnerSources: PARTNER_COLLECTIBLE_SOURCE_LIBRARY,
   });
 });
 

@@ -226,6 +226,10 @@ Supporting endpoints:
 - `/api/lego/status`
 - `/api/lego/valuation`
 
+The Collectibles workspace also exposes a Partner Portfolio Sources panel. It keeps shared LEGO
+and Pokemon portfolio PDFs, supporting Dropbox folders, BrickEconomy, and BrickLink close to the
+valuation flow without importing unreviewed private portfolio content into the repository.
+
 ## Partner Testing Flow
 
 Collecttrade now includes a built-in partner feedback loop.

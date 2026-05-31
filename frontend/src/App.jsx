@@ -112,6 +112,7 @@ const EMPTY_COLLECTIBLES_RESPONSE = {
   brands: [],
   items: [],
   referenceShelves: [],
+  partnerSources: [],
 };
 
 const EMPTY_FEEDBACK_RESPONSE = {
@@ -733,6 +734,7 @@ export default function App() {
       categories: collectiblesData.categories || [],
       brands: collectiblesData.brands || [],
       referenceShelves: collectiblesData.referenceShelves || [],
+      partnerSources: collectiblesData.partnerSources || [],
     });
     setHealth({
       ...EMPTY_HEALTH,
