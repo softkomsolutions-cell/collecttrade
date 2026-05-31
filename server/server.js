@@ -1118,6 +1118,31 @@ function summarizeCollectibleHoldings(items, transactions = []) {
     .reduce((total, transaction) => total + Number(transaction.realizedPnlZAR || 0), 0);
   summary.purchaseCount = transactions.filter((transaction) => transaction.type === "purchase").length;
   summary.saleCount = transactions.filter((transaction) => transaction.type === "sale").length;
+  const categoryMap = new Map();
+  items.forEach((item) => {
+    const categoryKey = item.category || "other";
+    const existing = categoryMap.get(categoryKey) || {
+      id: categoryKey,
+      label: item.categoryLabel || "Other Collectible",
+      holdingCount: 0,
+      itemCount: 0,
+      costBasisZAR: 0,
+      currentValueZAR: 0,
+    };
+    const quantity = Math.max(1, Number(item.quantity || 1));
+    existing.holdingCount += 1;
+    existing.itemCount += quantity;
+    existing.costBasisZAR += Number(item.purchasePriceZAR || 0) * quantity;
+    existing.currentValueZAR += Number(item.currentValueZAR || 0) * quantity;
+    categoryMap.set(categoryKey, existing);
+  });
+  summary.categoryBreakdown = Array.from(categoryMap.values())
+    .map((category) => ({
+      ...category,
+      unrealizedPnlZAR: category.currentValueZAR - category.costBasisZAR,
+    }))
+    .sort((left, right) => right.currentValueZAR - left.currentValueZAR);
+  summary.categoryCount = summary.categoryBreakdown.length;
   return summary;
 }
 

@@ -23,9 +23,10 @@ The primary beta workflow is available from `Collectibles`:
 4. Review the score, current estimate, gain, multiple, notes, sources, and 1 / 5 / 10 year scenario values.
 5. Save the rated purchase to `My Collectibles Portfolio`.
 6. Refresh a saved holding when newer evidence is available.
-7. Record a partial or complete sale and track realized versus unrealized performance.
-8. Review the purchase and sale ledger in `Investment Activity`.
-9. Open Gavin's shared source documents or queue them for reviewed import.
+7. Search the owned-inventory register by item details or category and review condition, rarity, cost, value, and score.
+8. Record a partial or complete sale and track realized versus unrealized performance.
+9. Review the purchase and sale ledger in `Investment Activity`.
+10. Open Gavin's shared source documents or queue them for reviewed import.
 
 Shared PDFs and Dropbox folders enter an import-review queue. The beta deliberately does not
 silently trust document contents or import holdings without identifier and evidence review.

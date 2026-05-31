@@ -153,6 +153,7 @@ export const PAGE_SECTION_LINKS = {
   collectibles: [
     { id: "collectibles-valuation", label: "Valuation" },
     { id: "collectibles-portfolio", label: "My Collection" },
+    { id: "collectibles-owned-inventory", label: "Inventory" },
     { id: "collectibles-transactions", label: "Activity" },
     { id: "collectibles-partner-sources", label: "Partner Sources" },
     { id: "collectibles-focus", label: "Focus" },

@@ -1958,6 +1958,8 @@ export function CollectiblesScreen({
   const [revalueBusyId, setRevalueBusyId] = useState("");
   const [portfolioStatus, setPortfolioStatus] = useState("");
   const [saleBusyId, setSaleBusyId] = useState("");
+  const [inventoryQuery, setInventoryQuery] = useState("");
+  const [inventoryCategory, setInventoryCategory] = useState("all");
   const officialShelves = collectiblesResponse.referenceShelves || [];
   const partnerSources = collectiblesResponse.partnerSources || [];
   const legoReferenceShelf =
@@ -1965,6 +1967,17 @@ export function CollectiblesScreen({
   const collectibleHoldings = collectiblePortfolio.items || [];
   const collectibleTransactions = collectiblePortfolio.transactions || [];
   const collectibleSummary = collectiblePortfolio.summary || {};
+  const inventoryCategories = collectibleSummary.categoryBreakdown || [];
+  const filteredOwnedInventory = collectibleHoldings.filter((holding) => {
+    const matchesCategory = inventoryCategory === "all" || holding.category === inventoryCategory;
+    const query = inventoryQuery.trim().toLowerCase();
+    const matchesQuery =
+      !query ||
+      [holding.name, holding.identifier, holding.categoryLabel, holding.rarity, holding.condition]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    return matchesCategory && matchesQuery;
+  });
   const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
   const queueImport = async (sourceId) => {
     setImportBusyId(sourceId);
@@ -2085,6 +2098,13 @@ export function CollectiblesScreen({
       meta: `${collectibleSummary.itemCount || 0}`,
       detail: "Review saved purchases, current estimates, and long-range projection scenarios.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
+    },
+    {
+      id: "owned-inventory",
+      label: "Owned Inventory",
+      meta: `${collectibleSummary.itemCount || 0}`,
+      detail: "Search the owned collection register with cost, value, condition, and rarity.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-owned-inventory"),
     },
     {
       id: "partner-sources",
@@ -2269,6 +2289,109 @@ export function CollectiblesScreen({
           />
         )}
         {portfolioStatus ? <div className="statusBanner">{portfolioStatus}</div> : null}
+      </section>
+
+      <section className="panel" id="collectibles-owned-inventory">
+        <div className="panelHeader">
+          <div>
+            <h2>Owned Inventory Register</h2>
+            <p>
+              Keep the operational collection record beside the investment view. Search the items
+              you own and review the details that affect resale value.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Inventory items</span>
+            <strong>{collectibleSummary.itemCount || 0}</strong>
+          </div>
+        </div>
+
+        <div className="collectibleInventoryToolbar">
+          <label>
+            <span>Search owned inventory</span>
+            <input
+              type="search"
+              value={inventoryQuery}
+              onChange={(event) => setInventoryQuery(event.target.value)}
+              placeholder="Name, reference, rarity, condition"
+            />
+          </label>
+          <label>
+            <span>Category</span>
+            <select
+              value={inventoryCategory}
+              onChange={(event) => setInventoryCategory(event.target.value)}
+            >
+              <option value="all">All categories</option>
+              {inventoryCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {inventoryCategories.length ? (
+          <div className="collectibleInventoryCategoryGrid">
+            {inventoryCategories.map((category) => (
+              <article className="collectibleInventoryStat" key={category.id}>
+                <span>{category.label}</span>
+                <strong>{category.itemCount} items</strong>
+                <small>{formatZar(category.currentValueZAR)} estimated value</small>
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        {filteredOwnedInventory.length ? (
+          <div className="collectibleInventoryTableWrap">
+            <table className="collectibleInventoryTable">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Qty</th>
+                  <th>Condition</th>
+                  <th>Rarity</th>
+                  <th>Cost basis</th>
+                  <th>Estimate</th>
+                  <th>Gain</th>
+                  <th>Score</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOwnedInventory.map((holding) => (
+                  <tr key={holding.id}>
+                    <td>
+                      <strong>{holding.name}</strong>
+                      <small>{holding.identifier}</small>
+                    </td>
+                    <td>{holding.categoryLabel}</td>
+                    <td>{holding.quantity}</td>
+                    <td>{holding.condition || "Review required"}</td>
+                    <td>{holding.rarity || "Review required"}</td>
+                    <td>{formatZar(holding.purchasePriceZAR * holding.quantity)}</td>
+                    <td>{formatZar(holding.currentValueZAR * holding.quantity)}</td>
+                    <td>{formatZar(holding.profitZAR * holding.quantity)}</td>
+                    <td>{holding.score}/10</td>
+                    <td>{formatDateTime(holding.lastValuedAt, appSettings.timezone)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            title={collectibleHoldings.length ? "No inventory matches that filter" : "No owned inventory yet"}
+            body={
+              collectibleHoldings.length
+                ? "Adjust the search or category filter to see more of the collection."
+                : "Rate and save a purchase to add the first collectible to inventory."
+            }
+          />
+        )}
       </section>
 
       <section className="panel" id="collectibles-transactions">
