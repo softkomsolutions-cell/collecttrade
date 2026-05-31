@@ -124,8 +124,8 @@ export function defaultSectionIdForIntro(page, introId) {
     return introId === "news" ? "macro-feed" : "signals-grid";
   }
 
-  if (page === "collectibles") {
-    return "collectibles-focus";
+    if (page === "collectibles") {
+      return "collectibles-valuation";
   }
 
   if (page === "portfolio") {

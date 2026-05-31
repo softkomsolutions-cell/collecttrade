@@ -154,7 +154,7 @@ export function BootSplash() {
       <div className="bootSplashPanel">
         <div className="bootSplashMark">CT</div>
         <div className="bootSplashWordmark">COLLECTRADE</div>
-        <div className="bootSplashTag">Signals | News | Collectibles</div>
+        <div className="bootSplashTag">Collectibles | Valuation | Portfolio</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
           <span />
@@ -170,81 +170,36 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
   const launchDesk = savedLaunch?.desk || normalizeDesk(activeDesk);
   const defaultTradingDesk = launchDesk === "crypto" ? "forex" : launchDesk;
   const partnerLaunch = {
-    page: "home",
+    page: "collectibles",
     desk: "forex",
-    introId: "home",
-    sectionId: "home-partner",
+    introId: "collectibles",
+    sectionId: "collectibles-valuation",
   };
   const savedLaunchLabel = savedLaunch ? workspaceLabel(savedLaunch.page, savedLaunch.desk) : null;
   const serviceMenuRows = [
     {
-      id: "news",
-      ordinal: "01",
-      glyph: "NW",
-      title: "News",
-      tag: "Macro tape",
-      tone: "news",
-      detail: `${labelDesk(launchDesk)} headlines, South African context, and the live desk narrative.`,
-      selection: {
-        page: "news",
-        desk: launchDesk,
-        introId: "news",
-        sectionId: "macro-feed",
-      },
-    },
-    {
-      id: "trading",
-      ordinal: "02",
-      glyph: "TR",
-      title: "Trading",
-      tag: "Signal desk",
-      tone: "trade",
-      detail: `${labelDesk(defaultTradingDesk)} signals, tickets, and structure planning.`,
-      selection: {
-        page: "signals",
-        desk: defaultTradingDesk,
-        introId: "trade",
-        sectionId: "signals-grid",
-      },
-    },
-    {
-      id: "crypto",
-      ordinal: "03",
-      glyph: "CR",
-      title: "Crypto",
-      tag: "BTC lane",
-      tone: "crypto",
-      detail: "Jump straight into the crypto desk, technical pulse, and RSI context.",
-      selection: {
-        page: "signals",
-        desk: "crypto",
-        introId: "trade",
-        sectionId: "signals-grid",
-      },
-    },
-    {
       id: "collectibles",
-      ordinal: "04",
+      ordinal: "01",
       glyph: "CL",
       title: "Collectibles",
-      tag: "Alt assets",
+      tag: "Primary workspace",
       tone: "collectibles",
-      detail: "Open LEGO, Pokemon, and the tradable inventory workflow.",
+      detail: "Rate purchases, document evidence, review inventory, and track collectible value.",
       selection: {
         page: "collectibles",
         desk: launchDesk,
         introId: "collectibles",
-        sectionId: "collectibles-focus",
+        sectionId: "collectibles-valuation",
       },
     },
     {
       id: "portfolio",
-      ordinal: "05",
+      ordinal: "02",
       glyph: "PF",
       title: "Portfolio",
-      tag: "Review",
+      tag: "Collection book",
       tone: "portfolio",
-      detail: "See open positions, recent activity, and the current book at a glance.",
+      detail: "See tracked collectible positions, recent activity, and the wider book.",
       selection: {
         page: "portfolio",
         desk: launchDesk,
@@ -252,8 +207,35 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         sectionId: "open-positions",
       },
     },
+    {
+      id: "home",
+      ordinal: "03",
+      glyph: "HM",
+      title: "Home",
+      tag: "Summary",
+      tone: "home",
+      detail: "Open the workspace summary, partner readiness, and launch paths.",
+      selection: {
+        page: "home",
+        desk: launchDesk,
+        introId: "home",
+        sectionId: "home-overview",
+      },
+    },
   ];
   const supportMenuRows = [
+    {
+      id: "news",
+      title: "Market News",
+      detail: "Background macro tape",
+      selection: { page: "news", desk: launchDesk, introId: "news", sectionId: "macro-feed" },
+    },
+    {
+      id: "trading",
+      title: "Market Tools",
+      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
+      selection: { page: "signals", desk: defaultTradingDesk, introId: "trade", sectionId: "signals-grid" },
+    },
     {
       id: "reports",
       title: "Reports",
@@ -286,33 +268,33 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
   ];
   const onboardingSlides = [
     {
-      id: "news",
-      glyph: "NW",
-      eyebrow: "Macro first",
-      title: "Read the market before you act.",
+      id: "collectibles",
+      glyph: "CL",
+      eyebrow: "Collectibles first",
+      title: "Rate the purchase before you buy.",
       description:
-        "Start with desk-aware headlines, South African context, and the macro tape that frames the session.",
-      accent: "news",
+        "Use one disciplined workflow for LEGO, whiskey, stamps, puzzles, coins, cards, comics, and other legitimate collectibles.",
+      accent: "collectibles",
       bars: [48, 82, 62, 92],
     },
     {
-      id: "trade",
-      glyph: "TR",
-      eyebrow: "Structured execution",
-      title: "Trade from signals and structure.",
+      id: "portfolio",
+      glyph: "PF",
+      eyebrow: "Evidence matters",
+      title: "Document what makes the item valuable.",
       description:
-        "Charts, 8/21 EMA setups, stop and target planning, and tickets stay connected in one flow.",
-      accent: "trade",
+        "Capture condition, rarity, provenance, comparable sales, sources, and a clear 1, 5, and 10 year scenario.",
+      accent: "portfolio",
       bars: [56, 74, 88, 68],
     },
     {
-      id: "collectibles",
-      glyph: "CL",
-      eyebrow: "Alternative assets",
-      title: "Keep collectibles in the same workspace.",
+      id: "market-tools",
+      glyph: "MT",
+      eyebrow: "Secondary tools",
+      title: "Keep market modules in the background.",
       description:
-        "LEGO, Pokemon, portfolio review, and route readiness all sit inside the same mobile product shell.",
-      accent: "collectibles",
+        "Forex, crypto, ETF, JSE, and market news tools stay available when you need them without competing with the collectibles workflow.",
+      accent: "trade",
       bars: [42, 68, 54, 80],
     },
   ];
@@ -406,9 +388,9 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
           <h1>Choose a service.</h1>
           <p className="authBlurb">Open one lane now. Each menu item takes you straight into its own screen.</p>
           <div className="splashHeroPillRow" aria-hidden="true">
-            <span className="splashHeroPill">Macro</span>
-            <span className="splashHeroPill">Signals</span>
             <span className="splashHeroPill">Collectibles</span>
+            <span className="splashHeroPill">Valuation</span>
+            <span className="splashHeroPill">Portfolio</span>
           </div>
         </div>
 
@@ -464,7 +446,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
           <div className="splashSectionHeader">
             <div>
               <span>More</span>
-              <strong>Reports and setup</strong>
+              <strong>Background tools and setup</strong>
             </div>
           </div>
 
@@ -550,52 +532,28 @@ function describeLaunchSelection(page, desk, sectionId) {
 export function LandingShell({ initialLaunch, onContinue }) {
   const landingActions = [
     {
-      id: "news",
-      glyph: "NW",
-      eyebrow: "Macro",
-      title: "News",
-      page: "news",
-      introId: "news",
-      sectionId: "macro-feed",
-      destination: "Macro feed",
-      bestFor: "Start with context",
-      blurb: "Start with the tape, South African context, and the headlines driving the next move.",
-    },
-    {
-      id: "alpha-signals",
-      glyph: "AS",
-      eyebrow: "Signals",
-      title: "Alpha Signals",
-      page: "signals",
-      introId: "trade",
-      sectionId: "signals-grid",
-      destination: "Signals grid",
-      bestFor: "Scan clean setups",
-      blurb: "Open the filtered signals grid first and scan the cleanest EMA setups before acting.",
-    },
-    {
-      id: "trade",
-      glyph: "TR",
-      eyebrow: "Execution",
-      title: "Trade Desk",
-      page: "signals",
-      introId: "trade",
-      sectionId: "chart-panel",
-      destination: "Active chart",
-      bestFor: "Go straight to execution",
-      blurb: "Go straight into the active chart, structure plan, and ticket workflow.",
-    },
-    {
       id: "collectibles",
       glyph: "CL",
-      eyebrow: "Alt",
-      title: "Collectibles",
+      eyebrow: "Primary",
+      title: "Collectibles Valuation",
       page: "collectibles",
       introId: "collectibles",
-      sectionId: "collectibles-focus",
-      destination: "Collectibles focus",
-      bestFor: "Trade alternatives",
-      blurb: "Trade LEGO, Pokemon, and alternative inventory with the same disciplined ticket flow.",
+      sectionId: "collectibles-valuation",
+      destination: "Valuation desk",
+      bestFor: "Rate a purchase",
+      blurb: "Value LEGO, whiskey, stamps, puzzles, coins, cards, comics, and other legitimate collectibles.",
+    },
+    {
+      id: "portfolio",
+      glyph: "PF",
+      eyebrow: "Book",
+      title: "Collectibles Portfolio",
+      page: "portfolio",
+      introId: "portfolio",
+      sectionId: "open-positions",
+      destination: "Open positions",
+      bestFor: "Review holdings",
+      blurb: "Review tracked positions, PnL, and recent closes before adding the next collectible.",
     },
   ];
   const secondaryActions = [
@@ -611,15 +569,26 @@ export function LandingShell({ initialLaunch, onContinue }) {
       blurb: "Open the product home first for quick launch, partner readiness, and recent session context.",
     },
     {
-      id: "portfolio",
-      glyph: "PF",
-      eyebrow: "Book",
-      title: "Portfolio",
-      page: "portfolio",
-      introId: "portfolio",
-      sectionId: "open-positions",
-      destination: "Open positions",
-      blurb: "Review open positions, PnL, and recent closes before you put on the next trade.",
+      id: "news",
+      glyph: "NW",
+      eyebrow: "Background",
+      title: "Market News",
+      page: "news",
+      introId: "news",
+      sectionId: "macro-feed",
+      destination: "Macro feed",
+      blurb: "Keep South African and global market headlines available as secondary context.",
+    },
+    {
+      id: "alpha-signals",
+      glyph: "AS",
+      eyebrow: "Background",
+      title: "Market Tools",
+      page: "signals",
+      introId: "trade",
+      sectionId: "signals-grid",
+      destination: "Signals grid",
+      blurb: "Open forex, crypto, ETF, and JSE signal tools only when they are needed.",
     },
     {
       id: "reports",
@@ -668,7 +637,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
   ];
   const allActions = [...landingActions, ...secondaryActions];
 
-  const initialPage = initialLaunch?.page || "news";
+  const initialPage = initialLaunch?.page || "collectibles";
   const initialDesk = initialLaunch?.desk || "forex";
   const initialIntroId = initialLaunch?.introId || defaultIntroIdForPage(initialPage);
   const [selectedActionId, setSelectedActionId] = useState(
@@ -713,43 +682,42 @@ export function LandingShell({ initialLaunch, onContinue }) {
           <div className="splashHeroCopy">
             <div className="authBrand">COLLECTRADE</div>
             <div className="splashEyebrow">TRADING WORKSPACE</div>
-            <h1>One professional workspace for news, signals, trade execution, and collectibles.</h1>
+            <h1>One focused workspace for collectible valuation, evidence, and portfolio tracking.</h1>
             <p className="authBlurb">
-              Collecttrade brings macro context, alpha signals, disciplined tickets, portfolio tracking,
-              and alternative inventory into one professional workspace. Pick where you want to start,
-              then sign in to continue.
+              Collecttrade helps you rate purchases, document provenance, compare value, and track a
+              collectibles portfolio. Market tools stay available in the background when you need them.
             </p>
 
             <div className="landingValueGrid">
               <div className="landingValueCard">
-                <span>Macro Context</span>
-                <strong>South Africa-aware tape</strong>
-                <small>Desk-aware headlines, honest timestamps, and route context before the trade.</small>
+                <span>Purchase Analysis</span>
+                <strong>Rate the opportunity</strong>
+                <small>Review price paid, market estimate, gain multiple, and 1, 5, and 10 year scenarios.</small>
               </div>
               <div className="landingValueCard">
-                <span>Alpha Signals</span>
-                <strong>8 / 21 EMA workflow</strong>
-                <small>Crosses, retests, structure plans, and visible exits baked into the desk.</small>
+                <span>Evidence</span>
+                <strong>Provenance and comparables</strong>
+                <small>Capture condition, rarity, sources, and comparable-market evidence in one flow.</small>
               </div>
               <div className="landingValueCard">
-                <span>Execution</span>
-                <strong>Paper first, live where ready</strong>
-                <small>Venue-aware tickets, risk budgets, and saved workflows that stay coherent.</small>
+                <span>Portfolio</span>
+                <strong>Collectibles book</strong>
+                <small>Track inventory positions and keep your next decision grounded in the wider collection.</small>
               </div>
             </div>
 
             <div className="landingFeatureRow">
               <div className="landingFeatureChip">
-                <span>Trading lanes</span>
-                <strong>Forex, ETFs, Crypto, JSE</strong>
+                <span>Collectible lanes</span>
+                <strong>LEGO, whiskey, stamps, puzzles</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Alternative book</span>
-                <strong>Collectibles inventory</strong>
+                <span>More categories</span>
+                <strong>Cards, coins, comics, custom</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Support stack</span>
-                <strong>Tools and connections</strong>
+                <span>Background stack</span>
+                <strong>Market tools and connections</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Workspace state</span>
@@ -759,7 +727,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
             <div className="landingTesterCard">
               <span>Partner testing route</span>
-              <strong>Landing, News, Trade Desk, Collectibles, Feedback Board</strong>
+                <strong>Landing, Collectibles Valuation, Portfolio, Feedback Board</strong>
               <small>
                 If this session is for partner feedback, use the built-in test pass so notes land in one
                 place and cover the main product surfaces.
@@ -878,7 +846,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
             <div>
               <span>More Workspaces</span>
               <strong>Open the supporting parts of the platform first if thatâ€™s your priority</strong>
-              <p>These usually support the main trading flow, but they should still be available from the first screen.</p>
+              <p>These remain available when useful, but they stay behind the collectibles-first workflow.</p>
             </div>
           </div>
 
@@ -1001,10 +969,10 @@ export function AuthShell({
         <section className="authStage">
           <div className="authBrand">COLLECTRADE</div>
           <div className="splashEyebrow">MARKET ACCESS</div>
-          <h1>Sign in to the desk before the market moves.</h1>
+          <h1>Sign in to your collectibles workspace.</h1>
           <p className="authBlurb">
-            South Africa-aware macro flow, 8/21 EMA execution, route-aware tickets, and a
-            cleaner portfolio workspace in one product shell.
+            Purchase valuation, comparable evidence, provenance notes, inventory, and portfolio
+            tracking in one focused product shell.
           </p>
 
           {launchDetails ? (
@@ -1031,19 +999,19 @@ export function AuthShell({
 
           <div className="authHighlightGrid">
             <div className="authHighlightCard">
-              <span>Signal engine</span>
-              <strong>8 / 21 EMA workflow</strong>
-              <small>Crosses, retests, structure-driven stops, and visible trade plans.</small>
+              <span>Valuation desk</span>
+              <strong>Rate the purchase</strong>
+              <small>Score the opportunity and review 1, 5, and 10 year scenarios.</small>
             </div>
             <div className="authHighlightCard">
-              <span>Market context</span>
-              <strong>SA + global macro tape</strong>
-              <small>Honest timestamps, route context, and desk-aware news flow.</small>
+              <span>Evidence</span>
+              <strong>Condition and provenance</strong>
+              <small>Keep comparable-market notes and source status visible.</small>
             </div>
             <div className="authHighlightCard">
-              <span>Execution</span>
-              <strong>Paper first, live where ready</strong>
-              <small>Venue-aware tickets with risk budget, targets, and support/resistance structure.</small>
+              <span>Portfolio</span>
+              <strong>Collectibles book</strong>
+              <small>Track legitimate collectible positions inside the same workflow.</small>
             </div>
           </div>
 
@@ -1053,12 +1021,12 @@ export function AuthShell({
               <strong>Saved routes and settings</strong>
             </div>
             <div className="authProofChip">
-              <span>Desk continuity</span>
-              <strong>Portfolio and ticket flow restored</strong>
+              <span>Workspace continuity</span>
+              <strong>Valuation and portfolio flow restored</strong>
             </div>
             <div className="authProofChip">
-              <span>Execution model</span>
-              <strong>Paper by default, live where connected</strong>
+              <span>Market modules</span>
+              <strong>Available in the background</strong>
             </div>
           </div>
         </section>
@@ -1071,7 +1039,7 @@ export function AuthShell({
               <p>
                 {authMode === "login"
                   ? "Open your desks, sync your state, and get back to the active setup."
-                  : "Create an account to save desks, settings, signals, and portfolio flow."}
+                  : "Create an account to save collectibles, settings, evidence, and portfolio flow."}
               </p>
             </div>
             {onBack ? (

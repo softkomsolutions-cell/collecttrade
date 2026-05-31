@@ -1710,7 +1710,7 @@ export default function App() {
     },
   ];
   const primaryNavItems = NAV_ITEMS.filter((item) =>
-    ["home", "news", "signals", "collectibles", "portfolio"].includes(item.id),
+    ["collectibles", "portfolio", "home"].includes(item.id),
   );
   const utilityNavItems = NAV_ITEMS.filter((item) =>
     ["tools", "reports", "connections", "settings"].includes(item.id),
@@ -1718,31 +1718,10 @@ export default function App() {
   const defaultTradingDesk = ["forex", "etfs", "jse"].includes(activeDesk) ? activeDesk : "forex";
   const menuPrimaryItems = [
     {
-      id: "menu-news",
-      glyph: "NW",
-      label: "News",
-      detail: `${labelDesk(activeDesk)} macro tape`,
-      action: () => handleMenuNavigate("news", activeDesk),
-    },
-    {
-      id: "menu-trading",
-      glyph: "TR",
-      label: "Trading",
-      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
-      action: () => handleMenuNavigate("signals", defaultTradingDesk),
-    },
-    {
-      id: "menu-crypto",
-      glyph: "CR",
-      label: "Crypto",
-      detail: "BTC and crypto desk",
-      action: () => handleMenuNavigate("signals", "crypto"),
-    },
-    {
       id: "menu-collectibles",
       glyph: "CL",
       label: "Collectibles",
-      detail: "Alternative inventory",
+      detail: "Valuation, evidence, and inventory",
       action: () => handleMenuNavigate("collectibles", activeDesk),
     },
     {
@@ -1751,6 +1730,13 @@ export default function App() {
       label: "Portfolio",
       detail: "Open positions and history",
       action: () => handleMenuNavigate("portfolio", activeDesk),
+    },
+    {
+      id: "menu-home",
+      glyph: "HM",
+      label: "Home",
+      detail: "Workspace summary",
+      action: () => handleMenuNavigate("home", activeDesk),
     },
   ];
   const menuDeskItems = MARKET_DESKS.map((desk) => ({
@@ -1762,10 +1748,22 @@ export default function App() {
   }));
   const menuSupportItems = [
     {
-      id: "menu-home",
-      label: "Home",
-      detail: "Workspace hub",
-      action: () => handleMenuNavigate("home", activeDesk),
+      id: "menu-news",
+      label: "Market News",
+      detail: `${labelDesk(activeDesk)} macro tape`,
+      action: () => handleMenuNavigate("news", activeDesk),
+    },
+    {
+      id: "menu-trading",
+      label: "Market Tools",
+      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
+      action: () => handleMenuNavigate("signals", defaultTradingDesk),
+    },
+    {
+      id: "menu-crypto",
+      label: "Crypto Tools",
+      detail: "BTC and crypto desk",
+      action: () => handleMenuNavigate("signals", "crypto"),
     },
     {
       id: "menu-reports",

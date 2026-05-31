@@ -2,11 +2,11 @@
 
 Collecttrade is a trading workspace for:
 
-- macro news and market context
-- 8 / 21 EMA signal discovery
-- trade planning and portfolio tracking
-- collectibles as an alternative-assets lane
-- broker, venue, and feed readiness
+- collectible purchase valuation
+- condition, provenance, and comparable-market evidence
+- collectibles inventory and portfolio tracking
+- LEGO connected pricing with category-aware appraisal workflows
+- background market tools for forex, crypto, ETFs, JSE, news, and venue readiness
 
 The app is split into:
 

@@ -1931,6 +1931,13 @@ export function CollectiblesScreen({
   ];
   const collectibleActions = [
     {
+      id: "valuation",
+      label: "Rate Purchase",
+      meta: "Start here",
+      detail: "Open the valuation workflow for LEGO, whiskey, stamps, puzzles, and more.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
+    },
+    {
       id: "inventory",
       label: "Tradable Inventory",
       meta: `${filteredCollectibles.length}`,
@@ -1946,7 +1953,7 @@ export function CollectiblesScreen({
     },
     {
       id: "buy",
-      label: "Buy Ticket",
+      label: "Inventory Ticket",
       meta: activeCollectible?.brand || "Select item",
       detail: "Open the collectible ticket flow on the current focus item.",
       onClick: () => activeCollectible && openCollectibleTicket(activeCollectible, "BUY"),
@@ -1965,9 +1972,9 @@ export function CollectiblesScreen({
     <>
       <WorkspaceHero
         tone="collectibles"
-        eyebrow="Alternative Inventory"
+        eyebrow="Collectibles Valuation"
         title="Collectibles"
-        description="Trade LEGO, Pokemon, and other alternative inventory with proper buy and sell tickets."
+        description="Rate purchases, document evidence, and track LEGO, whiskey, stamps, puzzles, cards, coins, comics, and other legitimate collectibles."
         statusLabel="Desk refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
@@ -1993,12 +2000,8 @@ export function CollectiblesScreen({
           },
         ]}
         primaryAction={{
-          label: "Open Buy Ticket",
-          onClick: () => {
-            if (activeCollectible) {
-              openCollectibleTicket(activeCollectible, "BUY");
-            }
-          },
+          label: "Rate a Purchase",
+          onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
         }}
         secondaryAction={{
           label: "Review Portfolio",
