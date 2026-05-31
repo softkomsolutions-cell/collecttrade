@@ -118,22 +118,113 @@ function formatZar(value) {
     : "--";
 }
 
-function legoErrorMessage(error) {
+const COLLECTIBLE_VALUATION_CATEGORIES = [
+  {
+    id: "lego",
+    label: "LEGO",
+    mode: "automatic",
+    identifierLabel: "LEGO set number",
+    identifierPlaceholder: "30725",
+    itemNamePlaceholder: "Resolved from the set number",
+    evidenceHint: "Automatic lookup uses configured BrickLink and BrickEconomy sources.",
+  },
+  {
+    id: "whiskey",
+    label: "Whiskey",
+    mode: "appraisal",
+    identifierLabel: "Bottle reference",
+    identifierPlaceholder: "Distillery, expression, vintage, bottle size",
+    itemNamePlaceholder: "Example: Distillery 12 Year Limited Release",
+    evidenceHint: "Use comparable auction or specialist-retailer evidence for this bottle.",
+  },
+  {
+    id: "stamps",
+    label: "Stamps",
+    mode: "appraisal",
+    identifierLabel: "Catalog or issue reference",
+    identifierPlaceholder: "Catalog number, issuer, year, denomination",
+    itemNamePlaceholder: "Example: Union of South Africa issue",
+    evidenceHint: "Use recent auction comparables for the same issue and grade.",
+  },
+  {
+    id: "puzzles",
+    label: "Puzzles",
+    mode: "appraisal",
+    identifierLabel: "Edition reference",
+    identifierPlaceholder: "Maker, title, edition, piece count",
+    itemNamePlaceholder: "Example: Vintage wooden puzzle limited edition",
+    evidenceHint: "Use sold comparables for the same maker, edition, and completeness.",
+  },
+  {
+    id: "coins",
+    label: "Coins",
+    mode: "appraisal",
+    identifierLabel: "Coin reference",
+    identifierPlaceholder: "Country, year, denomination, mint mark",
+    itemNamePlaceholder: "Example: 1898 ZAR Pond",
+    evidenceHint: "Use auction comparables for the same coin and grade.",
+  },
+  {
+    id: "cards",
+    label: "Trading Cards",
+    mode: "appraisal",
+    identifierLabel: "Card reference",
+    identifierPlaceholder: "Game, set, card number, grade",
+    itemNamePlaceholder: "Example: Pokemon 151 Charizard ex PSA 10",
+    evidenceHint: "Use sold listings for the exact card, edition, language, and grade.",
+  },
+  {
+    id: "comics",
+    label: "Comics",
+    mode: "appraisal",
+    identifierLabel: "Issue reference",
+    identifierPlaceholder: "Title, issue, publisher, year, grade",
+    itemNamePlaceholder: "Example: Amazing Spider-Man #300 CGC 9.4",
+    evidenceHint: "Use sold comparables for the exact issue, variant, and grade.",
+  },
+  {
+    id: "other",
+    label: "Other Collectible",
+    mode: "appraisal",
+    identifierLabel: "Reference",
+    identifierPlaceholder: "Maker, edition, year, serial or catalog reference",
+    itemNamePlaceholder: "Describe the collectible precisely",
+    evidenceHint: "Use recent sold comparables and document why they are genuinely comparable.",
+  },
+];
+
+function collectibleErrorMessage(error) {
   const messages = {
     lego_market_data_unavailable:
       "No live source or saved beta benchmark is available for that set yet.",
     lego_set_number_required: "Enter a valid LEGO set number.",
     purchase_price_required: "Enter the price you paid in rand.",
+    collectible_category_required: "Choose a collectible category.",
+    collectible_name_required: "Enter a clear name for the collectible.",
+    collectible_reference_required: "Enter a catalog, edition, or product reference.",
+    market_comparable_value_required:
+      "Enter an evidence-led current market estimate from comparable sales.",
   };
-  return messages[error] || "The LEGO valuation could not be completed. Please try again.";
+  return messages[error] || "The collectible valuation could not be completed. Please try again.";
 }
 
-function LegoValuationPanel() {
-  const [setNum, setSetNum] = useState("40766");
+function CollectibleValuationPanel() {
+  const [category, setCategory] = useState("lego");
+  const [identifier, setIdentifier] = useState("40766");
+  const [itemName, setItemName] = useState("");
   const [purchasePriceZAR, setPurchasePriceZAR] = useState("65");
+  const [currentMarketValueZAR, setCurrentMarketValueZAR] = useState("");
+  const [condition, setCondition] = useState("excellent");
+  const [rarity, setRarity] = useState("");
+  const [provenance, setProvenance] = useState("");
+  const [evidenceNotes, setEvidenceNotes] = useState("");
   const [valuation, setValuation] = useState(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const activeProfile =
+    COLLECTIBLE_VALUATION_CATEGORIES.find((profile) => profile.id === category) ||
+    COLLECTIBLE_VALUATION_CATEGORIES[0];
+  const appraisalMode = activeProfile.mode === "appraisal";
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -141,12 +232,19 @@ function LegoValuationPanel() {
     setStatus("");
 
     try {
-      const response = await fetch("/api/lego/valuation", {
+      const response = await fetch("/api/collectibles/valuation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          setNum,
+          category,
+          identifier,
+          itemName,
           purchasePriceZAR: Number(purchasePriceZAR),
+          currentMarketValueZAR: Number(currentMarketValueZAR),
+          condition,
+          rarity,
+          provenance,
+          evidenceNotes,
         }),
       });
       const payload = await response.json();
@@ -156,38 +254,66 @@ function LegoValuationPanel() {
       setValuation(payload);
     } catch (error) {
       setValuation(null);
-      setStatus(legoErrorMessage(error.message));
+      setStatus(collectibleErrorMessage(error.message));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <section className="panel legoValuationPanel" id="lego-valuation">
+    <section className="panel legoValuationPanel" id="collectibles-valuation">
       <div className="panelHeader">
         <div>
-          <span className="legoPanelEyebrow">LEGO Beta Flagship</span>
+          <span className="legoPanelEyebrow">Collectibles Valuation Desk</span>
           <h2>Rate This Purchase</h2>
           <p>
-            Enter the LEGO set and your purchase price. Collecttrade blends configured market
-            sources, protects API budgets, and returns the 1, 5, and 10 year scenario.
+            Use the same disciplined workflow for LEGO, whiskey, stamps, puzzles, cards, coins,
+            comics, and other legitimate collectibles.
           </p>
         </div>
         <div className="headerStatus">
-          <span>Workflow</span>
-          <strong>BrickLink + BrickEconomy</strong>
+          <span>Valuation mode</span>
+          <strong>{appraisalMode ? "Evidence-led appraisal" : "Connected market lookup"}</strong>
         </div>
       </div>
 
       <form className="legoValuationForm" onSubmit={handleSubmit}>
         <label>
-          <span>LEGO set number</span>
+          <span>Category</span>
+          <select
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value);
+              setIdentifier(event.target.value === "lego" ? "40766" : "");
+              setValuation(null);
+              setStatus("");
+            }}
+          >
+            {COLLECTIBLE_VALUATION_CATEGORIES.map((profile) => (
+              <option key={profile.id} value={profile.id}>
+                {profile.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {appraisalMode ? (
+          <label>
+            <span>Collectible name</span>
+            <input
+              type="text"
+              value={itemName}
+              onChange={(event) => setItemName(event.target.value)}
+              placeholder={activeProfile.itemNamePlaceholder}
+            />
+          </label>
+        ) : null}
+        <label>
+          <span>{activeProfile.identifierLabel}</span>
           <input
             type="text"
-            inputMode="numeric"
-            value={setNum}
-            onChange={(event) => setSetNum(event.target.value)}
-            placeholder="40766"
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
+            placeholder={activeProfile.identifierPlaceholder}
           />
         </label>
         <label>
@@ -201,6 +327,55 @@ function LegoValuationPanel() {
             placeholder="65"
           />
         </label>
+        {appraisalMode ? (
+          <>
+            <label>
+              <span>Current market estimate (ZAR)</span>
+              <input
+                type="number"
+                min="1"
+                step="0.01"
+                value={currentMarketValueZAR}
+                onChange={(event) => setCurrentMarketValueZAR(event.target.value)}
+                placeholder="Comparable-sale estimate"
+              />
+            </label>
+            <label>
+              <span>Condition</span>
+              <select value={condition} onChange={(event) => setCondition(event.target.value)}>
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+              </select>
+            </label>
+            <label>
+              <span>Rarity or edition</span>
+              <input
+                type="text"
+                value={rarity}
+                onChange={(event) => setRarity(event.target.value)}
+                placeholder="Limited release, catalog grade, edition size"
+              />
+            </label>
+            <label className="legoValuationWideField">
+              <span>Provenance</span>
+              <textarea
+                value={provenance}
+                onChange={(event) => setProvenance(event.target.value)}
+                placeholder="Where it came from, authenticity evidence, storage, certification"
+              />
+            </label>
+            <label className="legoValuationWideField">
+              <span>Comparable-sale evidence</span>
+              <textarea
+                value={evidenceNotes}
+                onChange={(event) => setEvidenceNotes(event.target.value)}
+                placeholder={activeProfile.evidenceHint}
+              />
+            </label>
+          </>
+        ) : null}
         <button className="primaryButton" type="submit" disabled={busy}>
           {busy ? "Analyzing..." : "Get Valuation"}
         </button>
@@ -212,10 +387,17 @@ function LegoValuationPanel() {
         <div className="legoValuationResult">
           <div className="legoValuationHeadline">
             <div>
-              <span>LEGO {valuation.setNum}</span>
+              <span>
+                {valuation.categoryLabel || "Collectible"} {valuation.setNum || valuation.identifier}
+              </span>
               <h3>{valuation.name}</h3>
               <p>
-                {valuation.rarity} | {valuation.confidence === "live" ? "Live market data" : "Beta benchmark"}
+                {valuation.rarity} |{" "}
+                {valuation.confidence === "live"
+                  ? "Live market data"
+                  : valuation.valuationMode === "automatic"
+                    ? "Beta benchmark"
+                    : "Appraisal input"}
               </p>
             </div>
             <div className="legoScore">
@@ -279,7 +461,8 @@ function LegoValuationPanel() {
 
           <div className="legoProjectionNote">
             Projections use a {valuation.projections.annualGrowthPercent}% annual scenario and are
-            estimates, not guaranteed returns. USD/ZAR reference: {valuation.usdZarRate}.
+            estimates, not guaranteed returns.
+            {valuation.usdZarRate ? ` USD/ZAR reference: ${valuation.usdZarRate}.` : ""}
           </div>
         </div>
       ) : null}
@@ -1833,7 +2016,7 @@ export function CollectiblesScreen({
         actions={collectibleActions}
       />
 
-      <LegoValuationPanel />
+      <CollectibleValuationPanel />
 
       <section className="summaryGrid">
         <div className="summaryCard">

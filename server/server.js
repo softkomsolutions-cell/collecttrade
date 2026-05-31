@@ -5,6 +5,10 @@ const path = require("path");
 const crypto = require("crypto");
 const Parser = require("rss-parser");
 const { getLegoStatus, getLegoValuation } = require("./services/legoValuation");
+const {
+  getCollectibleValuation,
+  getCollectiblesValuationMeta,
+} = require("./services/collectiblesValuation");
 
 const app = express();
 const parser = new Parser();
@@ -3484,6 +3488,31 @@ app.get("/api/collectibles", (_req, res) => {
 
 app.get("/api/lego/status", (_req, res) => {
   res.json(getLegoStatus());
+});
+
+app.get("/api/collectibles/valuation/meta", (_req, res) => {
+  res.json(getCollectiblesValuationMeta());
+});
+
+app.post("/api/collectibles/valuation", async (req, res) => {
+  try {
+    res.json(await getCollectibleValuation(req.body));
+  } catch (error) {
+    const knownErrors = new Set([
+      "collectible_category_required",
+      "collectible_name_required",
+      "collectible_reference_required",
+      "lego_set_number_required",
+      "purchase_price_required",
+      "market_comparable_value_required",
+      "lego_market_data_unavailable",
+    ]);
+    const message = String(error?.message || "collectible_valuation_failed");
+    res.status(knownErrors.has(message) ? 400 : 500).json({
+      ok: false,
+      error: message,
+    });
+  }
 });
 
 app.post("/api/lego/valuation", async (req, res) => {

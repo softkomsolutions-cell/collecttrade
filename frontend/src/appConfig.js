@@ -150,7 +150,7 @@ export const PAGE_SECTION_LINKS = {
     { id: "source-status", label: "Sources" },
   ],
   collectibles: [
-    { id: "lego-valuation", label: "LEGO Value" },
+    { id: "collectibles-valuation", label: "Valuation" },
     { id: "collectibles-focus", label: "Focus" },
     { id: "collectibles-reference", label: "Reference" },
     { id: "collectibles-grid", label: "Inventory" },

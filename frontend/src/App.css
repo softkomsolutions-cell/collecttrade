@@ -682,7 +682,7 @@
 
 .legoValuationForm {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   align-items: end;
 }
@@ -694,6 +694,15 @@
 
 .legoValuationForm .primaryButton {
   min-height: 48px;
+}
+
+.legoValuationForm textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.legoValuationWideField {
+  grid-column: 1 / -1;
 }
 
 .legoValuationResult,

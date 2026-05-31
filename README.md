@@ -194,10 +194,11 @@ The backend supports the following environment variables:
 
 Use `server/.env.example` as the template.
 
-## LEGO Valuation Beta
+## Collectibles Valuation Beta
 
-The Collectibles workspace includes a LEGO-first purchase analyzer. Enter a set number and the
-price paid in ZAR to generate:
+The Collectibles workspace includes a category-aware purchase analyzer for LEGO, whiskey, stamps,
+puzzles, coins, trading cards, comics, and other legitimate collectibles. Enter the purchase
+details and price paid in ZAR to generate:
 
 1. a current sealed-set estimate
 2. the cost multiple and current gain
@@ -205,14 +206,25 @@ price paid in ZAR to generate:
 4. 1, 5, and 10 year projection scenarios
 5. a visible source breakdown
 
-Configured sources are used in this order:
+LEGO uses connected market sources in this order:
 
 1. BrickLink sold and stock price guides through signed OAuth 1.0a requests
 2. BrickEconomy set data through its `x-apikey` header
 3. a clearly labeled Collecttrade benchmark for the Jane Austen beta example only
 
-The backend caches source responses and preserves a reserve portion of each configured daily
-budget. Use `/api/lego/status` to review source readiness and quota state.
+The backend caches LEGO source responses and preserves a reserve portion of each configured daily
+budget. Use `/api/lego/status` to review LEGO source readiness and quota state.
+
+Other categories use evidence-led appraisal mode. The app requires a comparable-market estimate
+and asks for condition, rarity, provenance, and comparable-sale notes instead of inventing an
+external quote. The result clearly labels appraisal inputs and projection scenarios.
+
+Supporting endpoints:
+
+- `/api/collectibles/valuation/meta`
+- `/api/collectibles/valuation`
+- `/api/lego/status`
+- `/api/lego/valuation`
 
 ## Partner Testing Flow
 
