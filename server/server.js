@@ -9,6 +9,7 @@ const {
   getCollectibleValuation,
   getCollectiblesValuationMeta,
 } = require("./services/collectiblesValuation");
+const reviewedLegoPortfolioV36 = require("./fixtures/reviewed-lego-portfolio-v36.json");
 
 const app = express();
 const parser = new Parser();
@@ -523,6 +524,7 @@ const PARTNER_REVIEWED_PORTFOLIOS = [
       },
     ],
   },
+  reviewedLegoPortfolioV36,
 ];
 const TRADEABLE_COLLECTIBLE_CATEGORIES = uniqueStrings(
   TRADEABLE_COLLECTIBLES.map((item) => item.category),
@@ -1229,10 +1231,23 @@ function summarizeCollectibleHoldings(items, transactions = []) {
   summary.categoryBreakdown = Array.from(categoryMap.values())
     .map((category) => ({
       ...category,
-      unrealizedPnlZAR: category.currentValueZAR - category.costBasisZAR,
+      costBasisZAR: Number(category.costBasisZAR.toFixed(2)),
+      currentValueZAR: Number(category.currentValueZAR.toFixed(2)),
+      unrealizedPnlZAR: Number((category.currentValueZAR - category.costBasisZAR).toFixed(2)),
     }))
     .sort((left, right) => right.currentValueZAR - left.currentValueZAR);
   summary.categoryCount = summary.categoryBreakdown.length;
+  [
+    "purchaseValueZAR",
+    "currentValueZAR",
+    "projectedOneYearZAR",
+    "projectedFiveYearsZAR",
+    "projectedTenYearsZAR",
+    "unrealizedPnlZAR",
+    "realizedPnlZAR",
+  ].forEach((key) => {
+    summary[key] = Number(summary[key].toFixed(2));
+  });
   return summary;
 }
 
@@ -4047,6 +4062,10 @@ app.post("/api/collectibles/partner-portfolios/:portfolioId/import", requireAuth
 
   const importedAt = nowIso();
   const holdings = portfolio.positions.map((position) => {
+    const category = portfolio.categoryId || "cards";
+    const categoryLabel = portfolio.categoryLabel || portfolio.category || "Trading Cards";
+    const sourceRef = position.invoiceRef || position.sourceRef || portfolio.title;
+    const quantity = Math.max(1, Number(position.quantity || 1));
     const profitZAR = position.currentValueZAR - position.purchasePriceZAR;
     const score =
       profitZAR < 0 ? 6.2 : position.grade === "Sealed" ? 8.5 : profitZAR > 1000 ? 8 : 7.4;
@@ -4055,11 +4074,11 @@ app.post("/api/collectibles/partner-portfolios/:portfolioId/import", requireAuth
       Math.round(position.currentValueZAR * (1 + position.annualGrowthPercent / 100) ** years);
 
     return sanitizeCollectibleHolding({
-      category: "cards",
-      categoryLabel: "Trading Cards",
+      category,
+      categoryLabel,
       identifier: position.identifier,
       name: position.name,
-      quantity: 1,
+      quantity,
       purchasePriceZAR: position.purchasePriceZAR,
       currentValueZAR: position.currentValueZAR,
       profitZAR,
@@ -4071,7 +4090,7 @@ app.post("/api/collectibles/partner-portfolios/:portfolioId/import", requireAuth
       condition: position.grade,
       valuationMode: "reviewed-import",
       importBatchId: portfolio.id,
-      invoiceRef: position.invoiceRef,
+      invoiceRef: sourceRef,
       projections: {
         oneYear: buildProjection(1),
         fiveYears: buildProjection(5),
@@ -4085,22 +4104,27 @@ app.post("/api/collectibles/partner-portfolios/:portfolioId/import", requireAuth
       ],
       sources: [
         {
-          id: position.invoiceRef,
-          label: `Invoice ${position.invoiceRef}`,
+          id: sourceRef,
+          label: position.invoiceRef ? `Invoice ${sourceRef}` : sourceRef,
           status: "reviewed",
-          detail: "Partner-supplied invoice reference reconciled against the portfolio PDF.",
+          detail: position.invoiceRef
+            ? "Partner-supplied invoice reference reconciled against the portfolio PDF."
+            : "Partner-supplied portfolio row reconciled against the reviewed PDF.",
         },
       ],
-      evidenceHint: `Reviewed portfolio position with invoice reference ${position.invoiceRef}.`,
+      evidenceHint: `Reviewed portfolio position with source reference ${sourceRef}.`,
       inputSnapshot: {
-        category: "cards",
-        identifier: position.identifier,
+        category,
+        identifier:
+          category === "lego" && /^\d+$/.test(String(position.setNum || ""))
+            ? position.setNum
+            : position.identifier,
         itemName: position.name,
         purchasePriceZAR: position.purchasePriceZAR,
         currentMarketValueZAR: position.currentValueZAR,
         condition: position.grade,
         rarity: position.rarity,
-        provenance: `Imported from ${portfolio.title}; invoice ${position.invoiceRef}.`,
+        provenance: `Imported from ${portfolio.title}; reference ${sourceRef}.`,
         evidenceNotes: `Reviewed partner portfolio estimate as of ${portfolio.updatedAt}.`,
       },
       createdAt: importedAt,

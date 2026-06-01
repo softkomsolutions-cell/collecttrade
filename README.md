@@ -32,6 +32,11 @@ The partner beta also includes a reviewed Pokémon import preset based on the su
 invoice bundle. It loads six reconciled positions into owned inventory while keeping raw invoices
 and private seller details outside the public repository.
 
+The reviewed-import path is category-neutral. The supplied Coolsters LEGO v36 portfolio is included
+as a second preset with 131 reconciled positions. The same workflow can accept whiskey, stamps,
+puzzles, coins, comics, cards, and other legitimate collectibles when reviewed source documents are
+provided.
+
 Shared PDFs and Dropbox folders enter an import-review queue. The beta deliberately does not
 silently trust document contents or import holdings without identifier and evidence review.
 
