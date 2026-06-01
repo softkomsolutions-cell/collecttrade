@@ -144,6 +144,18 @@ const EMPTY_SHARE_STATUS = {
   notes: "No public share session yet.",
 };
 
+const COLLECTIBLE_SERVICE_BY_SECTION = {
+  "collectibles-valuation": "valuation",
+  "collectibles-portfolio": "collection",
+  "collectibles-owned-inventory": "inventory",
+  "collectibles-transactions": "activity",
+  "collectibles-reviewed-portfolios": "imports",
+  "collectibles-partner-sources": "sources",
+  "collectibles-focus": "research",
+  "collectibles-reference": "research",
+  "collectibles-grid": "research",
+};
+
 const INITIAL_AUTH_FORM = {
   name: "",
   email: "",
@@ -575,6 +587,7 @@ export default function App() {
 
   const [page, setPage] = useState(normalizePage(initialPage));
   const [activeDesk, setActiveDesk] = useState(normalizeDesk(initialDesk));
+  const [activeCollectibleService, setActiveCollectibleService] = useState(initialHashState.service || "valuation");
   const [authChecked, setAuthChecked] = useState(() => !window.localStorage.getItem(TOKEN_KEY));
   const [bootSplashVisible, setBootSplashVisible] = useState(true);
   const [authToken, setAuthToken] = useState(() => window.localStorage.getItem(TOKEN_KEY) || "");
@@ -645,13 +658,13 @@ export default function App() {
   }, []);
 
   const syncHashRoute = useCallback(
-    (nextPage, nextDesk) => {
-      const nextHash = buildHash(nextPage, nextDesk);
+    (nextPage, nextDesk, nextService = activeCollectibleService) => {
+      const nextHash = buildHash(nextPage, nextDesk, nextService);
       if (window.location.hash !== nextHash) {
         window.location.hash = nextHash;
       }
     },
-    [],
+    [activeCollectibleService],
   );
 
   const rememberLaunch = useCallback((preference) => {
@@ -669,7 +682,7 @@ export default function App() {
       const normalizedDesk = normalizeDesk(nextDesk);
       setPage(normalizedPage);
       setActiveDesk(normalizedDesk);
-      syncHashRoute(normalizedPage, normalizedDesk);
+      syncHashRoute(normalizedPage, normalizedDesk, activeCollectibleService);
       if (currentUser) {
         rememberLaunch({
           page: normalizedPage,
@@ -679,13 +692,15 @@ export default function App() {
         });
       }
     },
-    [activeDesk, currentUser, rememberLaunch, syncHashRoute],
+    [activeCollectibleService, activeDesk, currentUser, rememberLaunch, syncHashRoute],
   );
 
   const jumpToPageSection = useCallback(
     (nextPage, sectionId, nextDesk = activeDesk) => {
       const normalizedPage = normalizePage(nextPage);
       const normalizedDesk = normalizeDesk(nextDesk);
+      const nextService = COLLECTIBLE_SERVICE_BY_SECTION[sectionId] || activeCollectibleService;
+      setActiveCollectibleService(nextService);
       setPendingSectionTarget({
         page: normalizedPage,
         desk: normalizedDesk,
@@ -693,7 +708,7 @@ export default function App() {
       });
       setPage(normalizedPage);
       setActiveDesk(normalizedDesk);
-      syncHashRoute(normalizedPage, normalizedDesk);
+      syncHashRoute(normalizedPage, normalizedDesk, nextService);
       if (currentUser) {
         rememberLaunch({
           page: normalizedPage,
@@ -703,7 +718,7 @@ export default function App() {
         });
       }
     },
-    [activeDesk, currentUser, rememberLaunch, syncHashRoute],
+    [activeCollectibleService, activeDesk, currentUser, rememberLaunch, syncHashRoute],
   );
 
   const refreshCore = useCallback(async () => {
@@ -830,9 +845,9 @@ export default function App() {
 
   useEffect(() => {
     if (!window.location.hash) {
-      syncHashRoute(page, activeDesk);
+      syncHashRoute(page, activeDesk, activeCollectibleService);
     }
-  }, [activeDesk, page, syncHashRoute]);
+  }, [activeCollectibleService, activeDesk, page, syncHashRoute]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -867,6 +882,7 @@ export default function App() {
       const next = parseHashState(window.location.hash);
       setPage(next.page);
       setActiveDesk(next.desk);
+      setActiveCollectibleService(next.service || "valuation");
       if (!currentUser) {
         setPreAuthLaunch((previous) => ({
           ...previous,
@@ -1071,7 +1087,7 @@ export default function App() {
       setCurrentUser(user);
       setAppSettings(normalizeAppSettings(settings));
       setAuthStatus("");
-      setSplashVisible(false);
+      setSplashVisible(true);
       const launch = launchSelection || preAuthLaunch;
       const nextPage = normalizePage(launch?.page || page);
       const nextDesk = normalizeDesk(launch?.desk || activeDesk);
@@ -1872,6 +1888,7 @@ export default function App() {
           collectibleImports={collectibleImports}
           collectiblePortfolio={collectiblePortfolio}
           collectiblesResponse={collectiblesResponse}
+          activeService={activeCollectibleService}
           filteredCollectibles={filteredCollectibles}
           handleCollectibleSelect={handleCollectibleSelect}
           jumpToPageSection={jumpToPageSection}

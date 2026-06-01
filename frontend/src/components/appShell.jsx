@@ -169,12 +169,6 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
   const savedPreference = readLaunchPreference();
   const savedLaunch = savedPreference?.page === "collectibles" ? savedPreference : null;
   const launchDesk = savedLaunch?.desk || normalizeDesk(activeDesk);
-  const partnerLaunch = {
-    page: "collectibles",
-    desk: "forex",
-    introId: "collectibles",
-    sectionId: "collectibles-valuation",
-  };
   const savedLaunchLabel = savedLaunch ? workspaceLabel(savedLaunch.page, savedLaunch.desk) : null;
   const serviceMenuRows = [
     {
@@ -193,8 +187,23 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       },
     },
     {
-      id: "inventory",
+      id: "collection",
       ordinal: "02",
+      glyph: "CO",
+      title: "My Collection",
+      tag: "Portfolio summary",
+      tone: "portfolio",
+      detail: "Review saved purchases, current estimates, and long-range projections.",
+      selection: {
+        page: "collectibles",
+        desk: launchDesk,
+        introId: "collectibles",
+        sectionId: "collectibles-portfolio",
+      },
+    },
+    {
+      id: "inventory",
+      ordinal: "03",
       glyph: "IN",
       title: "Owned Inventory",
       tag: "Collection register",
@@ -209,7 +218,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
     },
     {
       id: "imports",
-      ordinal: "03",
+      ordinal: "04",
       glyph: "IM",
       title: "Partner Imports",
       tag: "Reviewed portfolios",
@@ -235,6 +244,12 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       title: "Partner Sources",
       detail: "Shared documents and references",
       selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-partner-sources" },
+    },
+    {
+      id: "research",
+      title: "Research Inventory",
+      detail: "Ideas, source checks, and product context",
+      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-grid" },
     },
   ];
   const onboardingSlides = [
@@ -269,17 +284,13 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       bars: [42, 68, 54, 80],
     },
   ];
-  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingStep, setOnboardingStep] = useState(onboardingSlides.length);
   const onboardingComplete = onboardingStep >= onboardingSlides.length;
   const currentOnboardingSlide =
     onboardingSlides[Math.min(onboardingStep, onboardingSlides.length - 1)];
 
   const advanceOnboarding = () => {
     setOnboardingStep((step) => Math.min(step + 1, onboardingSlides.length));
-  };
-
-  const resetOnboarding = () => {
-    setOnboardingStep(0);
   };
 
   const skipOnboarding = () => {
@@ -349,15 +360,12 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashPanel splashPanelCompact splashMenuBackdrop">
         <div className="splashCompactHeader">
           <div className="authBrand">COLLECTRADE</div>
-          <button type="button" className="ghostButton onboardingSkipButton" onClick={resetOnboarding}>
-            View Intro
-          </button>
         </div>
 
         <div className="splashCompactHero">
-          <div className="splashEyebrow">Main Menu</div>
-          <h1>Choose a collectibles workflow.</h1>
-          <p className="authBlurb">Start with valuation, inventory, imports, or investment activity.</p>
+          <div className="splashEyebrow">Services Summary</div>
+          <h1>Choose a service.</h1>
+          <p className="authBlurb">Open the focused collectibles page you need.</p>
           <div className="splashHeroPillRow" aria-hidden="true">
             <span className="splashHeroPill">Collectibles</span>
             <span className="splashHeroPill">Valuation</span>
@@ -437,22 +445,6 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
           </div>
         </section>
 
-        <div className="chooserActionRow chooserActionRowSplit">
-          <button
-            type="button"
-            className="ghostButton splashRailButton"
-            onClick={() => onLaunch(partnerLaunch)}
-          >
-            Partner route
-          </button>
-          <button
-            type="button"
-            className="ghostButton splashRailButton"
-            onClick={resetOnboarding}
-          >
-            Replay intro
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -1955,6 +1955,7 @@ export function ToolsScreen({
 
 export function CollectiblesScreen({
   activeCollectible,
+  activeService = "valuation",
   activePageSections,
   appSettings,
   authToken,
@@ -2205,7 +2206,7 @@ export function CollectiblesScreen({
   ];
 
   return (
-    <>
+    <div className={`collectiblesServicePage collectiblesService-${activeService}`}>
       <WorkspaceHero
         tone="collectibles"
         eyebrow="Collectibles Valuation"
@@ -2982,7 +2983,7 @@ export function CollectiblesScreen({
           />
         ) : null}
       </section>
-    </>
+    </div>
   );
 }
 

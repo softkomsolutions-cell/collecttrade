@@ -719,6 +719,35 @@
   line-height: 1.6;
 }
 
+.collectiblesServicePage {
+  display: grid;
+  gap: 18px;
+}
+
+.collectiblesServicePage > .workspaceHero,
+.collectiblesServicePage > .workspaceSectionBar,
+.collectiblesServicePage > .workspaceCommandBar,
+.collectiblesServicePage > .panel,
+.collectiblesServicePage > .summaryGrid,
+.collectiblesServicePage > .collectibleShelfStack {
+  display: none;
+}
+
+.collectiblesService-valuation > #collectibles-valuation,
+.collectiblesService-collection > #collectibles-portfolio,
+.collectiblesService-inventory > #collectibles-owned-inventory,
+.collectiblesService-activity > #collectibles-transactions,
+.collectiblesService-imports > #collectibles-reviewed-portfolios,
+.collectiblesService-sources > #collectibles-partner-sources,
+.collectiblesService-research > .summaryGrid,
+.collectiblesService-research > #collectibles-lanes,
+.collectiblesService-research > #collectibles-focus,
+.collectiblesService-research > #collectibles-trading,
+.collectiblesService-research > #collectibles-reference,
+.collectiblesService-research > #collectibles-grid {
+  display: grid;
+}
+
 .collectibleReferenceMeta {
   padding-top: 4px;
 }
