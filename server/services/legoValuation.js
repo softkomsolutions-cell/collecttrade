@@ -7,6 +7,20 @@ const USD_ZAR_RATE = Number(process.env.USD_ZAR_RATE || 17.8);
 const cache = new Map();
 
 const BETA_BENCHMARKS = {
+  "30725": {
+    name: "Spider-Man vs. Anti-Venom Heist",
+    currentValueUSD: 5.33,
+    rarity: "Retail paperbag with exclusive Anti-Venom minifigure",
+    annualGrowthPercent: 8,
+    benchmarkScore: 7.5,
+    notes: [
+      "Released in 2026 with 31 pieces and two minifigures: Spider-Man and Anti-Venom.",
+      "Anti-Venom is currently exclusive to this paperbag set.",
+      "BrickEconomy benchmark: current new-sealed market value is about $5.33 while the set remains available at retail.",
+      "Store sealed and flat. Creases or packaging damage can reduce the future collector premium.",
+      "Benchmark fallback only: connect BrickLink or BrickEconomy for a fresh market quote.",
+    ],
+  },
   "40766": {
     name: "Tribute to Jane Austen's Books",
     currentValueUSD: 58,
@@ -132,8 +146,11 @@ async function getLegoValuation(input) {
   const discountPercent = (profitZAR / currentValueZAR) * 100;
   const multiplier = currentValueZAR / purchasePriceZAR;
   const isGwp = benchmark?.rarity === "Gift With Purchase";
-  const annualGrowthPercent = isGwp ? 8 : 6;
-  const score = scoreValuation({ discountPercent, dataConfidence, isGwp });
+  const annualGrowthPercent = benchmark?.annualGrowthPercent || (isGwp ? 8 : 6);
+  const score =
+    dataConfidence === "benchmark" && benchmark?.benchmarkScore
+      ? benchmark.benchmarkScore
+      : scoreValuation({ discountPercent, dataConfidence, isGwp });
   const valuation = {
     ok: true,
     setNum,
