@@ -166,9 +166,9 @@ export function BootSplash() {
 }
 
 export function SplashScreen({ ready, activeDesk, onLaunch }) {
-  const savedLaunch = readLaunchPreference();
+  const savedPreference = readLaunchPreference();
+  const savedLaunch = savedPreference?.page === "collectibles" ? savedPreference : null;
   const launchDesk = savedLaunch?.desk || normalizeDesk(activeDesk);
-  const defaultTradingDesk = launchDesk === "crypto" ? "forex" : launchDesk;
   const partnerLaunch = {
     page: "collectibles",
     desk: "forex",
@@ -178,13 +178,13 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
   const savedLaunchLabel = savedLaunch ? workspaceLabel(savedLaunch.page, savedLaunch.desk) : null;
   const serviceMenuRows = [
     {
-      id: "collectibles",
+      id: "valuation",
       ordinal: "01",
-      glyph: "CL",
-      title: "Collectibles",
-      tag: "Primary workspace",
+      glyph: "VL",
+      title: "Rate a Purchase",
+      tag: "Valuation",
       tone: "collectibles",
-      detail: "Rate purchases, document evidence, review inventory, and track collectible value.",
+      detail: "Score the opportunity and review the 1, 5, and 10 year scenarios.",
       selection: {
         page: "collectibles",
         desk: launchDesk,
@@ -193,77 +193,48 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       },
     },
     {
-      id: "portfolio",
+      id: "inventory",
       ordinal: "02",
-      glyph: "PF",
-      title: "Portfolio",
-      tag: "Collection book",
+      glyph: "IN",
+      title: "Owned Inventory",
+      tag: "Collection register",
       tone: "portfolio",
-      detail: "See tracked collectible positions, recent activity, and the wider book.",
+      detail: "Search holdings, cost basis, condition, rarity, and estimates.",
       selection: {
-        page: "portfolio",
+        page: "collectibles",
         desk: launchDesk,
-        introId: "portfolio",
-        sectionId: "open-positions",
+        introId: "collectibles",
+        sectionId: "collectibles-owned-inventory",
       },
     },
     {
-      id: "home",
+      id: "imports",
       ordinal: "03",
-      glyph: "HM",
-      title: "Home",
-      tag: "Summary",
+      glyph: "IM",
+      title: "Partner Imports",
+      tag: "Reviewed portfolios",
       tone: "home",
-      detail: "Open the workspace summary, partner readiness, and launch paths.",
+      detail: "Load reconciled LEGO and Pokemon portfolio records into inventory.",
       selection: {
-        page: "home",
+        page: "collectibles",
         desk: launchDesk,
-        introId: "home",
-        sectionId: "home-overview",
+        introId: "collectibles",
+        sectionId: "collectibles-reviewed-portfolios",
       },
     },
   ];
   const supportMenuRows = [
     {
-      id: "news",
-      title: "Market News",
-      detail: "Background macro tape",
-      selection: { page: "news", desk: launchDesk, introId: "news", sectionId: "macro-feed" },
+      id: "activity",
+      title: "Investment Activity",
+      detail: "Purchases and sales",
+      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-transactions" },
     },
     {
-      id: "trading",
-      title: "Market Tools",
-      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
-      selection: { page: "signals", desk: defaultTradingDesk, introId: "trade", sectionId: "signals-grid" },
-    },
-    {
-      id: "reports",
-      title: "Reports",
-      detail: "Performance graphs",
-      selection: { page: "reports", desk: launchDesk, introId: "reports", sectionId: "reports-performance" },
-    },
-    {
-      id: "tools",
-      title: "Tools",
-      detail: "Analyzer and simulator",
-      selection: { page: "tools", desk: launchDesk, introId: "tools", sectionId: "tools-workbench" },
-    },
-    {
-      id: "connections",
-      title: "Connections",
-      detail: "Feeds and routing",
-      selection: {
-        page: "connections",
-        desk: launchDesk,
-        introId: "connections",
-        sectionId: "connections-overview",
-      },
-    },
-    {
-      id: "settings",
-      title: "Settings",
-      detail: "Account and setup",
-      selection: { page: "settings", desk: launchDesk, introId: "settings", sectionId: "news-region" },
+      id: "sources",
+      title: "Partner Sources",
+      detail: "Shared documents and references",
+      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-partner-sources" },
     },
   ];
   const onboardingSlides = [
@@ -288,12 +259,12 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       bars: [56, 74, 88, 68],
     },
     {
-      id: "market-tools",
-      glyph: "MT",
-      eyebrow: "Secondary tools",
-      title: "Keep market modules in the background.",
+      id: "partner-imports",
+      glyph: "IM",
+      eyebrow: "Portfolio imports",
+      title: "Bring reviewed collections into one inventory.",
       description:
-        "Forex, crypto, ETF, JSE, and market news tools stay available when you need them without competing with the collectibles workflow.",
+        "Load partner LEGO and Pokemon portfolios, then expand the same structure to whiskey, stamps, puzzles, and more.",
       accent: "trade",
       bars: [42, 68, 54, 80],
     },
@@ -385,8 +356,8 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
 
         <div className="splashCompactHero">
           <div className="splashEyebrow">Main Menu</div>
-          <h1>Choose a service.</h1>
-          <p className="authBlurb">Open one lane now. Each menu item takes you straight into its own screen.</p>
+          <h1>Choose a collectibles workflow.</h1>
+          <p className="authBlurb">Start with valuation, inventory, imports, or investment activity.</p>
           <div className="splashHeroPillRow" aria-hidden="true">
             <span className="splashHeroPill">Collectibles</span>
             <span className="splashHeroPill">Valuation</span>
@@ -446,7 +417,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
           <div className="splashSectionHeader">
             <div>
               <span>More</span>
-              <strong>Background tools and setup</strong>
+              <strong>Records and references</strong>
             </div>
           </div>
 
@@ -532,10 +503,10 @@ function describeLaunchSelection(page, desk, sectionId) {
 export function LandingShell({ initialLaunch, onContinue }) {
   const landingActions = [
     {
-      id: "collectibles",
-      glyph: "CL",
-      eyebrow: "Primary",
-      title: "Collectibles Valuation",
+      id: "valuation",
+      glyph: "VL",
+      eyebrow: "Value",
+      title: "Rate a Purchase",
       page: "collectibles",
       introId: "collectibles",
       sectionId: "collectibles-valuation",
@@ -544,107 +515,53 @@ export function LandingShell({ initialLaunch, onContinue }) {
       blurb: "Value LEGO, whiskey, stamps, puzzles, coins, cards, comics, and other legitimate collectibles.",
     },
     {
-      id: "portfolio",
-      glyph: "PF",
-      eyebrow: "Book",
-      title: "Collectibles Portfolio",
-      page: "portfolio",
-      introId: "portfolio",
-      sectionId: "open-positions",
-      destination: "Open positions",
+      id: "inventory",
+      glyph: "IN",
+      eyebrow: "Own",
+      title: "Owned Inventory",
+      page: "collectibles",
+      introId: "collectibles",
+      sectionId: "collectibles-owned-inventory",
+      destination: "Inventory register",
       bestFor: "Review holdings",
-      blurb: "Review tracked positions, PnL, and recent closes before adding the next collectible.",
+      blurb: "Search owned items, cost basis, rarity, condition, and current estimates.",
+    },
+    {
+      id: "imports",
+      glyph: "IM",
+      eyebrow: "Load",
+      title: "Partner Imports",
+      page: "collectibles",
+      introId: "collectibles",
+      sectionId: "collectibles-reviewed-portfolios",
+      destination: "Reviewed portfolios",
+      bestFor: "Load collection data",
+      blurb: "Import reconciled LEGO and Pokemon portfolios into the working inventory register.",
+    },
+    {
+      id: "activity",
+      glyph: "AC",
+      eyebrow: "Track",
+      title: "Investment Activity",
+      page: "collectibles",
+      introId: "collectibles",
+      sectionId: "collectibles-transactions",
+      destination: "Purchase and sale ledger",
+      bestFor: "Review the trail",
+      blurb: "Keep acquisitions and exits together as a collectible investment ledger.",
     },
   ];
-  const secondaryActions = [
-    {
-      id: "home",
-      glyph: "HM",
-      eyebrow: "Hub",
-      title: "Home",
-      page: "home",
-      introId: "home",
-      sectionId: "home-overview",
-      destination: "Workspace hub",
-      blurb: "Open the product home first for quick launch, partner readiness, and recent session context.",
-    },
-    {
-      id: "news",
-      glyph: "NW",
-      eyebrow: "Background",
-      title: "Market News",
-      page: "news",
-      introId: "news",
-      sectionId: "macro-feed",
-      destination: "Macro feed",
-      blurb: "Keep South African and global market headlines available as secondary context.",
-    },
-    {
-      id: "alpha-signals",
-      glyph: "AS",
-      eyebrow: "Background",
-      title: "Market Tools",
-      page: "signals",
-      introId: "trade",
-      sectionId: "signals-grid",
-      destination: "Signals grid",
-      blurb: "Open forex, crypto, ETF, and JSE signal tools only when they are needed.",
-    },
-    {
-      id: "reports",
-      glyph: "RP",
-      eyebrow: "Review",
-      title: "Reports",
-      page: "reports",
-      introId: "reports",
-      sectionId: "reports-performance",
-      destination: "Performance reports",
-      blurb: "Open visual reporting with performance curves, desk exposure, and signal analytics.",
-    },
-    {
-      id: "tools",
-      glyph: "TL",
-      eyebrow: "Assist",
-      title: "Tools",
-      page: "tools",
-      introId: "tools",
-      sectionId: "tools-workbench",
-      destination: "Tools workbench",
-      blurb: "Use the mentor, chart analyzer, simulator, and research shelf before you commit.",
-    },
-    {
-      id: "connections",
-      glyph: "CN",
-      eyebrow: "Route",
-      title: "Connections",
-      page: "connections",
-      introId: "connections",
-      sectionId: "connections-overview",
-      destination: "Connector overview",
-      blurb: "Check brokers, live routing, feed health, and connector readiness in one place.",
-    },
-    {
-      id: "settings",
-      glyph: "ST",
-      eyebrow: "Setup",
-      title: "Settings",
-      page: "settings",
-      introId: "settings",
-      sectionId: "news-region",
-      destination: "Workspace settings",
-      blurb: "Adjust region, workspace preferences, and saved desk targets before the session starts.",
-    },
-  ];
+  const secondaryActions = [];
   const allActions = [...landingActions, ...secondaryActions];
 
-  const initialPage = initialLaunch?.page || "collectibles";
+  const initialPage = "collectibles";
   const initialDesk = initialLaunch?.desk || "forex";
   const initialIntroId = initialLaunch?.introId || defaultIntroIdForPage(initialPage);
   const [selectedActionId, setSelectedActionId] = useState(
     allActions.some((action) => action.id === initialLaunch?.landingId)
       ? initialLaunch.landingId
       : allActions.find((action) => action.page === initialPage && action.sectionId === initialLaunch?.sectionId)
-        ?.id || (initialPage === "signals" && initialLaunch?.sectionId === "chart-panel" ? "trade" : initialIntroId === "trade" ? "alpha-signals" : initialIntroId),
+        ?.id || "valuation",
   );
   const [selectedPage, setSelectedPage] = useState(initialPage);
   const [selectedDesk, setSelectedDesk] = useState(initialDesk);
@@ -681,11 +598,11 @@ export function LandingShell({ initialLaunch, onContinue }) {
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
             <div className="authBrand">COLLECTRADE</div>
-            <div className="splashEyebrow">TRADING WORKSPACE</div>
+            <div className="splashEyebrow">COLLECTIBLES INVESTMENT WORKSPACE</div>
             <h1>One focused workspace for collectible valuation, evidence, and portfolio tracking.</h1>
             <p className="authBlurb">
               Collecttrade helps you rate purchases, document provenance, compare value, and track a
-              collectibles portfolio. Market tools stay available in the background when you need them.
+              collectibles portfolio in one focused workspace.
             </p>
 
             <div className="landingValueGrid">
@@ -716,8 +633,8 @@ export function LandingShell({ initialLaunch, onContinue }) {
                 <strong>Cards, coins, comics, custom</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Background stack</span>
-                <strong>Market tools and connections</strong>
+                <span>Partner portfolios</span>
+                <strong>Reviewed imports and references</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Workspace state</span>
@@ -727,7 +644,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
             <div className="landingTesterCard">
               <span>Partner testing route</span>
-                <strong>Landing, Collectibles Valuation, Portfolio, Feedback Board</strong>
+                <strong>Valuation, inventory, imports, and activity</strong>
               <small>
                 If this session is for partner feedback, use the built-in test pass so notes land in one
                 place and cover the main product surfaces.
@@ -756,9 +673,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
               <div className="splashPreviewCard">
                 <span>Desk</span>
                 <strong>
-                  {selectedPage === "signals" || selectedPage === "news"
-                    ? labelDesk(selectedDesk)
-                    : "Cross-workspace"}
+                  Collectibles
                 </strong>
               </div>
               <div className="splashPreviewCard">
@@ -784,9 +699,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
                 <div>
                   <strong>Anchor the desk</strong>
                   <small>
-                    {selectedPage === "signals" || selectedPage === "news"
-                      ? `${labelDesk(selectedDesk)} frames the session.`
-                      : "This workspace opens without a desk filter."}
+                    The collectibles investment workspace opens without a market desk filter.
                   </small>
                 </div>
               </div>
@@ -841,33 +754,34 @@ export function LandingShell({ initialLaunch, onContinue }) {
           </div>
         </div>
 
-        <div className="splashSection">
-          <div className="splashSectionHeader">
-            <div>
-              <span>More Workspaces</span>
-              <strong>Open the supporting parts of the platform first if thatâ€™s your priority</strong>
-              <p>These remain available when useful, but they stay behind the collectibles-first workflow.</p>
+        {secondaryActions.length ? (
+          <div className="splashSection">
+            <div className="splashSectionHeader">
+              <div>
+                <span>More Workspaces</span>
+                <strong>Open another workspace first</strong>
+              </div>
+            </div>
+
+            <div className="splashWorkspaceRow landingWorkspaceRow">
+              {secondaryActions.map((action) => (
+                <button
+                  key={action.id}
+                  type="button"
+                  className={`splashWorkspaceChip ${selectedActionId === action.id ? "active" : ""}`}
+                  onClick={() => handleActionSelect(action)}
+                >
+                  <div className="landingWorkspaceHeader">
+                    <span>{action.title}</span>
+                    <strong>{action.glyph}</strong>
+                  </div>
+                  <em>{action.destination}</em>
+                  <small>{action.blurb}</small>
+                </button>
+              ))}
             </div>
           </div>
-
-          <div className="splashWorkspaceRow landingWorkspaceRow">
-            {secondaryActions.map((action) => (
-              <button
-                key={action.id}
-                type="button"
-                className={`splashWorkspaceChip ${selectedActionId === action.id ? "active" : ""}`}
-                onClick={() => handleActionSelect(action)}
-              >
-                <div className="landingWorkspaceHeader">
-                  <span>{action.title}</span>
-                  <strong>{action.glyph}</strong>
-                </div>
-                <em>{action.destination}</em>
-                <small>{action.blurb}</small>
-              </button>
-            ))}
-          </div>
-        </div>
+        ) : null}
 
         {selectedPage === "signals" || selectedPage === "news" ? (
           <div className="splashSection">
@@ -968,7 +882,7 @@ export function AuthShell({
       <div className="authShellInner">
         <section className="authStage">
           <div className="authBrand">COLLECTRADE</div>
-          <div className="splashEyebrow">MARKET ACCESS</div>
+          <div className="splashEyebrow">COLLECTIBLES ACCESS</div>
           <h1>Sign in to your collectibles workspace.</h1>
           <p className="authBlurb">
             Purchase valuation, comparable evidence, provenance notes, inventory, and portfolio
@@ -1025,8 +939,8 @@ export function AuthShell({
               <strong>Valuation and portfolio flow restored</strong>
             </div>
             <div className="authProofChip">
-              <span>Market modules</span>
-              <strong>Available in the background</strong>
+              <span>Partner imports</span>
+              <strong>Reviewed portfolio records</strong>
             </div>
           </div>
         </section>
@@ -1035,10 +949,10 @@ export function AuthShell({
           <div className="authPanelHeader">
             <div>
               <div className="authBrand">COLLECTRADE</div>
-              <h2>{authMode === "login" ? "Welcome back" : "Create your trading workspace"}</h2>
+              <h2>{authMode === "login" ? "Welcome back" : "Create your collectibles workspace"}</h2>
               <p>
                 {authMode === "login"
-                  ? "Open your desks, sync your state, and get back to the active setup."
+                  ? "Open your collection, sync your state, and continue the investment workflow."
                   : "Create an account to save collectibles, settings, evidence, and portfolio flow."}
               </p>
             </div>

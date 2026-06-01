@@ -2197,10 +2197,10 @@ export function CollectiblesScreen({
     },
     {
       id: "portfolio",
-      label: "Portfolio",
-      meta: "Review book",
-      detail: "Check how collectibles are sitting inside the wider portfolio.",
-      onClick: () => jumpToPageSection("portfolio", "open-positions"),
+      label: "My Collection",
+      meta: "Review holdings",
+      detail: "Review saved purchases, estimates, and projection scenarios.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
     },
   ];
 
@@ -2211,13 +2211,13 @@ export function CollectiblesScreen({
         eyebrow="Collectibles Valuation"
         title="Collectibles"
         description="Rate purchases, document evidence, and track LEGO, whiskey, stamps, puzzles, cards, coins, comics, and other legitimate collectibles."
-        statusLabel="Desk refresh"
+        statusLabel="Inventory refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
           {
             label: "Tradable items",
             value: collectibles.length,
-            detail: "Live desk inventory",
+            detail: "Research inventory",
           },
           {
             label: "Brands",
@@ -2240,8 +2240,8 @@ export function CollectiblesScreen({
           onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
         }}
         secondaryAction={{
-          label: "Review Portfolio",
-          onClick: () => jumpToPageSection("portfolio", "open-positions"),
+          label: "Review My Collection",
+          onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
         }}
       />
       <WorkspaceSectionBar
@@ -2251,7 +2251,7 @@ export function CollectiblesScreen({
       <WorkspaceCommandBar
         tone="collectibles"
         title="Collectibles Shortcuts"
-        hint="Keep trading, verification, and portfolio review in one tidy flow."
+        hint="Keep valuation, inventory, verification, and collection review in one tidy flow."
         actions={collectibleActions}
       />
 
@@ -2653,8 +2653,8 @@ export function CollectiblesScreen({
           <div>
             <h2>Collectibles Workflow</h2>
             <p>
-              Keep the trading workflow and the source-verification workflow distinct so the app
-              feels like a real desk, not a bundle of outbound links.
+              Keep the purchase-review workflow and the source-verification workflow distinct so
+              the collection stays practical and evidence-led.
             </p>
           </div>
         </div>
@@ -2665,11 +2665,11 @@ export function CollectiblesScreen({
             className="collectibleLaneCard"
             onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
           >
-            <span>Tradable Inventory</span>
-            <strong>Work inside Collecttrade</strong>
+            <span>Research Inventory</span>
+            <strong>Review opportunities inside Collecttrade</strong>
             <small>
-              Scan inventory ideas, compare thesis, open buy or sell tickets, and keep the trade
-              planning flow inside the app.
+              Scan inventory ideas, compare thesis, open purchase or sale tickets, and keep the
+              investment workflow inside the app.
             </small>
           </button>
 
@@ -2740,9 +2740,9 @@ export function CollectiblesScreen({
             <button
               type="button"
               className="ghostButton"
-              onClick={() => jumpToPageSection("portfolio", "position-detail")}
+              onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
             >
-              Review Portfolio
+              Review My Collection
             </button>
             {activeCollectible.brand === "LEGO" && legoReferenceShelf?.url ? (
               <button
@@ -2760,22 +2760,22 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-trading">
         <div className="panelHeader">
           <div>
-            <h2>Tradable Inventory</h2>
+            <h2>Research Inventory</h2>
             <p>
               These are the items you act on inside Collecttrade. Search, filter, compare, then
-              move into the collectible ticket flow.
+              move into the collectible purchase or sale flow.
             </p>
           </div>
           <div className="headerStatus">
             <span>Primary workflow</span>
-            <strong>Trade inside app</strong>
+            <strong>Review inside app</strong>
           </div>
         </div>
 
         <div className="deskBriefGrid">
           <div className="deskBriefCard">
             <span>Lane</span>
-            <strong>Trade planning</strong>
+            <strong>Investment review</strong>
             <small>
               Use this lane to review collectible theses, liquidity, and ticket entries without
               leaving the workspace.

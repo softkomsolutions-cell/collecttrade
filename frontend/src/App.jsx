@@ -20,7 +20,6 @@ import {
   executionPlanForSignal,
   formatTicketPlanInput,
   labelDesk,
-  marketModeLabel,
   normalizeAppSettings,
   normalizeDesk,
   normalizePage,
@@ -29,7 +28,6 @@ import {
   providerLabel,
   readLaunchPreference,
   resolveTicketPlanMeta,
-  statusTone,
   writeLaunchPreference,
   workspaceLabel,
 } from "./appUtils";
@@ -1180,14 +1178,6 @@ export default function App() {
     setMenuVisible(true);
   }, []);
 
-  const handleMenuNavigate = useCallback(
-    (targetPage, targetDesk = activeDesk) => {
-      setMenuVisible(false);
-      navigateToPage(targetPage, false, targetDesk);
-    },
-    [activeDesk, navigateToPage],
-  );
-
   const handleMenuSection = useCallback(
     (targetPage, sectionId, targetDesk = activeDesk) => {
       setMenuVisible(false);
@@ -1706,130 +1696,79 @@ export default function App() {
     [appSettings, connectors],
   );
 
+  const collectibleSummary = collectiblePortfolio.summary || {};
   const topMetrics = [
     {
       id: "workspace",
       label: "Workspace",
-      value: currentWorkspaceCard.label,
-      detail: activeDesk === "all" ? "Cross-market view" : labelDesk(activeDesk),
-      action: () => navigateToPage("home", false, activeDesk),
+      value: "Collectibles",
+      detail: "Investment workspace",
+      action: () => jumpToPageSection("collectibles", "collectibles-valuation"),
     },
     {
-      id: "feed",
-      label: "Market feed",
-      value: marketModeLabel(signalsResponse.marketData?.mode),
-      detail: signalsResponse.marketData?.provider || "Simulator",
-      action: () => jumpToPageSection("connections", "market-feed-status", activeDesk),
+      id: "inventory",
+      label: "Owned inventory",
+      value: collectibleSummary.itemCount || 0,
+      detail: `${collectibleSummary.holdingCount || collectibleSummary.itemCount || 0} tracked holdings`,
+      action: () => jumpToPageSection("collectibles", "collectibles-owned-inventory"),
     },
     {
-      id: "book",
-      label: "Open book",
-      value: openTrades.length,
-      detail: Number.isFinite(totalOpenPnl) ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}%` : "--",
-      action: () => jumpToPageSection("portfolio", "open-positions"),
+      id: "value",
+      label: "Collection value",
+      value: `R${Number(collectibleSummary.currentValueZAR || 0).toLocaleString("en-ZA")}`,
+      detail: "Current reviewed estimate",
+      action: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
     },
     {
-      id: "feedback",
-      label: "Feedback",
-      value: feedbackResponse.summary?.open || 0,
-      detail: "Open partner items",
-      action: () => jumpToPageSection("settings", "feedback-board"),
+      id: "imports",
+      label: "Partner imports",
+      value: collectiblesResponse.reviewedPortfolios?.length || 0,
+      detail: "Reviewed portfolios",
+      action: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
     },
   ];
-  const primaryNavItems = NAV_ITEMS.filter((item) =>
-    ["collectibles", "portfolio", "home"].includes(item.id),
-  );
-  const utilityNavItems = NAV_ITEMS.filter((item) =>
-    ["tools", "reports", "connections", "settings"].includes(item.id),
-  );
-  const defaultTradingDesk = ["forex", "etfs", "jse"].includes(activeDesk) ? activeDesk : "forex";
+  const primaryNavItems = NAV_ITEMS;
+  const utilityNavItems = [];
   const menuPrimaryItems = [
     {
-      id: "menu-collectibles",
-      glyph: "CL",
-      label: "Collectibles",
-      detail: "Valuation, evidence, and inventory",
-      action: () => handleMenuNavigate("collectibles", activeDesk),
+      id: "menu-valuation",
+      glyph: "VL",
+      label: "Rate a Purchase",
+      detail: "Score an item and review its future-value scenarios",
+      action: () => handleMenuSection("collectibles", "collectibles-valuation"),
     },
     {
-      id: "menu-portfolio",
-      glyph: "PF",
-      label: "Portfolio",
-      detail: "Open positions and history",
-      action: () => handleMenuNavigate("portfolio", activeDesk),
+      id: "menu-inventory",
+      glyph: "IN",
+      label: "Owned Inventory",
+      detail: "Search holdings, cost, rarity, and current estimates",
+      action: () => handleMenuSection("collectibles", "collectibles-owned-inventory"),
     },
     {
-      id: "menu-home",
-      glyph: "HM",
-      label: "Home",
-      detail: "Workspace summary",
-      action: () => handleMenuNavigate("home", activeDesk),
+      id: "menu-imports",
+      glyph: "IM",
+      label: "Partner Imports",
+      detail: "Load reviewed LEGO and Pokemon portfolios",
+      action: () => handleMenuSection("collectibles", "collectibles-reviewed-portfolios"),
+    },
+    {
+      id: "menu-activity",
+      glyph: "AC",
+      label: "Investment Activity",
+      detail: "Review acquisition and sale records",
+      action: () => handleMenuSection("collectibles", "collectibles-transactions"),
     },
   ];
-  const menuDeskItems = MARKET_DESKS.map((desk) => ({
-    id: desk.id,
-    label: desk.label,
-    detail: desk.shortLabel,
-    active: activeDesk === desk.id,
-    action: () => handleMenuNavigate(page === "news" ? "news" : "signals", desk.id),
-  }));
+  const menuDeskItems = [];
   const menuSupportItems = [
     {
-      id: "menu-news",
-      label: "Market News",
-      detail: `${labelDesk(activeDesk)} macro tape`,
-      action: () => handleMenuNavigate("news", activeDesk),
-    },
-    {
-      id: "menu-trading",
-      label: "Market Tools",
-      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
-      action: () => handleMenuNavigate("signals", defaultTradingDesk),
-    },
-    {
-      id: "menu-crypto",
-      label: "Crypto Tools",
-      detail: "BTC and crypto desk",
-      action: () => handleMenuNavigate("signals", "crypto"),
-    },
-    {
-      id: "menu-reports",
-      label: "Reports",
-      detail: "Performance graphs",
-      action: () => handleMenuNavigate("reports", activeDesk),
-    },
-    {
-      id: "menu-tools",
-      label: "Tools",
-      detail: "Mentor and simulator",
-      action: () => handleMenuNavigate("tools", activeDesk),
-    },
-    {
-      id: "menu-connections",
-      label: "Connections",
-      detail: "Feeds and routing",
-      action: () => handleMenuNavigate("connections", activeDesk),
-    },
-    {
-      id: "menu-settings",
-      label: "Settings",
-      detail: "Account and setup",
-      action: () => handleMenuNavigate("settings", activeDesk),
+      id: "menu-sources",
+      label: "Partner Sources",
+      detail: "Shared documents and collectible references",
+      action: () => handleMenuSection("collectibles", "collectibles-partner-sources"),
     },
   ];
   const menuActionItems = [
-    {
-      id: "menu-feedback",
-      label: "Feedback Board",
-      detail: "Partner notes and status",
-      action: () => handleMenuSection("settings", "feedback-board"),
-    },
-    {
-      id: "menu-testing",
-      label: "Partner Testing",
-      detail: "Guided review route",
-      action: () => handleMenuSection("settings", "partner-testing"),
-    },
     {
       id: "menu-intro",
       label: "Intro Screen",
@@ -2107,12 +2046,12 @@ export default function App() {
           <small>{currentWorkspaceCard.hint}</small>
           <div className="workspaceCardMeta">
             <div>
-              <span>Desk</span>
-              <strong>{labelDesk(activeDesk)}</strong>
+              <span>Focus</span>
+              <strong>Collectibles</strong>
             </div>
             <div>
               <span>Route</span>
-              <strong>{page === "signals" ? "Execution" : workspaceLabel(page, activeDesk)}</strong>
+              <strong>Investment</strong>
             </div>
           </div>
         </section>
@@ -2144,14 +2083,14 @@ export default function App() {
         <button
           type="button"
           className="sidebarCard sidebarCardButton"
-          onClick={() => jumpToPageSection("settings", "partner-testing")}
+          onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
         >
-          <span>Partner route</span>
-          <strong>{shareStatus.status === "live" ? "Share live" : "Private session"}</strong>
+          <span>Partner imports</span>
+          <strong>Reviewed portfolios</strong>
           <small>
             {shareStatus.status === "live"
               ? shareStatus.publicUrl
-              : "Open Settings -> Partner Testing when you are ready to hand this to partners."}
+              : "Load reconciled partner portfolios into owned inventory."}
           </small>
         </button>
       </aside>
@@ -2177,8 +2116,8 @@ export default function App() {
 
           <div className="mobileTitleActions">
             <div className="mobileTitleMeta">
-              <span>{labelDesk(activeDesk)}</span>
-              <strong>{marketModeLabel(signalsResponse.marketData?.mode)}</strong>
+              <span>Collectibles</span>
+              <strong>Beta</strong>
             </div>
             <button
               type="button"
@@ -2210,15 +2149,13 @@ export default function App() {
           </div>
 
           <div className="topbarTools">
-            <div className={`livePill ${statusTone(signalsResponse.marketData?.mode)}`}>
-              {marketModeLabel(signalsResponse.marketData?.mode)}
-            </div>
+            <div className="livePill ready">Collectibles Beta</div>
             <button
               type="button"
               className="ghostButton"
-              onClick={() => jumpToPageSection("settings", "feedback-board")}
+              onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
             >
-              Feedback Board
+              Partner Imports
             </button>
             <button type="button" className="ghostButton" onClick={clearSession}>
               Log Out
@@ -2272,10 +2209,7 @@ export default function App() {
                 <div>
                   <span>Navigation</span>
                   <strong>Choose where to go</strong>
-                  <small>
-                    {currentUser?.name || currentUser?.email || "Current session"} ·{" "}
-                    {labelDesk(activeDesk)} · {currentWorkspaceCard.label}
-                  </small>
+                  <small>{currentUser?.name || currentUser?.email || "Current session"} | Collectibles investment</small>
                 </div>
                 <button type="button" className="ghostButton mobileMenuClose" onClick={closeMenu}>
                   Close
@@ -2295,25 +2229,27 @@ export default function App() {
                 ))}
               </div>
 
-              <div className="mobileMenuScreenSection">
-                <span>Desk shortcuts</span>
-                <div className="mobileMenuPillRow">
-                  {menuDeskItems.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`mobileMenuPill ${item.active ? "active" : ""}`}
-                      onClick={item.action}
-                    >
-                      <strong>{item.label}</strong>
-                      <small>{item.detail}</small>
-                    </button>
-                  ))}
+              {menuDeskItems.length ? (
+                <div className="mobileMenuScreenSection">
+                  <span>Shortcuts</span>
+                  <div className="mobileMenuPillRow">
+                    {menuDeskItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`mobileMenuPill ${item.active ? "active" : ""}`}
+                        onClick={item.action}
+                      >
+                        <strong>{item.label}</strong>
+                        <small>{item.detail}</small>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
 
               <div className="mobileMenuScreenSection">
-                <span>More screens</span>
+                <span>References</span>
                 <div className="mobileMenuSupportList">
                   {menuSupportItems.map((item) => (
                     <button key={item.id} type="button" className="mobileMenuSupportCard" onClick={item.action}>
@@ -2358,7 +2294,7 @@ export default function App() {
                     providerLabel: "Collecttrade Paper",
                     pair: null,
                     ready: true,
-                    detail: "Collectibles stay inside the app as paper inventory trades.",
+                    detail: "Collectible purchase and sale records stay inside the investment workspace.",
                   }
                 : null
           }
