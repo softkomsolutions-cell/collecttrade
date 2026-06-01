@@ -488,6 +488,13 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
               ))}
             </div>
             <div>
+              <span>Investment Grade</span>
+              <p>
+                <strong>{valuation.investmentGrade || valuation.recommendation}</strong>
+              </p>
+              <p>{valuation.investmentGradeDetail}</p>
+            </div>
+            <div>
               <span>Pricing Sources</span>
               {(valuation.sources || []).map((source) => (
                 <p key={source.id}>
@@ -496,6 +503,20 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
                 </p>
               ))}
             </div>
+            {valuation.minifigures?.length ? (
+              <div>
+                <span>Minifigure Values</span>
+                {valuation.minifigures.map((minifigure) => (
+                  <p key={minifigure.id}>
+                    <strong>
+                      {minifigure.name}
+                      {minifigure.exclusive ? " | Exclusive" : ""}
+                    </strong>
+                    <small>{formatZar(minifigure.estimatedValueZAR)}</small>
+                  </p>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="legoProjectionNote">

@@ -13,6 +13,23 @@ const BETA_BENCHMARKS = {
     rarity: "Retail paperbag with exclusive Anti-Venom minifigure",
     annualGrowthPercent: 8,
     benchmarkScore: 7.5,
+    investmentGrade: "Entry-level hold",
+    investmentGradeDetail:
+      "A sensible low-cost sealed hold with an exclusive minifigure, but retail availability and paperbag supply keep it below top-tier investment grade.",
+    minifigures: [
+      {
+        id: "spider-man-printed-arms",
+        name: "Spider-Man - Printed Arms",
+        exclusive: false,
+        estimatedValueUSD: 2.78,
+      },
+      {
+        id: "anti-venom-small",
+        name: "Anti-Venom - Small",
+        exclusive: true,
+        estimatedValueUSD: 2.67,
+      },
+    ],
     notes: [
       "Released in 2026 with 31 pieces and two minifigures: Spider-Man and Anti-Venom.",
       "Anti-Venom is currently exclusive to this paperbag set.",
@@ -23,8 +40,20 @@ const BETA_BENCHMARKS = {
   },
   "40766": {
     name: "Tribute to Jane Austen's Books",
-    currentValueUSD: 58,
+    currentValueUSD: 59.44,
     rarity: "Gift With Purchase",
+    annualGrowthPercent: 8,
+    investmentGrade: "Strong niche GWP",
+    investmentGradeDetail:
+      "An interesting retired literary GWP with constrained supply and cross-collector appeal. Stronger than an ordinary promotional set, but not the same tier as a major flagship or deeply minifigure-led exclusive.",
+    minifigures: [
+      {
+        id: "gen194",
+        name: "Jane Austen",
+        exclusive: true,
+        estimatedValueUSD: 11.65,
+      },
+    ],
     notes: [
       "Short-run LEGO Gift With Purchase release.",
       "Exclusive Jane Austen minifigure and literary display appeal.",
@@ -163,8 +192,16 @@ async function getLegoValuation(input) {
     multiplier: Number(multiplier.toFixed(1)),
     score,
     recommendation: recommendationForScore(score),
+    investmentGrade: benchmark?.investmentGrade || recommendationForScore(score),
+    investmentGradeDetail:
+      benchmark?.investmentGradeDetail ||
+      "Use the source evidence, retirement status, scarcity, and collector demand together before treating this as an investment-grade purchase.",
     confidence: dataConfidence,
     rarity: benchmark?.rarity || "Standard Set",
+    minifigures: (benchmark?.minifigures || []).map((minifigure) => ({
+      ...minifigure,
+      estimatedValueZAR: Math.round(minifigure.estimatedValueUSD * USD_ZAR_RATE),
+    })),
     projections: {
       oneYear: buildProjection(currentValueZAR, annualGrowthPercent, 1),
       fiveYears: buildProjection(currentValueZAR, annualGrowthPercent, 5),
