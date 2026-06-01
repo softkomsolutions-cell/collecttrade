@@ -4841,6 +4841,41 @@
   gap: 20px;
 }
 
+.authShellMinimal {
+  background: #05070c;
+}
+
+.authPanelMinimal {
+  width: min(100%, 420px);
+  gap: 22px;
+  padding: 0;
+  text-align: center;
+}
+
+.authPanelMinimal > .authPanel {
+  width: 100%;
+  padding: 24px;
+  border-radius: 16px;
+  text-align: left;
+}
+
+.authMinimalLogo {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.authMinimalLogo .brandMark {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  font-size: 20px;
+}
+
+.authMinimalLogo .brandWordmark {
+  font-size: 20px;
+}
+
 .authStage {
   padding: 16px 0;
 }

@@ -864,154 +864,37 @@ export function LandingShell({ initialLaunch, onContinue }) {
 }
 
 export function AuthShell({
-  authMode,
   authForm,
   authStatus,
-  launchSelection,
-  onBack,
-  onModeChange,
   onSubmit,
   onFieldChange,
 }) {
-  const launchDetails = launchSelection
-    ? describeLaunchSelection(launchSelection.page, launchSelection.desk, launchSelection.sectionId)
-    : null;
-
   return (
-    <div className="authShell">
-      <div className="authShellInner">
-        <section className="authStage">
-          <div className="authBrand">COLLECTRADE</div>
-          <div className="splashEyebrow">COLLECTIBLES ACCESS</div>
-          <h1>Sign in to your collectibles workspace.</h1>
-          <p className="authBlurb">
-            Purchase valuation, comparable evidence, provenance notes, inventory, and portfolio
-            tracking in one focused product shell.
-          </p>
-
-          {launchDetails ? (
-            <div className="authJourneyCard">
-              <span>Selected route</span>
-              <strong>{launchDetails.label}</strong>
-              <small>{launchDetails.hint}</small>
-              <div className="authJourneyGrid">
-                <div className="authJourneyCell">
-                  <span>Step 1</span>
-                  <strong>Authenticate</strong>
-                </div>
-                <div className="authJourneyCell">
-                  <span>Step 2</span>
-                  <strong>Restore workspace</strong>
-                </div>
-                <div className="authJourneyCell">
-                  <span>Step 3</span>
-                  <strong>Resume flow</strong>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="authHighlightGrid">
-            <div className="authHighlightCard">
-              <span>Valuation desk</span>
-              <strong>Rate the purchase</strong>
-              <small>Score the opportunity and review 1, 5, and 10 year scenarios.</small>
-            </div>
-            <div className="authHighlightCard">
-              <span>Evidence</span>
-              <strong>Condition and provenance</strong>
-              <small>Keep comparable-market notes and source status visible.</small>
-            </div>
-            <div className="authHighlightCard">
-              <span>Portfolio</span>
-              <strong>Collectibles book</strong>
-              <small>Track legitimate collectible positions inside the same workflow.</small>
-            </div>
-          </div>
-
-          <div className="authProofRow">
-            <div className="authProofChip">
-              <span>Account state</span>
-              <strong>Saved routes and settings</strong>
-            </div>
-            <div className="authProofChip">
-              <span>Workspace continuity</span>
-              <strong>Valuation and portfolio flow restored</strong>
-            </div>
-            <div className="authProofChip">
-              <span>Partner imports</span>
-              <strong>Reviewed portfolio records</strong>
-            </div>
-          </div>
-        </section>
+    <div className="authShell authShellMinimal">
+      <div className="authPanel authPanelMinimal">
+        <div className="authMinimalLogo">
+          <div className="brandMark">CT</div>
+          <div className="brandWordmark">COLLECTRADE</div>
+        </div>
 
         <div className="authPanel">
           <div className="authPanelHeader">
             <div>
-              <div className="authBrand">COLLECTRADE</div>
-              <h2>{authMode === "login" ? "Welcome back" : "Create your collectibles workspace"}</h2>
-              <p>
-                {authMode === "login"
-                  ? "Open your collection, sync your state, and continue the investment workflow."
-                  : "Create an account to save collectibles, settings, evidence, and portfolio flow."}
-              </p>
+              <h2>Create account</h2>
             </div>
-            {onBack ? (
-              <button type="button" className="ghostButton authBackButton" onClick={onBack}>
-                Back
-              </button>
-            ) : null}
-          </div>
-
-          {launchDetails ? (
-            <div className="authRouteCard">
-              <span>Next stop</span>
-              <strong>{launchDetails.label}</strong>
-              <small>{launchDetails.hint}</small>
-            </div>
-          ) : null}
-
-          <div className="authAccessBar">
-            <div className="authAccessCell">
-              <span>Access</span>
-              <strong>{authMode === "login" ? "Existing workspace" : "New workspace"}</strong>
-            </div>
-            <div className="authAccessCell">
-              <span>State</span>
-              <strong>Secure session required</strong>
-            </div>
-          </div>
-
-          <div className="segmentedControl authModeSwitch">
-            <button
-              type="button"
-              className={authMode === "login" ? "active" : ""}
-              onClick={() => onModeChange("login")}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              className={authMode === "register" ? "active" : ""}
-              onClick={() => onModeChange("register")}
-            >
-              Create account
-            </button>
           </div>
 
           <form className="authForm" onSubmit={onSubmit}>
-            {authMode === "register" ? (
-              <label>
-                <span>Name</span>
-                <input
-                  type="text"
-                  value={authForm.name}
-                  onChange={(event) => onFieldChange("name", event.target.value)}
-                  placeholder="Darren"
-                  autoComplete="name"
-                />
-              </label>
-            ) : null}
+            <label>
+              <span>Name</span>
+              <input
+                type="text"
+                value={authForm.name}
+                onChange={(event) => onFieldChange("name", event.target.value)}
+                placeholder="Your name"
+                autoComplete="name"
+              />
+            </label>
 
             <label>
               <span>Email</span>
@@ -1031,22 +914,16 @@ export function AuthShell({
                 value={authForm.password}
                 onChange={(event) => onFieldChange("password", event.target.value)}
                 placeholder="Minimum 8 characters"
-                autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                autoComplete="new-password"
               />
             </label>
 
             {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
 
             <button className="primaryButton" type="submit">
-              {authMode === "login" ? "Sign in" : "Create account"}
+              Create account
             </button>
           </form>
-
-          <div className="authFooterNote">
-            <span>After sign-in</span>
-            <strong>{launchDetails ? launchDetails.label : "Your chosen workspace"}</strong>
-            <small>Weâ€™ll carry your selection straight through to the desk you chose on entry.</small>
-          </div>
         </div>
       </div>
     </div>

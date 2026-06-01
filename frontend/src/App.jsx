@@ -35,7 +35,6 @@ import {
   AuthShell,
   BootSplash,
   EmptyState,
-  LandingShell,
   SplashScreen,
 } from "./components/appShell";
 
@@ -580,8 +579,7 @@ export default function App() {
   const [bootSplashVisible, setBootSplashVisible] = useState(true);
   const [authToken, setAuthToken] = useState(() => window.localStorage.getItem(TOKEN_KEY) || "");
   const [currentUser, setCurrentUser] = useState(null);
-  const [authStage, setAuthStage] = useState("landing");
-  const [authMode, setAuthMode] = useState("login");
+  const [authMode] = useState("register");
   const [authStatus, setAuthStatus] = useState("");
   const [authForm, setAuthForm] = useState(INITIAL_AUTH_FORM);
   const [splashVisible, setSplashVisible] = useState(true);
@@ -634,8 +632,6 @@ export default function App() {
     window.localStorage.removeItem(TOKEN_KEY);
     setAuthToken("");
     setCurrentUser(null);
-    setAuthStage("landing");
-    setAuthMode("login");
     setAuthStatus("");
     setSplashVisible(false);
     setPortfolio([]);
@@ -1068,12 +1064,6 @@ export default function App() {
     ...(signalsResponse.marketData?.sourceStatus || []),
   ].filter((source) => !["ok", "online", "simulated", "configured", "manual_setup", "unsupported"].includes(source.status)).length;
 
-  const handleLandingContinue = useCallback((selection, nextMode) => {
-    setPreAuthLaunch(selection);
-    setAuthMode(nextMode);
-    setAuthStage("auth");
-  }, []);
-
   const handleAuthenticatedRoute = useCallback(
     async (token, user, settings, launchSelection) => {
       window.localStorage.setItem(TOKEN_KEY, token);
@@ -1081,7 +1071,6 @@ export default function App() {
       setCurrentUser(user);
       setAppSettings(normalizeAppSettings(settings));
       setAuthStatus("");
-      setAuthStage("landing");
       setSplashVisible(false);
       const launch = launchSelection || preAuthLaunch;
       const nextPage = normalizePage(launch?.page || page);
@@ -1996,18 +1985,10 @@ export default function App() {
   }
 
   if (!currentUser) {
-    if (authStage === "landing") {
-      return <LandingShell initialLaunch={preAuthLaunch} onContinue={handleLandingContinue} />;
-    }
-
     return (
       <AuthShell
-        authMode={authMode}
         authForm={authForm}
         authStatus={authStatus}
-        launchSelection={preAuthLaunch}
-        onBack={() => setAuthStage("landing")}
-        onModeChange={setAuthMode}
         onSubmit={handleAuthSubmit}
         onFieldChange={handleAuthFieldChange}
       />
