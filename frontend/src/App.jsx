@@ -113,6 +113,7 @@ const EMPTY_COLLECTIBLES_RESPONSE = {
   items: [],
   referenceShelves: [],
   partnerSources: [],
+  reviewedPortfolios: [],
 };
 
 const EMPTY_COLLECTIBLE_PORTFOLIO = {
@@ -746,6 +747,7 @@ export default function App() {
       brands: collectiblesData.brands || [],
       referenceShelves: collectiblesData.referenceShelves || [],
       partnerSources: collectiblesData.partnerSources || [],
+      reviewedPortfolios: collectiblesData.reviewedPortfolios || [],
     });
     setHealth({
       ...EMPTY_HEALTH,

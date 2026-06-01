@@ -28,6 +28,10 @@ The primary beta workflow is available from `Collectibles`:
 9. Review the purchase and sale ledger in `Investment Activity`.
 10. Open Gavin's shared source documents or queue them for reviewed import.
 
+The partner beta also includes a reviewed Pokémon import preset based on the supplied portfolio and
+invoice bundle. It loads six reconciled positions into owned inventory while keeping raw invoices
+and private seller details outside the public repository.
+
 Shared PDFs and Dropbox folders enter an import-review queue. The beta deliberately does not
 silently trust document contents or import holdings without identifier and evidence review.
 

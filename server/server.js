@@ -436,6 +436,94 @@ const PARTNER_COLLECTIBLE_SOURCE_LIBRARY = [
       "LEGO marketplace reference used by the connected OAuth price-guide workflow when credentials are configured.",
   },
 ];
+const PARTNER_REVIEWED_PORTFOLIOS = [
+  {
+    id: "coolsters-pokemon-portfolio-v1",
+    title: "Coolsters Pokemon Investment Portfolio v1",
+    category: "Pokemon",
+    sourceType: "Reviewed PDF portfolio",
+    updatedAt: "2026-05-19T00:00:00.000Z",
+    reviewStatus: "reviewed",
+    summary: {
+      positionCount: 6,
+      purchaseValueZAR: 24900,
+      currentValueZAR: 27915,
+      unrealizedPnlZAR: 3015,
+      roiPercent: 12.1,
+    },
+    invoiceRefs: ["INV-20260426-001", "PKM-2026-001", "CLR-2026-MEG179-PSA10"],
+    notes:
+      "Reviewed from the partner-supplied Pokemon portfolio and three invoice PDFs. Raw invoices and private seller details remain outside the public repository.",
+    positions: [
+      {
+        identifier: "1997-japanese-neo-destiny-dark-charizard-psa7",
+        name: "Dark Charizard",
+        setName: "1997 Japanese Neo Destiny",
+        grade: "PSA 7",
+        rarity: "Vintage graded slab",
+        invoiceRef: "INV-20260426-001",
+        purchasePriceZAR: 4000,
+        currentValueZAR: 3850,
+        annualGrowthPercent: 7,
+      },
+      {
+        identifier: "kyurem-ex-036-093-psa10",
+        name: "Kyurem EX #036/093",
+        setName: "2013 B&W EX Battle Boost 1st Edition",
+        grade: "PSA 10",
+        rarity: "Japanese 1st Edition graded slab",
+        invoiceRef: "PKM-2026-001",
+        purchasePriceZAR: 1233,
+        currentValueZAR: 1018,
+        annualGrowthPercent: 7,
+      },
+      {
+        identifier: "black-kyurem-ex-084-093-psa10",
+        name: "Black Kyurem EX #084/093",
+        setName: "2013 B&W EX Battle Boost 1st Edition",
+        grade: "PSA 10",
+        rarity: "Japanese 1st Edition graded slab",
+        invoiceRef: "PKM-2026-001",
+        purchasePriceZAR: 1233,
+        currentValueZAR: 1018,
+        annualGrowthPercent: 7,
+      },
+      {
+        identifier: "white-kyurem-ex-085-093-psa10",
+        name: "White Kyurem EX #085/093",
+        setName: "2013 B&W EX Battle Boost 1st Edition",
+        grade: "PSA 10",
+        rarity: "Japanese 1st Edition graded slab",
+        invoiceRef: "PKM-2026-001",
+        purchasePriceZAR: 1234,
+        currentValueZAR: 1832,
+        annualGrowthPercent: 7,
+      },
+      {
+        identifier: "mega-lucario-ex-179-132-sir-psa10",
+        name: "Mega Lucario ex 179/132 SIR",
+        setName: "2025 Mega Evolution ME01",
+        grade: "PSA 10",
+        rarity: "Special Illustration Rare graded slab",
+        invoiceRef: "CLR-2026-MEG179-PSA10",
+        purchasePriceZAR: 9200,
+        currentValueZAR: 10397,
+        annualGrowthPercent: 7,
+      },
+      {
+        identifier: "scarlet-violet-destined-rivals-booster-box",
+        name: "Scarlet & Violet Destined Rivals Booster Box",
+        setName: "2026 Scarlet & Violet",
+        grade: "Sealed",
+        rarity: "Sealed booster box",
+        invoiceRef: "INV-20260426-001",
+        purchasePriceZAR: 8000,
+        currentValueZAR: 9800,
+        annualGrowthPercent: 8,
+      },
+    ],
+  },
+];
 const TRADEABLE_COLLECTIBLE_CATEGORIES = uniqueStrings(
   TRADEABLE_COLLECTIBLES.map((item) => item.category),
 ).sort();
@@ -1034,6 +1122,8 @@ function sanitizeCollectibleHolding(input) {
     sources: Array.isArray(input?.sources) ? input.sources : [],
     evidenceHint: cleanCollectibleText(input?.evidenceHint, 500),
     valuationMode: cleanCollectibleText(input?.valuationMode, 80),
+    importBatchId: cleanCollectibleText(input?.importBatchId, 100),
+    invoiceRef: cleanCollectibleText(input?.invoiceRef, 100),
     inputSnapshot:
       input?.inputSnapshot && typeof input.inputSnapshot === "object" ? input.inputSnapshot : {},
     createdAt,
@@ -3709,6 +3799,10 @@ app.get("/api/collectibles", (_req, res) => {
     items: TRADEABLE_COLLECTIBLES,
     referenceShelves: OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES,
     partnerSources: PARTNER_COLLECTIBLE_SOURCE_LIBRARY,
+    reviewedPortfolios: PARTNER_REVIEWED_PORTFOLIOS.map(({ positions, ...portfolio }) => ({
+      ...portfolio,
+      positionCount: positions.length,
+    })),
   });
 });
 
@@ -3925,6 +4019,124 @@ app.post("/api/collectibles/imports", requireAuth, (req, res) => {
   req.userState.collectibleImports.unshift(item);
   persistStore();
   res.status(201).json({ ok: true, item });
+});
+
+app.post("/api/collectibles/partner-portfolios/:portfolioId/import", requireAuth, (req, res) => {
+  const portfolio = PARTNER_REVIEWED_PORTFOLIOS.find(
+    (candidate) => candidate.id === req.params.portfolioId,
+  );
+  if (!portfolio) {
+    return res.status(404).json({ ok: false, error: "partner_portfolio_not_found" });
+  }
+  const existing = req.userState.collectibleHoldings.filter(
+    (holding) => holding.importBatchId === portfolio.id,
+  );
+  if (existing.length) {
+    return res.json({
+      ok: true,
+      duplicate: true,
+      importedCount: 0,
+      existingCount: existing.length,
+      items: existing,
+      summary: summarizeCollectibleHoldings(
+        req.userState.collectibleHoldings,
+        req.userState.collectibleTransactions,
+      ),
+    });
+  }
+
+  const importedAt = nowIso();
+  const holdings = portfolio.positions.map((position) => {
+    const profitZAR = position.currentValueZAR - position.purchasePriceZAR;
+    const score =
+      profitZAR < 0 ? 6.2 : position.grade === "Sealed" ? 8.5 : profitZAR > 1000 ? 8 : 7.4;
+    const recommendation = score >= 8 ? "Strong Buy" : score >= 6 ? "Watchlist" : "Pass for now";
+    const buildProjection = (years) =>
+      Math.round(position.currentValueZAR * (1 + position.annualGrowthPercent / 100) ** years);
+
+    return sanitizeCollectibleHolding({
+      category: "cards",
+      categoryLabel: "Trading Cards",
+      identifier: position.identifier,
+      name: position.name,
+      quantity: 1,
+      purchasePriceZAR: position.purchasePriceZAR,
+      currentValueZAR: position.currentValueZAR,
+      profitZAR,
+      multiplier: Number((position.currentValueZAR / position.purchasePriceZAR).toFixed(1)),
+      score,
+      recommendation,
+      confidence: "reviewed-import",
+      rarity: position.rarity,
+      condition: position.grade,
+      valuationMode: "reviewed-import",
+      importBatchId: portfolio.id,
+      invoiceRef: position.invoiceRef,
+      projections: {
+        oneYear: buildProjection(1),
+        fiveYears: buildProjection(5),
+        tenYears: buildProjection(10),
+        annualGrowthPercent: position.annualGrowthPercent,
+      },
+      notes: [
+        `${position.setName} | ${position.grade}`,
+        `Reviewed import from ${portfolio.title}.`,
+        "Scenario values are planning estimates, not guaranteed returns.",
+      ],
+      sources: [
+        {
+          id: position.invoiceRef,
+          label: `Invoice ${position.invoiceRef}`,
+          status: "reviewed",
+          detail: "Partner-supplied invoice reference reconciled against the portfolio PDF.",
+        },
+      ],
+      evidenceHint: `Reviewed portfolio position with invoice reference ${position.invoiceRef}.`,
+      inputSnapshot: {
+        category: "cards",
+        identifier: position.identifier,
+        itemName: position.name,
+        purchasePriceZAR: position.purchasePriceZAR,
+        currentMarketValueZAR: position.currentValueZAR,
+        condition: position.grade,
+        rarity: position.rarity,
+        provenance: `Imported from ${portfolio.title}; invoice ${position.invoiceRef}.`,
+        evidenceNotes: `Reviewed partner portfolio estimate as of ${portfolio.updatedAt}.`,
+      },
+      createdAt: importedAt,
+      updatedAt: importedAt,
+      lastValuedAt: portfolio.updatedAt,
+    });
+  });
+
+  holdings.forEach((holding) => {
+    req.userState.collectibleHoldings.unshift(holding);
+    req.userState.collectibleTransactions.unshift(
+      sanitizeCollectibleTransaction({
+        holdingId: holding.id,
+        type: "purchase",
+        category: holding.category,
+        categoryLabel: holding.categoryLabel,
+        identifier: holding.identifier,
+        name: holding.name,
+        quantity: holding.quantity,
+        unitPriceZAR: holding.purchasePriceZAR,
+        unitCostZAR: holding.purchasePriceZAR,
+        realizedPnlZAR: 0,
+        notes: `Reviewed import from ${portfolio.title}; invoice ${holding.invoiceRef}.`,
+      }),
+    );
+  });
+  persistStore();
+  res.status(201).json({
+    ok: true,
+    importedCount: holdings.length,
+    items: holdings,
+    summary: summarizeCollectibleHoldings(
+      req.userState.collectibleHoldings,
+      req.userState.collectibleTransactions,
+    ),
+  });
 });
 
 app.post("/api/lego/valuation", async (req, res) => {

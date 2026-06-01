@@ -1981,8 +1981,10 @@ export function CollectiblesScreen({
   const [saleBusyId, setSaleBusyId] = useState("");
   const [inventoryQuery, setInventoryQuery] = useState("");
   const [inventoryCategory, setInventoryCategory] = useState("all");
+  const [portfolioImportBusyId, setPortfolioImportBusyId] = useState("");
   const officialShelves = collectiblesResponse.referenceShelves || [];
   const partnerSources = collectiblesResponse.partnerSources || [];
+  const reviewedPortfolios = collectiblesResponse.reviewedPortfolios || [];
   const legoReferenceShelf =
     officialShelves.find((shelf) => shelf.brand === "LEGO") || officialShelves[0] || null;
   const collectibleHoldings = collectiblePortfolio.items || [];
@@ -2000,6 +2002,9 @@ export function CollectiblesScreen({
     return matchesCategory && matchesQuery;
   });
   const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
+  const importedBatchIds = new Set(
+    collectibleHoldings.map((holding) => holding.importBatchId).filter(Boolean),
+  );
   const queueImport = async (sourceId) => {
     setImportBusyId(sourceId);
     setImportStatus("");
@@ -2050,6 +2055,33 @@ export function CollectiblesScreen({
       setPortfolioStatus("The holding could not be refreshed. Please try again.");
     } finally {
       setRevalueBusyId("");
+    }
+  };
+  const importReviewedPortfolio = async (portfolioId) => {
+    setPortfolioImportBusyId(portfolioId);
+    setPortfolioStatus("");
+
+    try {
+      const response = await fetch(`/api/collectibles/partner-portfolios/${portfolioId}/import`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || "partner_portfolio_import_failed");
+      }
+      setPortfolioStatus(
+        payload.duplicate
+          ? "That reviewed partner portfolio is already in your inventory."
+          : `${payload.importedCount} reviewed partner positions imported into inventory.`,
+      );
+      await refreshContext();
+    } catch {
+      setPortfolioStatus("The reviewed partner portfolio could not be imported.");
+    } finally {
+      setPortfolioImportBusyId("");
     }
   };
   const recordSale = async (holding) => {
@@ -2126,6 +2158,13 @@ export function CollectiblesScreen({
       meta: `${collectibleSummary.itemCount || 0}`,
       detail: "Search the owned collection register with cost, value, condition, and rarity.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-owned-inventory"),
+    },
+    {
+      id: "reviewed-portfolios",
+      label: "Partner Imports",
+      meta: `${reviewedPortfolios.length}`,
+      detail: "Load reviewed partner portfolios into owned inventory with reconciled invoice refs.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
     },
     {
       id: "partner-sources",
@@ -2463,6 +2502,70 @@ export function CollectiblesScreen({
             body="Saved valuations become purchase records and appear here automatically."
           />
         )}
+      </section>
+
+      <section className="panel" id="collectibles-reviewed-portfolios">
+        <div className="panelHeader">
+          <div>
+            <h2>Reviewed Partner Portfolios</h2>
+            <p>
+              Import reconciled partner collections into owned inventory. Raw invoices stay
+              private; the working register keeps reviewed costs, estimates, grades, and invoice
+              references.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Reviewed portfolios</span>
+            <strong>{reviewedPortfolios.length}</strong>
+          </div>
+        </div>
+
+        <div className="collectibleReferenceGrid">
+          {reviewedPortfolios.map((portfolio) => (
+            <article className="collectibleReferenceCard" key={portfolio.id}>
+              <div className="collectibleReferenceTop">
+                <span>{portfolio.category}</span>
+                <strong>{portfolio.reviewStatus}</strong>
+              </div>
+              <h3>{portfolio.title}</h3>
+              <p>{portfolio.notes}</p>
+              <div className="collectibleReferenceMeta">
+                <div>
+                  <span>Positions</span>
+                  <strong>{portfolio.positionCount}</strong>
+                </div>
+                <div>
+                  <span>Cost</span>
+                  <strong>{formatZar(portfolio.summary.purchaseValueZAR)}</strong>
+                </div>
+                <div>
+                  <span>Market value</span>
+                  <strong>{formatZar(portfolio.summary.currentValueZAR)}</strong>
+                </div>
+                <div>
+                  <span>ROI</span>
+                  <strong>{portfolio.summary.roiPercent}%</strong>
+                </div>
+              </div>
+              <div className="panelActions">
+                <button
+                  type="button"
+                  className="primaryButton"
+                  disabled={
+                    portfolioImportBusyId === portfolio.id || importedBatchIds.has(portfolio.id)
+                  }
+                  onClick={() => importReviewedPortfolio(portfolio.id)}
+                >
+                  {importedBatchIds.has(portfolio.id)
+                    ? "Imported"
+                    : portfolioImportBusyId === portfolio.id
+                      ? "Importing..."
+                      : "Import Reviewed Portfolio"}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="panel" id="collectibles-partner-sources">
