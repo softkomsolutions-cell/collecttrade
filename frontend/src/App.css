@@ -6283,3 +6283,33 @@
   border-top-color: var(--ct-line-soft);
   background: rgba(9, 10, 9, 0.98);
 }
+
+.splashAvailabilityNote {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 13px 2px 2px;
+  border-top: 1px solid var(--ct-line-soft);
+}
+
+.splashAvailabilityNote span {
+  color: var(--ct-brass);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.splashAvailabilityNote strong {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.splashAvailabilityNote small {
+  max-width: 640px;
+  color: var(--ct-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}

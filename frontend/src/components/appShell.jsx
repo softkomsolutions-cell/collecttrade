@@ -306,7 +306,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       eyebrow: "Portfolio imports",
       title: "Bring reviewed collections into one inventory.",
       description:
-        "Load partner LEGO and Pokemon portfolios, then expand the same structure to whiskey, stamps, puzzles, and more.",
+        "Load reviewed LEGO and Pokemon portfolios, then expand the same structure to whiskey, stamps, puzzles, and more.",
       accent: "trade",
       bars: [42, 68, 54, 80],
     },
@@ -390,9 +390,9 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         </div>
 
         <div className="splashCompactHero">
-          <div className="splashEyebrow">Services Summary</div>
-          <h1>Choose a service.</h1>
-          <p className="authBlurb">Open the focused collectibles page you need.</p>
+          <div className="splashEyebrow">Private Collection Services</div>
+          <h1>Choose the workspace you need.</h1>
+          <p className="authBlurb">Open a focused collection service.</p>
           <div className="splashHeroPillRow" aria-hidden="true">
             <span className="splashHeroPill">Collectibles</span>
             <span className="splashHeroPill">Valuation</span>
@@ -419,8 +419,8 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         <section className="splashSection splashSectionCompact">
           <div className="splashSectionHeader">
             <div>
-              <span>Services</span>
-              <strong>Main workspaces</strong>
+              <span>Collection</span>
+              <strong>Core services</strong>
             </div>
           </div>
 
@@ -451,8 +451,8 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         <section className="splashSection splashSectionCompact">
           <div className="splashSectionHeader">
             <div>
-              <span>More</span>
-              <strong>Records and references</strong>
+              <span>Records</span>
+              <strong>Supporting services</strong>
             </div>
           </div>
 
@@ -469,6 +469,14 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
                 <small>{item.detail}</small>
               </button>
             ))}
+          </div>
+          <div className="splashAvailabilityNote">
+            <span>Collection services</span>
+            <strong>Core register active</strong>
+            <small>
+              Valuation, inventory, catalog, documentation, registry, reviewed imports, and source
+              records are available.
+            </small>
           </div>
         </section>
 

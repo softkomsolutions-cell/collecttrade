@@ -1769,8 +1769,8 @@ export default function App() {
   const menuActionItems = [
     {
       id: "menu-intro",
-      label: "Intro Screen",
-      detail: "Open the launch chooser",
+      label: "Services",
+      detail: "Return to the services directory",
       action: handleMenuSplash,
     },
     {
@@ -2079,9 +2079,9 @@ export default function App() {
           <span>Reviewed imports</span>
           <strong>Reviewed portfolios</strong>
           <small>
-            {shareStatus.status === "live"
-              ? shareStatus.publicUrl
-              : "Load reconciled partner portfolios into owned inventory."}
+          {shareStatus.status === "live"
+            ? shareStatus.publicUrl
+            : "Load reconciled portfolios into owned inventory."}
           </small>
         </button>
       </aside>

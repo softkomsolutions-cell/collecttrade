@@ -196,7 +196,7 @@ const COLLECTIBLE_VALUATION_CATEGORIES = [
 function collectibleErrorMessage(error) {
   const messages = {
     lego_market_data_unavailable:
-      "No live source or saved beta benchmark is available for that set yet.",
+      "No live source or saved reference benchmark is available for that set yet.",
     lego_set_number_required: "Enter a valid LEGO set number.",
     purchase_price_required: "Enter the price you paid in rand.",
     collectible_category_required: "Choose a collectible category.",
@@ -435,7 +435,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
                 {valuation.confidence === "live"
                   ? "Live market data"
                   : valuation.valuationMode === "automatic"
-                    ? "Beta benchmark"
+                    ? "Saved benchmark"
                     : "Appraisal input"}
               </p>
             </div>
@@ -2075,12 +2075,12 @@ export function CollectiblesScreen({
       }
       setPortfolioStatus(
         payload.duplicate
-          ? "That reviewed partner portfolio is already in your inventory."
-          : `${payload.importedCount} reviewed partner positions imported into inventory.`,
+          ? "That reviewed portfolio is already in your inventory."
+          : `${payload.importedCount} reviewed positions imported into inventory.`,
       );
       await refreshContext();
     } catch {
-      setPortfolioStatus("The reviewed partner portfolio could not be imported.");
+      setPortfolioStatus("The reviewed portfolio could not be imported.");
     } finally {
       setPortfolioImportBusyId("");
     }
@@ -2164,14 +2164,14 @@ export function CollectiblesScreen({
       id: "reviewed-portfolios",
       label: "Reviewed Imports",
       meta: `${reviewedPortfolios.length}`,
-      detail: "Load reviewed partner portfolios into owned inventory with reconciled invoice refs.",
+      detail: "Load reviewed portfolios into owned inventory with reconciled invoice references.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
     },
     {
       id: "partner-sources",
       label: "Source Library",
       meta: `${partnerSources.length}`,
-      detail: "Open Gavin's portfolio PDFs, shared folders, and LEGO market references.",
+      detail: "Open portfolio documents, shared folders, and market references.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-partner-sources"),
     },
     {
@@ -2264,7 +2264,7 @@ export function CollectiblesScreen({
             <h2>My Collectibles Portfolio</h2>
             <p>
               Save rated purchases here to track the amount invested, the latest evidence-led
-              estimate, and the same 1, 5, and 10 year scenarios Gavin requested.
+              estimate, and the 1, 5, and 10 year scenarios used throughout the register.
             </p>
           </div>
           <div className="headerStatus">
@@ -2728,9 +2728,9 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-reviewed-portfolios">
         <div className="panelHeader">
           <div>
-            <h2>Reviewed Partner Portfolios</h2>
+            <h2>Reviewed Portfolio Imports</h2>
             <p>
-              Import reconciled partner collections into owned inventory. Raw invoices stay
+              Import reconciled collections into owned inventory. Raw invoices stay
               private; the working register keeps reviewed costs, estimates, grades, and invoice
               references.
             </p>
@@ -2792,7 +2792,7 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-partner-sources">
         <div className="panelHeader">
           <div>
-            <h2>Partner Portfolio Sources</h2>
+            <h2>Source Library</h2>
             <p>
               Keep the shared portfolio documents and market references close to the valuation
               workflow. These links stay as source material until a reviewed import pipeline is
