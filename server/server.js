@@ -3675,8 +3675,24 @@ app.post("/api/auth/register", (req, res) => {
     return;
   }
 
-  if (users.some((user) => user.email === email)) {
-    res.status(409).json({ ok: false, error: "email_in_use" });
+  const existingUser = users.find((user) => user.email === email);
+
+  if (existingUser) {
+    if (!verifyPassword(password, existingUser)) {
+      res.status(409).json({ ok: false, error: "email_in_use" });
+      return;
+    }
+
+    existingUser.lastLoginAt = nowIso();
+    persistStore();
+
+    res.json({
+      ok: true,
+      resumed: true,
+      token: issueToken(existingUser),
+      user: publicUser(existingUser),
+      settings: getUserState(existingUser.id).settings,
+    });
     return;
   }
 
