@@ -888,6 +888,165 @@
     rgba(255, 255, 255, 0.03);
 }
 
+.legoWorkflowRail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.legoWorkflowStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.legoWorkflowStep > strong {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(116, 132, 171, 0.22);
+  color: #8da2c8;
+  font-size: 12px;
+}
+
+.legoWorkflowStep div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.legoWorkflowStep span,
+.legoWorkflowStep small {
+  overflow-wrap: anywhere;
+}
+
+.legoWorkflowStep span {
+  color: #dce7ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.legoWorkflowStep small {
+  color: #7d8bab;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.legoWorkflowStep.active,
+.legoWorkflowStep.completed {
+  border-color: rgba(214, 179, 110, 0.34);
+  background: rgba(214, 179, 110, 0.07);
+}
+
+.legoWorkflowStep.active > strong,
+.legoWorkflowStep.completed > strong {
+  border-color: rgba(214, 179, 110, 0.56);
+  color: #f2d69c;
+  background: rgba(214, 179, 110, 0.12);
+}
+
+.legoScanWorkspace {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(214, 179, 110, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.42);
+}
+
+.legoScanPreview {
+  min-height: 218px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border: 1px dashed rgba(214, 179, 110, 0.36);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(214, 179, 110, 0.08), transparent 55%),
+    rgba(255, 255, 255, 0.018);
+}
+
+.legoScanPreview > div {
+  display: grid;
+  gap: 8px;
+  max-width: 210px;
+  text-align: center;
+}
+
+.legoScanPreview strong {
+  color: #f2d69c;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.legoScanPreview span,
+.legoScanCopy p,
+.legoFormIntro p {
+  color: #8da2c8;
+  line-height: 1.6;
+}
+
+.legoScanPreview.hasImage {
+  padding: 0;
+  border-style: solid;
+}
+
+.legoScanPreview img {
+  width: 100%;
+  height: 100%;
+  max-height: 310px;
+  object-fit: cover;
+}
+
+.legoScanCopy,
+.legoFormIntro {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.legoScanCopy h3,
+.legoFormIntro h3 {
+  margin: 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.legoScanCopy p,
+.legoFormIntro p {
+  margin: 0;
+}
+
+.legoUploadButton {
+  cursor: pointer;
+}
+
+.legoUploadButton input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.legoFormIntro {
+  padding-top: 2px;
+}
+
 .legoPanelEyebrow,
 .legoValuationForm span,
 .legoMetricGrid span,
@@ -1055,6 +1214,27 @@
   .legoScore {
     min-width: 0;
     text-align: left;
+  }
+
+  .legoWorkflowRail,
+  .legoScanWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .legoWorkflowRail {
+    gap: 6px;
+  }
+
+  .legoWorkflowStep {
+    padding: 9px 10px;
+  }
+
+  .legoScanWorkspace {
+    padding: 12px;
+  }
+
+  .legoScanPreview {
+    min-height: 180px;
   }
 }
 

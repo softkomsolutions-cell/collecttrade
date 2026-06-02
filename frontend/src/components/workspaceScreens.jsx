@@ -177,6 +177,9 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [reportBusy, setReportBusy] = useState(false);
+  const [scanImage, setScanImage] = useState(null);
+  const [scanPreview, setScanPreview] = useState("");
+  const [scanStage, setScanStage] = useState("capture");
   const activeProfile =
     COLLECTIBLE_VALUATION_CATEGORIES.find((profile) => profile.id === category) ||
     COLLECTIBLE_VALUATION_CATEGORIES[0];
@@ -198,6 +201,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     event.preventDefault();
     setBusy(true);
     setStatus("");
+    setScanStage("evaluate");
 
     try {
       const response = await fetch("/api/collectibles/valuation", {
@@ -210,9 +214,11 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
         throw new Error(payload?.error || "lego_valuation_failed");
       }
       setValuation(payload);
+      setScanStage("review");
     } catch (error) {
       setValuation(null);
       setStatus(collectibleErrorMessage(error.message));
+      setScanStage(scanImage ? "confirm" : "capture");
     } finally {
       setBusy(false);
     }
@@ -236,6 +242,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
         throw new Error(payload?.error || "collectible_save_failed");
       }
       setStatus("Saved to your collectibles portfolio.");
+      setScanStage("inventory");
       await onSaved();
     } catch (error) {
       setStatus(collectibleErrorMessage(error.message));
@@ -263,6 +270,38 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
       setReportBusy(false);
     }
   };
+  const handleScanImage = (event) => {
+    const [file] = Array.from(event.target.files || []);
+    if (!file) return;
+    if (scanPreview) {
+      window.URL.revokeObjectURL(scanPreview);
+    }
+    setScanImage(file);
+    setScanPreview(window.URL.createObjectURL(file));
+    setValuation(null);
+    setScanStage("confirm");
+    setStatus("Photo attached. Confirm the LEGO set number and purchase details before valuation.");
+  };
+  const clearScanImage = () => {
+    if (scanPreview) {
+      window.URL.revokeObjectURL(scanPreview);
+    }
+    setScanImage(null);
+    setScanPreview("");
+    setValuation(null);
+    setScanStage("capture");
+    setStatus("");
+  };
+  const workflowSteps = [
+    { id: "capture", label: "Scan purchase", detail: "Attach camera or gallery image" },
+    { id: "confirm", label: "Confirm record", detail: "Check set number and price" },
+    { id: "review", label: "Review valuation", detail: "Score, market value and scenarios" },
+    { id: "inventory", label: "Add to inventory", detail: "Store the asset and report" },
+  ];
+  const workflowStageIndex = Math.max(
+    0,
+    workflowSteps.findIndex((step) => step.id === scanStage),
+  );
 
   return (
     <section className="panel legoValuationPanel" id="collectibles-valuation">
@@ -279,6 +318,62 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           <span>Valuation mode</span>
           <strong>{appraisalMode ? "Evidence-led appraisal" : "Connected market lookup"}</strong>
         </div>
+      </div>
+
+      <div className="legoWorkflowRail" aria-label="LEGO collection workflow">
+        {workflowSteps.map((step, index) => (
+          <div
+            className={`legoWorkflowStep ${
+              index < workflowStageIndex ? "completed" : index === workflowStageIndex ? "active" : ""
+            }`}
+            key={step.id}
+          >
+            <strong>{index + 1}</strong>
+            <div>
+              <span>{step.label}</span>
+              <small>{step.detail}</small>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <section className="legoScanWorkspace">
+        <div className={`legoScanPreview ${scanPreview ? "hasImage" : ""}`}>
+          {scanPreview ? (
+            <img src={scanPreview} alt="Attached LEGO purchase evidence" />
+          ) : (
+            <div>
+              <strong>Purchase photo</strong>
+              <span>Use a clear image of the sealed set, packaging, or receipt.</span>
+            </div>
+          )}
+        </div>
+        <div className="legoScanCopy">
+          <span className="legoPanelEyebrow">Step 1 | Purchase evidence</span>
+          <h3>{scanImage ? "Photo attached" : "Scan or upload a LEGO purchase"}</h3>
+          <p>
+            {scanImage
+              ? `${scanImage.name} is attached to this valuation session. Confirm the set reference below before checking market evidence.`
+              : "Start with a camera image or an existing photo. For the beta, the image is attached as evidence and you confirm the detected set reference before pricing."}
+          </p>
+          <div className="panelActions">
+            <label className="primaryButton legoUploadButton">
+              <input type="file" accept="image/*" capture="environment" onChange={handleScanImage} />
+              {scanImage ? "Replace Photo" : "Scan Purchase"}
+            </label>
+            {scanImage ? (
+              <button className="ghostButton" type="button" onClick={clearScanImage}>
+                Remove Photo
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <div className="legoFormIntro">
+        <span className="legoPanelEyebrow">Step 2 | Confirm record</span>
+        <h3>Check the purchase details</h3>
+        <p>Use the LEGO set number printed on the packaging, then run the investment valuation.</p>
       </div>
 
       <form className="legoValuationForm" onSubmit={handleSubmit}>
@@ -483,7 +578,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           </div>
           <div className="panelActions">
             <button className="primaryButton" type="button" disabled={busy} onClick={handleSave}>
-              {busy ? "Saving..." : "Save to My Collection"}
+              {busy ? "Saving..." : "Add to Inventory"}
             </button>
             <button
               className="ghostButton"
