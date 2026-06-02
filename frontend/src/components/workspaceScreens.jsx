@@ -128,69 +128,6 @@ const COLLECTIBLE_VALUATION_CATEGORIES = [
     itemNamePlaceholder: "Resolved from the set number",
     evidenceHint: "Automatic lookup uses configured BrickLink and BrickEconomy sources.",
   },
-  {
-    id: "whiskey",
-    label: "Whiskey",
-    mode: "appraisal",
-    identifierLabel: "Bottle reference",
-    identifierPlaceholder: "Distillery, expression, vintage, bottle size",
-    itemNamePlaceholder: "Example: Distillery 12 Year Limited Release",
-    evidenceHint: "Use comparable auction or specialist-retailer evidence for this bottle.",
-  },
-  {
-    id: "stamps",
-    label: "Stamps",
-    mode: "appraisal",
-    identifierLabel: "Catalog or issue reference",
-    identifierPlaceholder: "Catalog number, issuer, year, denomination",
-    itemNamePlaceholder: "Example: Union of South Africa issue",
-    evidenceHint: "Use recent auction comparables for the same issue and grade.",
-  },
-  {
-    id: "puzzles",
-    label: "Puzzles",
-    mode: "appraisal",
-    identifierLabel: "Edition reference",
-    identifierPlaceholder: "Maker, title, edition, piece count",
-    itemNamePlaceholder: "Example: Vintage wooden puzzle limited edition",
-    evidenceHint: "Use sold comparables for the same maker, edition, and completeness.",
-  },
-  {
-    id: "coins",
-    label: "Coins",
-    mode: "appraisal",
-    identifierLabel: "Coin reference",
-    identifierPlaceholder: "Country, year, denomination, mint mark",
-    itemNamePlaceholder: "Example: 1898 ZAR Pond",
-    evidenceHint: "Use auction comparables for the same coin and grade.",
-  },
-  {
-    id: "cards",
-    label: "Trading Cards",
-    mode: "appraisal",
-    identifierLabel: "Card reference",
-    identifierPlaceholder: "Game, set, card number, grade",
-    itemNamePlaceholder: "Example: Pokemon 151 Charizard ex PSA 10",
-    evidenceHint: "Use sold listings for the exact card, edition, language, and grade.",
-  },
-  {
-    id: "comics",
-    label: "Comics",
-    mode: "appraisal",
-    identifierLabel: "Issue reference",
-    identifierPlaceholder: "Title, issue, publisher, year, grade",
-    itemNamePlaceholder: "Example: Amazing Spider-Man #300 CGC 9.4",
-    evidenceHint: "Use sold comparables for the exact issue, variant, and grade.",
-  },
-  {
-    id: "other",
-    label: "Other Collectible",
-    mode: "appraisal",
-    identifierLabel: "Reference",
-    identifierPlaceholder: "Maker, edition, year, serial or catalog reference",
-    itemNamePlaceholder: "Describe the collectible precisely",
-    evidenceHint: "Use recent sold comparables and document why they are genuinely comparable.",
-  },
 ];
 
 function collectibleErrorMessage(error) {
@@ -209,7 +146,7 @@ function collectibleErrorMessage(error) {
 }
 
 function CollectibleValuationPanel({ authToken, onSaved }) {
-  const [category, setCategory] = useState("lego");
+  const [category] = useState("lego");
   const [identifier, setIdentifier] = useState("40766");
   const [itemName, setItemName] = useState("");
   const [purchasePriceZAR, setPurchasePriceZAR] = useState("65");
@@ -296,8 +233,8 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           <span className="legoPanelEyebrow">Collectibles Valuation Desk</span>
           <h2>Rate This Purchase</h2>
           <p>
-            Use the same disciplined workflow for LEGO, whiskey, stamps, puzzles, cards, coins,
-            comics, and other legitimate collectibles.
+            Rate LEGO purchases with a consistent investment workflow for market value, rarity,
+            provenance, and 1, 5, and 10 year scenarios.
           </p>
         </div>
         <div className="headerStatus">
@@ -307,24 +244,6 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
       </div>
 
       <form className="legoValuationForm" onSubmit={handleSubmit}>
-        <label>
-          <span>Category</span>
-          <select
-            value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
-              setIdentifier(event.target.value === "lego" ? "40766" : "");
-              setValuation(null);
-              setStatus("");
-            }}
-          >
-            {COLLECTIBLE_VALUATION_CATEGORIES.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.label}
-              </option>
-            ))}
-          </select>
-        </label>
         {appraisalMode ? (
           <label>
             <span>Collectible name</span>
@@ -1984,12 +1903,20 @@ export function CollectiblesScreen({
   const [inventoryCategory, setInventoryCategory] = useState("all");
   const [portfolioImportBusyId, setPortfolioImportBusyId] = useState("");
   const officialShelves = collectiblesResponse.referenceShelves || [];
-  const partnerSources = collectiblesResponse.partnerSources || [];
-  const reviewedPortfolios = collectiblesResponse.reviewedPortfolios || [];
+  const partnerSources = (collectiblesResponse.partnerSources || []).filter(
+    (source) => source.category === "LEGO",
+  );
+  const reviewedPortfolios = (collectiblesResponse.reviewedPortfolios || []).filter(
+    (portfolio) => portfolio.category === "LEGO" || portfolio.categoryId === "lego",
+  );
   const legoReferenceShelf =
     officialShelves.find((shelf) => shelf.brand === "LEGO") || officialShelves[0] || null;
-  const collectibleHoldings = collectiblePortfolio.items || [];
-  const collectibleTransactions = collectiblePortfolio.transactions || [];
+  const collectibleHoldings = (collectiblePortfolio.items || []).filter(
+    (holding) => holding.category === "lego" || holding.categoryLabel === "LEGO",
+  );
+  const collectibleTransactions = (collectiblePortfolio.transactions || []).filter(
+    (transaction) => transaction.category === "lego" || transaction.categoryLabel === "LEGO",
+  );
   const collectibleSummary = collectiblePortfolio.summary || {};
   const inventoryCategories = collectibleSummary.categoryBreakdown || [];
   const filteredOwnedInventory = collectibleHoldings.filter((holding) => {
@@ -2143,7 +2070,7 @@ export function CollectiblesScreen({
       id: "valuation",
       label: "Rate Purchase",
       meta: "Start here",
-      detail: "Open the valuation workflow for LEGO, whiskey, stamps, puzzles, and more.",
+      detail: "Open the LEGO valuation workflow for market value, rarity, and projections.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
     },
     {
@@ -2209,9 +2136,9 @@ export function CollectiblesScreen({
     <div className={`collectiblesServicePage collectiblesService-${activeService}`}>
       <WorkspaceHero
         tone="collectibles"
-        eyebrow="Collectibles Valuation"
-        title="Collectibles"
-        description="Rate purchases, document evidence, and track LEGO, whiskey, stamps, puzzles, cards, coins, comics, and other legitimate collectibles."
+        eyebrow="LEGO Investment Register"
+        title="LEGO Collection"
+        description="Rate purchases, document evidence, and track LEGO sets, minifigures, sealed items, reviewed imports, and investment activity."
         statusLabel="Inventory refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
@@ -3170,11 +3097,8 @@ export function CollectiblesScreen({
               <div>
                 <h2>{group.brand}</h2>
                 <p>
-                  {group.brand === "LEGO"
-                    ? "Display-led sets, minifigures, and collector inventory with the official source shelf available beside the trade flow."
-                    : group.brand === "Pokemon"
-                      ? "Sealed and graded trading-card inventory with faster collector demand read-through."
-                      : "Alternative inventory tracked inside the same ticket and portfolio workflow."}
+                  Display-led sets, minifigures, and collector inventory with the official source
+                  shelf available beside the trade flow.
                 </p>
               </div>
               <div className="headerStatus">

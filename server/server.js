@@ -532,6 +532,21 @@ const TRADEABLE_COLLECTIBLE_CATEGORIES = uniqueStrings(
 const TRADEABLE_COLLECTIBLE_BRANDS = uniqueStrings(
   TRADEABLE_COLLECTIBLES.map((item) => item.brand),
 ).sort();
+const LEGO_TRADEABLE_COLLECTIBLES = TRADEABLE_COLLECTIBLES.filter((item) => item.brand === "LEGO");
+const LEGO_TRADEABLE_COLLECTIBLE_CATEGORIES = uniqueStrings(
+  LEGO_TRADEABLE_COLLECTIBLES.map((item) => item.category),
+).sort();
+const LEGO_TRADEABLE_COLLECTIBLE_BRANDS = ["LEGO"];
+const LEGO_SOURCE_LIBRARY = PARTNER_COLLECTIBLE_SOURCE_LIBRARY.filter(
+  (source) => source.category === "LEGO",
+);
+const LEGO_REVIEWED_PORTFOLIOS = PARTNER_REVIEWED_PORTFOLIOS.filter(
+  (portfolio) => portfolio.category === "LEGO" || portfolio.categoryId === "lego",
+);
+
+function isLegoPortfolioRecord(record) {
+  return record?.category === "lego" || record?.categoryLabel === "LEGO";
+}
 
 const NEWS_SOURCES = [
   {
@@ -3825,12 +3840,12 @@ app.get("/api/catalog", (_req, res) => {
 app.get("/api/collectibles", (_req, res) => {
   res.json({
     updatedAt: nowIso(),
-    categories: TRADEABLE_COLLECTIBLE_CATEGORIES,
-    brands: TRADEABLE_COLLECTIBLE_BRANDS,
-    items: TRADEABLE_COLLECTIBLES,
+    categories: LEGO_TRADEABLE_COLLECTIBLE_CATEGORIES,
+    brands: LEGO_TRADEABLE_COLLECTIBLE_BRANDS,
+    items: LEGO_TRADEABLE_COLLECTIBLES,
     referenceShelves: OFFICIAL_COLLECTIBLE_REFERENCE_SHELVES,
-    partnerSources: PARTNER_COLLECTIBLE_SOURCE_LIBRARY,
-    reviewedPortfolios: PARTNER_REVIEWED_PORTFOLIOS.map(({ positions, ...portfolio }) => ({
+    partnerSources: LEGO_SOURCE_LIBRARY,
+    reviewedPortfolios: LEGO_REVIEWED_PORTFOLIOS.map(({ positions, ...portfolio }) => ({
       ...portfolio,
       positionCount: positions.length,
     })),
@@ -3867,8 +3882,8 @@ app.post("/api/collectibles/valuation", async (req, res) => {
 });
 
 app.get("/api/collectibles/portfolio", requireAuth, (req, res) => {
-  const items = req.userState.collectibleHoldings || [];
-  const transactions = req.userState.collectibleTransactions || [];
+  const items = (req.userState.collectibleHoldings || []).filter(isLegoPortfolioRecord);
+  const transactions = (req.userState.collectibleTransactions || []).filter(isLegoPortfolioRecord);
   res.json({
     ok: true,
     items,
@@ -4022,14 +4037,15 @@ app.post("/api/collectibles/portfolio/:holdingId/sell", requireAuth, (req, res) 
 });
 
 app.get("/api/collectibles/imports", requireAuth, (req, res) => {
+  const legoSourceIds = new Set(LEGO_SOURCE_LIBRARY.map((source) => source.id));
   res.json({
     ok: true,
-    items: req.userState.collectibleImports || [],
+    items: (req.userState.collectibleImports || []).filter((item) => legoSourceIds.has(item.sourceId)),
   });
 });
 
 app.post("/api/collectibles/imports", requireAuth, (req, res) => {
-  const source = PARTNER_COLLECTIBLE_SOURCE_LIBRARY.find(
+  const source = LEGO_SOURCE_LIBRARY.find(
     (candidate) => candidate.id === req.body?.sourceId,
   );
   if (!source) {
@@ -4053,7 +4069,7 @@ app.post("/api/collectibles/imports", requireAuth, (req, res) => {
 });
 
 app.post("/api/collectibles/partner-portfolios/:portfolioId/import", requireAuth, (req, res) => {
-  const portfolio = PARTNER_REVIEWED_PORTFOLIOS.find(
+  const portfolio = LEGO_REVIEWED_PORTFOLIOS.find(
     (candidate) => candidate.id === req.params.portfolioId,
   );
   if (!portfolio) {

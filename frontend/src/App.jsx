@@ -997,6 +997,7 @@ export default function App() {
   const filteredCollectibles = useMemo(() => {
     const query = collectibleQuery.trim().toLowerCase();
     return (collectiblesResponse.items || []).filter((item) => {
+      const isLego = item.brand === "LEGO";
       const matchesQuery =
         !query ||
         [item.name, item.brand, item.category, item.description, item.thesis, item.sku]
@@ -1005,10 +1006,10 @@ export default function App() {
       const matchesBrand = collectibleBrand === "all" || item.brand === collectibleBrand;
       const matchesCategory =
         collectibleCategory === "all" || item.category === collectibleCategory;
-      return matchesQuery && matchesBrand && matchesCategory;
+      return isLego && matchesQuery && matchesBrand && matchesCategory;
     });
   }, [collectibleBrand, collectibleCategory, collectibleQuery, collectiblesResponse.items]);
-  const collectibles = collectiblesResponse.items || [];
+  const collectibles = (collectiblesResponse.items || []).filter((item) => item.brand === "LEGO");
   const resolvedSelectedCollectibleId =
     filteredCollectibles.some((item) => item.id === selectedCollectibleId)
       ? selectedCollectibleId
@@ -1746,7 +1747,7 @@ export default function App() {
       id: "menu-imports",
       glyph: "IM",
       label: "Reviewed Imports",
-      detail: "Load reviewed LEGO and Pokemon portfolios",
+      detail: "Load reviewed LEGO portfolio records",
       action: () => handleMenuSection("collectibles", "collectibles-reviewed-portfolios"),
     },
     {

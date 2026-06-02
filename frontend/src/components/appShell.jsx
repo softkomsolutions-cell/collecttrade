@@ -223,7 +223,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       title: "Reviewed Imports",
       tag: "Reviewed portfolios",
       tone: "home",
-      detail: "Load reconciled LEGO and Pokemon portfolio records into the collection.",
+      detail: "Load reconciled LEGO portfolio records into the collection.",
       selection: {
         page: "collectibles",
         desk: launchDesk,
@@ -286,7 +286,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       eyebrow: "Collectibles first",
       title: "Rate the purchase before you buy.",
       description:
-        "Use one disciplined workflow for LEGO, whiskey, stamps, puzzles, coins, cards, comics, and other legitimate collectibles.",
+        "Use one disciplined workflow for LEGO sets, minifigures, sealed items, and reviewed portfolio positions.",
       accent: "collectibles",
       bars: [48, 82, 62, 92],
     },
@@ -306,7 +306,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       eyebrow: "Portfolio imports",
       title: "Bring reviewed collections into one inventory.",
       description:
-        "Load reviewed LEGO and Pokemon portfolios, then expand the same structure to whiskey, stamps, puzzles, and more.",
+        "Load reviewed LEGO portfolios and keep every position inside one collection register.",
       accent: "trade",
       bars: [42, 68, 54, 80],
     },
@@ -539,7 +539,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
       sectionId: "collectibles-valuation",
       destination: "Valuation desk",
       bestFor: "Rate a purchase",
-      blurb: "Value LEGO, whiskey, stamps, puzzles, coins, cards, comics, and other legitimate collectibles.",
+      blurb: "Value LEGO sets, minifigures, sealed items, and reviewed collection positions.",
     },
     {
       id: "inventory",
@@ -563,7 +563,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
       sectionId: "collectibles-reviewed-portfolios",
       destination: "Reviewed portfolios",
       bestFor: "Load collection data",
-      blurb: "Import reconciled LEGO and Pokemon portfolios into the working inventory register.",
+      blurb: "Import reconciled LEGO portfolios into the working inventory register.",
     },
     {
       id: "activity",
@@ -652,12 +652,12 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
             <div className="landingFeatureRow">
               <div className="landingFeatureChip">
-                <span>Collectible lanes</span>
-                <strong>LEGO, whiskey, stamps, puzzles</strong>
+                <span>LEGO collection</span>
+                <strong>Sets, minifigures, sealed items</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>More categories</span>
-                <strong>Cards, coins, comics, custom</strong>
+                <span>Investment record</span>
+                <strong>Cost, value, rarity, provenance</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Partner portfolios</span>

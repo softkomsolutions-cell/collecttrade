@@ -54,7 +54,7 @@ export const SCREEN_PREVIEWS = {
   signals: "Live 8/21 EMA setups, chart structure, and execution tickets.",
   tools: "AI mentor, chart analyzer, simulator, and research workspace for decision support.",
   connections: "Broker, venue, feed, and execution controls with live readiness and sync status.",
-  collectibles: "Valuation, evidence, and inventory for legitimate collectibles.",
+  collectibles: "Valuation, evidence, and inventory for LEGO collections.",
   portfolio: "Tracked positions, close workflow, and execution history.",
   reports: "Performance reporting, signal analytics, desk exposure, and visual review graphs.",
   settings: "Desk controls, health status, sources, and account preferences.",
@@ -340,7 +340,7 @@ export const INTRO_ACTIONS = [
     page: "collectibles",
     sectionId: "collectibles-reviewed-portfolios",
     destination: "Reviewed Portfolios",
-    blurb: "Load reconciled LEGO and Pokemon portfolio records into owned inventory.",
+    blurb: "Load reconciled LEGO portfolio records into owned inventory.",
   },
   {
     ordinal: "04",
@@ -404,7 +404,7 @@ export const TRADE_PATHS = [
     eyebrow: "ALT",
     title: "Trade Collectibles",
     destination: "Collectibles",
-    blurb: "Buy and sell LEGO, Pokemon, and other alternative inventory with the same ticket workflow.",
+    blurb: "Buy and sell LEGO inventory with the same ticket workflow.",
   },
 ];
 
@@ -465,7 +465,7 @@ export const PARTNER_TEST_FLOW = [
     id: "imports",
     ordinal: "03",
     title: "Partner imports",
-    detail: "Review the reconciled LEGO and Pokemon portfolios and import a reviewed collection into inventory.",
+    detail: "Review the reconciled LEGO portfolios and import a reviewed collection into inventory.",
     page: "collectibles",
     desk: null,
     sectionId: "collectibles-reviewed-portfolios",
