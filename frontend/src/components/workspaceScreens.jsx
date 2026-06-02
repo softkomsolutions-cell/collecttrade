@@ -2455,6 +2455,226 @@ export function CollectiblesScreen({
         )}
       </section>
 
+      <section className="panel" id="collectibles-catalog">
+        <div className="panelHeader">
+          <div>
+            <h2>Collection Catalog</h2>
+            <p>
+              Build a structured asset record for every collectible. Keep identifiers, category,
+              condition, rarity, cost, and estimated value together so a physical collection can
+              be searched, shared, and prepared for trade.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Cataloged assets</span>
+            <strong>{collectibleHoldings.length}</strong>
+          </div>
+        </div>
+
+        <section className="summaryGrid">
+          <div className="summaryCard">
+            <span>Asset records</span>
+            <strong>{collectibleHoldings.length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Categories</span>
+            <strong>{inventoryCategories.length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Evidence sources</span>
+            <strong>{partnerSources.length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Reviewed imports</span>
+            <strong>{importedBatchIds.size}</strong>
+          </div>
+        </section>
+
+        {collectibleHoldings.length ? (
+          <div className="collectibleReferenceGrid">
+            {collectibleHoldings.slice(0, 12).map((holding) => (
+              <article className="collectibleReferenceCard" key={holding.id}>
+                <div className="collectibleReferenceTop">
+                  <span>{holding.categoryLabel}</span>
+                  <strong>{holding.identifier}</strong>
+                </div>
+                <h3>{holding.name}</h3>
+                <p>
+                  {holding.condition || "Condition review required"} |{" "}
+                  {holding.rarity || "Rarity review required"}
+                </p>
+                <div className="collectibleReferenceMeta">
+                  <div>
+                    <span>Quantity</span>
+                    <strong>{holding.quantity}</strong>
+                  </div>
+                  <div>
+                    <span>Current estimate</span>
+                    <strong>{formatZar(holding.currentValueZAR * holding.quantity)}</strong>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No catalog records yet"
+            body="Save a rated purchase or import a reviewed portfolio to start the collection catalog."
+          />
+        )}
+        <div className="panelActions">
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => jumpToPageSection("collectibles", "collectibles-owned-inventory")}
+          >
+            Open Full Inventory
+          </button>
+        </div>
+      </section>
+
+      <section className="panel" id="collectibles-documentation">
+        <div className="panelHeader">
+          <div>
+            <h2>Documentation & Provenance</h2>
+            <p>
+              Preserve the evidence behind each investment decision. A serious collectible record
+              should make its identification, condition, acquisition trail, and valuation sources
+              easy to review before resale or insurance documentation.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Evidence sources</span>
+            <strong>{partnerSources.length}</strong>
+          </div>
+        </div>
+
+        <div className="deskBriefGrid">
+          <article className="deskBriefCard">
+            <span>01</span>
+            <strong>Identification</strong>
+            <p>Record the item name, category, reference number, edition, and quantity.</p>
+          </article>
+          <article className="deskBriefCard">
+            <span>02</span>
+            <strong>Condition</strong>
+            <p>Document grading, sealed status, visible wear, and any appraisal notes.</p>
+          </article>
+          <article className="deskBriefCard">
+            <span>03</span>
+            <strong>Provenance</strong>
+            <p>Keep acquisition cost, invoice references, shared documents, and source trail.</p>
+          </article>
+          <article className="deskBriefCard">
+            <span>04</span>
+            <strong>Valuation</strong>
+            <p>Link comparable evidence and keep the latest 1, 5, and 10 year scenarios.</p>
+          </article>
+        </div>
+
+        <section className="summaryGrid">
+          <div className="summaryCard">
+            <span>Condition documented</span>
+            <strong>{collectibleHoldings.filter((holding) => holding.condition).length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Rarity documented</span>
+            <strong>{collectibleHoldings.filter((holding) => holding.rarity).length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Shared references</span>
+            <strong>{partnerSources.length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Reviewed portfolios</span>
+            <strong>{reviewedPortfolios.length}</strong>
+          </div>
+        </section>
+
+        <div className="panelActions">
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => jumpToPageSection("collectibles", "collectibles-partner-sources")}
+          >
+            Review Source Library
+          </button>
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
+          >
+            Review Partner Imports
+          </button>
+        </div>
+      </section>
+
+      <section className="panel" id="collectibles-digital-registry">
+        <div className="panelHeader">
+          <div>
+            <h2>Digital Registry</h2>
+            <p>
+              Give each physical collectible a clear digital representation. The beta registry
+              keeps the asset reference, ownership record, evidence state, and estimated value
+              ready for future verification, sharing, and trade workflows.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Registry status</span>
+            <strong>Beta</strong>
+          </div>
+        </div>
+
+        <section className="summaryGrid">
+          <div className="summaryCard">
+            <span>Registered assets</span>
+            <strong>{collectibleHoldings.length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Import batches</span>
+            <strong>{importedBatchIds.size}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Source references</span>
+            <strong>{partnerSources.length}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Verification state</span>
+            <strong>Review ready</strong>
+          </div>
+        </section>
+
+        {collectibleHoldings.length ? (
+          <div className="collectibleReferenceGrid">
+            {collectibleHoldings.slice(0, 12).map((holding) => (
+              <article className="collectibleReferenceCard" key={holding.id}>
+                <div className="collectibleReferenceTop">
+                  <span>{holding.categoryLabel}</span>
+                  <strong>Physical asset</strong>
+                </div>
+                <h3>{holding.name}</h3>
+                <p>{holding.identifier} | Evidence linked | Review ready</p>
+                <div className="collectibleReferenceMeta">
+                  <div>
+                    <span>Registry quantity</span>
+                    <strong>{holding.quantity}</strong>
+                  </div>
+                  <div>
+                    <span>Estimated value</span>
+                    <strong>{formatZar(holding.currentValueZAR * holding.quantity)}</strong>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="The digital registry is ready"
+            body="Save a rated purchase or import a reviewed portfolio to create the first physical-asset record."
+          />
+        )}
+      </section>
+
       <section className="panel" id="collectibles-transactions">
         <div className="panelHeader">
           <div>

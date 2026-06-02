@@ -231,6 +231,21 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         sectionId: "collectibles-reviewed-portfolios",
       },
     },
+    {
+      id: "catalog",
+      ordinal: "05",
+      glyph: "CA",
+      title: "Collection Catalog",
+      tag: "Asset records",
+      tone: "portfolio",
+      detail: "Organize items with identifiers, categories, condition, rarity, and value records.",
+      selection: {
+        page: "collectibles",
+        desk: launchDesk,
+        introId: "collectibles",
+        sectionId: "collectibles-catalog",
+      },
+    },
   ];
   const supportMenuRows = [
     {
@@ -250,6 +265,18 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       title: "Research Inventory",
       detail: "Ideas, source checks, and product context",
       selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-grid" },
+    },
+    {
+      id: "documentation",
+      title: "Documentation & Provenance",
+      detail: "Condition, appraisals, receipts, and source trail",
+      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-documentation" },
+    },
+    {
+      id: "digital-registry",
+      title: "Digital Registry",
+      detail: "Physical-to-digital records and verification readiness",
+      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-digital-registry" },
     },
   ];
   const onboardingSlides = [
