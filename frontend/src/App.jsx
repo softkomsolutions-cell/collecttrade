@@ -1886,6 +1886,7 @@ export default function App() {
           filteredCollectibles={filteredCollectibles}
           handleCollectibleSelect={handleCollectibleSelect}
           jumpToPageSection={jumpToPageSection}
+          onBackToServices={handleMenuSplash}
           openCollectibleTicket={openCollectibleTicket}
           authToken={authToken}
           refreshContext={refreshContext}

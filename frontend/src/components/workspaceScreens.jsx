@@ -1888,6 +1888,7 @@ export function CollectiblesScreen({
   filteredCollectibles,
   handleCollectibleSelect,
   jumpToPageSection,
+  onBackToServices,
   openCollectibleTicket,
   refreshContext,
   setCollectibleBrand,
@@ -2134,6 +2135,13 @@ export function CollectiblesScreen({
 
   return (
     <div className={`collectiblesServicePage collectiblesService-${activeService}`}>
+      <div className="collectiblesServiceNav">
+        <button className="collectiblesServiceBack" type="button" onClick={onBackToServices}>
+          <span aria-hidden="true">&lt;-</span>
+          <strong>Back to services</strong>
+        </button>
+        <small>LEGO collection register</small>
+      </div>
       <WorkspaceHero
         tone="collectibles"
         eyebrow="LEGO Investment Register"

@@ -724,6 +724,50 @@
   gap: 18px;
 }
 
+.collectiblesServiceNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 2px 2px 0;
+}
+
+.collectiblesServiceBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--ct-line-soft);
+  border-radius: 6px;
+  background: rgba(214, 179, 110, 0.04);
+  color: var(--ct-ivory);
+  cursor: pointer;
+}
+
+.collectiblesServiceBack span {
+  color: var(--ct-brass-bright);
+  font-size: 15px;
+}
+
+.collectiblesServiceBack strong {
+  font-size: 12px;
+}
+
+.collectiblesServiceBack:hover {
+  border-color: rgba(214, 179, 110, 0.42);
+  background: rgba(214, 179, 110, 0.1);
+}
+
+.collectiblesServiceNav small {
+  color: var(--ct-muted);
+  font-size: 11px;
+  text-align: right;
+  text-transform: uppercase;
+}
+
 .collectiblesServicePage > .workspaceHero,
 .collectiblesServicePage > .workspaceSectionBar,
 .collectiblesServicePage > .workspaceCommandBar,
@@ -6145,6 +6189,78 @@
 @media (max-width: 520px) {
   .mobileMenuRow {
     grid-template-columns: 54px minmax(0, 1fr) 18px;
+  }
+
+  .workspace {
+    padding: 10px 10px 18px;
+  }
+
+  .collectiblesServicePage {
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .collectiblesServiceNav {
+    padding: 0;
+  }
+
+  .collectiblesServiceNav small {
+    display: none;
+  }
+
+  .collectiblesServicePage > .panel {
+    min-width: 0;
+    padding: 16px;
+  }
+
+  .collectiblesServicePage .panelHeader {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .collectiblesServicePage .panelHeader > *,
+  .collectiblesServicePage .collectibleInventoryToolbar,
+  .collectiblesServicePage .collectibleInventoryToolbar label,
+  .collectiblesServicePage .collectibleInventoryStat,
+  .collectiblesServicePage .emptyState {
+    min-width: 0;
+  }
+
+  .collectiblesServicePage .headerStatus {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 5px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .collectiblesServicePage .headerStatus strong {
+    overflow-wrap: anywhere;
+  }
+
+  .collectiblesServicePage .collectibleInventoryToolbar,
+  .collectiblesServicePage .collectibleInventoryCategoryGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  .collectiblesServicePage .collectibleInventoryToolbar input,
+  .collectiblesServicePage .collectibleInventoryToolbar select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .collectiblesServicePage h2,
+  .collectiblesServicePage h3,
+  .collectiblesServicePage p,
+  .collectiblesServicePage span,
+  .collectiblesServicePage small,
+  .collectiblesServicePage strong {
+    overflow-wrap: anywhere;
   }
 }
 
