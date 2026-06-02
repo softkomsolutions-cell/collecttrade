@@ -1689,16 +1689,6 @@ export default function App() {
     label: workspaceLabel(page, activeDesk),
     hint: SCREEN_PREVIEWS[page] || "Current workspace",
   };
-  const mobileClockLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat("en-ZA", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: appSettings.timezone || "Africa/Johannesburg",
-      }).format(new Date()),
-    [appSettings.timezone],
-  );
   const executionPlanForCard = useCallback(
     (signal) => executionPlanForSignal(signal, appSettings, connectors),
     [appSettings, connectors],
@@ -1729,7 +1719,7 @@ export default function App() {
     },
     {
       id: "imports",
-      label: "Partner imports",
+      label: "Reviewed imports",
       value: collectiblesResponse.reviewedPortfolios?.length || 0,
       detail: "Reviewed portfolios",
       action: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
@@ -1755,7 +1745,7 @@ export default function App() {
     {
       id: "menu-imports",
       glyph: "IM",
-      label: "Partner Imports",
+      label: "Reviewed Imports",
       detail: "Load reviewed LEGO and Pokemon portfolios",
       action: () => handleMenuSection("collectibles", "collectibles-reviewed-portfolios"),
     },
@@ -1771,7 +1761,7 @@ export default function App() {
   const menuSupportItems = [
     {
       id: "menu-sources",
-      label: "Partner Sources",
+      label: "Source Library",
       detail: "Shared documents and collectible references",
       action: () => handleMenuSection("collectibles", "collectibles-partner-sources"),
     },
@@ -2036,7 +2026,7 @@ export default function App() {
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
               <div className="brandWordmark">COLLECTRADE</div>
-              <div className="brandSub">Workspace build for partner testing</div>
+              <div className="brandSub">Private collection intelligence</div>
             </button>
           </div>
         </div>
@@ -2086,7 +2076,7 @@ export default function App() {
           className="sidebarCard sidebarCardButton"
           onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
         >
-          <span>Partner imports</span>
+          <span>Reviewed imports</span>
           <strong>Reviewed portfolios</strong>
           <small>
             {shareStatus.status === "live"
@@ -2097,15 +2087,6 @@ export default function App() {
       </aside>
 
       <div className="workspaceShell">
-        <div className="mobileStatusBar">
-          <span>{mobileClockLabel}</span>
-          <div className="mobileStatusIcons" aria-hidden="true">
-            <span className="mobileStatusDot" />
-            <span className="mobileStatusPill">5G</span>
-            <span className="mobileStatusBattery">92%</span>
-          </div>
-        </div>
-
         <div className="mobileTitleBar">
           <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
             <div className="brandMark">CT</div>
@@ -2117,8 +2098,8 @@ export default function App() {
 
           <div className="mobileTitleActions">
             <div className="mobileTitleMeta">
-              <span>Collectibles</span>
-              <strong>Beta</strong>
+              <span>Collection</span>
+              <strong>Private</strong>
             </div>
             <button
               type="button"
@@ -2150,13 +2131,13 @@ export default function App() {
           </div>
 
           <div className="topbarTools">
-            <div className="livePill ready">Collectibles Beta</div>
+            <div className="livePill ready">Collection Register</div>
             <button
               type="button"
               className="ghostButton"
               onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
             >
-              Partner Imports
+              Reviewed Imports
             </button>
             <button type="button" className="ghostButton" onClick={clearSession}>
               Log Out
@@ -2189,19 +2170,21 @@ export default function App() {
           </Suspense>
         </main>
 
-        <nav className="mobileBottomNav" aria-label="Primary navigation">
-          {primaryNavItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`mobileBottomNavItem ${page === item.id ? "active" : ""}`}
-              onClick={() => navigateToPage(item.id, false, activeDesk)}
-            >
-              <span>{item.glyph}</span>
-              <strong>{item.label}</strong>
-            </button>
-          ))}
-        </nav>
+        {primaryNavItems.length > 1 ? (
+          <nav className="mobileBottomNav" aria-label="Primary navigation">
+            {primaryNavItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`mobileBottomNavItem ${page === item.id ? "active" : ""}`}
+                onClick={() => navigateToPage(item.id, false, activeDesk)}
+              >
+                <span>{item.glyph}</span>
+                <strong>{item.label}</strong>
+              </button>
+            ))}
+          </nav>
+        ) : null}
 
         {menuVisible ? (
           <div className="mobileMenuBackdrop" onClick={closeMenu}>

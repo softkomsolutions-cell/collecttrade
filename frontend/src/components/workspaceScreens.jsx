@@ -2162,14 +2162,14 @@ export function CollectiblesScreen({
     },
     {
       id: "reviewed-portfolios",
-      label: "Partner Imports",
+      label: "Reviewed Imports",
       meta: `${reviewedPortfolios.length}`,
       detail: "Load reviewed partner portfolios into owned inventory with reconciled invoice refs.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
     },
     {
       id: "partner-sources",
-      label: "Partner Sources",
+      label: "Source Library",
       meta: `${partnerSources.length}`,
       detail: "Open Gavin's portfolio PDFs, shared folders, and LEGO market references.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-partner-sources"),
@@ -2346,7 +2346,7 @@ export function CollectiblesScreen({
         ) : (
           <EmptyState
             title="No saved collectibles yet"
-            body="Rate a purchase above and save it to start the partner beta collection."
+            body="Rate a purchase above and save it to start the collection register."
           />
         )}
         {portfolioStatus ? <div className="statusBanner">{portfolioStatus}</div> : null}
@@ -2604,7 +2604,7 @@ export function CollectiblesScreen({
             className="ghostButton"
             onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
           >
-            Review Partner Imports
+            Review Imports
           </button>
         </div>
       </section>
@@ -2614,14 +2614,14 @@ export function CollectiblesScreen({
           <div>
             <h2>Digital Registry</h2>
             <p>
-              Give each physical collectible a clear digital representation. The beta registry
+              Give each physical collectible a clear digital representation. The registry
               keeps the asset reference, ownership record, evidence state, and estimated value
               ready for future verification, sharing, and trade workflows.
             </p>
           </div>
           <div className="headerStatus">
             <span>Registry status</span>
-            <strong>Beta</strong>
+            <strong>Ready</strong>
           </div>
         </div>
 

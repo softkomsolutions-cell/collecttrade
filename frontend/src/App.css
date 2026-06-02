@@ -6147,3 +6147,139 @@
     grid-template-columns: 54px minmax(0, 1fr) 18px;
   }
 }
+
+/* Signed-in beta refinement: remove prototype phone chrome and unify the register */
+.workspaceShell::before {
+  display: none;
+}
+
+.mobileTitleBar {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ct-line-soft);
+  background: rgba(16, 17, 15, 0.98);
+}
+
+.mobileBrandCopy strong {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.mobileBrandCopy small,
+.mobileTitleMeta span {
+  color: var(--ct-muted);
+}
+
+.mobileTitleMeta span {
+  letter-spacing: 0;
+}
+
+.mobileTitleMeta strong {
+  color: var(--ct-brass-bright);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.mobileMenuButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border-color: var(--ct-line-soft);
+  background: rgba(214, 179, 110, 0.05);
+}
+
+.mobileMenuButton span {
+  height: 1px;
+  background: var(--ct-brass-bright);
+}
+
+.mobileMenuButton:hover {
+  border-color: rgba(214, 179, 110, 0.42);
+  background: rgba(214, 179, 110, 0.1);
+}
+
+.topbar {
+  padding: 12px 16px;
+  gap: 12px;
+  border-bottom-color: var(--ct-line-soft);
+  background: rgba(11, 12, 11, 0.96);
+  box-shadow: none;
+}
+
+.metricStrip {
+  gap: 8px;
+}
+
+.metricBlock {
+  min-width: 132px;
+  padding: 11px 12px;
+  border-radius: 6px;
+  border-color: var(--ct-line-soft);
+  background: rgba(214, 179, 110, 0.035);
+}
+
+.metricBlock span {
+  color: var(--ct-muted);
+  letter-spacing: 0;
+}
+
+.metricBlock strong {
+  color: var(--ct-brass-bright);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.metricBlock small {
+  color: #8f9188;
+}
+
+.metricButton:hover {
+  border-color: rgba(214, 179, 110, 0.34);
+  background: rgba(214, 179, 110, 0.07);
+}
+
+.livePill {
+  border: 1px solid rgba(139, 178, 154, 0.24);
+  background: rgba(139, 178, 154, 0.08);
+  color: #a8cbb4;
+  letter-spacing: 0;
+}
+
+.avatarCircle {
+  background: rgba(214, 179, 110, 0.14);
+  color: var(--ct-brass-bright);
+}
+
+.workspace {
+  padding: 16px 16px 22px;
+}
+
+.mobileMenuBackdrop {
+  padding: 20px 16px;
+  background: rgba(9, 10, 9, 0.96);
+}
+
+.mobileMenuScreenHeader strong {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.mobileMenuScreenHeader span,
+.mobileMenuScreenSection > span {
+  color: var(--ct-brass);
+  letter-spacing: 0;
+}
+
+.mobileMenuPill {
+  border-radius: 6px;
+  border-color: var(--ct-line-soft);
+  background: var(--ct-surface);
+}
+
+.mobileBottomNav {
+  border-top-color: var(--ct-line-soft);
+  background: rgba(9, 10, 9, 0.98);
+}
