@@ -9,6 +9,7 @@ const {
   getCollectibleValuation,
   getCollectiblesValuationMeta,
 } = require("./services/collectiblesValuation");
+const { streamInventoryPdf, streamValuationPdf } = require("./services/collectiblesPdf");
 const reviewedLegoPortfolioV36 = require("./fixtures/reviewed-lego-portfolio-v36.json");
 
 const app = express();
@@ -3881,6 +3882,17 @@ app.post("/api/collectibles/valuation", async (req, res) => {
   }
 });
 
+app.post("/api/collectibles/valuation/pdf", async (req, res) => {
+  try {
+    streamValuationPdf(res, await getCollectibleValuation(req.body));
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error: String(error?.message || "collectible_pdf_failed"),
+    });
+  }
+});
+
 app.get("/api/collectibles/portfolio", requireAuth, (req, res) => {
   const items = (req.userState.collectibleHoldings || []).filter(isLegoPortfolioRecord);
   const transactions = (req.userState.collectibleTransactions || []).filter(isLegoPortfolioRecord);
@@ -3889,6 +3901,16 @@ app.get("/api/collectibles/portfolio", requireAuth, (req, res) => {
     items,
     transactions,
     summary: summarizeCollectibleHoldings(items, transactions),
+  });
+});
+
+app.get("/api/collectibles/portfolio/pdf", requireAuth, (req, res) => {
+  const items = (req.userState.collectibleHoldings || []).filter(isLegoPortfolioRecord);
+  const transactions = (req.userState.collectibleTransactions || []).filter(isLegoPortfolioRecord);
+  streamInventoryPdf(res, {
+    items,
+    summary: summarizeCollectibleHoldings(items, transactions),
+    ownerName: req.user.name || req.user.email,
   });
 });
 

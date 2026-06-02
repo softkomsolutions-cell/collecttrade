@@ -118,6 +118,23 @@ function formatZar(value) {
     : "--";
 }
 
+async function downloadPdf(response, fallbackFilename) {
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload?.error || "pdf_download_failed");
+  }
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const filenameMatch = disposition.match(/filename="([^"]+)"/i);
+  const url = window.URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filenameMatch?.[1] || fallbackFilename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+}
+
 const COLLECTIBLE_VALUATION_CATEGORIES = [
   {
     id: "lego",
@@ -159,6 +176,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
   const [valuation, setValuation] = useState(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reportBusy, setReportBusy] = useState(false);
   const activeProfile =
     COLLECTIBLE_VALUATION_CATEGORIES.find((profile) => profile.id === category) ||
     COLLECTIBLE_VALUATION_CATEGORIES[0];
@@ -223,6 +241,26 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
       setStatus(collectibleErrorMessage(error.message));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    setReportBusy(true);
+    setStatus("");
+    try {
+      await downloadPdf(
+        await fetch("/api/collectibles/valuation/pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestPayload),
+        }),
+        `collecttrade-lego-valuation-${identifier || "report"}.pdf`,
+      );
+      setStatus("Valuation report downloaded.");
+    } catch (error) {
+      setStatus(collectibleErrorMessage(error.message));
+    } finally {
+      setReportBusy(false);
     }
   };
 
@@ -446,6 +484,14 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           <div className="panelActions">
             <button className="primaryButton" type="button" disabled={busy} onClick={handleSave}>
               {busy ? "Saving..." : "Save to My Collection"}
+            </button>
+            <button
+              className="ghostButton"
+              type="button"
+              disabled={reportBusy}
+              onClick={handleDownloadReport}
+            >
+              {reportBusy ? "Preparing PDF..." : "Download Valuation PDF"}
             </button>
           </div>
         </div>
@@ -1903,6 +1949,7 @@ export function CollectiblesScreen({
   const [inventoryQuery, setInventoryQuery] = useState("");
   const [inventoryCategory, setInventoryCategory] = useState("all");
   const [portfolioImportBusyId, setPortfolioImportBusyId] = useState("");
+  const [inventoryReportBusy, setInventoryReportBusy] = useState(false);
   const officialShelves = collectiblesResponse.referenceShelves || [];
   const partnerSources = (collectiblesResponse.partnerSources || []).filter(
     (source) => source.category === "LEGO",
@@ -2043,6 +2090,23 @@ export function CollectiblesScreen({
       setPortfolioStatus("The sale could not be recorded. Check the quantity and price.");
     } finally {
       setSaleBusyId("");
+    }
+  };
+  const downloadInventoryReport = async () => {
+    setInventoryReportBusy(true);
+    setPortfolioStatus("");
+    try {
+      await downloadPdf(
+        await fetch("/api/collectibles/portfolio/pdf", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }),
+        "collecttrade-lego-inventory.pdf",
+      );
+      setPortfolioStatus("Inventory register PDF downloaded.");
+    } catch {
+      setPortfolioStatus("The inventory report could not be generated. Please try again.");
+    } finally {
+      setInventoryReportBusy(false);
     }
   };
   const groupedCollectibles = [
@@ -2302,6 +2366,36 @@ export function CollectiblesScreen({
           </div>
         </div>
 
+        <section className="summaryGrid collectibleInventorySummary">
+          <div className="summaryCard">
+            <span>Cost basis</span>
+            <strong>{formatZar(collectibleSummary.purchaseValueZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Current estimate</span>
+            <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Unrealized gain</span>
+            <strong>{formatZar(collectibleSummary.unrealizedPnlZAR)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>5 year scenario</span>
+            <strong>{formatZar(collectibleSummary.projectedFiveYearsZAR)}</strong>
+          </div>
+        </section>
+
+        <div className="panelActions collectibleInventoryActions">
+          <button
+            className="ghostButton"
+            type="button"
+            disabled={inventoryReportBusy}
+            onClick={downloadInventoryReport}
+          >
+            {inventoryReportBusy ? "Preparing PDF..." : "Download Inventory PDF"}
+          </button>
+        </div>
+
         <div className="collectibleInventoryToolbar">
           <label>
             <span>Search owned inventory</span>
@@ -2341,8 +2435,26 @@ export function CollectiblesScreen({
         ) : null}
 
         {filteredOwnedInventory.length ? (
-          <div className="collectibleInventoryTableWrap">
-            <table className="collectibleInventoryTable">
+          <>
+            <div className="collectibleInventoryMobileList">
+              {filteredOwnedInventory.map((holding) => (
+                <article className="collectibleInventoryMobileCard" key={holding.id}>
+                  <div>
+                    <span>{holding.categoryLabel}</span>
+                    <strong>{holding.name}</strong>
+                    <small>{holding.identifier}</small>
+                  </div>
+                  <dl>
+                    <div><dt>Qty</dt><dd>{holding.quantity}</dd></div>
+                    <div><dt>Cost</dt><dd>{formatZar(holding.purchasePriceZAR * holding.quantity)}</dd></div>
+                    <div><dt>Estimate</dt><dd>{formatZar(holding.currentValueZAR * holding.quantity)}</dd></div>
+                    <div><dt>Score</dt><dd>{holding.score}/10</dd></div>
+                  </dl>
+                </article>
+              ))}
+            </div>
+            <div className="collectibleInventoryTableWrap">
+              <table className="collectibleInventoryTable">
               <thead>
                 <tr>
                   <th>Item</th>
@@ -2376,8 +2488,9 @@ export function CollectiblesScreen({
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+              </table>
+            </div>
+          </>
         ) : (
           <EmptyState
             title={collectibleHoldings.length ? "No inventory matches that filter" : "No owned inventory yet"}

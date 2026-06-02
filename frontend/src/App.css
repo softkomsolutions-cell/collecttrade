@@ -625,6 +625,71 @@
   border-radius: 14px;
 }
 
+.collectibleInventorySummary {
+  margin-bottom: 14px;
+}
+
+.collectibleInventoryActions {
+  margin: 0 0 14px;
+}
+
+.collectibleInventoryMobileList {
+  display: none;
+  gap: 10px;
+}
+
+.collectibleInventoryMobileCard {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--ct-line-soft);
+  border-radius: 8px;
+  background: rgba(214, 179, 110, 0.035);
+}
+
+.collectibleInventoryMobileCard > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.collectibleInventoryMobileCard span,
+.collectibleInventoryMobileCard dt {
+  color: var(--ct-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.collectibleInventoryMobileCard strong,
+.collectibleInventoryMobileCard dd {
+  color: var(--ct-ivory);
+}
+
+.collectibleInventoryMobileCard small {
+  color: var(--ct-brass-bright);
+  overflow-wrap: anywhere;
+}
+
+.collectibleInventoryMobileCard dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.collectibleInventoryMobileCard dl div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.collectibleInventoryMobileCard dd {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
 .collectibleInventoryTable {
   width: 100%;
   min-width: 1040px;
@@ -6252,6 +6317,14 @@
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
+  }
+
+  .collectiblesServicePage .collectibleInventoryMobileList {
+    display: grid;
+  }
+
+  .collectiblesServicePage .collectibleInventoryTableWrap {
+    display: none;
   }
 
   .collectiblesServicePage h2,
