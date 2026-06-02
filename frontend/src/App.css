@@ -5813,3 +5813,337 @@
     width: 7px;
   }
 }
+
+/* Collecttrade premium beta: restrained private-collection visual language */
+:root {
+  --ct-ink: #10110f;
+  --ct-ink-deep: #090a09;
+  --ct-surface: rgba(25, 27, 24, 0.96);
+  --ct-surface-raised: rgba(32, 35, 31, 0.96);
+  --ct-line: rgba(218, 195, 151, 0.2);
+  --ct-line-soft: rgba(218, 195, 151, 0.1);
+  --ct-brass: #d6b36e;
+  --ct-brass-bright: #ecd294;
+  --ct-ivory: #f4f0e7;
+  --ct-muted: #aaa99f;
+}
+
+.appShell,
+.authShell,
+.authShellMinimal,
+.splashShell,
+.bootSplashShell {
+  background: var(--ct-ink-deep);
+}
+
+.brandMark,
+.bootSplashMark {
+  border-radius: 8px;
+  border: 1px solid rgba(214, 179, 110, 0.45);
+  background: #1b1b17;
+  color: var(--ct-brass-bright);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  letter-spacing: 0;
+}
+
+.brandWordmark,
+.authBrand,
+.bootSplashWordmark {
+  color: var(--ct-brass-bright);
+  letter-spacing: 0;
+}
+
+.authShellMinimal {
+  padding: 24px;
+}
+
+.authPanelMinimal {
+  width: min(100%, 390px);
+  gap: 28px;
+}
+
+.authMinimalLogo {
+  gap: 16px;
+}
+
+.authMinimalLogo .brandMark {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+}
+
+.authMinimalLogo .brandWordmark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.authPanelMinimal > .authPanel {
+  padding: 26px;
+  border-radius: 8px;
+  border-color: var(--ct-line);
+  background: var(--ct-surface);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.36);
+}
+
+.authPanelHeader h2 {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.authForm {
+  gap: 18px;
+}
+
+.authForm label {
+  gap: 8px;
+}
+
+.authForm label span,
+.sidebarCard span,
+.metricBlock span,
+.headerStatus span,
+.panelHeader p,
+.summaryCard span,
+.workspaceHeroEyebrow,
+.workspaceSectionBarHeader span,
+.workspaceSectionChip,
+.mobileMenuRowTop span,
+.mobileMenuRowTop small {
+  letter-spacing: 0;
+}
+
+.authForm input,
+.collectibleInventoryToolbar input,
+.collectibleInventoryToolbar select {
+  border-radius: 6px;
+  border-color: var(--ct-line-soft);
+  background: rgba(6, 7, 6, 0.5);
+  color: var(--ct-ivory);
+}
+
+.authForm input:focus,
+.collectibleInventoryToolbar input:focus,
+.collectibleInventoryToolbar select:focus {
+  border-color: rgba(214, 179, 110, 0.7);
+  box-shadow: 0 0 0 3px rgba(214, 179, 110, 0.1);
+}
+
+.primaryButton {
+  border-radius: 6px;
+  background: var(--ct-brass);
+  color: #17160f;
+  box-shadow: none;
+}
+
+.primaryButton:hover {
+  box-shadow: 0 12px 24px rgba(214, 179, 110, 0.16);
+  filter: brightness(1.06);
+}
+
+.ghostButton {
+  border-radius: 6px;
+  border-color: var(--ct-line-soft);
+  color: var(--ct-ivory);
+}
+
+.splashShellMobile {
+  padding: 22px 16px;
+}
+
+.splashMenuBackdrop {
+  overflow: visible;
+  background: transparent;
+}
+
+.splashMenuBackdrop::before {
+  display: none;
+}
+
+.splashPanelCompact {
+  width: min(100%, 520px);
+  gap: 22px;
+}
+
+.splashCompactHeader {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ct-line-soft);
+}
+
+.splashCompactHero {
+  gap: 8px;
+}
+
+.splashCompactHero h1 {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 10vw, 50px);
+  font-weight: 500;
+}
+
+.splashCompactHero .authBlurb {
+  color: var(--ct-muted);
+}
+
+.splashHeroPill {
+  border-radius: 999px;
+  border-color: var(--ct-line-soft);
+  background: rgba(214, 179, 110, 0.05);
+  color: #c9bd9e;
+  letter-spacing: 0;
+}
+
+.chooserResumeBar,
+.mobileMenuRow,
+.mobileMenuSupportCard {
+  border-radius: 8px;
+  border-color: var(--ct-line-soft);
+  background: var(--ct-surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.mobileMenuRow {
+  min-height: 94px;
+  grid-template-columns: 54px minmax(0, 1fr) 18px;
+  gap: 14px;
+  padding: 16px;
+}
+
+.mobileMenuRow:hover,
+.mobileMenuSupportCard:hover {
+  border-color: rgba(214, 179, 110, 0.42);
+  background: var(--ct-surface-raised);
+  transform: translateY(-1px);
+}
+
+.mobileMenuRowGlyph {
+  width: 54px;
+  height: 54px;
+  border-radius: 6px;
+  border-color: var(--ct-line-soft);
+  background: rgba(214, 179, 110, 0.06);
+  color: var(--ct-brass-bright);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.mobileMenuRowCopy strong,
+.mobileMenuSupportCard strong {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.mobileMenuRowCopy small,
+.mobileMenuSupportCard small {
+  color: var(--ct-muted);
+}
+
+.mobileMenuRowTop span {
+  color: var(--ct-brass);
+}
+
+.mobileMenuRowTop small {
+  color: #99998f;
+}
+
+.mobileMenuRowArrow {
+  color: var(--ct-brass);
+}
+
+.mobileMenuRow-news,
+.mobileMenuRow-trade,
+.mobileMenuRow-crypto,
+.mobileMenuRow-collectibles,
+.mobileMenuRow-portfolio {
+  border-color: var(--ct-line-soft);
+  background: var(--ct-surface);
+}
+
+.mobileMenuRow-news .mobileMenuRowGlyph,
+.mobileMenuRow-trade .mobileMenuRowGlyph,
+.mobileMenuRow-crypto .mobileMenuRowGlyph,
+.mobileMenuRow-collectibles .mobileMenuRowGlyph,
+.mobileMenuRow-portfolio .mobileMenuRowGlyph {
+  color: var(--ct-brass-bright);
+}
+
+.mobileMenuSupportCard {
+  min-height: 82px;
+  padding: 14px;
+}
+
+.workspaceShell {
+  border-radius: 8px;
+  border-color: var(--ct-line);
+  background: var(--ct-ink);
+}
+
+.workspaceHero,
+.workspaceSectionBar,
+.workspaceCommandBar,
+.panel,
+.summaryCard,
+.collectibleReferenceCard,
+.collectibleInventoryStat,
+.deskBriefCard {
+  border-radius: 8px;
+  border-color: var(--ct-line-soft);
+  background: var(--ct-surface);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+}
+
+.workspaceHero-collectibles {
+  border-color: rgba(214, 179, 110, 0.28);
+  background: var(--ct-surface-raised);
+}
+
+.workspaceHero h1,
+.panelHeader h2,
+.collectibleReferenceCard h3 {
+  color: var(--ct-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.workspaceHeroEyebrow,
+.collectibleCategory {
+  color: var(--ct-brass);
+}
+
+.workspaceHero p,
+.panelHeader p,
+.collectibleReferenceCard p {
+  color: var(--ct-muted);
+}
+
+.summaryCard strong,
+.collectibleReferenceMeta strong,
+.headerStatus strong {
+  color: var(--ct-brass-bright);
+}
+
+.workspaceSectionChip {
+  border-radius: 999px;
+}
+
+.panel::before,
+.workspaceHero::before,
+.workspaceSectionBar::before,
+.summaryCard::before,
+.authPanel::before {
+  background: linear-gradient(90deg, transparent, rgba(236, 210, 148, 0.18), transparent);
+}
+
+@media (max-width: 520px) {
+  .mobileMenuRow {
+    grid-template-columns: 54px minmax(0, 1fr) 18px;
+  }
+}
