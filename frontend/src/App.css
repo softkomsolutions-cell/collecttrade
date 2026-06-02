@@ -6609,6 +6609,91 @@
   background: rgba(214, 179, 110, 0.07);
 }
 
+/* The signed-in beta always renders inside a compact app shell, even on a wide browser. */
+.mobileAppShell .collectiblesServicePage {
+  gap: 12px;
+  min-width: 0;
+}
+
+.mobileAppShell .collectiblesServicePage > .panel {
+  min-width: 0;
+  padding: 16px;
+}
+
+.mobileAppShell .collectiblesServicePage .panelHeader {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.mobileAppShell .collectiblesServicePage .panelHeader > *,
+.mobileAppShell .collectiblesServicePage .headerStatus,
+.mobileAppShell .legoWorkflowStep,
+.mobileAppShell .legoScanCopy,
+.mobileAppShell .legoFormIntro,
+.mobileAppShell .legoValuationForm label {
+  min-width: 0;
+}
+
+.mobileAppShell .collectiblesServicePage .headerStatus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  text-align: left;
+}
+
+.mobileAppShell .legoWorkflowRail,
+.mobileAppShell .legoScanWorkspace,
+.mobileAppShell .legoValuationForm,
+.mobileAppShell .legoMetricGrid,
+.mobileAppShell .legoProjectionGrid,
+.mobileAppShell .legoValuationDetailGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mobileAppShell .legoWorkflowRail {
+  gap: 6px;
+}
+
+.mobileAppShell .legoWorkflowStep {
+  padding: 10px;
+}
+
+.mobileAppShell .legoWorkflowStep span,
+.mobileAppShell .legoWorkflowStep small,
+.mobileAppShell .legoScanCopy p,
+.mobileAppShell .legoFormIntro p {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.mobileAppShell .legoScanWorkspace {
+  gap: 14px;
+  padding: 12px;
+}
+
+.mobileAppShell .legoScanPreview {
+  min-height: 184px;
+}
+
+.mobileAppShell .legoValuationForm input,
+.mobileAppShell .legoValuationForm select,
+.mobileAppShell .legoValuationForm textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.mobileAppShell .legoValuationHeadline {
+  display: grid;
+}
+
+.mobileAppShell .legoScore {
+  min-width: 0;
+  text-align: left;
+}
+
 .livePill {
   border: 1px solid rgba(139, 178, 154, 0.24);
   background: rgba(139, 178, 154, 0.08);
