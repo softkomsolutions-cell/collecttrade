@@ -1488,6 +1488,185 @@
   border-top: 1px solid rgba(214, 179, 110, 0.14);
 }
 
+.portfolioAssetDetailButton {
+  min-height: 30px;
+  padding: 6px 9px;
+  font-size: 12px;
+}
+
+.assetDetailPanel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(214, 179, 110, 0.2);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(214, 179, 110, 0.07), transparent 56%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.assetDetailHero {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.assetDetailCopy {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.assetDetailCopy h3 {
+  margin: 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.assetDetailCopy p,
+.assetDetailThesis p {
+  margin: 0;
+  color: #8da2c8;
+  line-height: 1.55;
+}
+
+.assetDetailVerdict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.assetDetailVerdict strong {
+  color: #00d46a;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.assetDetailVerdict span,
+.assetDetailVerdict small {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(0, 212, 106, 0.1);
+  color: #00d46a;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.assetDetailVerdict small {
+  background: rgba(214, 179, 110, 0.1);
+  color: #f2d69c;
+}
+
+.assetDetailMetrics,
+.assetDetailGrid,
+.assetForecastBars {
+  display: grid;
+  gap: 10px;
+}
+
+.assetDetailMetrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.assetDetailGrid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 14px;
+}
+
+.assetDetailMetrics div,
+.assetDetailChart,
+.assetDetailThesis {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.32);
+}
+
+.assetDetailMetrics div,
+.assetDetailChart,
+.assetDetailThesis,
+.assetDetailSources {
+  display: grid;
+  gap: 12px;
+}
+
+.assetDetailMetrics span,
+.assetDetailSources span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.assetDetailMetrics strong {
+  color: #f5f7fb;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+
+.assetForecastBars {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  min-height: 190px;
+}
+
+.assetForecastBar {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 7px;
+  min-width: 0;
+  height: 190px;
+  text-align: center;
+}
+
+.assetForecastBar > span {
+  align-self: end;
+  display: block;
+  min-height: 26px;
+  height: var(--forecast-height);
+  border-radius: 7px 7px 3px 3px;
+  background: linear-gradient(180deg, #f2d69c, rgba(0, 212, 106, 0.32));
+}
+
+.assetForecastBar strong {
+  color: #f5f7fb;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.assetForecastBar small,
+.assetDetailSources small {
+  color: #8da2c8;
+  font-size: 12px;
+}
+
+.assetDetailThesis p {
+  position: relative;
+  padding-left: 15px;
+}
+
+.assetDetailThesis p::before {
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  content: "";
+  background: #f2d69c;
+}
+
 .portfolioAssetCard {
   display: grid;
   grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
@@ -1594,6 +1773,10 @@
 
 .legoAssetVisual-opportunity {
   min-height: 250px;
+}
+
+.legoAssetVisual-detail {
+  min-height: 330px;
 }
 
 .legoAssetBrand {
@@ -1856,6 +2039,10 @@
   .portfolioAssetCard,
   .investmentOpportunityGrid,
   .investmentOpportunityMetrics,
+  .assetDetailHero,
+  .assetDetailMetrics,
+  .assetDetailGrid,
+  .assetForecastBars,
   .legoVerdictCard,
   .legoVerdictMetrics,
   .legoValuationForm,
@@ -1909,6 +2096,14 @@
 
   .portfolioLineStats {
     grid-template-columns: 1fr;
+  }
+
+  .assetDetailCopy h3 {
+    font-size: 28px;
+  }
+
+  .assetForecastBar {
+    height: 150px;
   }
 }
 
@@ -7596,6 +7791,18 @@
   .mobileAppShell .portfolioAssetCard {
     grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
   }
+
+  .mobileAppShell .assetDetailHero {
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+  }
+
+  .mobileAppShell .assetDetailMetrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .assetDetailGrid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  }
 }
 
 @media (max-width: 899px) {
@@ -7603,6 +7810,10 @@
   .mobileAppShell .portfolioAssetCard,
   .mobileAppShell .investmentOpportunityGrid,
   .mobileAppShell .investmentOpportunityMetrics,
+  .mobileAppShell .assetDetailHero,
+  .mobileAppShell .assetDetailMetrics,
+  .mobileAppShell .assetDetailGrid,
+  .mobileAppShell .assetForecastBars,
   .mobileAppShell .legoVerdictCard,
   .mobileAppShell .legoVerdictMetrics {
     grid-template-columns: minmax(0, 1fr);

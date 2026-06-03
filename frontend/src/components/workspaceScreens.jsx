@@ -2158,6 +2158,7 @@ export function CollectiblesScreen({
   const [inventoryCategory, setInventoryCategory] = useState("all");
   const [portfolioImportBusyId, setPortfolioImportBusyId] = useState("");
   const [inventoryReportBusy, setInventoryReportBusy] = useState(false);
+  const [selectedAssetDetailId, setSelectedAssetDetailId] = useState("");
   const officialShelves = collectiblesResponse.referenceShelves || [];
   const partnerSources = (collectiblesResponse.partnerSources || []).filter(
     (source) => source.category === "LEGO",
@@ -2238,6 +2239,80 @@ export function CollectiblesScreen({
           tone: "Hold",
         },
       ];
+  const assetDetailCandidates = hasSavedPortfolio
+    ? collectibleHoldings.map((holding) => ({
+        id: holding.id,
+        reference: holding.identifier,
+        name: holding.name,
+        value: numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1),
+        purchasePriceZAR: numberOrZero(holding.purchasePriceZAR) * numberOrZero(holding.quantity || 1),
+        score: holding.score,
+        tone: holding.recommendation || "Hold",
+        risk: numberOrZero(holding.score) >= 8.5 ? "Low" : "Medium",
+        rarity: holding.rarity || "Review required",
+        thesis: holding.notes?.length
+          ? holding.notes.slice(0, 3)
+          : ["Source-backed valuation recorded in the portfolio.", "Review condition and comparable sales before increasing exposure."],
+        projections: holding.projections || {},
+        sources: holding.sources || [],
+      }))
+    : [
+        {
+          id: "detail-10316",
+          reference: "10316",
+          name: "LEGO Icons Rivendell",
+          value: 12300,
+          purchasePriceZAR: 8000,
+          score: 9.1,
+          tone: "Strong Hold",
+          risk: "Low",
+          rarity: "Major Icons display set",
+          thesis: ["Adult collector demand", "High display value", "Strong long-term franchise appeal"],
+          projections: { oneYear: 14200, fiveYears: 21500, tenYears: 34500 },
+          sources: [{ id: "demo", label: "Collecttrade demo benchmark", status: "available" }],
+        },
+        {
+          id: "detail-40766",
+          reference: "40766",
+          name: "Tribute to Jane Austen's Books",
+          value: 1032,
+          purchasePriceZAR: 65,
+          score: 9.5,
+          tone: "Exceptional Buy",
+          risk: "Low",
+          rarity: "Gift With Purchase",
+          thesis: ["Limited production run", "Exclusive Jane Austen minifigure", "Literary crossover demand"],
+          projections: { oneYear: 1115, fiveYears: 1516, tenYears: 2228 },
+          sources: [{ id: "benchmark", label: "Collecttrade benchmark", status: "available" }],
+        },
+        {
+          id: "detail-30725",
+          reference: "30725",
+          name: "Spider-Man vs. Anti-Venom Heist",
+          value: 95,
+          purchasePriceZAR: 65,
+          score: 7.5,
+          tone: "Hold",
+          risk: "Medium",
+          rarity: "Retail paperbag with exclusive minifigure",
+          thesis: ["Low entry price", "Exclusive Anti-Venom minifigure", "Packaging condition matters"],
+          projections: { oneYear: 103, fiveYears: 140, tenYears: 205 },
+          sources: [{ id: "benchmark", label: "Collecttrade benchmark", status: "available" }],
+        },
+      ];
+  const selectedAssetDetail =
+    assetDetailCandidates.find((asset) => asset.id === selectedAssetDetailId) ||
+    assetDetailCandidates[0];
+  const openAssetDetail = (assetIdOrReference) => {
+    const asset = assetDetailCandidates.find(
+      (candidate) =>
+        candidate.id === assetIdOrReference || candidate.reference === assetIdOrReference,
+    );
+    setSelectedAssetDetailId(asset?.id || assetIdOrReference);
+    window.requestAnimationFrame(() => {
+      document.getElementById("collectibles-asset-detail")?.scrollIntoView({ block: "start" });
+    });
+  };
   const portfolioTrend = hasSavedPortfolio
     ? [
         dashboardCost * 0.86,
@@ -2720,12 +2795,108 @@ export function CollectiblesScreen({
                   <div>
                     <span>{asset.score}/10</span>
                     <strong>{formatZar(asset.value)}</strong>
+                    <button className="ghostButton portfolioAssetDetailButton" type="button" onClick={() => openAssetDetail(asset.reference)}>
+                      Detail
+                    </button>
                   </div>
                 </article>
               ))}
             </div>
           </div>
         </section>
+
+        {selectedAssetDetail ? (
+          <section className="assetDetailPanel" id="collectibles-asset-detail">
+            <div className="assetDetailHero">
+              <LegoAssetVisual
+                reference={selectedAssetDetail.reference}
+                name={selectedAssetDetail.name}
+                size="detail"
+              />
+              <div className="assetDetailCopy">
+                <span className="legoPanelEyebrow">Asset Detail</span>
+                <h3>{selectedAssetDetail.name}</h3>
+                <p>
+                  LEGO {selectedAssetDetail.reference} | {selectedAssetDetail.rarity}
+                </p>
+                <div className="assetDetailVerdict">
+                  <strong>{selectedAssetDetail.score}/10</strong>
+                  <span>{selectedAssetDetail.tone}</span>
+                  <small>Risk: {selectedAssetDetail.risk}</small>
+                </div>
+              </div>
+            </div>
+
+            <div className="assetDetailMetrics">
+              <div>
+                <span>Current Value</span>
+                <strong>{formatZar(selectedAssetDetail.value)}</strong>
+              </div>
+              <div>
+                <span>You Paid</span>
+                <strong>{formatZar(selectedAssetDetail.purchasePriceZAR)}</strong>
+              </div>
+              <div>
+                <span>Gain</span>
+                <strong>{formatZar(selectedAssetDetail.value - selectedAssetDetail.purchasePriceZAR)}</strong>
+              </div>
+              <div>
+                <span>5-Year Projection</span>
+                <strong>{formatZar(selectedAssetDetail.projections?.fiveYears)}</strong>
+              </div>
+            </div>
+
+            <div className="assetDetailGrid">
+              <div className="assetDetailChart">
+                <div className="portfolioGrowthHeader">
+                  <div>
+                    <span className="legoPanelEyebrow">Forecast</span>
+                    <h3>Value scenario</h3>
+                  </div>
+                </div>
+                <div className="assetForecastBars">
+                  {[
+                    ["Now", selectedAssetDetail.value],
+                    ["1Y", selectedAssetDetail.projections?.oneYear],
+                    ["5Y", selectedAssetDetail.projections?.fiveYears],
+                    ["10Y", selectedAssetDetail.projections?.tenYears],
+                  ].map(([label, value]) => {
+                    const maxValue = Math.max(
+                      selectedAssetDetail.value,
+                      numberOrZero(selectedAssetDetail.projections?.oneYear),
+                      numberOrZero(selectedAssetDetail.projections?.fiveYears),
+                      numberOrZero(selectedAssetDetail.projections?.tenYears),
+                      1,
+                    );
+                    const height = Math.max(18, (numberOrZero(value) / maxValue) * 100);
+                    return (
+                      <div className="assetForecastBar" key={label}>
+                        <span style={{ "--forecast-height": `${height}%` }} />
+                        <strong>{formatZar(value)}</strong>
+                        <small>{label}</small>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="assetDetailThesis">
+                <span className="legoPanelEyebrow">AI Investment Thesis</span>
+                {selectedAssetDetail.thesis.map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
+                <div className="assetDetailSources">
+                  <span>Source trail</span>
+                  {(selectedAssetDetail.sources || []).slice(0, 3).map((source) => (
+                    <small key={source.id || source.label}>
+                      {source.label}: {source.status}
+                    </small>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className="summaryGrid">
           <div className="summaryCard">
@@ -2777,6 +2948,13 @@ export function CollectiblesScreen({
                   </div>
                 </div>
                 <div className="panelActions">
+                  <button
+                    className="ghostButton"
+                    type="button"
+                    onClick={() => openAssetDetail(holding.id)}
+                  >
+                    Asset Detail
+                  </button>
                   <button
                     className="ghostButton"
                     type="button"
