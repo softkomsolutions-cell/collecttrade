@@ -1325,6 +1325,11 @@
   min-width: 0;
 }
 
+.portfolioAssetCard > div:nth-child(2) {
+  display: grid;
+  gap: 4px;
+}
+
 .portfolioAssetCard strong {
   color: #f5f7fb;
   line-height: 1.25;
