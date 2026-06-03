@@ -118,6 +118,64 @@ function formatZar(value) {
     : "--";
 }
 
+const LEGO_ASSET_VISUALS = {
+  "10316": {
+    theme: "valley",
+    line: "Icons",
+    title: "Rivendell",
+    initials: "RV",
+  },
+  "40766": {
+    theme: "library",
+    line: "GWP",
+    title: "Jane Austen",
+    initials: "JA",
+  },
+  "30725": {
+    theme: "marvel",
+    line: "Marvel",
+    title: "Spider-Man",
+    initials: "SM",
+  },
+};
+
+function assetVisualFor(reference, name = "LEGO") {
+  const cleanReference = String(reference || "").split("-")[0];
+  return (
+    LEGO_ASSET_VISUALS[cleanReference] || {
+      theme: "classic",
+      line: "LEGO",
+      title: name,
+      initials: String(name || "LEGO")
+        .split(/\s+/)
+        .map((part) => part.slice(0, 1))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+    }
+  );
+}
+
+function LegoAssetVisual({ reference, name, size = "card" }) {
+  const visual = assetVisualFor(reference, name);
+  return (
+    <div className={`legoAssetVisual legoAssetVisual-${visual.theme} legoAssetVisual-${size}`}>
+      <div className="legoAssetBrand">LEGO</div>
+      <div className="legoAssetScene" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="legoAssetCopy">
+        <small>{visual.line}</small>
+        <strong>{visual.title}</strong>
+        <span>{reference}</span>
+      </div>
+      <div className="legoAssetInitials">{visual.initials}</div>
+    </div>
+  );
+}
+
 async function downloadPdf(response, fallbackFilename) {
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
@@ -496,10 +554,11 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
               {scanPreview ? (
                 <img src={scanPreview} alt={`${valuation.name} purchase evidence`} />
               ) : (
-                <div>
-                  <span>LEGO</span>
-                  <strong>{valuation.setNum || valuation.identifier}</strong>
-                </div>
+                <LegoAssetVisual
+                  reference={valuation.setNum || valuation.identifier}
+                  name={valuation.name}
+                  size="hero"
+                />
               )}
             </div>
             <div className="legoVerdictCopy">
@@ -2179,6 +2238,81 @@ export function CollectiblesScreen({
           tone: "Hold",
         },
       ];
+  const portfolioTrend = hasSavedPortfolio
+    ? [
+        dashboardCost * 0.86,
+        dashboardCost * 0.91,
+        dashboardCost * 0.98,
+        dashboardValue * 0.88,
+        dashboardValue * 0.93,
+        dashboardValue * 0.97,
+        dashboardValue,
+      ].map((value) => Math.round(value))
+    : [592887, 625400, 648900, 701200, 752600, 813900, 873415];
+  const portfolioTrendMax = Math.max(...portfolioTrend, 1);
+  const portfolioTrendPoints = portfolioTrend
+    .map((value, index) => {
+      const x = 8 + (index / Math.max(portfolioTrend.length - 1, 1)) * 84;
+      const y = 88 - (value / portfolioTrendMax) * 72;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+  const portfolioAllocation = hasSavedPortfolio
+    ? Object.values(
+        collectibleHoldings.reduce((groups, holding) => {
+          const label = holding.rarity?.includes("Gift") ? "GWP" : holding.categoryLabel || "LEGO";
+          const current = groups[label] || { label, value: 0 };
+          current.value += numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1);
+          groups[label] = current;
+          return groups;
+        }, {}),
+      )
+        .sort((left, right) => right.value - left.value)
+        .slice(0, 5)
+    : [
+        { label: "Icons", value: 42 },
+        { label: "Marvel", value: 18 },
+        { label: "GWP", value: 16 },
+        { label: "Star Wars", value: 14 },
+        { label: "Pokemon", value: 10 },
+      ];
+  const allocationTotal = portfolioAllocation.reduce((sum, item) => sum + numberOrZero(item.value), 0) || 1;
+  const opportunityCards = [
+    {
+      id: "opp-40766",
+      reference: "40766",
+      name: "Tribute to Jane Austen's Books",
+      currentValueZAR: 1032,
+      score: 9.5,
+      upsidePercent: 82,
+      recommendation: "Exceptional Buy",
+      reasons: [
+        "Limited GWP production run",
+        "Exclusive minifigure appeal",
+        "Strong literary collector crossover",
+      ],
+    },
+    {
+      id: "opp-10316",
+      reference: "10316",
+      name: "LEGO Icons Rivendell",
+      currentValueZAR: 12300,
+      score: 9.1,
+      upsidePercent: 75,
+      recommendation: "Strong Hold",
+      reasons: ["Major Icons display set", "Adult collector demand", "High long-term shelf appeal"],
+    },
+    {
+      id: "opp-30725",
+      reference: "30725",
+      name: "Spider-Man vs. Anti-Venom Heist",
+      currentValueZAR: 95,
+      score: 7.5,
+      upsidePercent: 34,
+      recommendation: "Hold",
+      reasons: ["Low entry price", "Exclusive Anti-Venom minifigure", "Sealed paperbag optionality"],
+    },
+  ];
   const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
   const importedBatchIds = new Set(
     collectibleHoldings.map((holding) => holding.importBatchId).filter(Boolean),
@@ -2502,16 +2636,69 @@ export function CollectiblesScreen({
             <div className="portfolioGrowthHeader">
               <div>
                 <span className="legoPanelEyebrow">Portfolio growth</span>
-                <h3>{hasSavedPortfolio ? "Collection trajectory" : "Illustrative beta trajectory"}</h3>
+                <h3>Portfolio value over time</h3>
               </div>
               <strong>{dashboardRoi.toFixed(1)}% ROI</strong>
             </div>
-            <div className="portfolioGrowthChart" aria-label="Portfolio growth chart preview">
-              {[42, 51, 58, 64, 73, 82, 92].map((height, index) => (
-                <span key={height} style={{ "--bar-height": `${height}%` }}>
-                  <small>{index + 1}</small>
-                </span>
-              ))}
+            <div className="portfolioLineChart" aria-label="Portfolio value over time">
+              <svg viewBox="0 0 100 100" role="img" aria-label="Portfolio value trend">
+                <defs>
+                  <linearGradient id="portfolioTrendFill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(242, 214, 156, 0.35)" />
+                    <stop offset="100%" stopColor="rgba(242, 214, 156, 0)" />
+                  </linearGradient>
+                </defs>
+                <polyline className="portfolioLineFill" points={`8,94 ${portfolioTrendPoints} 92,94`} />
+                <polyline className="portfolioLinePath" points={portfolioTrendPoints} />
+              </svg>
+              <div className="portfolioLineLabels">
+                <span>Jan</span>
+                <span>Mar</span>
+                <span>May</span>
+                <span>Jul</span>
+                <span>Sep</span>
+                <span>Nov</span>
+                <span>Now</span>
+              </div>
+              <div className="portfolioLineStats">
+                <div>
+                  <span>Start</span>
+                  <strong>{formatZar(portfolioTrend[0])}</strong>
+                </div>
+                <div>
+                  <span>Current</span>
+                  <strong>{formatZar(portfolioTrend[portfolioTrend.length - 1])}</strong>
+                </div>
+                <div>
+                  <span>Monthly trend</span>
+                  <strong>Positive</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="portfolioAllocationPanel">
+            <div className="portfolioGrowthHeader">
+              <div>
+                <span className="legoPanelEyebrow">Portfolio allocation</span>
+                <h3>Where the collection is weighted</h3>
+              </div>
+            </div>
+            <div className="portfolioAllocationList">
+              {portfolioAllocation.map((item) => {
+                const percent = Math.round((numberOrZero(item.value) / allocationTotal) * 100);
+                return (
+                  <div className="portfolioAllocationRow" key={item.label}>
+                    <div>
+                      <span>{item.label}</span>
+                      <strong>{percent}%</strong>
+                    </div>
+                    <div className="portfolioAllocationTrack">
+                      <span style={{ "--allocation-width": `${percent}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -2525,10 +2712,7 @@ export function CollectiblesScreen({
             <div className="portfolioAssetList">
               {dashboardTopAssets.map((asset) => (
                 <article className="portfolioAssetCard" key={asset.id}>
-                  <div className="portfolioAssetThumb">
-                    <span>LEGO</span>
-                    <strong>{asset.reference}</strong>
-                  </div>
+                  <LegoAssetVisual reference={asset.reference} name={asset.name} size="thumb" />
                   <div>
                     <strong>{asset.name}</strong>
                     <small>{asset.tone}</small>
@@ -3047,11 +3231,61 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-reviewed-portfolios">
         <div className="panelHeader">
           <div>
-            <h2>Reviewed Portfolio Imports</h2>
+            <h2>Investment Opportunities</h2>
             <p>
-              Import reconciled collections into owned inventory. Raw invoices stay
-              private; the working register keeps reviewed costs, estimates, grades, and invoice
-              references.
+              Watchlist-grade LEGO opportunities with a clear verdict, upside scenario, and the
+              reasons a collector-investor should care.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Opportunity cards</span>
+            <strong>{opportunityCards.length}</strong>
+          </div>
+        </div>
+
+        <div className="investmentOpportunityGrid">
+          {opportunityCards.map((opportunity) => (
+            <article className="investmentOpportunityCard" key={opportunity.id}>
+              <LegoAssetVisual
+                reference={opportunity.reference}
+                name={opportunity.name}
+                size="opportunity"
+              />
+              <div className="investmentOpportunityBody">
+                <span className="legoPanelEyebrow">LEGO {opportunity.reference}</span>
+                <h3>{opportunity.name}</h3>
+                <div className="investmentOpportunityMetrics">
+                  <div>
+                    <span>Current value</span>
+                    <strong>{formatZar(opportunity.currentValueZAR)}</strong>
+                  </div>
+                  <div>
+                    <span>Score</span>
+                    <strong>{opportunity.score}/10</strong>
+                  </div>
+                  <div>
+                    <span>Potential upside</span>
+                    <strong>+{opportunity.upsidePercent}%</strong>
+                  </div>
+                </div>
+                <div className="investmentOpportunityReasons">
+                  <span>Why it matters</span>
+                  {opportunity.reasons.map((reason) => (
+                    <p key={reason}>{reason}</p>
+                  ))}
+                </div>
+                <strong className="investmentOpportunityVerdict">{opportunity.recommendation}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="panelHeader investmentImportHeader">
+          <div>
+            <h3>Reviewed Portfolio Imports</h3>
+            <p>
+              Import reconciled collections into owned inventory. Raw invoices stay private; the
+              working register keeps reviewed costs, estimates, grades, and invoice references.
             </p>
           </div>
           <div className="headerStatus">

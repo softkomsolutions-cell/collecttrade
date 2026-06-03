@@ -1212,7 +1212,8 @@
 
 .portfolioHeroMetrics > div,
 .portfolioGrowthPanel,
-.portfolioTopAssets {
+.portfolioTopAssets,
+.portfolioAllocationPanel {
   min-width: 0;
   padding: 16px;
   border: 1px solid rgba(214, 179, 110, 0.18);
@@ -1251,7 +1252,8 @@
 }
 
 .portfolioGrowthPanel,
-.portfolioTopAssets {
+.portfolioTopAssets,
+.portfolioAllocationPanel {
   display: grid;
   gap: 16px;
 }
@@ -1277,37 +1279,213 @@
   white-space: nowrap;
 }
 
-.portfolioGrowthChart {
+.portfolioLineChart {
+  display: grid;
+  gap: 12px;
+}
+
+.portfolioLineChart svg {
+  width: 100%;
+  height: 172px;
+  overflow: visible;
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(116, 132, 171, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(116, 132, 171, 0.05) 1px, transparent 1px),
+    rgba(8, 10, 12, 0.28);
+  background-size: 100% 25%, 14.28% 100%, auto;
+}
+
+.portfolioLineFill {
+  fill: url("#portfolioTrendFill");
+  stroke: none;
+}
+
+.portfolioLinePath {
+  fill: none;
+  stroke: #f2d69c;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  filter: drop-shadow(0 8px 14px rgba(214, 179, 110, 0.22));
+}
+
+.portfolioLineLabels,
+.portfolioLineStats {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  align-items: end;
   gap: 8px;
-  height: 150px;
-  padding: 10px 0 0;
 }
 
-.portfolioGrowthChart span {
-  position: relative;
-  display: block;
+.portfolioLineLabels span,
+.portfolioLineStats span,
+.portfolioAllocationRow span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.portfolioLineStats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.portfolioLineStats div {
+  display: grid;
+  gap: 4px;
   min-width: 0;
-  height: var(--bar-height);
-  min-height: 34px;
-  border-radius: 7px 7px 3px 3px;
-  background: linear-gradient(180deg, rgba(242, 214, 156, 0.9), rgba(214, 179, 110, 0.24));
+  padding: 10px;
+  border: 1px solid rgba(116, 132, 171, 0.12);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.3);
 }
 
-.portfolioGrowthChart small {
-  position: absolute;
-  right: 6px;
-  bottom: 5px;
-  color: rgba(11, 12, 11, 0.78);
-  font-size: 10px;
-  font-weight: 800;
+.portfolioLineStats strong,
+.portfolioAllocationRow strong {
+  color: #f5f7fb;
+}
+
+.portfolioAllocationList {
+  display: grid;
+  gap: 12px;
+}
+
+.portfolioAllocationRow {
+  display: grid;
+  gap: 8px;
+}
+
+.portfolioAllocationRow > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.portfolioAllocationTrack {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(116, 132, 171, 0.12);
+}
+
+.portfolioAllocationTrack span {
+  display: block;
+  width: var(--allocation-width);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f2d69c, rgba(0, 212, 106, 0.84));
 }
 
 .portfolioAssetList {
   display: grid;
   gap: 10px;
+}
+
+.investmentOpportunityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.investmentOpportunityCard {
+  overflow: hidden;
+  display: grid;
+  min-width: 0;
+  border: 1px solid rgba(214, 179, 110, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.investmentOpportunityBody {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.investmentOpportunityBody h3 {
+  margin: 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.investmentOpportunityMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.investmentOpportunityMetrics div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(116, 132, 171, 0.12);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.32);
+}
+
+.investmentOpportunityMetrics span,
+.investmentOpportunityReasons span {
+  color: #8da2c8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.investmentOpportunityMetrics strong {
+  color: #f5f7fb;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.investmentOpportunityReasons {
+  display: grid;
+  gap: 7px;
+}
+
+.investmentOpportunityReasons p {
+  position: relative;
+  margin: 0;
+  padding-left: 15px;
+  color: #8da2c8;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.investmentOpportunityReasons p::before {
+  position: absolute;
+  left: 0;
+  top: 0.56em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  content: "";
+  background: #f2d69c;
+}
+
+.investmentOpportunityVerdict {
+  justify-self: start;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(0, 212, 106, 0.1);
+  color: #00d46a;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.investmentImportHeader {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(214, 179, 110, 0.14);
 }
 
 .portfolioAssetCard {
@@ -1353,6 +1531,155 @@
   background:
     radial-gradient(circle at 28% 20%, rgba(242, 214, 156, 0.16), transparent 34%),
     linear-gradient(145deg, rgba(214, 179, 110, 0.12), rgba(8, 10, 12, 0.75));
+}
+
+.legoAssetVisual {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  min-width: 0;
+  border: 1px solid rgba(214, 179, 110, 0.28);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.14), transparent 24%),
+    linear-gradient(145deg, rgba(214, 179, 110, 0.16), rgba(8, 10, 12, 0.84));
+}
+
+.legoAssetVisual::before,
+.legoAssetVisual::after {
+  position: absolute;
+  content: "";
+  inset: auto -16% -22% -16%;
+  height: 48%;
+  border-radius: 50% 50% 0 0;
+  background: rgba(255, 255, 255, 0.09);
+  z-index: -1;
+}
+
+.legoAssetVisual::after {
+  inset: 18% -20% auto 44%;
+  height: 42%;
+  background: rgba(0, 0, 0, 0.18);
+  transform: rotate(-14deg);
+}
+
+.legoAssetVisual-marvel {
+  background:
+    radial-gradient(circle at 72% 25%, rgba(255, 255, 255, 0.18), transparent 18%),
+    linear-gradient(145deg, rgba(188, 34, 44, 0.7), rgba(12, 25, 58, 0.88));
+}
+
+.legoAssetVisual-library {
+  background:
+    radial-gradient(circle at 25% 20%, rgba(242, 214, 156, 0.22), transparent 24%),
+    linear-gradient(145deg, rgba(111, 73, 43, 0.72), rgba(24, 18, 13, 0.9));
+}
+
+.legoAssetVisual-valley {
+  background:
+    radial-gradient(circle at 24% 18%, rgba(242, 214, 156, 0.2), transparent 21%),
+    linear-gradient(145deg, rgba(56, 104, 76, 0.78), rgba(17, 31, 41, 0.92));
+}
+
+.legoAssetVisual-thumb {
+  width: 78px;
+  height: 64px;
+}
+
+.legoAssetVisual-hero {
+  width: 100%;
+  min-height: 210px;
+}
+
+.legoAssetVisual-opportunity {
+  min-height: 250px;
+}
+
+.legoAssetBrand {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 7px;
+  border-radius: 5px;
+  background: #d82020;
+  color: #fff6d8;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.legoAssetScene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0.8;
+}
+
+.legoAssetScene span {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.legoAssetScene span:nth-child(1) {
+  width: 34%;
+  height: 16%;
+  left: 18%;
+  top: 36%;
+}
+
+.legoAssetScene span:nth-child(2) {
+  width: 24%;
+  height: 24%;
+  right: 18%;
+  top: 30%;
+}
+
+.legoAssetScene span:nth-child(3) {
+  width: 58%;
+  height: 12%;
+  right: 12%;
+  bottom: 18%;
+}
+
+.legoAssetCopy {
+  align-self: end;
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  margin-top: auto;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.62));
+}
+
+.legoAssetCopy small,
+.legoAssetCopy span {
+  color: rgba(245, 247, 251, 0.78);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.legoAssetCopy strong {
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.legoAssetInitials {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  color: rgba(255, 255, 255, 0.22);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 42px;
+  font-weight: 800;
+  transform: translateY(-50%);
 }
 
 .portfolioAssetThumb {
@@ -1527,6 +1854,8 @@
   .collectibleInventoryCategoryGrid,
   .portfolioHeroMetrics,
   .portfolioAssetCard,
+  .investmentOpportunityGrid,
+  .investmentOpportunityMetrics,
   .legoVerdictCard,
   .legoVerdictMetrics,
   .legoValuationForm,
@@ -1576,6 +1905,10 @@
 
   .portfolioGrowthHeader {
     display: grid;
+  }
+
+  .portfolioLineStats {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -7256,6 +7589,10 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .mobileAppShell .investmentOpportunityGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .mobileAppShell .portfolioAssetCard {
     grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
   }
@@ -7264,6 +7601,8 @@
 @media (max-width: 899px) {
   .mobileAppShell .portfolioHeroMetrics,
   .mobileAppShell .portfolioAssetCard,
+  .mobileAppShell .investmentOpportunityGrid,
+  .mobileAppShell .investmentOpportunityMetrics,
   .mobileAppShell .legoVerdictCard,
   .mobileAppShell .legoVerdictMetrics {
     grid-template-columns: minmax(0, 1fr);
