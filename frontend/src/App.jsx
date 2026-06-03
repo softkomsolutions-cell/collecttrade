@@ -6,8 +6,6 @@ import {
   DEFAULT_PAGE,
   DEFAULT_SETTINGS,
   MARKET_DESKS,
-  NAV_GROUPS,
-  NAV_ITEMS,
   PAGE_SECTION_LINKS,
   RESEARCH_REPORTS,
   SCREEN_PREVIEWS,
@@ -1726,37 +1724,63 @@ export default function App() {
       action: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
     },
   ];
-  const primaryNavItems = NAV_ITEMS;
-  const utilityNavItems = [];
-  const menuPrimaryItems = [
+  const productNavItems = [
     {
-      id: "menu-valuation",
-      glyph: "VL",
-      label: "Rate a Purchase",
-      detail: "Score an item and review its future-value scenarios",
-      action: () => handleMenuSection("collectibles", "collectibles-valuation"),
+      id: "dashboard",
+      glyph: "DB",
+      label: "Dashboard",
+      detail: "Portfolio value, ROI, projections, and recent activity",
+      sectionId: "collectibles-portfolio",
+      activeService: "collection",
     },
     {
-      id: "menu-inventory",
+      id: "scan",
+      glyph: "SC",
+      label: "Scan Asset",
+      detail: "Upload a purchase image, confirm the set, and run valuation",
+      sectionId: "collectibles-valuation",
+      activeService: "valuation",
+    },
+    {
+      id: "portfolio",
+      glyph: "PF",
+      label: "Portfolio",
+      detail: "Saved LEGO holdings and investment scorecards",
+      sectionId: "collectibles-portfolio",
+      activeService: "collection",
+    },
+    {
+      id: "inventory",
       glyph: "IN",
-      label: "Owned Inventory",
-      detail: "Search holdings, cost, rarity, and current estimates",
-      action: () => handleMenuSection("collectibles", "collectibles-owned-inventory"),
+      label: "Inventory",
+      detail: "Owned register with condition, rarity, cost, and estimate",
+      sectionId: "collectibles-owned-inventory",
+      activeService: "inventory",
     },
     {
-      id: "menu-imports",
-      glyph: "IM",
-      label: "Reviewed Imports",
-      detail: "Load reviewed LEGO portfolio records",
-      action: () => handleMenuSection("collectibles", "collectibles-reviewed-portfolios"),
+      id: "market",
+      glyph: "MI",
+      label: "Market Intel",
+      detail: "LEGO reference shelf, source library, and reviewed imports",
+      sectionId: "collectibles-reviewed-portfolios",
+      activeService: "imports",
     },
     {
-      id: "menu-activity",
-      glyph: "AC",
-      label: "Investment Activity",
-      detail: "Review acquisition and sale records",
-      action: () => handleMenuSection("collectibles", "collectibles-transactions"),
+      id: "reports",
+      glyph: "RP",
+      label: "Reports",
+      detail: "Activity, documentation, and downloadable PDFs",
+      sectionId: "collectibles-transactions",
+      activeService: "activity",
     },
+  ];
+  const primaryNavItems = productNavItems.slice(0, 5);
+  const utilityNavItems = productNavItems.slice(0, 3);
+  const menuPrimaryItems = [
+    ...productNavItems.map((item) => ({
+      ...item,
+      action: () => handleMenuSection("collectibles", item.sectionId),
+    })),
   ];
   const menuDeskItems = [];
   const menuSupportItems = [
@@ -1770,8 +1794,8 @@ export default function App() {
   const menuActionItems = [
     {
       id: "menu-intro",
-      label: "Services",
-      detail: "Return to the services directory",
+      label: "App Overview",
+      detail: "Return to the product overview",
       action: handleMenuSplash,
     },
     {
@@ -2050,27 +2074,29 @@ export default function App() {
         </section>
 
         <nav className="sideNav">
-          {NAV_GROUPS.map((group) => (
-            <div className="navGroup" key={group.id}>
-              <div className="navGroupLabel">{group.label}</div>
-              {NAV_ITEMS.filter((item) => item.section.toLowerCase() === group.id).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={page === item.id ? "active" : ""}
-                  onClick={() => navigateToPage(item.id, false, activeDesk)}
-                >
-                  <div className="navButtonMain">
-                    <div className="navGlyph">{item.glyph}</div>
-                    <div className="navButtonCopy">
-                      <span>{item.label}</span>
-                      <small>{item.hint}</small>
-                    </div>
+          <div className="navGroup">
+            <div className="navGroupLabel">Collectibles Investment</div>
+            {productNavItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={
+                  page === "collectibles" && activeCollectibleService === item.activeService
+                    ? "active"
+                    : ""
+                }
+                onClick={() => handleMenuSection("collectibles", item.sectionId)}
+              >
+                <div className="navButtonMain">
+                  <div className="navGlyph">{item.glyph}</div>
+                  <div className="navButtonCopy">
+                    <span>{item.label}</span>
+                    <small>{item.detail}</small>
                   </div>
-                </button>
-              ))}
-            </div>
-          ))}
+                </div>
+              </button>
+            ))}
+          </div>
         </nav>
 
         <button
@@ -2078,12 +2104,12 @@ export default function App() {
           className="sidebarCard sidebarCardButton"
           onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
         >
-          <span>Reviewed imports</span>
-          <strong>Reviewed portfolios</strong>
+          <span>Market intelligence</span>
+          <strong>Source library</strong>
           <small>
           {shareStatus.status === "live"
             ? shareStatus.publicUrl
-            : "Load reconciled portfolios into owned inventory."}
+            : "Portfolio documents, BrickEconomy, BrickLink, and review inputs."}
           </small>
         </button>
       </aside>
@@ -2139,7 +2165,7 @@ export default function App() {
               className="ghostButton"
               onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
             >
-              Reviewed Imports
+              Market Intel
             </button>
             <button type="button" className="ghostButton" onClick={clearSession}>
               Log Out
@@ -2155,8 +2181,12 @@ export default function App() {
             <button
               key={item.id}
               type="button"
-              className={`mobileUtilityChip ${page === item.id ? "active" : ""}`}
-              onClick={() => navigateToPage(item.id, false, activeDesk)}
+              className={`mobileUtilityChip ${
+                page === "collectibles" && activeCollectibleService === item.activeService
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() => handleMenuSection("collectibles", item.sectionId)}
             >
               <span>{item.glyph}</span>
               <strong>{item.label}</strong>
@@ -2178,8 +2208,12 @@ export default function App() {
               <button
                 key={item.id}
                 type="button"
-                className={`mobileBottomNavItem ${page === item.id ? "active" : ""}`}
-                onClick={() => navigateToPage(item.id, false, activeDesk)}
+                className={`mobileBottomNavItem ${
+                  page === "collectibles" && activeCollectibleService === item.activeService
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() => handleMenuSection("collectibles", item.sectionId)}
               >
                 <span>{item.glyph}</span>
                 <strong>{item.label}</strong>
