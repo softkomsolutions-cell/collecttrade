@@ -1797,6 +1797,129 @@
   text-align: left;
 }
 
+@media (min-width: 900px) {
+  .appShell.mobileAppShell {
+    display: grid;
+    grid-template-columns: 292px minmax(0, 1fr);
+    align-items: stretch;
+    justify-content: stretch;
+    gap: 0;
+    padding: 0;
+  }
+
+  .mobileAppShell .sidebar {
+    display: flex;
+  }
+
+  .mobileAppShell .workspaceShell {
+    width: 100%;
+    min-height: 100vh;
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .mobileAppShell .mobileTitleBar,
+  .mobileAppShell .mobileUtilityRail,
+  .mobileAppShell .mobileBottomNav,
+  .mobileAppShell .mobileMenuBackdrop {
+    display: none;
+  }
+
+  .mobileAppShell .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobileAppShell .workspace {
+    padding: 28px 32px 44px;
+  }
+
+  .mobileAppShell .workspaceViewport {
+    width: min(100%, 1380px);
+    margin: 0 auto;
+    gap: 22px;
+  }
+
+  .mobileAppShell .workspaceHero {
+    grid-template-columns: minmax(0, 1.25fr) minmax(360px, 460px);
+    padding: 28px;
+  }
+
+  .mobileAppShell .workspaceHeroMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .workspaceCommandGrid,
+  .mobileAppShell .collectibleReferenceGrid,
+  .mobileAppShell .partnerTestingGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .summaryGrid,
+  .mobileAppShell .collectibleInventoryMeta,
+  .mobileAppShell .reportMiniStats {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .mobileAppShell .panelHeader,
+  .mobileAppShell .panelActions,
+  .mobileAppShell .topbarTools {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .mobileAppShell .panelHeader {
+    display: flex;
+  }
+
+  .mobileAppShell .headerStatus {
+    justify-items: end;
+    text-align: right;
+  }
+
+  .mobileAppShell .legoWorkflowRail {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .legoScanWorkspace {
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .mobileAppShell .legoValuationForm {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .legoMetricGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .legoProjectionGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .legoValuationDetailGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .legoValuationHeadline {
+    display: flex;
+  }
+
+  .mobileAppShell .legoScore {
+    min-width: 142px;
+    text-align: right;
+  }
+}
+
 .workspaceHero {
   border: 1px solid rgba(116, 132, 171, 0.16);
   border-radius: 28px;
