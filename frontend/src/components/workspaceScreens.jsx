@@ -164,7 +164,7 @@ function collectibleErrorMessage(error) {
 
 function CollectibleValuationPanel({ authToken, onSaved }) {
   const [category] = useState("lego");
-  const [identifier, setIdentifier] = useState("40766");
+  const [identifier, setIdentifier] = useState("30725");
   const [itemName, setItemName] = useState("");
   const [purchasePriceZAR, setPurchasePriceZAR] = useState("65");
   const [currentMarketValueZAR, setCurrentMarketValueZAR] = useState("");
@@ -293,7 +293,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     setStatus("");
   };
   const workflowSteps = [
-    { id: "capture", label: "Scan purchase", detail: "Attach camera or gallery image" },
+    { id: "capture", label: "Scan purchase", detail: "Camera, gallery, or barcode" },
     { id: "confirm", label: "Confirm record", detail: "Check set number and price" },
     { id: "review", label: "Review valuation", detail: "Score, market value and scenarios" },
     { id: "inventory", label: "Add to inventory", detail: "Store the asset and report" },
@@ -310,8 +310,8 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           <span className="legoPanelEyebrow">Collectibles Valuation Desk</span>
           <h2>Rate This Purchase</h2>
           <p>
-            Rate LEGO purchases with a consistent investment workflow for market value, rarity,
-            provenance, and 1, 5, and 10 year scenarios.
+            Upload a LEGO purchase, confirm the set, and get the investment verdict in one clean
+            workflow.
           </p>
         </div>
         <div className="headerStatus">
@@ -342,25 +342,40 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           {scanPreview ? (
             <img src={scanPreview} alt="Attached LEGO purchase evidence" />
           ) : (
-            <div>
-              <strong>Purchase photo</strong>
-              <span>Use a clear image of the sealed set, packaging, or receipt.</span>
+            <div className="legoScanPlaceholder">
+              <span className="legoCameraMark">CAM</span>
+              <strong>Scan Your Investment</strong>
+              <span>Drag image here or open the camera to attach the purchase evidence.</span>
+              <div className="legoScanMethods" aria-label="Available scan methods">
+                <span>Open Camera</span>
+                <span>Upload Image</span>
+                <span>Scan Barcode</span>
+              </div>
             </div>
           )}
         </div>
         <div className="legoScanCopy">
           <span className="legoPanelEyebrow">Step 1 | Purchase evidence</span>
-          <h3>{scanImage ? "Photo attached" : "Scan or upload a LEGO purchase"}</h3>
+          <h3>{scanImage ? "Purchase image attached" : "Scan Your Investment"}</h3>
           <p>
             {scanImage
-              ? `${scanImage.name} is attached to this valuation session. Confirm the set reference below before checking market evidence.`
-              : "Start with a camera image or an existing photo. For the beta, the image is attached as evidence and you confirm the detected set reference before pricing."}
+              ? `${scanImage.name} is attached. Confirm the LEGO reference and your price, then run the verdict.`
+              : "Start with the purchase photo, packaging, or receipt. The beta keeps the image as evidence while you confirm the set number before pricing."}
           </p>
           <div className="panelActions">
             <label className="primaryButton legoUploadButton">
               <input type="file" accept="image/*" capture="environment" onChange={handleScanImage} />
-              {scanImage ? "Replace Photo" : "Scan Purchase"}
+              {scanImage ? "Replace Image" : "Open Camera / Upload"}
             </label>
+            <button
+              className="ghostButton"
+              type="button"
+              onClick={() =>
+                setStatus("Barcode scanning is staged for beta. Use the LEGO set number field for now.")
+              }
+            >
+              Scan Barcode
+            </button>
             {scanImage ? (
               <button className="ghostButton" type="button" onClick={clearScanImage}>
                 Remove Photo
@@ -476,6 +491,45 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
 
       {valuation ? (
         <div className="legoValuationResult">
+          <div className="legoVerdictCard">
+            <div className={`legoVerdictImage ${scanPreview ? "hasImage" : ""}`}>
+              {scanPreview ? (
+                <img src={scanPreview} alt={`${valuation.name} purchase evidence`} />
+              ) : (
+                <div>
+                  <span>LEGO</span>
+                  <strong>{valuation.setNum || valuation.identifier}</strong>
+                </div>
+              )}
+            </div>
+            <div className="legoVerdictCopy">
+              <span className="legoPanelEyebrow">Investment verdict</span>
+              <h3>{valuation.name}</h3>
+              <div className="legoVerdictScore">
+                <strong>{valuation.score}/10</strong>
+                <span>{valuation.recommendation}</span>
+              </div>
+              <div className="legoVerdictMetrics">
+                <div>
+                  <span>Current market value</span>
+                  <strong>{formatZar(valuation.currentValueZAR)}</strong>
+                </div>
+                <div>
+                  <span>You paid</span>
+                  <strong>{formatZar(valuation.purchasePriceZAR)}</strong>
+                </div>
+                <div>
+                  <span>Current gain</span>
+                  <strong>{formatZar(valuation.profitZAR)}</strong>
+                </div>
+                <div>
+                  <span>5 year estimate</span>
+                  <strong>{formatZar(valuation.projections.fiveYears)}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="legoValuationHeadline">
             <div>
               <span>
@@ -2072,6 +2126,59 @@ export function CollectiblesScreen({
         .some((value) => String(value).toLowerCase().includes(query));
     return matchesCategory && matchesQuery;
   });
+  const hasSavedPortfolio = Boolean(collectibleHoldings.length);
+  const dashboardCost = hasSavedPortfolio
+    ? numberOrZero(collectibleSummary.purchaseValueZAR)
+    : 592887;
+  const dashboardValue = hasSavedPortfolio
+    ? numberOrZero(collectibleSummary.currentValueZAR)
+    : 873415;
+  const dashboardProfit = hasSavedPortfolio
+    ? numberOrZero(collectibleSummary.unrealizedPnlZAR)
+    : dashboardValue - dashboardCost;
+  const dashboardRoi = dashboardCost ? (dashboardProfit / dashboardCost) * 100 : 0;
+  const dashboardTopAssets = hasSavedPortfolio
+    ? [...collectibleHoldings]
+        .sort(
+          (left, right) =>
+            numberOrZero(right.currentValueZAR) * numberOrZero(right.quantity || 1) -
+            numberOrZero(left.currentValueZAR) * numberOrZero(left.quantity || 1),
+        )
+        .slice(0, 3)
+        .map((holding) => ({
+          id: holding.id,
+          name: holding.name,
+          reference: holding.identifier,
+          value: numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1),
+          score: holding.score,
+          tone: holding.recommendation || "Hold",
+        }))
+    : [
+        {
+          id: "demo-rivendell",
+          name: "LEGO Icons Rivendell",
+          reference: "10316",
+          value: 12300,
+          score: 9.1,
+          tone: "Strong Hold",
+        },
+        {
+          id: "demo-jane-austen",
+          name: "Tribute to Jane Austen's Books",
+          reference: "40766",
+          value: 1032,
+          score: 9.5,
+          tone: "Exceptional Buy",
+        },
+        {
+          id: "demo-spider-man",
+          name: "Spider-Man vs. Anti-Venom Heist",
+          reference: "30725",
+          value: 95,
+          score: 7.5,
+          tone: "Hold",
+        },
+      ];
   const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
   const importedBatchIds = new Set(
     collectibleHoldings.map((holding) => holding.importBatchId).filter(Boolean),
@@ -2366,6 +2473,75 @@ export function CollectiblesScreen({
             <strong>{collectibleSummary.itemCount || 0}</strong>
           </div>
         </div>
+
+        <section className="collectiblePortfolioDashboard">
+          <div className="portfolioHeroMetrics">
+            <div>
+              <span>Portfolio Value</span>
+              <strong>{formatZar(dashboardValue)}</strong>
+              <small>{hasSavedPortfolio ? "Saved holdings" : "Demo portfolio preview"}</small>
+            </div>
+            <div>
+              <span>Total Cost</span>
+              <strong>{formatZar(dashboardCost)}</strong>
+              <small>Purchase basis</small>
+            </div>
+            <div>
+              <span>Total Profit</span>
+              <strong>{formatZar(dashboardProfit)}</strong>
+              <small>Unrealized gain</small>
+            </div>
+            <div>
+              <span>ROI</span>
+              <strong>{dashboardRoi.toFixed(1)}%</strong>
+              <small>Current return</small>
+            </div>
+          </div>
+
+          <div className="portfolioGrowthPanel">
+            <div className="portfolioGrowthHeader">
+              <div>
+                <span className="legoPanelEyebrow">Portfolio growth</span>
+                <h3>{hasSavedPortfolio ? "Collection trajectory" : "Illustrative beta trajectory"}</h3>
+              </div>
+              <strong>{dashboardRoi.toFixed(1)}% ROI</strong>
+            </div>
+            <div className="portfolioGrowthChart" aria-label="Portfolio growth chart preview">
+              {[42, 51, 58, 64, 73, 82, 92].map((height, index) => (
+                <span key={height} style={{ "--bar-height": `${height}%` }}>
+                  <small>{index + 1}</small>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="portfolioTopAssets">
+            <div className="portfolioGrowthHeader">
+              <div>
+                <span className="legoPanelEyebrow">Top performing assets</span>
+                <h3>What deserves attention</h3>
+              </div>
+            </div>
+            <div className="portfolioAssetList">
+              {dashboardTopAssets.map((asset) => (
+                <article className="portfolioAssetCard" key={asset.id}>
+                  <div className="portfolioAssetThumb">
+                    <span>LEGO</span>
+                    <strong>{asset.reference}</strong>
+                  </div>
+                  <div>
+                    <strong>{asset.name}</strong>
+                    <small>{asset.tone}</small>
+                  </div>
+                  <div>
+                    <span>{asset.score}/10</span>
+                    <strong>{formatZar(asset.value)}</strong>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section className="summaryGrid">
           <div className="summaryCard">

@@ -1736,8 +1736,8 @@ export default function App() {
     {
       id: "scan",
       glyph: "SC",
-      label: "Scan Asset",
-      detail: "Upload a purchase image, confirm the set, and run valuation",
+      label: "Rate This Purchase",
+      detail: "Upload a photo and get the investment verdict",
       sectionId: "collectibles-valuation",
       activeService: "valuation",
     },
@@ -1760,8 +1760,8 @@ export default function App() {
     {
       id: "market",
       glyph: "MI",
-      label: "Market Intel",
-      detail: "LEGO reference shelf, source library, and reviewed imports",
+      label: "Investment Opportunities",
+      detail: "Undervalued LEGO watchlist, reviewed imports, and source library",
       sectionId: "collectibles-reviewed-portfolios",
       activeService: "imports",
     },
@@ -2104,7 +2104,7 @@ export default function App() {
           className="sidebarCard sidebarCardButton"
           onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
         >
-          <span>Market intelligence</span>
+          <span>Investment opportunities</span>
           <strong>Source library</strong>
           <small>
           {shareStatus.status === "live"
@@ -2165,7 +2165,7 @@ export default function App() {
               className="ghostButton"
               onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
             >
-              Market Intel
+              Opportunities
             </button>
             <button type="button" className="ghostButton" onClick={clearSession}>
               Log Out

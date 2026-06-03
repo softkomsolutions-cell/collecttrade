@@ -1198,9 +1198,332 @@
   line-height: 1.6;
 }
 
+.collectiblePortfolioDashboard {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.portfolioHeroMetrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.portfolioHeroMetrics > div,
+.portfolioGrowthPanel,
+.portfolioTopAssets {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(214, 179, 110, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(214, 179, 110, 0.075), transparent 62%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.portfolioHeroMetrics > div {
+  display: grid;
+  gap: 7px;
+}
+
+.portfolioHeroMetrics span,
+.portfolioAssetCard span {
+  color: #8da2c8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.portfolioHeroMetrics strong {
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.portfolioHeroMetrics small,
+.portfolioAssetCard small {
+  color: #8f9188;
+  line-height: 1.45;
+}
+
+.portfolioGrowthPanel,
+.portfolioTopAssets {
+  display: grid;
+  gap: 16px;
+}
+
+.portfolioGrowthHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+}
+
+.portfolioGrowthHeader h3 {
+  margin: 4px 0 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.portfolioGrowthHeader > strong {
+  color: #00d46a;
+  white-space: nowrap;
+}
+
+.portfolioGrowthChart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  height: 150px;
+  padding: 10px 0 0;
+}
+
+.portfolioGrowthChart span {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: var(--bar-height);
+  min-height: 34px;
+  border-radius: 7px 7px 3px 3px;
+  background: linear-gradient(180deg, rgba(242, 214, 156, 0.9), rgba(214, 179, 110, 0.24));
+}
+
+.portfolioGrowthChart small {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  color: rgba(11, 12, 11, 0.78);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.portfolioAssetList {
+  display: grid;
+  gap: 10px;
+}
+
+.portfolioAssetCard {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.32);
+}
+
+.portfolioAssetCard > div {
+  min-width: 0;
+}
+
+.portfolioAssetCard strong {
+  color: #f5f7fb;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.portfolioAssetCard > div:last-child {
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  text-align: right;
+}
+
+.portfolioAssetThumb,
+.legoVerdictImage {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(214, 179, 110, 0.24);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(242, 214, 156, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(214, 179, 110, 0.12), rgba(8, 10, 12, 0.75));
+}
+
+.portfolioAssetThumb {
+  width: 74px;
+  height: 58px;
+}
+
+.portfolioAssetThumb span,
+.legoVerdictImage span {
+  color: #f2d69c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.portfolioAssetThumb strong,
+.legoVerdictImage strong {
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+}
+
+.legoValuationPanel .panelHeader {
+  margin-bottom: 10px;
+}
+
+.legoScanWorkspace {
+  grid-template-columns: minmax(280px, 1.25fr) minmax(0, 0.75fr);
+  padding: 20px;
+  background:
+    linear-gradient(135deg, rgba(214, 179, 110, 0.09), transparent 58%),
+    rgba(8, 10, 12, 0.56);
+}
+
+.legoScanPreview {
+  min-height: 360px;
+}
+
+.legoScanPlaceholder {
+  max-width: 360px;
+}
+
+.legoCameraMark {
+  justify-self: center;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(214, 179, 110, 0.42);
+  background: rgba(214, 179, 110, 0.1);
+}
+
+.legoScanPlaceholder strong {
+  font-size: 32px;
+}
+
+.legoScanMethods {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.legoScanMethods span {
+  padding: 7px 10px;
+  border: 1px solid rgba(214, 179, 110, 0.22);
+  border-radius: 999px;
+  background: rgba(214, 179, 110, 0.06);
+  color: #dce7ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.legoVerdictCard {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.28fr);
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid rgba(0, 212, 106, 0.2);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(0, 212, 106, 0.09), transparent 62%),
+    rgba(255, 255, 255, 0.025);
+}
+
+.legoVerdictImage {
+  min-height: 210px;
+}
+
+.legoVerdictImage.hasImage {
+  padding: 0;
+}
+
+.legoVerdictImage img {
+  width: 100%;
+  height: 100%;
+  min-height: 210px;
+  object-fit: cover;
+}
+
+.legoVerdictCopy {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.legoVerdictCopy h3 {
+  margin: 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.legoVerdictScore {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.legoVerdictScore strong {
+  color: #00d46a;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.legoVerdictScore span {
+  color: #f2d69c;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.legoVerdictMetrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.legoVerdictMetrics div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(116, 132, 171, 0.12);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.32);
+}
+
+.legoVerdictMetrics span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.legoVerdictMetrics strong {
+  color: #f5f7fb;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
   .collectibleInventoryToolbar,
   .collectibleInventoryCategoryGrid,
+  .portfolioHeroMetrics,
+  .portfolioAssetCard,
+  .legoVerdictCard,
+  .legoVerdictMetrics,
   .legoValuationForm,
   .legoMetricGrid,
   .legoValuationDetailGrid {
@@ -1234,7 +1557,20 @@
   }
 
   .legoScanPreview {
-    min-height: 180px;
+    min-height: 260px;
+  }
+
+  .legoScanPlaceholder strong {
+    font-size: 28px;
+  }
+
+  .portfolioAssetCard > div:last-child {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .portfolioGrowthHeader {
+    display: grid;
   }
 }
 
@@ -6889,4 +7225,51 @@
   color: var(--ct-muted);
   font-size: 12px;
   line-height: 1.55;
+}
+
+/* Final collectibles beta layout pass: web gets the investment desk, mobile gets one clean stack. */
+@media (min-width: 900px) {
+  .mobileAppShell .legoScanWorkspace {
+    grid-template-columns: minmax(320px, 1.25fr) minmax(280px, 0.75fr);
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .mobileAppShell .legoScanPreview {
+    min-height: 380px;
+  }
+
+  .mobileAppShell .legoVerdictCard {
+    grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+  }
+
+  .mobileAppShell .legoVerdictMetrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .portfolioHeroMetrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .portfolioAssetCard {
+    grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
+  }
+}
+
+@media (max-width: 899px) {
+  .mobileAppShell .portfolioHeroMetrics,
+  .mobileAppShell .portfolioAssetCard,
+  .mobileAppShell .legoVerdictCard,
+  .mobileAppShell .legoVerdictMetrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobileAppShell .legoScanPreview {
+    min-height: 260px;
+  }
+
+  .mobileAppShell .portfolioAssetCard > div:last-child {
+    justify-items: start;
+    text-align: left;
+  }
 }
