@@ -2490,9 +2490,9 @@ export function CollectiblesScreen({
     },
     {
       id: "reviewed-portfolios",
-      label: "Reviewed Imports",
+      label: "Investment Opportunities",
       meta: `${reviewedPortfolios.length}`,
-      detail: "Load reviewed portfolios into owned inventory with reconciled invoice references.",
+      detail: "Review opportunity cards, upside scenarios, and source-backed reasons to act.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
     },
     {
@@ -2544,9 +2544,9 @@ export function CollectiblesScreen({
       </div>
       <WorkspaceHero
         tone="collectibles"
-        eyebrow="LEGO Investment Register"
-        title="LEGO Collection"
-        description="Rate purchases, document evidence, and track LEGO sets, minifigures, sealed items, reviewed imports, and investment activity."
+        eyebrow="Trusted Collectible Investment Intelligence"
+        title="Is this collectible a good investment?"
+        description="Upload a photo, confirm the LEGO set, get a valuation, review the investment score, forecast future value, and save the asset to your portfolio."
         statusLabel="Inventory refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[

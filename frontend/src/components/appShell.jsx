@@ -154,7 +154,7 @@ export function BootSplash() {
       <div className="bootSplashPanel">
         <div className="bootSplashMark">CT</div>
         <div className="bootSplashWordmark">COLLECTRADE</div>
-        <div className="bootSplashTag">Collectibles | Valuation | Portfolio</div>
+        <div className="bootSplashTag">AI-powered investment intelligence for collectibles</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
           <span />
@@ -178,7 +178,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       title: "Rate a Purchase",
       tag: "Valuation",
       tone: "collectibles",
-      detail: "Score the opportunity and review the 1, 5, and 10 year scenarios.",
+      detail: "Upload, identify, value, score, forecast, and save the asset in under 30 seconds.",
       selection: {
         page: "collectibles",
         desk: launchDesk,
@@ -220,10 +220,10 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       id: "imports",
       ordinal: "04",
       glyph: "IM",
-      title: "Reviewed Imports",
-      tag: "Reviewed portfolios",
+      title: "Investment Opportunities",
+      tag: "AI watchlist",
       tone: "home",
-      detail: "Load reconciled LEGO portfolio records into the collection.",
+      detail: "Review below-market ideas, upside scenarios, and the reasons to act.",
       selection: {
         page: "collectibles",
         desk: launchDesk,
@@ -284,9 +284,9 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       id: "collectibles",
       glyph: "CL",
       eyebrow: "Collectibles first",
-      title: "Rate the purchase before you buy.",
+      title: "Know if the collectible is a good investment.",
       description:
-        "Use one disciplined workflow for LEGO sets, minifigures, sealed items, and reviewed portfolio positions.",
+        "Upload a photo, identify the asset, get a valuation, score the investment, and save it to your portfolio.",
       accent: "collectibles",
       bars: [48, 82, 62, 92],
     },
@@ -625,18 +625,18 @@ export function LandingShell({ initialLaunch, onContinue }) {
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
             <div className="authBrand">COLLECTRADE</div>
-            <div className="splashEyebrow">COLLECTIBLES INVESTMENT WORKSPACE</div>
-            <h1>One focused workspace for collectible valuation, evidence, and portfolio tracking.</h1>
+            <div className="splashEyebrow">AI-POWERED INVESTMENT INTELLIGENCE FOR COLLECTIBLES</div>
+            <h1>Know what your collection is worth. Know what to buy next.</h1>
             <p className="authBlurb">
-              Collecttrade helps you rate purchases, document provenance, compare value, and track a
-              collectibles portfolio in one focused workspace.
+              Collecttrade helps collectors upload, identify, value, score, forecast, and track
+              collectible investments in one trusted workspace.
             </p>
 
             <div className="landingValueGrid">
               <div className="landingValueCard">
                 <span>Purchase Analysis</span>
-                <strong>Rate the opportunity</strong>
-                <small>Review price paid, market estimate, gain multiple, and 1, 5, and 10 year scenarios.</small>
+                <strong>Instant investment verdict</strong>
+                <small>Review price paid, market value, gain, risk, score, and 1, 5, and 10 year scenarios.</small>
               </div>
               <div className="landingValueCard">
                 <span>Evidence</span>
@@ -645,7 +645,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
               </div>
               <div className="landingValueCard">
                 <span>Portfolio</span>
-                <strong>Collectibles book</strong>
+                <strong>Cross-asset intelligence</strong>
                 <small>Track inventory positions and keep your next decision grounded in the wider collection.</small>
               </div>
             </div>
@@ -653,7 +653,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
             <div className="landingFeatureRow">
               <div className="landingFeatureChip">
                 <span>LEGO collection</span>
-                <strong>Sets, minifigures, sealed items</strong>
+                <strong>Beta focus: LEGO and Pokémon next</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Investment record</span>

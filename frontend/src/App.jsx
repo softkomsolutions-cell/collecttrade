@@ -2052,7 +2052,7 @@ export default function App() {
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
               <div className="brandWordmark">COLLECTRADE</div>
-              <div className="brandSub">Private collection intelligence</div>
+              <div className="brandSub">AI investment intelligence for collectibles</div>
             </button>
           </div>
         </div>
