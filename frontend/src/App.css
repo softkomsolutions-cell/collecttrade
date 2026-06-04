@@ -953,6 +953,86 @@
   background: rgba(214, 179, 110, 0.12);
 }
 
+.partnerBetaPrompt {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+  gap: 16px;
+  align-items: stretch;
+  padding: 18px;
+  border: 1px solid rgba(214, 179, 110, 0.26);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(214, 179, 110, 0.14), transparent 30%),
+    linear-gradient(135deg, rgba(214, 179, 110, 0.08), rgba(0, 212, 106, 0.035)),
+    rgba(8, 10, 12, 0.44);
+}
+
+.partnerBetaCopy,
+.partnerBetaStep {
+  min-width: 0;
+}
+
+.partnerBetaCopy {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.partnerBetaCopy h3 {
+  margin: 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.partnerBetaCopy p {
+  max-width: 620px;
+  margin: 0;
+  color: #8da2c8;
+  line-height: 1.65;
+}
+
+.partnerBetaChecklist {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.partnerBetaStep {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.partnerBetaStep strong {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(214, 179, 110, 0.42);
+  border-radius: 50%;
+  color: #f2d69c;
+  font-size: 11px;
+}
+
+.partnerBetaStep span {
+  color: #f5f7fb;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.partnerBetaStep small {
+  color: #8da2c8;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .legoScanWorkspace {
   display: grid;
   grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
@@ -2043,6 +2123,7 @@
   .assetDetailMetrics,
   .assetDetailGrid,
   .assetForecastBars,
+  .partnerBetaPrompt,
   .legoVerdictCard,
   .legoVerdictMetrics,
   .legoValuationForm,
@@ -2061,6 +2142,7 @@
   }
 
   .legoWorkflowRail,
+  .partnerBetaChecklist,
   .legoScanWorkspace {
     grid-template-columns: 1fr;
   }
@@ -2071,6 +2153,20 @@
 
   .legoWorkflowStep {
     padding: 9px 10px;
+  }
+
+  .partnerBetaPrompt {
+    padding: 14px;
+  }
+
+  .partnerBetaCopy h3 {
+    font-size: 21px;
+  }
+
+  .partnerBetaStep {
+    grid-template-columns: 32px minmax(0, 0.35fr) minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: center;
   }
 
   .legoScanWorkspace {
@@ -7621,6 +7717,8 @@
 .mobileAppShell .collectiblesServicePage .panelHeader > *,
 .mobileAppShell .collectiblesServicePage .headerStatus,
 .mobileAppShell .legoWorkflowStep,
+.mobileAppShell .partnerBetaPrompt,
+.mobileAppShell .partnerBetaStep,
 .mobileAppShell .legoScanCopy,
 .mobileAppShell .legoFormIntro,
 .mobileAppShell .legoValuationForm label {
@@ -7636,6 +7734,8 @@
 }
 
 .mobileAppShell .legoWorkflowRail,
+.mobileAppShell .partnerBetaPrompt,
+.mobileAppShell .partnerBetaChecklist,
 .mobileAppShell .legoScanWorkspace,
 .mobileAppShell .legoValuationForm,
 .mobileAppShell .legoMetricGrid,
@@ -7652,8 +7752,21 @@
   padding: 10px;
 }
 
+.mobileAppShell .partnerBetaPrompt {
+  padding: 14px;
+}
+
+.mobileAppShell .partnerBetaStep {
+  grid-template-columns: 32px minmax(0, 0.35fr) minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: center;
+}
+
 .mobileAppShell .legoWorkflowStep span,
 .mobileAppShell .legoWorkflowStep small,
+.mobileAppShell .partnerBetaStep span,
+.mobileAppShell .partnerBetaStep small,
+.mobileAppShell .partnerBetaCopy p,
 .mobileAppShell .legoScanCopy p,
 .mobileAppShell .legoFormIntro p {
   overflow-wrap: normal;

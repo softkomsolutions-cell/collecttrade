@@ -395,6 +395,32 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
         ))}
       </div>
 
+      <section className="partnerBetaPrompt" aria-label="Partner beta test guidance">
+        <div className="partnerBetaCopy">
+          <span className="legoPanelEyebrow">Partner beta test pass</span>
+          <h3>Test the 30-second investment workflow</h3>
+          <p>
+            Use LEGO 30725 at R65, run the valuation, save it to inventory, then open the asset
+            detail view. The most useful feedback is whether the verdict feels trustworthy and
+            what evidence would make the score easier to act on.
+          </p>
+        </div>
+        <div className="partnerBetaChecklist">
+          {[
+            ["01", "Rate", "Scan or upload the purchase image"],
+            ["02", "Verdict", "Review score, value, gain, and forecasts"],
+            ["03", "Save", "Add the item to inventory"],
+            ["04", "Trust", "Check source trail and missing evidence"],
+          ].map(([step, label, detail]) => (
+            <div className="partnerBetaStep" key={step}>
+              <strong>{step}</strong>
+              <span>{label}</span>
+              <small>{detail}</small>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="legoScanWorkspace">
         <div className={`legoScanPreview ${scanPreview ? "hasImage" : ""}`}>
           {scanPreview ? (
