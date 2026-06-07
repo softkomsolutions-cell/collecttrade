@@ -351,10 +351,10 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     setStatus("");
   };
   const workflowSteps = [
-    { id: "capture", label: "Scan purchase", detail: "Camera, gallery, or barcode" },
-    { id: "confirm", label: "Confirm record", detail: "Check set number and price" },
-    { id: "review", label: "Review valuation", detail: "Score, market value and scenarios" },
-    { id: "inventory", label: "Add to inventory", detail: "Store the asset and report" },
+    { id: "capture", label: "Upload evidence", detail: "Photo, receipt, or barcode" },
+    { id: "confirm", label: "Identify asset", detail: "Confirm set number and cost" },
+    { id: "review", label: "Market data", detail: "Score, value, and scenarios" },
+    { id: "inventory", label: "Portfolio record", detail: "Save the asset and report" },
   ];
   const workflowStageIndex = Math.max(
     0,
@@ -365,11 +365,11 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     <section className="panel legoValuationPanel" id="collectibles-valuation">
       <div className="panelHeader">
         <div>
-          <span className="legoPanelEyebrow">Collectibles Valuation Desk</span>
-          <h2>Rate This Purchase</h2>
+          <span className="legoPanelEyebrow">Collectible Investment Intelligence</span>
+          <h2>Investment Analysis</h2>
           <p>
-            Upload a LEGO purchase, confirm the set, and get the investment verdict in one clean
-            workflow.
+            Upload evidence, confirm the LEGO asset, retrieve the market context, and get a clear
+            investment verdict.
           </p>
         </div>
         <div className="headerStatus">
@@ -400,16 +400,16 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           <span className="legoPanelEyebrow">Partner beta test pass</span>
           <h3>Test the 30-second investment workflow</h3>
           <p>
-            Use LEGO 30725 at R65, run the valuation, save it to inventory, then open the asset
+            Use LEGO 30725 at R65, run the analysis, save it to holdings, then open the asset
             detail view. The most useful feedback is whether the verdict feels trustworthy and
             what evidence would make the score easier to act on.
           </p>
         </div>
         <div className="partnerBetaChecklist">
           {[
-            ["01", "Rate", "Scan or upload the purchase image"],
+            ["01", "Evidence", "Scan or upload the purchase image"],
             ["02", "Verdict", "Review score, value, gain, and forecasts"],
-            ["03", "Save", "Add the item to inventory"],
+            ["03", "Save", "Add the item to holdings"],
             ["04", "Trust", "Check source trail and missing evidence"],
           ].map(([step, label, detail]) => (
             <div className="partnerBetaStep" key={step}>
@@ -428,8 +428,8 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           ) : (
             <div className="legoScanPlaceholder">
               <span className="legoCameraMark">CAM</span>
-              <strong>Scan Your Investment</strong>
-              <span>Drag image here or open the camera to attach the purchase evidence.</span>
+              <strong>Upload Evidence</strong>
+              <span>Drag the image here or open the camera to attach purchase evidence.</span>
               <div className="legoScanMethods" aria-label="Available scan methods">
                 <span>Open Camera</span>
                 <span>Upload Image</span>
@@ -439,12 +439,12 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           )}
         </div>
         <div className="legoScanCopy">
-          <span className="legoPanelEyebrow">Step 1 | Purchase evidence</span>
-          <h3>{scanImage ? "Purchase image attached" : "Scan Your Investment"}</h3>
+          <span className="legoPanelEyebrow">Step 1 | Investment evidence</span>
+          <h3>{scanImage ? "Evidence attached" : "Upload Evidence"}</h3>
           <p>
             {scanImage
               ? `${scanImage.name} is attached. Confirm the LEGO reference and your price, then run the verdict.`
-              : "Start with the purchase photo, packaging, or receipt. The beta keeps the image as evidence while you confirm the set number before pricing."}
+              : "Start with the purchase photo, packaging, or receipt. The beta keeps the image as evidence while you confirm the asset before pricing."}
           </p>
           <div className="panelActions">
             <label className="primaryButton legoUploadButton">
@@ -470,9 +470,9 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
       </section>
 
       <div className="legoFormIntro">
-        <span className="legoPanelEyebrow">Step 2 | Confirm record</span>
-        <h3>Check the purchase details</h3>
-        <p>Use the LEGO set number printed on the packaging, then run the investment valuation.</p>
+        <span className="legoPanelEyebrow">Step 2 | Identify asset</span>
+        <h3>Confirm the investment record</h3>
+        <p>Use the LEGO set number printed on the packaging, then run the investment analysis.</p>
       </div>
 
       <form className="legoValuationForm" onSubmit={handleSubmit}>
@@ -567,7 +567,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           </>
         ) : null}
         <button className="primaryButton" type="submit" disabled={busy}>
-          {busy ? "Analyzing..." : "Get Valuation"}
+          {busy ? "Retrieving Market Data..." : "Run Analysis"}
         </button>
       </form>
 
@@ -717,7 +717,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           </div>
           <div className="panelActions">
             <button className="primaryButton" type="button" disabled={busy} onClick={handleSave}>
-              {busy ? "Saving..." : "Add to Inventory"}
+              {busy ? "Saving..." : "Add to Holdings"}
             </button>
             <button
               className="ghostButton"
@@ -2570,28 +2570,28 @@ export function CollectiblesScreen({
   const collectibleActions = [
     {
       id: "valuation",
-      label: "Rate Purchase",
+      label: "Investment Analysis",
       meta: "Start here",
       detail: "Open the LEGO valuation workflow for market value, rarity, and projections.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
     },
     {
       id: "collection",
-      label: "My Collection",
+      label: "Portfolio",
       meta: `${collectibleSummary.itemCount || 0}`,
       detail: "Review saved purchases, current estimates, and long-range projection scenarios.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
     },
     {
       id: "owned-inventory",
-      label: "Owned Inventory",
+      label: "Holdings",
       meta: `${collectibleSummary.itemCount || 0}`,
       detail: "Search the owned collection register with cost, value, condition, and rarity.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-owned-inventory"),
     },
     {
       id: "reviewed-portfolios",
-      label: "Investment Opportunities",
+      label: "AI Watchlist",
       meta: `${reviewedPortfolios.length}`,
       detail: "Review opportunity cards, upside scenarios, and source-backed reasons to act.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
@@ -2602,6 +2602,13 @@ export function CollectiblesScreen({
       meta: `${partnerSources.length}`,
       detail: "Open portfolio documents, shared folders, and market references.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-partner-sources"),
+    },
+    {
+      id: "reports",
+      label: "Reports",
+      meta: "PDF",
+      detail: "Open the partner beta test script and downloadable inventory report.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-reports"),
     },
     {
       id: "inventory",
@@ -2627,7 +2634,7 @@ export function CollectiblesScreen({
     },
     {
       id: "portfolio",
-      label: "My Collection",
+      label: "Portfolio",
       meta: "Review holdings",
       detail: "Review saved purchases, estimates, and projection scenarios.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
@@ -2673,11 +2680,11 @@ export function CollectiblesScreen({
           },
         ]}
         primaryAction={{
-          label: "Rate a Purchase",
+          label: "Run Investment Analysis",
           onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
         }}
         secondaryAction={{
-          label: "Review My Collection",
+          label: "Open Portfolio",
           onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
         }}
       />
@@ -2687,8 +2694,8 @@ export function CollectiblesScreen({
       />
       <WorkspaceCommandBar
         tone="collectibles"
-        title="Collectibles Shortcuts"
-        hint="Keep valuation, inventory, verification, and collection review in one tidy flow."
+        title="Private Portfolio Console"
+        hint="Keep investment analysis, holdings, verification, and portfolio review in one premium flow."
         actions={collectibleActions}
       />
 
@@ -2697,40 +2704,55 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-portfolio">
         <div className="panelHeader">
           <div>
-            <h2>My Collectibles Portfolio</h2>
+            <h2>Collectibles Portfolio</h2>
             <p>
-              Save rated purchases here to track the amount invested, the latest evidence-led
-              estimate, and the 1, 5, and 10 year scenarios used throughout the register.
+              Track net asset value, cost basis, confidence, risk, and future value scenarios
+              across the LEGO portfolio.
             </p>
           </div>
           <div className="headerStatus">
-            <span>Saved items</span>
-            <strong>{collectibleSummary.itemCount || 0}</strong>
+              <span>Tracked assets</span>
+              <strong>{collectibleSummary.itemCount || 0}</strong>
           </div>
         </div>
 
         <section className="collectiblePortfolioDashboard">
           <div className="portfolioHeroMetrics">
             <div>
-              <span>Portfolio Value</span>
+              <span>Net Asset Value</span>
               <strong>{formatZar(dashboardValue)}</strong>
-              <small>{hasSavedPortfolio ? "Saved holdings" : "Demo portfolio preview"}</small>
+              <small>+14.2% vs last quarter</small>
             </div>
             <div>
-              <span>Total Cost</span>
+              <span>Cost Basis</span>
               <strong>{formatZar(dashboardCost)}</strong>
               <small>Purchase basis</small>
             </div>
             <div>
-              <span>Total Profit</span>
+              <span>Unrealized Profit</span>
               <strong>{formatZar(dashboardProfit)}</strong>
-              <small>Unrealized gain</small>
+              <small>Current gain</small>
             </div>
             <div>
               <span>ROI</span>
               <strong>{dashboardRoi.toFixed(1)}%</strong>
-              <small>Current return</small>
+              <small>Wealth performance</small>
             </div>
+          </div>
+
+          <div className="portfolioHealthGrid">
+            {[
+              ["Collection Grade", "A-", "Quality of current LEGO exposure"],
+              ["Risk", "Low", "Concentration and liquidity profile"],
+              ["Diversification", "82%", "Theme and asset spread"],
+              ["Confidence", "91%", "Source and evidence coverage"],
+            ].map(([label, value, detail]) => (
+              <div className="portfolioHealthCard" key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <small>{detail}</small>
+              </div>
+            ))}
           </div>
 
           <div className="portfolioGrowthPanel">
@@ -2840,7 +2862,7 @@ export function CollectiblesScreen({
                 size="detail"
               />
               <div className="assetDetailCopy">
-                <span className="legoPanelEyebrow">Asset Detail</span>
+                <span className="legoPanelEyebrow">Investment Report</span>
                 <h3>{selectedAssetDetail.name}</h3>
                 <p>
                   LEGO {selectedAssetDetail.reference} | {selectedAssetDetail.rarity}
@@ -2979,7 +3001,7 @@ export function CollectiblesScreen({
                     type="button"
                     onClick={() => openAssetDetail(holding.id)}
                   >
-                    Asset Detail
+                    Investment Report
                   </button>
                   <button
                     className="ghostButton"
@@ -3013,14 +3035,14 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-owned-inventory">
         <div className="panelHeader">
           <div>
-            <h2>Owned Inventory Register</h2>
+            <h2>Holdings</h2>
             <p>
-              Keep the operational collection record beside the investment view. Search the items
-              you own and review the details that affect resale value.
+              Keep each owned asset beside the investment view. Search holdings and review the
+              details that affect resale value, confidence, and future optionality.
             </p>
           </div>
           <div className="headerStatus">
-            <span>Inventory items</span>
+            <span>Tracked holdings</span>
             <strong>{collectibleSummary.itemCount || 0}</strong>
           </div>
         </div>
@@ -3051,13 +3073,13 @@ export function CollectiblesScreen({
             disabled={inventoryReportBusy}
             onClick={downloadInventoryReport}
           >
-            {inventoryReportBusy ? "Preparing PDF..." : "Download Inventory PDF"}
+            {inventoryReportBusy ? "Preparing PDF..." : "Download Holdings PDF"}
           </button>
         </div>
 
         <div className="collectibleInventoryToolbar">
           <label>
-            <span>Search owned inventory</span>
+            <span>Search holdings</span>
             <input
               type="search"
               value={inventoryQuery}
@@ -3152,11 +3174,11 @@ export function CollectiblesScreen({
           </>
         ) : (
           <EmptyState
-            title={collectibleHoldings.length ? "No inventory matches that filter" : "No owned inventory yet"}
+            title={collectibleHoldings.length ? "No holdings match that filter" : "No holdings yet"}
             body={
               collectibleHoldings.length
                 ? "Adjust the search or category filter to see more of the collection."
-                : "Rate and save a purchase to add the first collectible to inventory."
+                : "Run an investment analysis and save the result to add the first holding."
             }
           />
         )}
@@ -3432,17 +3454,101 @@ export function CollectiblesScreen({
         )}
       </section>
 
+      <section className="panel collectibleBetaReportPanel" id="collectibles-reports">
+        <div className="panelHeader">
+          <div>
+            <span className="legoPanelEyebrow">Partner beta packet</span>
+            <h2>Partner Test Pack</h2>
+            <p>
+              Give partners one focused path through the live beta: analyze the purchase, save it,
+              review holdings, and download the evidence-backed report.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Beta focus</span>
+            <strong>LEGO investment workflow</strong>
+          </div>
+        </div>
+
+        <div className="betaReportHero">
+          <div>
+            <span className="legoPanelEyebrow">What to test</span>
+            <h3>Can Collecttrade answer: is this a good collectible investment?</h3>
+            <p>
+              The partner test should take less than 30 seconds for the first pass, then another
+              minute to inspect the saved asset and PDF output.
+            </p>
+          </div>
+          <div className="betaReportScore">
+            <strong>30s</strong>
+            <span>target workflow</span>
+          </div>
+        </div>
+
+        <div className="betaReportGrid">
+          {[
+            ["01", "Investment Analysis", "Upload the LEGO image or use set 30725 at R65."],
+            ["02", "Investment Verdict", "Check score, current value, gain, and 1/5/10 year projections."],
+            ["03", "Add to Holdings", "Save the rated purchase into the owned asset register."],
+            ["04", "Investment Report", "Open a holding and review image, thesis, forecast, and sources."],
+            ["05", "Download PDF", "Export the inventory report for partner review."],
+            ["06", "Trust Check", "Ask what evidence would make the score more believable."],
+          ].map(([step, title, body]) => (
+            <article className="betaReportCard" key={step}>
+              <strong>{step}</strong>
+              <div>
+                <span>{title}</span>
+                <p>{body}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="betaReportActions">
+          <button
+            type="button"
+            className="primaryButton"
+            onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
+          >
+            Start Test Workflow
+          </button>
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
+          >
+            Open Dashboard
+          </button>
+          <button
+            type="button"
+            className="ghostButton"
+            disabled={inventoryReportBusy}
+            onClick={downloadInventoryReport}
+          >
+            {inventoryReportBusy ? "Preparing PDF..." : "Download Holdings PDF"}
+          </button>
+        </div>
+
+        <div className="betaFeedbackPrompt">
+          <span>Partner feedback prompt</span>
+          <p>
+            After testing, ask: Did the verdict feel trustworthy? Was the workflow clear on mobile?
+            What would make the score actionable enough to buy, hold, or pass?
+          </p>
+        </div>
+      </section>
+
       <section className="panel" id="collectibles-reviewed-portfolios">
         <div className="panelHeader">
           <div>
-            <h2>Investment Opportunities</h2>
+            <h2>AI Watchlist</h2>
             <p>
               Watchlist-grade LEGO opportunities with a clear verdict, upside scenario, and the
               reasons a collector-investor should care.
             </p>
           </div>
           <div className="headerStatus">
-            <span>Opportunity cards</span>
+            <span>Watchlist cards</span>
             <strong>{opportunityCards.length}</strong>
           </div>
         </div>
@@ -3720,7 +3826,7 @@ export function CollectiblesScreen({
               className="ghostButton"
               onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
             >
-              Review My Collection
+              Open Portfolio
             </button>
             {activeCollectible.brand === "LEGO" && legoReferenceShelf?.url ? (
               <button

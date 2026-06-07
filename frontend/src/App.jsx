@@ -150,6 +150,7 @@ const COLLECTIBLE_SERVICE_BY_SECTION = {
   "collectibles-documentation": "documentation",
   "collectibles-digital-registry": "digital-registry",
   "collectibles-transactions": "activity",
+  "collectibles-reports": "reports",
   "collectibles-reviewed-portfolios": "imports",
   "collectibles-partner-sources": "sources",
   "collectibles-focus": "research",
@@ -1711,7 +1712,7 @@ export default function App() {
     },
     {
       id: "value",
-      label: "Collection value",
+      label: "Net Asset Value",
       value: `R${Number(collectibleSummary.currentValueZAR || 0).toLocaleString("en-ZA")}`,
       detail: "Current reviewed estimate",
       action: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
@@ -1736,8 +1737,8 @@ export default function App() {
     {
       id: "scan",
       glyph: "SC",
-      label: "Rate This Purchase",
-      detail: "Upload a photo and get the investment verdict",
+      label: "Investment Analysis",
+      detail: "Upload evidence and get the investment verdict",
       sectionId: "collectibles-valuation",
       activeService: "valuation",
     },
@@ -1752,15 +1753,15 @@ export default function App() {
     {
       id: "inventory",
       glyph: "IN",
-      label: "Inventory",
-      detail: "Owned register with condition, rarity, cost, and estimate",
+      label: "Holdings",
+      detail: "Owned assets with condition, rarity, cost, and estimate",
       sectionId: "collectibles-owned-inventory",
       activeService: "inventory",
     },
     {
       id: "market",
       glyph: "MI",
-      label: "Investment Opportunities",
+      label: "AI Watchlist",
       detail: "Undervalued LEGO watchlist, reviewed imports, and source library",
       sectionId: "collectibles-reviewed-portfolios",
       activeService: "imports",
@@ -1769,9 +1770,9 @@ export default function App() {
       id: "reports",
       glyph: "RP",
       label: "Reports",
-      detail: "Activity, documentation, and downloadable PDFs",
-      sectionId: "collectibles-transactions",
-      activeService: "activity",
+      detail: "Partner test pack, PDF downloads, and readiness checklist",
+      sectionId: "collectibles-reports",
+      activeService: "reports",
     },
   ];
   const primaryNavItems = productNavItems.slice(0, 5);
@@ -2159,7 +2160,7 @@ export default function App() {
           </div>
 
           <div className="topbarTools">
-            <div className="livePill ready">Collection Register</div>
+            <div className="livePill ready">Asset Registry</div>
             <button
               type="button"
               className="ghostButton"
