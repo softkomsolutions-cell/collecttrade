@@ -3198,6 +3198,44 @@ export function CollectiblesScreen({
           </div>
         </div>
 
+        <section className="workflowHeroCard workflowHeroCard-holdings" aria-label="Holdings workflow overview">
+          <div>
+            <span className="legoPanelEyebrow">Asset register</span>
+            <h3>Every rated purchase becomes a managed holding.</h3>
+            <p>
+              Keep cost, current estimate, condition, rarity, evidence, and forecast in one
+              investment record.
+            </p>
+          </div>
+          <div className="workflowHeroMetrics">
+            <div>
+              <span>Holdings</span>
+              <strong>{collectibleSummary.itemCount || 0}</strong>
+            </div>
+            <div>
+              <span>Current value</span>
+              <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
+            </div>
+          </div>
+          <div className="workflowHeroActions">
+            <button
+              className="primaryButton"
+              type="button"
+              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
+            >
+              Rate New Purchase
+            </button>
+            <button
+              className="ghostButton"
+              type="button"
+              disabled={inventoryReportBusy}
+              onClick={downloadInventoryReport}
+            >
+              {inventoryReportBusy ? "Preparing PDF..." : "Download PDF"}
+            </button>
+          </div>
+        </section>
+
         <section className="summaryGrid collectibleInventorySummary">
           <div className="summaryCard">
             <span>Cost basis</span>
@@ -3621,6 +3659,44 @@ export function CollectiblesScreen({
           </div>
         </div>
 
+        <section className="workflowHeroCard workflowHeroCard-report" aria-label="Partner workflow overview">
+          <div>
+            <span className="legoPanelEyebrow">Partner-ready beta flow</span>
+            <h3>One path from image to investment report.</h3>
+            <p>
+              Analyze a purchase, review the verdict, save it to holdings, then export a report
+              partners can judge quickly.
+            </p>
+          </div>
+          <div className="workflowHeroMetrics">
+            <div>
+              <span>Target</span>
+              <strong>30s</strong>
+            </div>
+            <div>
+              <span>Output</span>
+              <strong>PDF</strong>
+            </div>
+          </div>
+          <div className="workflowHeroActions">
+            <button
+              type="button"
+              className="primaryButton"
+              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
+            >
+              Start Workflow
+            </button>
+            <button
+              type="button"
+              className="ghostButton"
+              disabled={inventoryReportBusy}
+              onClick={downloadInventoryReport}
+            >
+              {inventoryReportBusy ? "Preparing..." : "Export Report"}
+            </button>
+          </div>
+        </section>
+
         <div className="betaReportHero">
           <div>
             <span className="legoPanelEyebrow">What to test</span>
@@ -3703,6 +3779,43 @@ export function CollectiblesScreen({
             <strong>{opportunityCards.length}</strong>
           </div>
         </div>
+
+        <section className="workflowHeroCard workflowHeroCard-watchlist" aria-label="Investment opportunities overview">
+          <div>
+            <span className="legoPanelEyebrow">AI watchlist</span>
+            <h3>Find collectible opportunities worth reviewing.</h3>
+            <p>
+              See score, current value, upside, and why the asset may deserve attention before you
+              buy.
+            </p>
+          </div>
+          <div className="workflowHeroMetrics">
+            <div>
+              <span>Ideas</span>
+              <strong>{opportunityCards.length}</strong>
+            </div>
+            <div>
+              <span>Top score</span>
+              <strong>{Math.max(...opportunityCards.map((item) => item.score || 0), 0).toFixed(1)}</strong>
+            </div>
+          </div>
+          <div className="workflowHeroActions">
+            <button
+              className="primaryButton"
+              type="button"
+              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
+            >
+              Rate Purchase
+            </button>
+            <button
+              className="ghostButton"
+              type="button"
+              onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
+            >
+              Portfolio Home
+            </button>
+          </div>
+        </section>
 
         <div className="investmentOpportunityGrid">
           {opportunityCards.map((opportunity) => (
