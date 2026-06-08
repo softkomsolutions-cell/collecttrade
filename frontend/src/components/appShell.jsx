@@ -175,7 +175,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       id: "valuation",
       ordinal: "01",
       glyph: "VL",
-      title: "Rate a Purchase",
+      title: "Analyze a Purchase",
       tag: "Valuation",
       tone: "collectibles",
       detail: "Upload, identify, value, score, forecast, and save the asset in under 30 seconds.",
@@ -190,7 +190,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       id: "collection",
       ordinal: "02",
       glyph: "CO",
-      title: "My Collection",
+      title: "Portfolio Home",
       tag: "Portfolio summary",
       tone: "portfolio",
       detail: "Review saved purchases, current estimates, and long-range projections.",
@@ -205,7 +205,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       id: "inventory",
       ordinal: "03",
       glyph: "IN",
-      title: "Owned Inventory",
+      title: "Holdings",
       tag: "Collection register",
       tone: "portfolio",
       detail: "Search holdings, cost basis, condition, rarity, and estimates.",
@@ -214,36 +214,6 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         desk: launchDesk,
         introId: "collectibles",
         sectionId: "collectibles-owned-inventory",
-      },
-    },
-    {
-      id: "imports",
-      ordinal: "04",
-      glyph: "IM",
-      title: "Investment Opportunities",
-      tag: "AI watchlist",
-      tone: "home",
-      detail: "Review below-market ideas, upside scenarios, and the reasons to act.",
-      selection: {
-        page: "collectibles",
-        desk: launchDesk,
-        introId: "collectibles",
-        sectionId: "collectibles-reviewed-portfolios",
-      },
-    },
-    {
-      id: "catalog",
-      ordinal: "05",
-      glyph: "CA",
-      title: "Collection Catalog",
-      tag: "Asset records",
-      tone: "portfolio",
-      detail: "Organize items with identifiers, categories, condition, rarity, and value records.",
-      selection: {
-        page: "collectibles",
-        desk: launchDesk,
-        introId: "collectibles",
-        sectionId: "collectibles-catalog",
       },
     },
   ];
@@ -390,14 +360,32 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         </div>
 
         <div className="splashCompactHero">
-          <div className="splashEyebrow">Private Collection Services</div>
-          <h1>Choose the workspace you need.</h1>
-          <p className="authBlurb">Open a focused collection service.</p>
+          <div className="splashEyebrow">Collectible investment intelligence</div>
+          <h1>Know what it is worth. Know what to buy next.</h1>
+          <p className="authBlurb">
+            Upload collectible evidence, get an investment verdict, and manage the collection from
+            one premium portfolio app.
+          </p>
           <div className="splashHeroPillRow" aria-hidden="true">
-            <span className="splashHeroPill">Collectibles</span>
-            <span className="splashHeroPill">Valuation</span>
+            <span className="splashHeroPill">Score</span>
+            <span className="splashHeroPill">Forecast</span>
             <span className="splashHeroPill">Portfolio</span>
           </div>
+          <button
+            type="button"
+            className="primaryButton splashHeroPrimary"
+            onClick={() =>
+              onLaunch({
+                page: "collectibles",
+                desk: launchDesk,
+                introId: "collectibles",
+                sectionId: "collectibles-portfolio",
+              })
+            }
+            disabled={!ready}
+          >
+            Open Portfolio App
+          </button>
         </div>
 
         {savedLaunch ? (
@@ -419,8 +407,8 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
         <section className="splashSection splashSectionCompact">
           <div className="splashSectionHeader">
             <div>
-              <span>Collection</span>
-              <strong>Core services</strong>
+              <span>Start here</span>
+              <strong>Core actions</strong>
             </div>
           </div>
 
@@ -448,11 +436,11 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
           </div>
         </section>
 
-        <section className="splashSection splashSectionCompact">
+        <section className="splashSection splashSectionCompact splashSupportCompact">
           <div className="splashSectionHeader">
             <div>
               <span>Records</span>
-              <strong>Supporting services</strong>
+              <strong>Available in the menu</strong>
             </div>
           </div>
 

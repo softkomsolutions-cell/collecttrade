@@ -7608,6 +7608,48 @@
   text-transform: uppercase;
 }
 
+.splashHeroPrimary {
+  width: fit-content;
+  min-width: 220px;
+  margin-top: 8px;
+}
+
+.splashSupportCompact {
+  opacity: 0.72;
+}
+
+.splashSupportCompact .mobileMenuSupportList {
+  display: none;
+}
+
+.splashSupportCompact .splashAvailabilityNote {
+  margin-top: 0;
+}
+
+.splashPanelCompact .mobileMenuRow {
+  min-height: 92px;
+  grid-template-columns: 58px minmax(0, 1fr) 28px;
+  border-radius: 18px;
+}
+
+.splashPanelCompact .mobileMenuRowGlyph {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+.splashPanelCompact .mobileMenuRowCopy strong {
+  font-size: 18px;
+}
+
+.splashPanelCompact .mobileMenuRowTop small {
+  display: none;
+}
+
+.splashPanelCompact .mobileMenuRowCopy small:last-child {
+  max-width: 44ch;
+}
+
 .mobileMenuRow {
   grid-template-columns: 64px minmax(0, 1fr) 76px 30px;
 }
