@@ -8346,25 +8346,53 @@
   gap: 10px;
 }
 
-.mobileAppShell .collectiblesServiceNav {
-  position: sticky;
-  top: 0;
-  z-index: 9;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 2px 8px;
-  background: rgba(7, 8, 7, 0.96);
-}
-
-.mobileAppShell .collectiblesServiceNav small {
+.mobileAppShell .topbar,
+.mobileAppShell .mobileUtilityRail {
   display: none;
 }
 
-.mobileAppShell .collectiblesServiceBack {
-  min-height: 34px;
-  padding: 0 12px;
-  border-radius: 999px;
-  font-size: 12px;
+.mobileAppShell .workspace {
+  padding: 12px 12px calc(82px + env(safe-area-inset-bottom, 0px));
+}
+
+.mobileAppShell .mobileBottomNav {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 9px 10px calc(9px + env(safe-area-inset-bottom, 0px));
+  border-top-color: rgba(214, 179, 110, 0.14);
+  background:
+    linear-gradient(180deg, rgba(7, 8, 7, 0.72), rgba(7, 8, 7, 0.98)),
+    rgba(7, 8, 7, 0.98);
+}
+
+.mobileAppShell .mobileBottomNavItem {
+  min-height: 54px;
+  padding: 8px 4px;
+  border-radius: 14px;
+}
+
+.mobileAppShell .mobileBottomNavItem span {
+  display: none;
+}
+
+.mobileAppShell .mobileBottomNavItem strong {
+  color: #aeb5c8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.mobileAppShell .mobileBottomNavItem.active {
+  border-color: rgba(217, 178, 111, 0.28);
+  background: rgba(217, 178, 111, 0.09);
+}
+
+.mobileAppShell .mobileBottomNavItem.active strong {
+  color: #f2d69c;
+}
+
+.mobileAppShell .collectiblesServiceNav {
+  display: none;
 }
 
 .mobileAppShell .collectiblesServicePage > .panel {

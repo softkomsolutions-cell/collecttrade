@@ -1730,6 +1730,7 @@ export default function App() {
       id: "dashboard",
       glyph: "DB",
       label: "Dashboard",
+      navLabel: "Home",
       detail: "Portfolio value, ROI, projections, and recent activity",
       sectionId: "collectibles-portfolio",
       activeService: "collection",
@@ -1738,6 +1739,7 @@ export default function App() {
       id: "scan",
       glyph: "SC",
       label: "Investment Analysis",
+      navLabel: "Analyze",
       detail: "Upload evidence and get the investment verdict",
       sectionId: "collectibles-valuation",
       activeService: "valuation",
@@ -1746,6 +1748,7 @@ export default function App() {
       id: "portfolio",
       glyph: "PF",
       label: "Portfolio",
+      navLabel: "Portfolio",
       detail: "Saved LEGO holdings and investment scorecards",
       sectionId: "collectibles-portfolio",
       activeService: "collection",
@@ -1754,6 +1757,7 @@ export default function App() {
       id: "inventory",
       glyph: "IN",
       label: "Holdings",
+      navLabel: "Holdings",
       detail: "Owned assets with condition, rarity, cost, and estimate",
       sectionId: "collectibles-owned-inventory",
       activeService: "inventory",
@@ -1762,6 +1766,7 @@ export default function App() {
       id: "market",
       glyph: "MI",
       label: "AI Watchlist",
+      navLabel: "Watchlist",
       detail: "Undervalued LEGO watchlist, reviewed imports, and source library",
       sectionId: "collectibles-reviewed-portfolios",
       activeService: "imports",
@@ -1770,13 +1775,16 @@ export default function App() {
       id: "reports",
       glyph: "RP",
       label: "Reports",
+      navLabel: "Reports",
       detail: "Partner test pack, PDF downloads, and readiness checklist",
       sectionId: "collectibles-reports",
       activeService: "reports",
     },
   ];
-  const primaryNavItems = productNavItems.slice(0, 5);
-  const utilityNavItems = productNavItems.slice(0, 3);
+  const primaryNavItems = productNavItems.filter((item) =>
+    ["dashboard", "scan", "inventory", "market"].includes(item.id),
+  );
+  const utilityNavItems = [];
   const menuPrimaryItems = [
     ...productNavItems.map((item) => ({
       ...item,
@@ -2217,7 +2225,7 @@ export default function App() {
                 onClick={() => handleMenuSection("collectibles", item.sectionId)}
               >
                 <span>{item.glyph}</span>
-                <strong>{item.label}</strong>
+                <strong>{item.navLabel || item.label}</strong>
               </button>
             ))}
           </nav>
