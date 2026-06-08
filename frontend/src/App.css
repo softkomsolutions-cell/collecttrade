@@ -1483,6 +1483,73 @@
   margin-bottom: 16px;
 }
 
+.portfolioAppHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  padding: 20px;
+  border: 1px solid rgba(214, 179, 110, 0.22);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(217, 178, 111, 0.22), transparent 36%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.014));
+}
+
+.portfolioAppHeroCopy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.portfolioAppHeroCopy strong {
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 6vw, 58px);
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.portfolioAppHeroCopy small {
+  color: #00d46a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.portfolioAppHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 8px;
+}
+
+.portfolioSearchButton {
+  grid-column: 1 / -1;
+  min-height: 48px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid rgba(116, 132, 171, 0.16);
+  border-radius: 14px;
+  background: rgba(8, 10, 12, 0.38);
+  color: inherit;
+  cursor: pointer;
+}
+
+.portfolioSearchButton span {
+  color: #8da2c8;
+  font-size: 13px;
+}
+
+.portfolioSearchButton strong {
+  color: #f2d69c;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
 .portfolioHeroMetrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -8630,7 +8697,27 @@
 }
 
 .mobileAppShell .portfolioHeroMetrics {
-  gap: 8px;
+  display: none;
+}
+
+.mobileAppShell .portfolioAppHero {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+}
+
+.mobileAppShell .portfolioAppHeroCopy strong {
+  font-size: 42px;
+}
+
+.mobileAppShell .portfolioAppHeroActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobileAppShell .portfolioSearchButton {
+  min-height: 52px;
 }
 
 .mobileAppShell .portfolioHeroMetrics > div {

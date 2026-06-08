@@ -2791,6 +2791,41 @@ export function CollectiblesScreen({
         </div>
 
         <section className="collectiblePortfolioDashboard">
+          <section className="portfolioAppHero" aria-label="Collectible portfolio overview">
+            <div className="portfolioAppHeroCopy">
+              <span className="legoPanelEyebrow">Collection value</span>
+              <strong>{formatZar(dashboardValue)}</strong>
+              <small>
+                {dashboardProfit >= 0 ? "+" : ""}
+                {formatZar(dashboardProfit)} unrealized | {dashboardRoi.toFixed(1)}% ROI
+              </small>
+            </div>
+            <div className="portfolioAppHeroActions">
+              <button
+                className="primaryButton"
+                type="button"
+                onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
+              >
+                Rate Purchase
+              </button>
+              <button
+                className="ghostButton"
+                type="button"
+                onClick={() => jumpToPageSection("collectibles", "collectibles-owned-inventory")}
+              >
+                View Holdings
+              </button>
+            </div>
+            <button
+              className="portfolioSearchButton"
+              type="button"
+              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
+            >
+              <span>Search or scan a collectible</span>
+              <strong>Analyze</strong>
+            </button>
+          </section>
+
           <div className="portfolioHeroMetrics">
             <div>
               <span>Net Asset Value</span>
