@@ -589,7 +589,7 @@ export default function App() {
 
   const [page, setPage] = useState(normalizePage(initialPage));
   const [activeDesk, setActiveDesk] = useState(normalizeDesk(initialDesk));
-  const [activeCollectibleService, setActiveCollectibleService] = useState(initialHashState.service || "valuation");
+  const [activeCollectibleService, setActiveCollectibleService] = useState(initialHashState.service || "collection");
   const [authChecked, setAuthChecked] = useState(() => !window.localStorage.getItem(TOKEN_KEY));
   const [bootSplashVisible, setBootSplashVisible] = useState(true);
   const [authToken, setAuthToken] = useState(() => window.localStorage.getItem(TOKEN_KEY) || "");
@@ -846,7 +846,8 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (!window.location.hash) {
+    const normalizedHash = buildHash(page, activeDesk, activeCollectibleService);
+    if (window.location.hash !== normalizedHash) {
       syncHashRoute(page, activeDesk, activeCollectibleService);
     }
   }, [activeCollectibleService, activeDesk, page, syncHashRoute]);
@@ -884,7 +885,7 @@ export default function App() {
       const next = parseHashState(window.location.hash);
       setPage(next.page);
       setActiveDesk(next.desk);
-      setActiveCollectibleService(next.service || "valuation");
+      setActiveCollectibleService(next.service || "collection");
       if (!currentUser) {
         setPreAuthLaunch((previous) => ({
           ...previous,

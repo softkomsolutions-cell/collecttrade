@@ -28,11 +28,11 @@ export function parseHashState(hashValue) {
   return {
     page: normalizePage(pathValue.split("/")[0]),
     desk: normalizeDesk(params.get("desk")),
-    service: params.get("service") || "valuation",
+    service: params.get("service") || "collection",
   };
 }
 
-export function buildHash(page, desk, service = "valuation") {
+export function buildHash(page, desk, service = "collection") {
   return `#/${normalizePage(page)}?desk=${encodeURIComponent(normalizeDesk(desk))}&service=${encodeURIComponent(service)}`;
 }
 
