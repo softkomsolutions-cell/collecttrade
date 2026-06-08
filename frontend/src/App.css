@@ -1034,6 +1034,90 @@
   line-height: 1.45;
 }
 
+.analysisPipelinePanel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(77, 159, 255, 0.2);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(77, 159, 255, 0.08), transparent 56%),
+    rgba(8, 10, 12, 0.44);
+}
+
+.analysisPipelineHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: end;
+}
+
+.analysisPipelineHeader h3 {
+  margin: 4px 0 0;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.analysisPipelineGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.analysisPipelineStep {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.analysisPipelineStep span {
+  width: fit-content;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(116, 132, 171, 0.12);
+  color: #8da2c8;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.analysisPipelineStep strong {
+  color: #f5f7fb;
+  font-size: 13px;
+}
+
+.analysisPipelineStep small {
+  color: #8da2c8;
+  line-height: 1.45;
+}
+
+.analysisPipelineStep.active {
+  border-color: rgba(77, 159, 255, 0.36);
+  background: rgba(77, 159, 255, 0.08);
+}
+
+.analysisPipelineStep.active span {
+  background: rgba(77, 159, 255, 0.16);
+  color: #4d9fff;
+}
+
+.analysisPipelineStep.complete {
+  border-color: rgba(0, 210, 106, 0.32);
+  background: rgba(0, 210, 106, 0.07);
+}
+
+.analysisPipelineStep.complete span {
+  background: rgba(0, 210, 106, 0.14);
+  color: #00d26a;
+}
+
 .collectibleBetaReportPanel {
   gap: 18px;
 }
@@ -1483,6 +1567,70 @@
   font-size: 30px;
 }
 
+.portfolioIntelligenceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.portfolioIntelligenceCard {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.026);
+}
+
+.portfolioIntelligenceCard span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.portfolioIntelligenceCard strong {
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.22;
+}
+
+.portfolioIntelligenceCard p {
+  margin: 0;
+  color: #8da2c8;
+  line-height: 1.58;
+}
+
+.portfolioIntelligenceCard.gold {
+  border-color: rgba(217, 178, 111, 0.24);
+  background: linear-gradient(135deg, rgba(217, 178, 111, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+.portfolioIntelligenceCard.gold span {
+  color: #d9b26f;
+}
+
+.portfolioIntelligenceCard.blue {
+  border-color: rgba(77, 159, 255, 0.24);
+  background: linear-gradient(135deg, rgba(77, 159, 255, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+.portfolioIntelligenceCard.blue span {
+  color: #4d9fff;
+}
+
+.portfolioIntelligenceCard.green {
+  border-color: rgba(0, 210, 106, 0.22);
+  background: linear-gradient(135deg, rgba(0, 210, 106, 0.07), rgba(255, 255, 255, 0.02));
+}
+
+.portfolioIntelligenceCard.green span {
+  color: #00d26a;
+}
+
 .portfolioGrowthPanel,
 .portfolioTopAssets,
 .portfolioAllocationPanel {
@@ -1899,6 +2047,42 @@
   background: #f2d69c;
 }
 
+.assetSignalStack {
+  display: grid;
+  gap: 9px;
+  margin-top: 4px;
+}
+
+.assetSignalStack div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 11px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 8px;
+  background: rgba(8, 10, 12, 0.34);
+}
+
+.assetSignalStack span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.assetSignalStack strong {
+  color: #00d26a;
+  font-size: 18px;
+}
+
+.assetSignalStack small {
+  grid-column: 1 / -1;
+  color: #8f9188;
+  line-height: 1.45;
+}
+
 .portfolioAssetCard {
   display: grid;
   grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
@@ -2269,6 +2453,7 @@
   .collectibleInventoryCategoryGrid,
   .portfolioHeroMetrics,
   .portfolioHealthGrid,
+  .portfolioIntelligenceGrid,
   .portfolioAssetCard,
   .investmentOpportunityGrid,
   .investmentOpportunityMetrics,
@@ -2279,6 +2464,7 @@
   .partnerBetaPrompt,
   .betaReportHero,
   .betaReportGrid,
+  .analysisPipelineGrid,
   .legoVerdictCard,
   .legoVerdictMetrics,
   .legoValuationForm,
@@ -7911,6 +8097,7 @@
 .mobileAppShell .legoWorkflowRail,
 .mobileAppShell .partnerBetaPrompt,
 .mobileAppShell .partnerBetaChecklist,
+.mobileAppShell .analysisPipelineGrid,
 .mobileAppShell .betaReportHero,
 .mobileAppShell .betaReportGrid,
 .mobileAppShell .legoScanWorkspace,
@@ -8097,6 +8284,14 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .mobileAppShell .portfolioIntelligenceGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mobileAppShell .analysisPipelineGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .mobileAppShell .investmentOpportunityGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -8121,6 +8316,7 @@
 @media (max-width: 899px) {
   .mobileAppShell .portfolioHeroMetrics,
   .mobileAppShell .portfolioHealthGrid,
+  .mobileAppShell .portfolioIntelligenceGrid,
   .mobileAppShell .portfolioAssetCard,
   .mobileAppShell .investmentOpportunityGrid,
   .mobileAppShell .investmentOpportunityMetrics,
@@ -8128,6 +8324,7 @@
   .mobileAppShell .assetDetailMetrics,
   .mobileAppShell .assetDetailGrid,
   .mobileAppShell .assetForecastBars,
+  .mobileAppShell .analysisPipelineGrid,
   .mobileAppShell .legoVerdictCard,
   .mobileAppShell .legoVerdictMetrics {
     grid-template-columns: minmax(0, 1fr);
