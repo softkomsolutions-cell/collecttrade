@@ -8339,3 +8339,212 @@
     text-align: left;
   }
 }
+
+/* Mobile-app simplification: the signed-in beta is intentionally a compact app shell,
+   so it should never inherit wide desktop grids just because the browser viewport is wide. */
+.mobileAppShell .collectiblesServicePage {
+  gap: 10px;
+}
+
+.mobileAppShell .collectiblesServiceNav {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 2px 8px;
+  background: rgba(7, 8, 7, 0.96);
+}
+
+.mobileAppShell .collectiblesServiceNav small {
+  display: none;
+}
+
+.mobileAppShell .collectiblesServiceBack {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.mobileAppShell .collectiblesServicePage > .panel {
+  padding: 14px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.mobileAppShell .collectiblesServicePage .panelHeader {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mobileAppShell .collectiblesServicePage .panelHeader p,
+.mobileAppShell .collectiblesServicePage .headerStatus,
+.mobileAppShell .partnerBetaPrompt,
+.mobileAppShell .analysisPipelinePanel,
+.mobileAppShell .portfolioIntelligenceGrid,
+.mobileAppShell .portfolioAllocationPanel {
+  display: none;
+}
+
+.mobileAppShell .legoWorkflowRail {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mobileAppShell .legoWorkflowStep {
+  justify-items: center;
+  gap: 5px;
+  padding: 8px 5px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.mobileAppShell .legoWorkflowStep strong {
+  width: 24px;
+  height: 24px;
+  flex-basis: 24px;
+  font-size: 11px;
+}
+
+.mobileAppShell .legoWorkflowStep span {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.mobileAppShell .legoWorkflowStep small {
+  display: none;
+}
+
+.mobileAppShell .legoScanWorkspace,
+.mobileAppShell .legoValuationForm,
+.mobileAppShell .portfolioHeroMetrics,
+.mobileAppShell .portfolioHealthGrid,
+.mobileAppShell .portfolioAssetCard,
+.mobileAppShell .investmentOpportunityGrid,
+.mobileAppShell .investmentOpportunityMetrics,
+.mobileAppShell .assetDetailHero,
+.mobileAppShell .assetDetailMetrics,
+.mobileAppShell .assetDetailGrid,
+.mobileAppShell .assetForecastBars,
+.mobileAppShell .legoVerdictCard,
+.mobileAppShell .legoVerdictMetrics,
+.mobileAppShell .betaReportHero,
+.mobileAppShell .betaReportGrid,
+.mobileAppShell .legoMetricGrid,
+.mobileAppShell .legoProjectionGrid,
+.mobileAppShell .legoValuationDetailGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mobileAppShell .legoScanWorkspace {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.mobileAppShell .legoScanPreview {
+  min-height: 300px;
+  border-radius: 18px;
+  background:
+    linear-gradient(140deg, rgba(214, 179, 110, 0.12), rgba(77, 159, 255, 0.05)),
+    rgba(255, 255, 255, 0.026);
+}
+
+.mobileAppShell .legoScanPreview strong {
+  font-size: 24px;
+}
+
+.mobileAppShell .legoScanMethods {
+  display: none;
+}
+
+.mobileAppShell .legoScanCopy {
+  padding: 2px;
+}
+
+.mobileAppShell .legoScanCopy h3,
+.mobileAppShell .legoFormIntro h3 {
+  font-size: 20px;
+}
+
+.mobileAppShell .legoScanCopy p,
+.mobileAppShell .legoFormIntro p {
+  display: none;
+}
+
+.mobileAppShell .panelActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mobileAppShell .legoFormIntro {
+  padding-top: 4px;
+}
+
+.mobileAppShell .legoValuationForm {
+  gap: 10px;
+}
+
+.mobileAppShell .legoValuationForm label {
+  gap: 6px;
+}
+
+.mobileAppShell .legoValuationForm span,
+.mobileAppShell .legoPanelEyebrow {
+  font-size: 10px;
+}
+
+.mobileAppShell .legoValuationForm input,
+.mobileAppShell .legoValuationForm select,
+.mobileAppShell .legoValuationForm textarea {
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.mobileAppShell .primaryButton,
+.mobileAppShell .ghostButton {
+  min-height: 46px;
+  border-radius: 12px;
+}
+
+.mobileAppShell .portfolioHeroMetrics {
+  gap: 8px;
+}
+
+.mobileAppShell .portfolioHeroMetrics > div {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.mobileAppShell .portfolioHeroMetrics strong {
+  font-size: 25px;
+}
+
+.mobileAppShell .portfolioHealthGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mobileAppShell .portfolioHealthCard {
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.mobileAppShell .portfolioHealthCard strong {
+  font-size: 24px;
+}
+
+.mobileAppShell .portfolioGrowthPanel,
+.mobileAppShell .portfolioTopAssets,
+.mobileAppShell .assetDetailPanel,
+.mobileAppShell .legoVerdictCard {
+  border-radius: 16px;
+}
+
+.mobileAppShell .assetDetailCopy h3 {
+  font-size: 26px;
+}
