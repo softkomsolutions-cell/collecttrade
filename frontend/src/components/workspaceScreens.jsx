@@ -408,6 +408,29 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
         </div>
       </div>
 
+      <section className="investmentHeroCard" aria-label="Investment analysis overview">
+        <div>
+          <span className="legoPanelEyebrow">Private investment verdict</span>
+          <h3>Rate a purchase in under 30 seconds.</h3>
+          <p>
+            Upload evidence, confirm the set, and get the score, gain, risk, and future value
+            forecast in one clean verdict.
+          </p>
+        </div>
+        <div className="investmentHeroStats" aria-label="Analysis checkpoints">
+          {[
+            ["01", "Evidence"],
+            ["02", "Market"],
+            ["03", "Verdict"],
+          ].map(([number, label]) => (
+            <div key={number}>
+              <span>{number}</span>
+              <strong>{label}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="legoWorkflowRail" aria-label="LEGO collection workflow">
         {workflowSteps.map((step, index) => (
           <div

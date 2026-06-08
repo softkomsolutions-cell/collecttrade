@@ -2305,6 +2305,66 @@
   margin-bottom: 10px;
 }
 
+.investmentHeroCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.48fr);
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid rgba(214, 179, 110, 0.2);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(217, 178, 111, 0.15), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+}
+
+.investmentHeroCard h3 {
+  margin: 6px 0 8px;
+  max-width: 620px;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.investmentHeroCard p {
+  max-width: 640px;
+  margin: 0;
+  color: #8da2c8;
+  line-height: 1.55;
+}
+
+.investmentHeroStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.investmentHeroStats div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 12px;
+  background: rgba(8, 10, 12, 0.36);
+}
+
+.investmentHeroStats span {
+  color: #4d9fff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.investmentHeroStats strong {
+  color: #f2d69c;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
 .legoScanWorkspace {
   grid-template-columns: minmax(280px, 1.25fr) minmax(0, 0.75fr);
   padding: 20px;
@@ -8408,11 +8468,41 @@
 
 .mobileAppShell .collectiblesServicePage .panelHeader p,
 .mobileAppShell .collectiblesServicePage .headerStatus,
+.mobileAppShell .legoValuationPanel > .panelHeader,
 .mobileAppShell .partnerBetaPrompt,
 .mobileAppShell .analysisPipelinePanel,
+.mobileAppShell .legoWorkflowRail,
 .mobileAppShell .portfolioIntelligenceGrid,
 .mobileAppShell .portfolioAllocationPanel {
   display: none;
+}
+
+.mobileAppShell .investmentHeroCard {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.mobileAppShell .investmentHeroCard h3 {
+  margin: 5px 0 7px;
+  font-size: 31px;
+}
+
+.mobileAppShell .investmentHeroCard p {
+  font-size: 13px;
+}
+
+.mobileAppShell .investmentHeroStats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mobileAppShell .investmentHeroStats div {
+  justify-items: center;
+  padding: 9px 6px;
+  text-align: center;
 }
 
 .mobileAppShell .legoWorkflowRail {
