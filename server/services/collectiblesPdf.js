@@ -112,6 +112,12 @@ function streamValuationPdf(res, valuation) {
     { label: "Current gain", value: formatZar(valuation.profitZAR), tone: "positive" },
     { label: "Cost multiple", value: `${valuation.multiplier}x`, tone: "positive" },
   ]);
+  drawMetricRow(doc, [
+    { label: "Risk", value: valuation.riskRating || "Review" },
+    { label: "Confidence", value: valuation.confidenceLabel || valuation.confidence || "Review" },
+    { label: "Gain ratio", value: `${valuation.roiPercent || 0}%`, tone: "positive" },
+    { label: "Discount to market", value: `${valuation.discountPercent || 0}%`, tone: "positive" },
+  ]);
 
   drawSectionTitle(doc, "Investment view");
   doc
@@ -125,6 +131,19 @@ function streamValuationPdf(res, valuation) {
     .fontSize(9)
     .text(valuation.investmentGradeDetail || "Review the supporting evidence before making a purchase decision.");
   doc.moveDown(0.9);
+
+  drawSectionTitle(doc, "Investor snapshot");
+  doc
+    .fillColor(COLORS.ink)
+    .font("Helvetica")
+    .fontSize(9)
+    .text(`Purchase date: ${valuation.purchaseDate || "Not supplied"}`)
+    .text(`Risk: ${valuation.riskRating || "Review"}`)
+    .text(`Confidence: ${valuation.confidenceLabel || valuation.confidence || "Review"}`);
+  if (valuation.certificationNotes) {
+    doc.text(`Certification / evidence: ${valuation.certificationNotes}`);
+  }
+  doc.moveDown(0.7);
 
   drawSectionTitle(doc, "Future value scenarios");
   drawMetricRow(doc, [

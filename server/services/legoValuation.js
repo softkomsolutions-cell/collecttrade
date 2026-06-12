@@ -122,6 +122,23 @@ function recommendationForScore(score) {
   return "Pass for now";
 }
 
+function riskRatingForScore(score, dataConfidence) {
+  if (score >= 8.5 && dataConfidence === "live") return "Low";
+  if (score >= 7.5) return "Moderate";
+  if (score >= 6) return "Speculative";
+  return "High";
+}
+
+function confidenceLabelFor(dataConfidence) {
+  if (dataConfidence === "live") return "High";
+  if (dataConfidence === "benchmark") return "Medium";
+  return "Early";
+}
+
+function cleanInputText(value, maxLength = 500) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
 function sourceView(id, label, response) {
   return {
     id,
@@ -138,6 +155,8 @@ function sourceView(id, label, response) {
 async function getLegoValuation(input) {
   const setNum = String(input?.setNum || "").trim().split("-")[0];
   const purchasePriceZAR = asPositiveNumber(input?.purchasePriceZAR);
+  const purchaseDate = cleanInputText(input?.purchaseDate, 40);
+  const certificationNotes = cleanInputText(input?.certificationNotes, 700);
 
   if (!/^\d{3,8}$/.test(setNum)) {
     throw new Error("lego_set_number_required");
@@ -146,7 +165,7 @@ async function getLegoValuation(input) {
     throw new Error("purchase_price_required");
   }
 
-  const cacheKey = `${setNum}:${purchasePriceZAR}`;
+  const cacheKey = `${setNum}:${purchasePriceZAR}:${purchaseDate}:${certificationNotes}`;
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return { ...cached.value, cache: "fresh" };
@@ -174,6 +193,7 @@ async function getLegoValuation(input) {
   const profitZAR = currentValueZAR - purchasePriceZAR;
   const discountPercent = (profitZAR / currentValueZAR) * 100;
   const multiplier = currentValueZAR / purchasePriceZAR;
+  const roiPercent = (profitZAR / purchasePriceZAR) * 100;
   const isGwp = benchmark?.rarity === "Gift With Purchase";
   const annualGrowthPercent = benchmark?.annualGrowthPercent || (isGwp ? 8 : 6);
   const score =
@@ -185,11 +205,14 @@ async function getLegoValuation(input) {
     setNum,
     name: benchmark?.name || nameFromBrickEconomy(brickEconomyResponse, setNum),
     purchasePriceZAR,
+    purchaseDate,
     currentValueZAR,
     currentValueUSD: Number(currentValueUSD.toFixed(2)),
     usdZarRate: USD_ZAR_RATE,
     profitZAR: Math.round(profitZAR),
     multiplier: Number(multiplier.toFixed(1)),
+    roiPercent: Number(roiPercent.toFixed(1)),
+    discountPercent: Number(discountPercent.toFixed(1)),
     score,
     recommendation: recommendationForScore(score),
     investmentGrade: benchmark?.investmentGrade || recommendationForScore(score),
@@ -197,6 +220,9 @@ async function getLegoValuation(input) {
       benchmark?.investmentGradeDetail ||
       "Use the source evidence, retirement status, scarcity, and collector demand together before treating this as an investment-grade purchase.",
     confidence: dataConfidence,
+    confidenceLabel: confidenceLabelFor(dataConfidence),
+    riskRating: riskRatingForScore(score, dataConfidence),
+    certificationNotes,
     rarity: benchmark?.rarity || "Standard Set",
     minifigures: (benchmark?.minifigures || []).map((minifigure) => ({
       ...minifigure,

@@ -225,11 +225,13 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
   const [identifier, setIdentifier] = useState("30725");
   const [itemName, setItemName] = useState("");
   const [purchasePriceZAR, setPurchasePriceZAR] = useState("65");
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().slice(0, 10));
   const [currentMarketValueZAR, setCurrentMarketValueZAR] = useState("");
   const [condition, setCondition] = useState("excellent");
   const [rarity, setRarity] = useState("");
   const [provenance, setProvenance] = useState("");
   const [evidenceNotes, setEvidenceNotes] = useState("");
+  const [certificationNotes, setCertificationNotes] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [valuation, setValuation] = useState(null);
   const [status, setStatus] = useState("");
@@ -247,11 +249,13 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     identifier,
     itemName,
     purchasePriceZAR: Number(purchasePriceZAR),
+    purchaseDate,
     currentMarketValueZAR: Number(currentMarketValueZAR),
     condition,
     rarity,
     provenance,
     evidenceNotes,
+    certificationNotes,
     quantity: Number(quantity),
   };
 
@@ -582,6 +586,14 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           />
         </label>
         <label>
+          <span>Purchase date</span>
+          <input
+            type="date"
+            value={purchaseDate}
+            onChange={(event) => setPurchaseDate(event.target.value)}
+          />
+        </label>
+        <label>
           <span>Quantity</span>
           <input
             type="number"
@@ -589,6 +601,14 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
             step="1"
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
+          />
+        </label>
+        <label className="legoValuationWideField">
+          <span>Certification / evidence</span>
+          <textarea
+            value={certificationNotes}
+            onChange={(event) => setCertificationNotes(event.target.value)}
+            placeholder="Grading, authenticity, minifigure evidence, receipt, sealed condition, or photo notes"
           />
         </label>
         {appraisalMode ? (
@@ -685,6 +705,14 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
                   <span>5 year estimate</span>
                   <strong>{formatZar(valuation.projections.fiveYears)}</strong>
                 </div>
+                <div>
+                  <span>Risk</span>
+                  <strong>{valuation.riskRating || "Review"}</strong>
+                </div>
+                <div>
+                  <span>Confidence</span>
+                  <strong>{valuation.confidenceLabel || valuation.confidence || "Review"}</strong>
+                </div>
               </div>
             </div>
           </div>
@@ -728,6 +756,14 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
               <span>Cost multiple</span>
               <strong>{valuation.multiplier}x</strong>
             </div>
+            <div>
+              <span>Gain ratio</span>
+              <strong>{valuation.roiPercent ?? 0}%</strong>
+            </div>
+            <div>
+              <span>Discount to market</span>
+              <strong>{valuation.discountPercent ?? 0}%</strong>
+            </div>
           </div>
 
           <div className="legoProjectionGrid">
@@ -746,6 +782,14 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           </div>
 
           <div className="legoValuationDetailGrid">
+            <div>
+              <span>Investor Snapshot</span>
+              <p>
+                <strong>Risk: {valuation.riskRating || "Review"}</strong>
+              </p>
+              <p>Confidence: {valuation.confidenceLabel || valuation.confidence || "Review required"}</p>
+              <p>Purchase date: {valuation.purchaseDate || purchaseDate || "Not supplied"}</p>
+            </div>
             <div>
               <span>Investment Notes</span>
               {(valuation.notes || []).map((note) => (
@@ -780,6 +824,12 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
                     <small>{formatZar(minifigure.estimatedValueZAR)}</small>
                   </p>
                 ))}
+              </div>
+            ) : null}
+            {valuation.certificationNotes ? (
+              <div>
+                <span>Certification / Evidence</span>
+                <p>{valuation.certificationNotes}</p>
               </div>
             ) : null}
           </div>
@@ -3341,6 +3391,8 @@ export function CollectiblesScreen({
                     <div><dt>Cost</dt><dd>{formatZar(holding.purchasePriceZAR * holding.quantity)}</dd></div>
                     <div><dt>Estimate</dt><dd>{formatZar(holding.currentValueZAR * holding.quantity)}</dd></div>
                     <div><dt>Score</dt><dd>{holding.score}/10</dd></div>
+                    <div><dt>Risk</dt><dd>{holding.riskRating || "Review"}</dd></div>
+                    <div><dt>Confidence</dt><dd>{holding.confidenceLabel || holding.confidence || "Review"}</dd></div>
                   </dl>
                 </article>
               ))}
@@ -3358,6 +3410,8 @@ export function CollectiblesScreen({
                   <th>Estimate</th>
                   <th>Gain</th>
                   <th>Score</th>
+                  <th>Risk</th>
+                  <th>Confidence</th>
                   <th>Updated</th>
                 </tr>
               </thead>
@@ -3376,6 +3430,8 @@ export function CollectiblesScreen({
                     <td>{formatZar(holding.currentValueZAR * holding.quantity)}</td>
                     <td>{formatZar(holding.profitZAR * holding.quantity)}</td>
                     <td>{holding.score}/10</td>
+                    <td>{holding.riskRating || "Review"}</td>
+                    <td>{holding.confidenceLabel || holding.confidence || "Review"}</td>
                     <td>{formatDateTime(holding.lastValuedAt, appSettings.timezone)}</td>
                   </tr>
                 ))}

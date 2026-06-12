@@ -128,6 +128,19 @@ function recommendationForScore(score) {
   return "Pass for now";
 }
 
+function riskRatingForScore(score, confidence) {
+  if (score >= 8.5 && confidence === "appraisal-input") return "Low";
+  if (score >= 7.5) return "Moderate";
+  if (score >= 6) return "Speculative";
+  return "High";
+}
+
+function confidenceLabelFor(confidence) {
+  if (confidence === "appraisal-input") return "Medium";
+  if (confidence === "early-appraisal") return "Early";
+  return "Review";
+}
+
 function profileFor(category) {
   const profile = CATEGORY_PROFILES[cleanText(category, 40).toLowerCase()];
   if (!profile) {
@@ -151,6 +164,8 @@ async function getCollectibleValuation(input) {
     const valuation = await getLegoValuation({
       setNum: input?.identifier,
       purchasePriceZAR: input?.purchasePriceZAR,
+      purchaseDate: input?.purchaseDate,
+      certificationNotes: input?.certificationNotes,
     });
     return {
       ...valuation,
@@ -166,6 +181,8 @@ async function getCollectibleValuation(input) {
   const condition = cleanText(input?.condition, 40).toLowerCase();
   const provenance = cleanText(input?.provenance, 400);
   const evidenceNotes = cleanText(input?.evidenceNotes, 500);
+  const certificationNotes = cleanText(input?.certificationNotes, 700);
+  const purchaseDate = cleanText(input?.purchaseDate, 40);
   const purchasePriceZAR = asPositiveNumber(input?.purchasePriceZAR);
   const currentValueZAR = asPositiveNumber(input?.currentMarketValueZAR);
 
@@ -176,6 +193,8 @@ async function getCollectibleValuation(input) {
 
   const profitZAR = currentValueZAR - purchasePriceZAR;
   const multiplier = currentValueZAR / purchasePriceZAR;
+  const roiPercent = (profitZAR / purchasePriceZAR) * 100;
+  const discountPercent = (profitZAR / currentValueZAR) * 100;
   const score = scoreAppraisal({
     purchasePriceZAR,
     currentValueZAR,
@@ -183,6 +202,8 @@ async function getCollectibleValuation(input) {
     provenance,
   });
   const annualGrowthPercent = profile.annualGrowthPercent;
+
+  const confidence = evidenceNotes && provenance ? "appraisal-input" : "early-appraisal";
 
   return {
     ok: true,
@@ -192,12 +213,18 @@ async function getCollectibleValuation(input) {
     identifier,
     name: itemName,
     purchasePriceZAR,
+    purchaseDate,
     currentValueZAR,
     profitZAR: Math.round(profitZAR),
     multiplier: Number(multiplier.toFixed(1)),
+    roiPercent: Number(roiPercent.toFixed(1)),
+    discountPercent: Number(discountPercent.toFixed(1)),
     score,
     recommendation: recommendationForScore(score),
-    confidence: evidenceNotes && provenance ? "appraisal-input" : "early-appraisal",
+    confidence,
+    confidenceLabel: confidenceLabelFor(confidence),
+    riskRating: riskRatingForScore(score, confidence),
+    certificationNotes,
     rarity: cleanText(input?.rarity, 100) || "Review required",
     condition: condition || "not supplied",
     projections: {
