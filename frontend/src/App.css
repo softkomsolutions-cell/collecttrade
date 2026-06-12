@@ -2657,6 +2657,64 @@
   overflow-wrap: anywhere;
 }
 
+.verdictNextStepCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
+  gap: 16px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid rgba(0, 210, 106, 0.2);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(0, 210, 106, 0.14), transparent 34%),
+    rgba(255, 255, 255, 0.026);
+}
+
+.verdictNextStepCard h3 {
+  margin: 6px 0 7px;
+  color: #f5f7fb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.verdictNextStepCard p {
+  margin: 0;
+  color: #8da2c8;
+  line-height: 1.55;
+}
+
+.verdictNextStepRail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.verdictNextStepRail div {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 6px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  border-radius: 12px;
+  background: rgba(8, 10, 12, 0.34);
+  text-align: center;
+}
+
+.verdictNextStepRail span {
+  color: #00d46a;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.verdictNextStepRail strong {
+  color: #f2d69c;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
 @media (max-width: 760px) {
   .collectibleInventoryToolbar,
   .collectibleInventoryCategoryGrid,
@@ -2676,6 +2734,7 @@
   .analysisPipelineGrid,
   .legoVerdictCard,
   .legoVerdictMetrics,
+  .verdictNextStepCard,
   .legoValuationForm,
   .legoMetricGrid,
   .legoValuationDetailGrid {

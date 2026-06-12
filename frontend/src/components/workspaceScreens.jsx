@@ -789,6 +789,28 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
             estimates, not guaranteed returns.
             {valuation.usdZarRate ? ` USD/ZAR reference: ${valuation.usdZarRate}.` : ""}
           </div>
+          <section className="verdictNextStepCard" aria-label="Recommended next step">
+            <div>
+              <span className="legoPanelEyebrow">Recommended next step</span>
+              <h3>Save this verdict to your holdings.</h3>
+              <p>
+                The purchase becomes a managed investment record with evidence, valuation, forecast,
+                and a downloadable PDF trail.
+              </p>
+            </div>
+            <div className="verdictNextStepRail">
+              {[
+                ["01", "Save holding"],
+                ["02", "Export PDF"],
+                ["03", "Review report"],
+              ].map(([step, label]) => (
+                <div key={step}>
+                  <span>{step}</span>
+                  <strong>{label}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
           <div className="panelActions">
             <button className="primaryButton" type="button" disabled={busy} onClick={handleSave}>
               {busy ? "Saving..." : "Add to Holdings"}
