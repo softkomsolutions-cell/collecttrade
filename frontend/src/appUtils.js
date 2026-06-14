@@ -65,11 +65,15 @@ export function workspaceLabel(page, desk) {
   }
 
   if (page === "collectibles") {
-    return "Collectibles";
+    return "LEGO Investments";
   }
 
   if (page === "reports") {
-    return "Reports";
+    return "Research Center";
+  }
+
+  if (page === "subscriptions") {
+    return "Subscriptions";
   }
 
   return NAV_ITEMS.find((item) => item.id === page)?.label || "Workspace";
@@ -94,6 +98,10 @@ export function defaultIntroIdForPage(page) {
 
   if (page === "reports") {
     return "reports";
+  }
+
+  if (page === "subscriptions") {
+    return "subscriptions";
   }
 
   if (page === "settings") {
@@ -134,6 +142,10 @@ export function defaultSectionIdForIntro(page, introId) {
 
   if (page === "reports") {
     return "reports-performance";
+  }
+
+  if (page === "subscriptions") {
+    return "subscriptions-overview";
   }
 
   if (page === "settings") {
@@ -229,18 +241,42 @@ export function normalizeExecutionProfiles(input) {
 }
 
 export function normalizeAppSettings(input) {
+  const subscriptionTier =
+    input?.subscriptionTier === "pro" || input?.subscriptionTier === "elite"
+      ? input.subscriptionTier
+      : "starter";
   return {
-    preferredRegion:
-      input?.preferredRegion === "global" || input?.preferredRegion === "all"
-        ? input.preferredRegion
-        : "south-africa",
-    timezone: input?.timezone || "Africa/Johannesburg",
-    riskMode:
-      input?.riskMode === "defensive" || input?.riskMode === "aggressive"
-        ? input.riskMode
-        : "balanced",
-    executionProfiles: normalizeExecutionProfiles(input?.executionProfiles),
-  };
+      preferredRegion:
+        input?.preferredRegion === "global" || input?.preferredRegion === "all"
+          ? input.preferredRegion
+          : "south-africa",
+      timezone: input?.timezone || "Africa/Johannesburg",
+      riskMode:
+        input?.riskMode === "defensive" || input?.riskMode === "aggressive"
+          ? input.riskMode
+          : "balanced",
+      subscriptionTier,
+      alertPreferences: {
+        inAppEnabled: input?.alertPreferences?.inAppEnabled !== false,
+        emailEnabled:
+          subscriptionTier !== "starter" && input?.alertPreferences?.emailEnabled === true,
+        digestWindow:
+          input?.alertPreferences?.digestWindow === "hourly" ||
+          input?.alertPreferences?.digestWindow === "daily"
+            ? input.alertPreferences.digestWindow
+            : "instant",
+      },
+      routinePreferences: {
+        remindersEnabled: input?.routinePreferences?.remindersEnabled !== false,
+        nudgeWindow:
+          input?.routinePreferences?.nudgeWindow === "quiet" ||
+          input?.routinePreferences?.nudgeWindow === "focused"
+            ? input.routinePreferences.nudgeWindow
+            : "active",
+        celebrationEnabled: input?.routinePreferences?.celebrationEnabled !== false,
+      },
+      executionProfiles: normalizeExecutionProfiles(input?.executionProfiles),
+    };
 }
 
 export function formatDateTime(value, timeZone) {
@@ -311,6 +347,57 @@ export function labelRegion(region) {
   return "All Regions";
 }
 
+export function subscriptionTierLabel(tier) {
+  if (tier === "elite") {
+    return "Elite";
+  }
+
+  if (tier === "pro") {
+    return "Pro";
+  }
+
+  return "Starter";
+}
+
+export function alertDigestWindowLabel(value) {
+  if (value === "hourly") {
+    return "Hourly digest";
+  }
+
+  if (value === "daily") {
+    return "Daily digest";
+  }
+
+  return "Instant";
+}
+
+export function alertKindLabel(kind) {
+  switch (kind) {
+    case "price_below":
+      return "Price below";
+    case "rsi_above":
+      return "RSI above";
+    case "rsi_below":
+      return "RSI below";
+    case "price_above":
+    default:
+      return "Price above";
+  }
+}
+
+export function formatAlertThreshold(ticker, kind, threshold) {
+  const numeric = Number(threshold);
+  if (!Number.isFinite(numeric)) {
+    return "--";
+  }
+
+  if (String(kind || "").startsWith("rsi_")) {
+    return numeric.toFixed(1);
+  }
+
+  return formatTickerPrice(ticker, numeric);
+}
+
 export function actionTone(action) {
   if (action === "BUY") {
     return "buy";
@@ -364,7 +451,7 @@ export function providerLabel(providerId) {
     ibkr: "Interactive Brokers",
     saxo: "Saxo",
     easyequities: "EasyEquities",
-    collecttrade: "Collecttrade",
+    collecttrade: "Brick Alpha",
   };
 
   return labels[normalized] || humanizeStatus(normalized);
@@ -424,7 +511,7 @@ export function executionPlanForSignal(signal, settings, connectors) {
     return {
       mode: "paper",
       providerId: profile.providerId,
-      providerLabel: "Collecttrade Paper",
+      providerLabel: "Brick Alpha Paper",
       pair: null,
       ready: true,
       detail: "This ticket stays inside the app and will not send a broker order.",
@@ -449,7 +536,7 @@ export function executionPlanForSignal(signal, settings, connectors) {
   return {
     mode: "paper",
     providerId: profile.providerId,
-    providerLabel: "Collecttrade Paper",
+    providerLabel: "Brick Alpha Paper",
     pair: null,
     ready: true,
     detail: "Live routing is not wired for this desk yet, so it stays in paper mode.",

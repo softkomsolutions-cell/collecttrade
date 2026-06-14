@@ -1,4 +1,4 @@
-const CACHE_NAME = "collecttrade-pro-v2";
+const CACHE_NAME = "brick-alpha-pro-v2";
 const APP_SHELL = ["/", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {

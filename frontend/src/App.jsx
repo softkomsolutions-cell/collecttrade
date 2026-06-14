@@ -18,6 +18,7 @@ import {
   buildTicketPlanDefaults,
   defaultIntroIdForPage,
   executionPlanForSignal,
+  formatDateTime,
   formatTicketPlanInput,
   labelDesk,
   marketModeLabel,
@@ -30,6 +31,7 @@ import {
   readLaunchPreference,
   resolveTicketPlanMeta,
   statusTone,
+  subscriptionTierLabel,
   writeLaunchPreference,
   workspaceLabel,
 } from "./appUtils";
@@ -37,7 +39,6 @@ import {
   AuthShell,
   BootSplash,
   EmptyState,
-  LandingShell,
   SplashScreen,
 } from "./components/appShell";
 
@@ -64,6 +65,10 @@ const PortfolioScreen = lazyNamedExport(
 const ReportsScreen = lazyNamedExport(
   () => import("./components/workspaceScreens"),
   "ReportsScreen",
+);
+const SubscriptionsScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "SubscriptionsScreen",
 );
 const ConnectionsScreen = lazyNamedExport(
   () => import("./components/workspaceScreens"),
@@ -120,6 +125,85 @@ const EMPTY_FEEDBACK_RESPONSE = {
   permissions: { canManage: false },
 };
 
+const EMPTY_WATCHLIST_RESPONSE = {
+  items: [],
+};
+
+const EMPTY_ALERTS_RESPONSE = {
+  items: [],
+  summary: {
+    total: 0,
+    enabled: 0,
+    disabled: 0,
+    triggered: 0,
+    priceAlerts: 0,
+    rsiAlerts: 0,
+    maxAllowed: 5,
+    remaining: 5,
+    overLimit: 0,
+    subscriptionTier: "starter",
+    emailEligible: false,
+    emailQueued: 0,
+  },
+  plan: {
+    id: "starter",
+    label: "Starter",
+    maxAlerts: 5,
+    emailEnabled: false,
+  },
+  deliverySummary: {
+    total: 0,
+    queued: 0,
+    sent: 0,
+    cancelled: 0,
+  },
+  deliveryQueue: [],
+};
+
+const EMPTY_NOTIFICATIONS_RESPONSE = {
+  items: [],
+  summary: {
+    total: 0,
+    unread: 0,
+    read: 0,
+  },
+};
+
+const EMPTY_ROUTINE_RESPONSE = {
+  currentDate: null,
+  completedStepIds: [],
+  activeDates: [],
+  streakCount: 0,
+  bestStreakCount: 0,
+  weekActiveCount: 0,
+  sessionMode: "morning",
+  completedAt: null,
+  isComplete: false,
+  reminderDismissedDate: null,
+  completionAcknowledgedDate: null,
+  updatedAt: null,
+};
+
+function normalizeAlertsResponse(data = {}) {
+  return {
+    ...EMPTY_ALERTS_RESPONSE,
+    items: data.items || [],
+    summary: {
+      ...EMPTY_ALERTS_RESPONSE.summary,
+      ...(data.summary || {}),
+    },
+    plan: {
+      ...EMPTY_ALERTS_RESPONSE.plan,
+      ...(data.plan || {}),
+    },
+    deliverySummary: {
+      ...EMPTY_ALERTS_RESPONSE.deliverySummary,
+      ...(data.deliverySummary || {}),
+    },
+    deliveryQueue: data.deliveryQueue || [],
+  };
+}
+
 const EMPTY_HEALTH = {
   ok: true,
   services: {},
@@ -145,12 +229,53 @@ const INITIAL_AUTH_FORM = {
   password: "",
 };
 
-const INITIAL_VALR_FORM = {
-  apiKey: "",
-  apiSecret: "",
-  preferredPair: DEFAULT_EXECUTION_PROFILES.crypto.pair,
-  subAccountId: "",
+const INITIAL_RESET_FORM = {
+  email: "",
+  code: "",
+  password: "",
+  confirmPassword: "",
 };
+
+const INITIAL_CONNECTOR_FORMS = {
+  valr: {
+    apiKey: "",
+    apiSecret: "",
+    preferredPair: DEFAULT_EXECUTION_PROFILES.crypto.pair,
+    subAccountId: "",
+  },
+  ibkr: {
+    gatewayUrl: "",
+    accountId: "",
+    environment: "paper",
+  },
+  saxo: {
+    appKey: "",
+    appSecret: "",
+    accountKey: "",
+    environment: "simulation",
+  },
+  easyequities: {
+    accountLabel: "",
+    fundingBank: "",
+  },
+};
+
+function mergeConnectorForms(providers) {
+  const next = JSON.parse(JSON.stringify(INITIAL_CONNECTOR_FORMS));
+
+  (providers || []).forEach((provider) => {
+    if (!provider?.id || !next[provider.id]) {
+      return;
+    }
+
+    next[provider.id] = {
+      ...next[provider.id],
+      ...(provider.config || {}),
+    };
+  });
+
+  return next;
+}
 
 const INITIAL_FEEDBACK_FORM = {
   title: "",
@@ -362,13 +487,13 @@ function buildCollectibleTicket(item, side) {
   const presetPlans = {
     BUY: {
       ...buyPlan,
-      source: "Inventory preset",
-      rationale: "Using the slower collectible inventory risk template.",
+      source: "Holdings preset",
+      rationale: "Using the slower LEGO holdings risk template.",
     },
     SELL: {
       ...sellPlan,
-      source: "Inventory preset",
-      rationale: "Using the slower collectible inventory risk template.",
+      source: "Holdings preset",
+      rationale: "Using the slower LEGO holdings risk template.",
     },
   };
   const basePlan = presetPlans[side];
@@ -537,7 +662,7 @@ function LoadingShell({ message }) {
     <div className="authShell">
       <div className="authShellInner">
         <section className="authStage">
-          <div className="authBrand">COLLECTRADE</div>
+          <div className="authBrand">BRICK ALPHA</div>
           <div className="splashEyebrow">RESTORING WORKSPACE</div>
           <h1>Opening the session cleanly.</h1>
           <p className="authBlurb">{message}</p>
@@ -558,6 +683,130 @@ function WorkspaceLoadingState({ label }) {
   );
 }
 
+function NotificationCenter({
+  activeDesk,
+  alertSummary,
+  appSettings,
+  busyKey,
+  notificationsResponse,
+  onClose,
+  onMarkAllRead,
+  onMarkRead,
+  onOpenHomeFeed,
+  onOpenNotification,
+}) {
+  const notificationItems = notificationsResponse.items || [];
+  const notificationSummary = notificationsResponse.summary || EMPTY_NOTIFICATIONS_RESPONSE.summary;
+  const latestNotificationAt = notificationItems[0]?.createdAt
+    ? formatDateTime(notificationItems[0].createdAt, appSettings.timezone)
+    : "Quiet now";
+
+  return (
+    <div className="mobileMenuBackdrop mobileOverlayBackdrop" onClick={onClose}>
+      <div
+        className="mobileMenuScreen mobileNotificationCenter"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mobileNotificationHeader">
+          <div>
+            <span>Alerts inbox</span>
+            <strong>What needs your attention</strong>
+            <small>
+              {labelDesk(activeDesk)} session | {notificationSummary.unread || 0} unread | Latest{" "}
+              {latestNotificationAt}
+            </small>
+          </div>
+          <button type="button" className="ghostButton mobileMenuClose" onClick={onClose}>
+            Close
+          </button>
+        </div>
+
+        <div className="mobileNotificationSummaryGrid">
+          <div className="mobileNotificationSummaryCard">
+            <span>Unread now</span>
+            <strong>{notificationSummary.unread || 0}</strong>
+            <small>Fresh notifications waiting in this session.</small>
+          </div>
+          <div className="mobileNotificationSummaryCard">
+            <span>Triggered alerts</span>
+            <strong>{alertSummary.triggered || 0}</strong>
+            <small>Live rules currently firing across your desks.</small>
+          </div>
+          <div className="mobileNotificationSummaryCard">
+            <span>Recent events</span>
+            <strong>{notificationSummary.total || 0}</strong>
+            <small>Short inbox history kept tight and actionable.</small>
+          </div>
+        </div>
+
+        <div className="mobileNotificationActions">
+          <button
+            type="button"
+            className="ghostButton"
+            disabled={!notificationSummary.unread || busyKey === "notification:all"}
+            onClick={onMarkAllRead}
+          >
+            Mark all read
+          </button>
+          <button type="button" className="ghostButton" onClick={onOpenHomeFeed}>
+            Open Home feed
+          </button>
+        </div>
+
+        <div className="mobileNotificationList">
+          {notificationItems.length ? (
+            notificationItems.slice(0, 12).map((item) => (
+              <article
+                key={item.id}
+                className={`mobileNotificationItem ${item.status === "unread" ? "unread" : ""}`}
+              >
+                <button
+                  type="button"
+                  className="mobileNotificationOpen"
+                  onClick={() => onOpenNotification(item)}
+                >
+                  <div className="mobileNotificationItemTop">
+                    <span className="mobileNotificationTag">{labelDesk(item.desk || activeDesk)}</span>
+                    <span className={`mobileNotificationStatus ${item.status}`}>
+                      {item.status === "unread" ? "New" : "Read"}
+                    </span>
+                  </div>
+                  <strong>{item.title || `${item.label || "Alert"} update`}</strong>
+                  <p>{item.message || "A new event is ready for review."}</p>
+                  <div className="mobileNotificationItemFooter">
+                    <small>{formatDateTime(item.createdAt, appSettings.timezone) || "Just now"}</small>
+                    <span>Open desk</span>
+                  </div>
+                </button>
+
+                {item.status === "unread" ? (
+                  <div className="mobileNotificationActionRow">
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={busyKey === `notification:${item.id}`}
+                      onClick={() => onMarkRead(item.id)}
+                    >
+                      Mark read
+                    </button>
+                  </div>
+                ) : null}
+              </article>
+            ))
+          ) : (
+            <div className="panel mobileNotificationEmpty">
+              <EmptyState
+                title="No alert activity yet"
+                body="As your watchlist and signal rules start firing, the inbox will keep the latest events ready here."
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const initialHashState = useMemo(() => parseHashState(window.location.hash), []);
   const initialLaunchPreference = useMemo(() => readLaunchPreference(), []);
@@ -574,19 +823,25 @@ export default function App() {
   const [bootSplashVisible, setBootSplashVisible] = useState(true);
   const [authToken, setAuthToken] = useState(() => window.localStorage.getItem(TOKEN_KEY) || "");
   const [currentUser, setCurrentUser] = useState(null);
-  const [authStage, setAuthStage] = useState("landing");
+  const [authStage, setAuthStage] = useState("auth");
   const [authMode, setAuthMode] = useState("login");
+  const [authView, setAuthView] = useState("auth");
   const [authStatus, setAuthStatus] = useState("");
+  const [demoLaunchBusy, setDemoLaunchBusy] = useState(false);
   const [authForm, setAuthForm] = useState(INITIAL_AUTH_FORM);
+  const [resetForm, setResetForm] = useState(INITIAL_RESET_FORM);
+  const [resetStatus, setResetStatus] = useState("");
+  const [resetHintCode, setResetHintCode] = useState("");
   const [splashVisible, setSplashVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [notificationCenterVisible, setNotificationCenterVisible] = useState(false);
+  const [navigationStack, setNavigationStack] = useState([]);
   const [preAuthLaunch, setPreAuthLaunch] = useState({
-    page: normalizePage(initialPage),
+    page: "home",
     desk: normalizeDesk(initialDesk),
-    introId: initialLaunchPreference?.introId || defaultIntroIdForPage(initialPage),
-    sectionId:
-      initialLaunchPreference?.sectionId || PAGE_SECTION_LINKS[normalizePage(initialPage)]?.[0]?.id,
-    landingId: initialLaunchPreference?.landingId || initialLaunchPreference?.introId || "news",
+    introId: "home",
+    sectionId: "home-overview",
+    landingId: "home",
   });
   const [pendingSectionTarget, setPendingSectionTarget] = useState(null);
 
@@ -599,18 +854,32 @@ export default function App() {
   const [targetInput, setTargetInput] = useState("");
   const [connectors, setConnectors] = useState([]);
   const [feedbackResponse, setFeedbackResponse] = useState(EMPTY_FEEDBACK_RESPONSE);
+  const [watchlistResponse, setWatchlistResponse] = useState(EMPTY_WATCHLIST_RESPONSE);
+  const [alertsResponse, setAlertsResponse] = useState(EMPTY_ALERTS_RESPONSE);
+  const [notificationsResponse, setNotificationsResponse] = useState(EMPTY_NOTIFICATIONS_RESPONSE);
+  const [routineResponse, setRoutineResponse] = useState(EMPTY_ROUTINE_RESPONSE);
   const [shareStatus, setShareStatus] = useState(EMPTY_SHARE_STATUS);
   const [appSettings, setAppSettings] = useState(DEFAULT_SETTINGS);
   const [settingsStatus, setSettingsStatus] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("");
+  const [watchlistStatus, setWatchlistStatus] = useState("");
+  const [routineStatus, setRoutineStatus] = useState("");
   const [feedbackForm, setFeedbackForm] = useState(INITIAL_FEEDBACK_FORM);
   const [feedbackBusyKey, setFeedbackBusyKey] = useState("");
+  const [watchlistBusyKey, setWatchlistBusyKey] = useState("");
   const [connectorBusyKey, setConnectorBusyKey] = useState("");
   const [tradeActionBusy, setTradeActionBusy] = useState(false);
   const [tradeStatus, setTradeStatus] = useState("");
   const [toolStatus, setToolStatus] = useState("");
   const [chartUploadName, setChartUploadName] = useState("");
-  const [valrForm, setValrForm] = useState(INITIAL_VALR_FORM);
+  const [connectorForms, setConnectorForms] = useState(INITIAL_CONNECTOR_FORMS);
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [installStatus, setInstallStatus] = useState("");
+  const [isAppInstalled, setIsAppInstalled] = useState(() =>
+    Boolean(
+      window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true,
+    ),
+  );
 
   const [selectedSignalTicker, setSelectedSignalTicker] = useState(null);
   const [selectedCollectibleId, setSelectedCollectibleId] = useState(null);
@@ -625,14 +894,26 @@ export default function App() {
     window.localStorage.removeItem(TOKEN_KEY);
     setAuthToken("");
     setCurrentUser(null);
-    setAuthStage("landing");
+    setNavigationStack([]);
+    setAuthStage("auth");
     setAuthMode("login");
+    setAuthView("auth");
     setAuthStatus("");
+    setResetStatus("");
+    setResetHintCode("");
+    setResetForm(INITIAL_RESET_FORM);
     setSplashVisible(false);
+    setMenuVisible(false);
+    setNotificationCenterVisible(false);
     setPortfolio([]);
     setTargets([]);
     setConnectors([]);
+    setConnectorForms(INITIAL_CONNECTOR_FORMS);
     setFeedbackResponse(EMPTY_FEEDBACK_RESPONSE);
+    setWatchlistResponse(EMPTY_WATCHLIST_RESPONSE);
+    setAlertsResponse(EMPTY_ALERTS_RESPONSE);
+    setNotificationsResponse(EMPTY_NOTIFICATIONS_RESPONSE);
+    setRoutineResponse(EMPTY_ROUTINE_RESPONSE);
     setShareStatus(EMPTY_SHARE_STATUS);
     setAppSettings(DEFAULT_SETTINGS);
   }, []);
@@ -651,6 +932,46 @@ export default function App() {
     writeLaunchPreference(preference);
   }, []);
 
+  const applyWorkspaceRoute = useCallback(
+    (nextPage, nextDesk, options = {}) => {
+      const {
+        pushHistory = true,
+        sectionId = null,
+        persistLaunch = true,
+      } = options;
+      const normalizedPage = normalizePage(nextPage);
+      const normalizedDesk = normalizeDesk(nextDesk);
+
+      if (pushHistory && (page !== normalizedPage || activeDesk !== normalizedDesk)) {
+        setNavigationStack((current) =>
+          [...current, { page, desk: activeDesk }].slice(-24),
+        );
+      }
+
+      if (sectionId) {
+        setPendingSectionTarget({
+          page: normalizedPage,
+          desk: normalizedDesk,
+          sectionId,
+        });
+      }
+
+      setPage(normalizedPage);
+      setActiveDesk(normalizedDesk);
+      syncHashRoute(normalizedPage, normalizedDesk);
+
+      if (currentUser && persistLaunch) {
+        rememberLaunch({
+          page: normalizedPage,
+          desk: normalizedDesk,
+          introId: defaultIntroIdForPage(normalizedPage),
+          sectionId: sectionId || PAGE_SECTION_LINKS[normalizedPage]?.[0]?.id || null,
+        });
+      }
+    },
+    [activeDesk, currentUser, page, rememberLaunch, syncHashRoute],
+  );
+
   const navigateToPage = useCallback(
     (nextPage, reopenIntro = false, nextDesk = activeDesk) => {
       if (reopenIntro) {
@@ -658,46 +979,90 @@ export default function App() {
         return;
       }
 
-      const normalizedPage = normalizePage(nextPage);
-      const normalizedDesk = normalizeDesk(nextDesk);
-      setPage(normalizedPage);
-      setActiveDesk(normalizedDesk);
-      syncHashRoute(normalizedPage, normalizedDesk);
-      if (currentUser) {
-        rememberLaunch({
-          page: normalizedPage,
-          desk: normalizedDesk,
-          introId: defaultIntroIdForPage(normalizedPage),
-          sectionId: PAGE_SECTION_LINKS[normalizedPage]?.[0]?.id || null,
-        });
-      }
+      applyWorkspaceRoute(nextPage, nextDesk, {
+        pushHistory: true,
+        sectionId: null,
+        persistLaunch: true,
+      });
     },
-    [activeDesk, currentUser, rememberLaunch, syncHashRoute],
+    [activeDesk, applyWorkspaceRoute],
   );
 
   const jumpToPageSection = useCallback(
     (nextPage, sectionId, nextDesk = activeDesk) => {
-      const normalizedPage = normalizePage(nextPage);
-      const normalizedDesk = normalizeDesk(nextDesk);
-      setPendingSectionTarget({
-        page: normalizedPage,
-        desk: normalizedDesk,
+      applyWorkspaceRoute(nextPage, nextDesk, {
+        pushHistory: true,
         sectionId,
+        persistLaunch: true,
       });
-      setPage(normalizedPage);
-      setActiveDesk(normalizedDesk);
-      syncHashRoute(normalizedPage, normalizedDesk);
-      if (currentUser) {
-        rememberLaunch({
-          page: normalizedPage,
-          desk: normalizedDesk,
-          introId: defaultIntroIdForPage(normalizedPage),
-          sectionId,
-        });
-      }
     },
-    [activeDesk, currentUser, rememberLaunch, syncHashRoute],
+    [activeDesk, applyWorkspaceRoute],
   );
+
+  const installHint = useMemo(() => {
+    if (isAppInstalled) {
+      return "Brick Alpha is already installed on this device.";
+    }
+
+    const userAgent = window.navigator.userAgent || "";
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
+    if (isIOS) {
+      return "Open the share menu in Safari, then tap Add to Home Screen.";
+    }
+
+    if (installPromptEvent) {
+      return "This device can install Brick Alpha directly from the browser.";
+    }
+
+    return "Use the browser menu and choose Install App or Add to Home Screen.";
+  }, [installPromptEvent, isAppInstalled]);
+
+  const installActionLabel = useMemo(() => {
+    if (isAppInstalled) {
+      return "Installed";
+    }
+
+    const userAgent = window.navigator.userAgent || "";
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
+    if (isIOS) {
+      return "Add to Home Screen";
+    }
+
+    return installPromptEvent ? "Install App" : "Install Guide";
+  }, [installPromptEvent, isAppInstalled]);
+
+  const installApp = useCallback(async () => {
+    if (isAppInstalled) {
+      setInstallStatus("Brick Alpha is already installed on this device.");
+      return;
+    }
+
+    if (installPromptEvent) {
+      try {
+        installPromptEvent.prompt();
+        const choice = await installPromptEvent.userChoice;
+        if (choice?.outcome === "accepted") {
+          setInstallStatus("Install prompt accepted. Finish the device install to pin Brick Alpha.");
+          setInstallPromptEvent(null);
+          return;
+        }
+        setInstallStatus("Install prompt opened. If you dismissed it, you can reopen it from the browser menu later.");
+        return;
+      } catch {
+        setInstallStatus("The install prompt could not complete. Use the browser menu to install the app manually.");
+        return;
+      }
+    }
+
+    const userAgent = window.navigator.userAgent || "";
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
+    if (isIOS) {
+      setInstallStatus("On iPhone or iPad, tap Share and then Add to Home Screen to install Brick Alpha.");
+      return;
+    }
+
+    setInstallStatus("Use the browser menu and choose Install App or Add to Home Screen to pin Brick Alpha.");
+  }, [installPromptEvent, isAppInstalled]);
 
   const refreshCore = useCallback(async () => {
     const region = appSettings.preferredRegion || DEFAULT_SETTINGS.preferredRegion;
@@ -758,6 +1123,10 @@ export default function App() {
           targetsData,
           connectorsData,
           feedbackData,
+          watchlistData,
+          alertsData,
+          notificationsData,
+          routineData,
           shareData,
         ] = await Promise.all([
           requestJson("/api/portfolio", { token: tokenOverride }),
@@ -765,6 +1134,10 @@ export default function App() {
           requestJson("/api/news/targets", { token: tokenOverride }),
           requestJson("/api/connectors", { token: tokenOverride }),
           requestJson("/api/feedback", { token: tokenOverride }),
+          requestJson("/api/watchlist", { token: tokenOverride }),
+          requestJson("/api/alerts", { token: tokenOverride }),
+          requestJson("/api/notifications", { token: tokenOverride }),
+          requestJson("/api/session-routine", { token: tokenOverride }),
           requestJson("/api/share-status", { token: tokenOverride }),
         ]);
 
@@ -772,25 +1145,31 @@ export default function App() {
         setAppSettings(normalizeAppSettings(settingsData.settings));
         setTargets(targetsData.items || []);
         setConnectors(connectorsData.providers || []);
-        const nextCryptoConnector = (connectorsData.providers || []).find(
-          (provider) => provider.id === "valr",
-        );
-        if (nextCryptoConnector) {
-          setValrForm((current) => ({
-            ...current,
-            preferredPair:
-              nextCryptoConnector.config?.preferredPair ||
-              current.preferredPair ||
-              DEFAULT_EXECUTION_PROFILES.crypto.pair,
-            subAccountId: nextCryptoConnector.config?.subAccountId || current.subAccountId || "",
-          }));
-        }
+        setConnectorForms(mergeConnectorForms(connectorsData.providers || []));
         setFeedbackResponse({
           ...EMPTY_FEEDBACK_RESPONSE,
           ...feedbackData,
           items: feedbackData.items || [],
           summary: feedbackData.summary || {},
           permissions: feedbackData.permissions || { canManage: false },
+        });
+        setWatchlistResponse({
+          ...EMPTY_WATCHLIST_RESPONSE,
+          ...watchlistData,
+          items: watchlistData.items || [],
+        });
+        setAlertsResponse(normalizeAlertsResponse(alertsData));
+        setNotificationsResponse({
+          ...EMPTY_NOTIFICATIONS_RESPONSE,
+          ...notificationsData,
+          items: notificationsData.items || [],
+          summary: notificationsData.summary || EMPTY_NOTIFICATIONS_RESPONSE.summary,
+        });
+        setRoutineResponse({
+          ...EMPTY_ROUTINE_RESPONSE,
+          ...(routineData.routine || {}),
+          completedStepIds: routineData.routine?.completedStepIds || [],
+          activeDates: routineData.routine?.activeDates || [],
         });
         setShareStatus({
           ...EMPTY_SHARE_STATUS,
@@ -819,6 +1198,43 @@ export default function App() {
     }, 1300);
 
     return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    const syncInstalledState = () => {
+      setIsAppInstalled(
+        Boolean(
+          window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true,
+        ),
+      );
+    };
+
+    syncInstalledState();
+
+    const onBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event);
+      setInstallStatus("");
+    };
+
+    const onAppInstalled = () => {
+      setInstallPromptEvent(null);
+      setInstallStatus("Brick Alpha is now installed on this device.");
+      syncInstalledState();
+    };
+
+    const displayModeMedia = window.matchMedia?.("(display-mode: standalone)");
+    const onDisplayModeChange = () => syncInstalledState();
+
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    window.addEventListener("appinstalled", onAppInstalled);
+    displayModeMedia?.addEventListener?.("change", onDisplayModeChange);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", onAppInstalled);
+      displayModeMedia?.removeEventListener?.("change", onDisplayModeChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -1043,11 +1459,29 @@ export default function App() {
     ...(signalsResponse.marketData?.sourceStatus || []),
   ].filter((source) => !["ok", "online", "simulated", "configured", "manual_setup", "unsupported"].includes(source.status)).length;
 
-  const handleLandingContinue = useCallback((selection, nextMode) => {
-    setPreAuthLaunch(selection);
-    setAuthMode(nextMode);
-    setAuthStage("auth");
-  }, []);
+  const handleAppBack = useCallback(() => {
+    setMenuVisible(false);
+    setNotificationCenterVisible(false);
+
+    const previous = navigationStack[navigationStack.length - 1];
+    if (!previous) {
+      if (page !== "home") {
+        applyWorkspaceRoute("home", activeDesk, {
+          pushHistory: false,
+          sectionId: null,
+          persistLaunch: true,
+        });
+      }
+      return;
+    }
+
+    setNavigationStack((current) => current.slice(0, -1));
+    applyWorkspaceRoute(previous.page, previous.desk, {
+      pushHistory: false,
+      sectionId: null,
+      persistLaunch: true,
+    });
+  }, [activeDesk, applyWorkspaceRoute, navigationStack, page]);
 
   const handleAuthenticatedRoute = useCallback(
     async (token, user, settings, launchSelection) => {
@@ -1056,33 +1490,33 @@ export default function App() {
       setCurrentUser(user);
       setAppSettings(normalizeAppSettings(settings));
       setAuthStatus("");
-      setAuthStage("landing");
-      setSplashVisible(false);
+      setResetStatus("");
+      setResetHintCode("");
+      setResetForm(INITIAL_RESET_FORM);
+      setAuthForm(INITIAL_AUTH_FORM);
+      setAuthMode("login");
+      setAuthView("auth");
+      setAuthStage("auth");
+      setSplashVisible(true);
+      setNavigationStack([]);
       const launch = launchSelection || preAuthLaunch;
-      const nextPage = normalizePage(launch?.page || page);
+      const nextPage = "home";
       const nextDesk = normalizeDesk(launch?.desk || activeDesk);
       rememberLaunch({
         page: nextPage,
         desk: nextDesk,
-        introId: launch?.introId || defaultIntroIdForPage(nextPage),
-        sectionId: launch?.sectionId || PAGE_SECTION_LINKS[nextPage]?.[0]?.id || null,
-        landingId: launch?.landingId || launch?.introId || defaultIntroIdForPage(nextPage),
+        introId: "home",
+        sectionId: "home-overview",
+        landingId: "home",
       });
       setPage(nextPage);
       setActiveDesk(nextDesk);
       syncHashRoute(nextPage, nextDesk);
-      if (launch?.sectionId) {
-        setPendingSectionTarget({
-          page: nextPage,
-          desk: nextDesk,
-          sectionId: launch.sectionId,
-        });
-      }
+      setPendingSectionTarget(null);
       await Promise.all([refreshCore(), refreshContext(token)]);
     },
     [
       activeDesk,
-      page,
       preAuthLaunch,
       refreshContext,
       refreshCore,
@@ -1129,6 +1563,117 @@ export default function App() {
     }));
   }, []);
 
+  const handleResetFieldChange = useCallback((field, value) => {
+    setResetForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }, []);
+
+  const openForgotPassword = useCallback(() => {
+    setAuthStatus("");
+    setResetStatus("");
+    setResetHintCode("");
+    setResetForm({
+      email: authForm.email || "",
+      code: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setAuthView("forgot-request");
+  }, [authForm.email]);
+
+  const returnToLogin = useCallback(() => {
+    setAuthView("auth");
+    setResetStatus("");
+    setResetHintCode("");
+    setAuthMode("login");
+  }, []);
+
+  const handleResetRequest = useCallback(
+    async (event) => {
+      event.preventDefault();
+      setResetStatus("");
+
+      try {
+        const data = await requestJson("/api/auth/forgot-password/request", {
+          method: "POST",
+          body: {
+            email: resetForm.email,
+          },
+        });
+        setResetHintCode(data.demoCode || "");
+        setResetStatus(
+          data.message || "If that account exists, a reset code has been prepared for this build.",
+        );
+        setAuthView("forgot-reset");
+      } catch (error) {
+        setResetStatus(String(error.message || "Could not prepare a reset code."));
+      }
+    },
+    [resetForm.email],
+  );
+
+  const handleResetConfirm = useCallback(
+    async (event) => {
+      event.preventDefault();
+      setResetStatus("");
+
+      if (resetForm.password !== resetForm.confirmPassword) {
+        setResetStatus("Passwords do not match.");
+        return;
+      }
+
+      try {
+        const data = await requestJson("/api/auth/forgot-password/confirm", {
+          method: "POST",
+          body: {
+            email: resetForm.email,
+            code: resetForm.code,
+            password: resetForm.password,
+          },
+        });
+        setAuthForm((current) => ({
+          ...current,
+          email: resetForm.email,
+          password: "",
+        }));
+        setAuthStatus(data.message || "Password updated. Sign in with your new password.");
+        setResetForm(INITIAL_RESET_FORM);
+        setResetHintCode("");
+        setResetStatus("");
+        setAuthMode("login");
+        setAuthView("auth");
+      } catch (error) {
+        setResetStatus(String(error.message || "Could not reset the password."));
+      }
+    },
+    [resetForm],
+  );
+
+  const handleDemoLaunch = useCallback(
+    async (selection) => {
+      setDemoLaunchBusy(true);
+      setAuthStatus("");
+      setPreAuthLaunch(selection);
+
+      try {
+        const data = await requestJson("/api/auth/demo", {
+          method: "POST",
+          body: {
+            name: "Partner Demo",
+          },
+        });
+        await handleAuthenticatedRoute(data.token, data.user, data.settings, selection);
+      } catch (error) {
+        setAuthStatus(String(error.message || "Could not open demo mode."));
+      } finally {
+        setDemoLaunchBusy(false);
+      }
+    },
+    [handleAuthenticatedRoute],
+  );
+
   const handleSplashLaunch = useCallback(
     (selection) => {
       rememberLaunch(selection);
@@ -1150,7 +1695,17 @@ export default function App() {
   }, []);
 
   const openMenu = useCallback(() => {
+    setNotificationCenterVisible(false);
     setMenuVisible(true);
+  }, []);
+
+  const closeNotificationCenter = useCallback(() => {
+    setNotificationCenterVisible(false);
+  }, []);
+
+  const openNotificationCenter = useCallback(() => {
+    setMenuVisible(false);
+    setNotificationCenterVisible(true);
   }, []);
 
   const handleMenuNavigate = useCallback(
@@ -1171,11 +1726,13 @@ export default function App() {
 
   const handleMenuSplash = useCallback(() => {
     setMenuVisible(false);
+    setNotificationCenterVisible(false);
     setSplashVisible(true);
   }, []);
 
   const handleMenuLogout = useCallback(() => {
     setMenuVisible(false);
+    setNotificationCenterVisible(false);
     clearSession();
   }, [clearSession]);
 
@@ -1381,16 +1938,18 @@ export default function App() {
         return;
       }
 
-      try {
-        const data = await requestJson("/api/settings", {
-          method: "PUT",
-          token: authToken,
-          body: partial,
-        });
-        setAppSettings(normalizeAppSettings(data.settings));
-        setSettingsStatus("Workspace settings saved.");
-      } catch (error) {
-        setSettingsStatus(String(error.message || "Settings update failed."));
+        try {
+          const data = await requestJson("/api/settings", {
+            method: "PUT",
+            token: authToken,
+            body: partial,
+          });
+          setAppSettings(normalizeAppSettings(data.settings));
+          const alertsData = await requestJson("/api/alerts", { token: authToken });
+          setAlertsResponse(normalizeAlertsResponse(alertsData));
+          setSettingsStatus("Workspace settings saved.");
+        } catch (error) {
+          setSettingsStatus(String(error.message || "Settings update failed."));
       }
     },
     [authToken],
@@ -1432,40 +1991,64 @@ export default function App() {
     }
   }, [authToken, targetInput]);
 
-  const handleValrFieldChange = useCallback((field, value) => {
-    setValrForm((current) => ({
+  const handleConnectorFieldChange = useCallback((providerId, field, value) => {
+    setConnectorForms((current) => ({
       ...current,
-      [field]: value,
+      [providerId]: {
+        ...(current[providerId] || {}),
+        [field]: value,
+      },
     }));
   }, []);
 
-  const saveValrConnector = useCallback(async () => {
+  const saveConnector = useCallback(async (providerId) => {
     if (!authToken) {
       return;
     }
 
-    setConnectorBusyKey("valr:save");
+    const formValues = connectorForms[providerId];
+    if (!formValues) {
+      return;
+    }
+
+    setConnectorBusyKey(`${providerId}:save`);
     try {
-      const data = await requestJson("/api/connectors/valr", {
+      const data = await requestJson(`/api/connectors/${providerId}`, {
         method: "PUT",
         token: authToken,
-        body: valrForm,
+        body: formValues,
       });
       setConnectors((current) =>
-        current.map((provider) => (provider.id === "valr" ? data.provider : provider)),
+        current.map((provider) => (provider.id === providerId ? data.provider : provider)),
       );
-      setSettingsStatus("VALR credentials saved.");
-      setValrForm((current) => ({
+      setConnectorForms((current) => ({
         ...current,
-        apiKey: "",
-        apiSecret: "",
+        [providerId]: {
+          ...(current[providerId] || {}),
+          ...(data.provider?.config || {}),
+          ...(providerId === "valr"
+            ? {
+                apiKey: "",
+                apiSecret: "",
+              }
+            : providerId === "saxo"
+              ? {
+                  appKey: "",
+                  appSecret: "",
+                }
+              : {}),
+        },
       }));
+      setSettingsStatus(
+        data.detail ||
+          `${providerLabel(providerId)} ${providerId === "valr" ? "credentials" : "setup"} saved.`,
+      );
     } catch (error) {
-      setSettingsStatus(String(error.message || "VALR save failed."));
+      setSettingsStatus(String(error.message || "Connector save failed."));
     } finally {
       setConnectorBusyKey("");
     }
-  }, [authToken, valrForm]);
+  }, [authToken, connectorForms]);
 
   const testConnectorConnection = useCallback(
     async (providerId) => {
@@ -1533,6 +2116,12 @@ export default function App() {
           current.map((provider) => (provider.id === providerId ? data.provider : provider)),
         );
         setSettingsStatus(`${providerLabel(providerId)} disconnected.`);
+        setConnectorForms((current) => ({
+          ...current,
+          [providerId]: {
+            ...INITIAL_CONNECTOR_FORMS[providerId],
+          },
+        }));
       } catch (error) {
         setSettingsStatus(String(error.message || "Disconnect failed."));
       } finally {
@@ -1600,6 +2189,368 @@ export default function App() {
     [authToken],
   );
 
+  const openWatchlistSignal = useCallback(
+    (item) => {
+      if (!item?.ticker) {
+        return;
+      }
+      setSelectedSignalTicker(item.ticker);
+      jumpToPageSection("signals", "chart-panel", item.desk || activeDesk);
+    },
+    [activeDesk, jumpToPageSection],
+  );
+
+  const addSignalToWatchlist = useCallback(
+    async (signal) => {
+      if (!authToken || !signal) {
+        return;
+      }
+
+      setWatchlistBusyKey(`watch:${signal.ticker}`);
+      try {
+        const data = await requestJson("/api/watchlist", {
+          method: "POST",
+          token: authToken,
+          body: {
+            ticker: signal.ticker,
+            label: signal.label,
+            desk: signal.desk,
+          },
+        });
+        setWatchlistResponse({
+          ...EMPTY_WATCHLIST_RESPONSE,
+          items: data.items || [],
+        });
+        setWatchlistStatus(`${signal.label} added to your watchlist.`);
+      } catch (error) {
+        setWatchlistStatus(String(error.message || "Watchlist update failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const removeWatchlistItem = useCallback(
+    async (watchId) => {
+      if (!authToken || !watchId) {
+        return;
+      }
+
+      setWatchlistBusyKey(`watch:remove:${watchId}`);
+      try {
+        const data = await requestJson(`/api/watchlist/${watchId}`, {
+          method: "DELETE",
+          token: authToken,
+        });
+        setWatchlistResponse({
+          ...EMPTY_WATCHLIST_RESPONSE,
+          items: data.items || [],
+        });
+        setWatchlistStatus("Watchlist updated.");
+      } catch (error) {
+        setWatchlistStatus(String(error.message || "Watchlist removal failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const updateRoutineStep = useCallback(
+    async (stepId, completed) => {
+      if (!authToken || !stepId) {
+        return;
+      }
+
+      setWatchlistBusyKey(`routine:${stepId}`);
+      try {
+        const data = await requestJson("/api/session-routine", {
+          method: "PUT",
+          token: authToken,
+          body: { stepId, completed },
+        });
+        setRoutineResponse({
+          ...EMPTY_ROUTINE_RESPONSE,
+          ...(data.routine || {}),
+          completedStepIds: data.routine?.completedStepIds || [],
+          activeDates: data.routine?.activeDates || [],
+        });
+        setRoutineStatus(completed ? "Workflow step marked complete." : "Workflow step unchecked.");
+      } catch (error) {
+        setRoutineStatus(String(error.message || "Routine update failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const updateRoutineSessionMode = useCallback(
+    async (sessionMode) => {
+      if (!authToken || !sessionMode) {
+        return;
+      }
+
+      setWatchlistBusyKey(`routine-mode:${sessionMode}`);
+      try {
+        const data = await requestJson("/api/session-routine", {
+          method: "PUT",
+          token: authToken,
+          body: { sessionMode },
+        });
+        setRoutineResponse({
+          ...EMPTY_ROUTINE_RESPONSE,
+          ...(data.routine || {}),
+          completedStepIds: data.routine?.completedStepIds || [],
+          activeDates: data.routine?.activeDates || [],
+        });
+        setRoutineStatus("Workflow session updated.");
+      } catch (error) {
+        setRoutineStatus(String(error.message || "Session update failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const resetRoutineForToday = useCallback(async () => {
+    if (!authToken) {
+      return;
+    }
+
+    setWatchlistBusyKey("routine:reset");
+    try {
+      const data = await requestJson("/api/session-routine", {
+        method: "PUT",
+        token: authToken,
+        body: { reset: true },
+      });
+      setRoutineResponse({
+        ...EMPTY_ROUTINE_RESPONSE,
+        ...(data.routine || {}),
+        completedStepIds: data.routine?.completedStepIds || [],
+        activeDates: data.routine?.activeDates || [],
+      });
+      setRoutineStatus("Today's workflow has been reset.");
+    } catch (error) {
+      setRoutineStatus(String(error.message || "Routine reset failed."));
+    } finally {
+      setWatchlistBusyKey("");
+    }
+  }, [authToken]);
+
+  const dismissRoutineReminder = useCallback(async () => {
+    if (!authToken) {
+      return;
+    }
+
+    setWatchlistBusyKey("routine:reminder");
+    try {
+      const data = await requestJson("/api/session-routine", {
+        method: "PUT",
+        token: authToken,
+        body: { dismissReminder: true },
+      });
+      setRoutineResponse({
+        ...EMPTY_ROUTINE_RESPONSE,
+        ...(data.routine || {}),
+        completedStepIds: data.routine?.completedStepIds || [],
+        activeDates: data.routine?.activeDates || [],
+      });
+      setRoutineStatus("Today's reminder dismissed.");
+    } catch (error) {
+      setRoutineStatus(String(error.message || "Reminder dismissal failed."));
+    } finally {
+      setWatchlistBusyKey("");
+    }
+  }, [authToken]);
+
+  const acknowledgeRoutineCompletion = useCallback(async () => {
+    if (!authToken) {
+      return;
+    }
+
+    setWatchlistBusyKey("routine:ack");
+    try {
+      const data = await requestJson("/api/session-routine", {
+        method: "PUT",
+        token: authToken,
+        body: { acknowledgeCompletion: true },
+      });
+      setRoutineResponse({
+        ...EMPTY_ROUTINE_RESPONSE,
+        ...(data.routine || {}),
+        completedStepIds: data.routine?.completedStepIds || [],
+        activeDates: data.routine?.activeDates || [],
+      });
+      setRoutineStatus("Routine completion saved.");
+    } catch (error) {
+      setRoutineStatus(String(error.message || "Completion acknowledgement failed."));
+    } finally {
+      setWatchlistBusyKey("");
+    }
+  }, [authToken]);
+
+  const createSignalAlert = useCallback(
+    async (signal, kind, threshold, labelOverride) => {
+      if (!authToken || !signal) {
+        return;
+      }
+
+        setWatchlistBusyKey(`alert:${signal.ticker}:${kind}`);
+        try {
+          const data = await requestJson("/api/alerts", {
+            method: "POST",
+            token: authToken,
+            body: {
+            ticker: signal.ticker,
+            label: labelOverride || signal.label,
+            desk: signal.desk,
+            kind,
+              threshold,
+            },
+          });
+          setAlertsResponse(normalizeAlertsResponse(data));
+          setWatchlistStatus(`${signal.label} alert saved.`);
+        } catch (error) {
+          if (String(error.message || "") === "alert_limit_reached") {
+            const limit = alertsResponse.plan?.maxAlerts || 5;
+            setWatchlistStatus(
+              `Your ${subscriptionTierLabel(appSettings.subscriptionTier)} plan allows ${limit} alert slots. Remove one or upgrade in Settings.`,
+            );
+          } else {
+            setWatchlistStatus(String(error.message || "Alert save failed."));
+          }
+        } finally {
+          setWatchlistBusyKey("");
+        }
+      },
+      [alertsResponse.plan?.maxAlerts, appSettings.subscriptionTier, authToken],
+    );
+
+  const toggleAlertRule = useCallback(
+    async (alertId, enabled) => {
+      if (!authToken || !alertId) {
+        return;
+      }
+
+      setWatchlistBusyKey(`alert:toggle:${alertId}`);
+      try {
+        const data = await requestJson(`/api/alerts/${alertId}`, {
+          method: "PATCH",
+          token: authToken,
+          body: { enabled },
+        });
+          setAlertsResponse(normalizeAlertsResponse(data));
+          setWatchlistStatus(`Alert ${enabled ? "enabled" : "paused"}.`);
+      } catch (error) {
+        setWatchlistStatus(String(error.message || "Alert update failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const removeAlertRule = useCallback(
+    async (alertId) => {
+      if (!authToken || !alertId) {
+        return;
+      }
+
+      setWatchlistBusyKey(`alert:remove:${alertId}`);
+      try {
+        const data = await requestJson(`/api/alerts/${alertId}`, {
+          method: "DELETE",
+          token: authToken,
+        });
+          setAlertsResponse(normalizeAlertsResponse(data));
+          setWatchlistStatus("Alert removed.");
+      } catch (error) {
+        setWatchlistStatus(String(error.message || "Alert removal failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const markNotificationRead = useCallback(
+    async (notificationId) => {
+      if (!authToken || !notificationId) {
+        return;
+      }
+
+      setWatchlistBusyKey(`notification:${notificationId}`);
+      try {
+        const data = await requestJson(`/api/notifications/${notificationId}`, {
+          method: "PATCH",
+          token: authToken,
+          body: { status: "read" },
+        });
+        setNotificationsResponse({
+          ...EMPTY_NOTIFICATIONS_RESPONSE,
+          items: data.items || [],
+          summary: data.summary || EMPTY_NOTIFICATIONS_RESPONSE.summary,
+        });
+      } catch (error) {
+        setWatchlistStatus(String(error.message || "Notification update failed."));
+      } finally {
+        setWatchlistBusyKey("");
+      }
+    },
+    [authToken],
+  );
+
+  const markAllNotificationsRead = useCallback(async () => {
+    if (!authToken) {
+      return;
+    }
+
+    setWatchlistBusyKey("notification:all");
+    try {
+      const data = await requestJson("/api/notifications/mark-all-read", {
+        method: "POST",
+        token: authToken,
+      });
+      setNotificationsResponse({
+        ...EMPTY_NOTIFICATIONS_RESPONSE,
+        items: data.items || [],
+        summary: data.summary || EMPTY_NOTIFICATIONS_RESPONSE.summary,
+      });
+      setWatchlistStatus("Notifications marked as read.");
+    } catch (error) {
+      setWatchlistStatus(String(error.message || "Notification update failed."));
+    } finally {
+      setWatchlistBusyKey("");
+    }
+  }, [authToken]);
+
+  const openNotificationHomeFeed = useCallback(() => {
+    setNotificationCenterVisible(false);
+    jumpToPageSection("home", "home-watchlist", activeDesk);
+  }, [activeDesk, jumpToPageSection]);
+
+  const openNotificationDestination = useCallback(
+    async (item) => {
+      setNotificationCenterVisible(false);
+      if (item?.status === "unread" && item?.id) {
+        await markNotificationRead(item.id);
+      }
+
+      if (item?.ticker) {
+        setSelectedSignalTicker(item.ticker);
+        jumpToPageSection("signals", "chart-panel", item.desk || activeDesk);
+        return;
+      }
+
+      jumpToPageSection("home", "home-watchlist", activeDesk);
+    },
+    [activeDesk, jumpToPageSection, markNotificationRead],
+  );
+
   const applyChartLevelToTicket = useCallback((levelKind) => {
     if (!activeSignal) {
       return;
@@ -1664,6 +2615,10 @@ export default function App() {
     label: workspaceLabel(page, activeDesk),
     hint: SCREEN_PREVIEWS[page] || "Current workspace",
   };
+  const canGoBack = navigationStack.length > 0 || page !== "home";
+  const notificationSummary = notificationsResponse.summary || EMPTY_NOTIFICATIONS_RESPONSE.summary;
+  const notificationUnreadCount = notificationSummary.unread || 0;
+  const alertSummary = alertsResponse.summary || EMPTY_ALERTS_RESPONSE.summary;
   const mobileClockLabel = useMemo(
     () =>
       new Intl.DateTimeFormat("en-ZA", {
@@ -1708,12 +2663,19 @@ export default function App() {
       detail: "Open partner items",
       action: () => jumpToPageSection("settings", "feedback-board"),
     },
+    {
+      id: "notifications",
+      label: "Inbox",
+      value: notificationUnreadCount,
+      detail: "Unread notifications",
+      action: openNotificationCenter,
+    },
   ];
   const primaryNavItems = NAV_ITEMS.filter((item) =>
     ["home", "news", "signals", "collectibles", "portfolio"].includes(item.id),
   );
   const utilityNavItems = NAV_ITEMS.filter((item) =>
-    ["tools", "reports", "connections", "settings"].includes(item.id),
+    ["subscriptions", "tools", "reports", "connections", "settings"].includes(item.id),
   );
   const defaultTradingDesk = ["forex", "etfs", "jse"].includes(activeDesk) ? activeDesk : "forex";
   const menuPrimaryItems = [
@@ -1741,8 +2703,8 @@ export default function App() {
     {
       id: "menu-collectibles",
       glyph: "CL",
-      label: "Collectibles",
-      detail: "Alternative inventory",
+      label: "LEGO Investments",
+      detail: "collectibles",
       action: () => handleMenuNavigate("collectibles", activeDesk),
     },
     {
@@ -1769,9 +2731,15 @@ export default function App() {
     },
     {
       id: "menu-reports",
-      label: "Reports",
+      label: "Research Center",
       detail: "Performance graphs",
       action: () => handleMenuNavigate("reports", activeDesk),
+    },
+    {
+      id: "menu-subscriptions",
+      label: "Subscriptions",
+      detail: "Plans and premium value",
+      action: () => handleMenuNavigate("subscriptions", activeDesk),
     },
     {
       id: "menu-tools",
@@ -1793,6 +2761,12 @@ export default function App() {
     },
   ];
   const menuActionItems = [
+    {
+      id: "menu-inbox",
+      label: "Alerts Inbox",
+      detail: `${notificationUnreadCount} unread in this session`,
+      action: openNotificationCenter,
+    },
     {
       id: "menu-feedback",
       label: "Feedback Board",
@@ -1824,6 +2798,7 @@ export default function App() {
         <HomeScreen
           activeDesk={effectiveDeskKey}
           activePageSections={activePageSections}
+          alertsResponse={alertsResponse}
           appSettings={appSettings}
           collectiblesResponse={collectiblesResponse}
           connectedProviderCount={connectedProviderCount}
@@ -1831,12 +2806,29 @@ export default function App() {
           health={health}
           jumpToPageSection={jumpToPageSection}
           liveReadyDeskCount={liveReadyDeskCount}
+          markAllNotificationsRead={markAllNotificationsRead}
+          markNotificationRead={markNotificationRead}
           navigateToPage={navigateToPage}
           newsResponse={newsResponse}
+          notificationsResponse={notificationsResponse}
+          onOpenWatchlistSignal={openWatchlistSignal}
+          onRemoveAlertRule={removeAlertRule}
+          onRemoveWatchlistItem={removeWatchlistItem}
+          onToggleAlertRule={toggleAlertRule}
           openTrades={openTrades}
+          routineResponse={routineResponse}
+          routineStatus={routineStatus}
+          dismissRoutineReminder={dismissRoutineReminder}
+          acknowledgeRoutineCompletion={acknowledgeRoutineCompletion}
+          setRoutineMode={updateRoutineSessionMode}
+          resetRoutine={resetRoutineForToday}
+          setRoutineStep={updateRoutineStep}
           shareStatus={shareStatus}
           signalsResponse={signalsResponse}
           totalOpenPnl={totalOpenPnl}
+          watchlistBusyKey={watchlistBusyKey}
+          watchlistResponse={watchlistResponse}
+          watchlistStatus={watchlistStatus}
         />
       ) : null}
 
@@ -1865,8 +2857,11 @@ export default function App() {
           activeDesk={activeDesk}
           activePageSections={activePageSections}
           activeSignalExecutionPlan={activeSignalExecutionPlan}
+          addSignalToWatchlist={addSignalToWatchlist}
+          alertsResponse={alertsResponse}
           appSettings={appSettings}
           applyChartLevelToTicket={applyChartLevelToTicket}
+          createSignalAlert={createSignalAlert}
           effectiveDeskKey={effectiveDeskKey}
           executionPlanForCard={executionPlanForCard}
           filteredSignals={filteredSignals}
@@ -1877,11 +2872,14 @@ export default function App() {
           marketSourceMap={marketSourceMap}
           newsItemsForDesk={newsItemsForDesk}
           newsSourceMap={newsSourceMap}
+          navigateToPage={navigateToPage}
           openMarketTicket={openMarketTicket}
           openTrades={openTrades}
           orderTicket={orderTicket}
           signalsResponse={signalsResponse}
           tradeStatus={tradeStatus}
+          watchlistBusyKey={watchlistBusyKey}
+          watchlistStatus={watchlistStatus}
         />
       ) : null}
 
@@ -1959,6 +2957,20 @@ export default function App() {
         />
       ) : null}
 
+      {page === "subscriptions" ? (
+        <SubscriptionsScreen
+          activeDesk={activeDesk}
+          activePageSections={activePageSections}
+          alertsResponse={alertsResponse}
+          appSettings={appSettings}
+          jumpToPageSection={jumpToPageSection}
+          navigateToPage={navigateToPage}
+          notificationsResponse={notificationsResponse}
+          openTrades={openTrades}
+          totalOpenPnl={totalOpenPnl}
+        />
+      ) : null}
+
       {page === "connections" ? (
         <ConnectionsScreen
           activeDesk={activeDesk}
@@ -1970,20 +2982,20 @@ export default function App() {
           cryptoConnector={cryptoConnector}
           degradedSourceCount={degradedSourceCount}
           disconnectConnector={disconnectConnector}
-          handleValrFieldChange={handleValrFieldChange}
+          handleConnectorFieldChange={handleConnectorFieldChange}
           health={health}
           jumpToPageSection={jumpToPageSection}
           liveReadyDeskCount={liveReadyDeskCount}
           newsResponse={newsResponse}
           refreshContext={refreshContext}
           refreshCore={refreshCore}
-          saveValrConnector={saveValrConnector}
+          saveConnector={saveConnector}
           settingsStatus={settingsStatus}
           signalsResponse={signalsResponse}
           syncConnectorBalances={syncConnectorBalances}
           testConnectorConnection={testConnectorConnection}
           updateExecutionProfile={updateExecutionProfile}
-          valrForm={valrForm}
+          connectorForms={connectorForms}
         />
       ) : null}
 
@@ -1992,6 +3004,7 @@ export default function App() {
           activeDesk={activeDesk}
           activePageSections={activePageSections}
           addTarget={addTarget}
+          alertsResponse={alertsResponse}
           appSettings={appSettings}
           connectedProviderCount={connectedProviderCount}
           currentUser={currentUser}
@@ -1999,9 +3012,14 @@ export default function App() {
           feedbackForm={feedbackForm}
           feedbackResponse={feedbackResponse}
           feedbackStatus={feedbackStatus}
+          installActionLabel={installActionLabel}
+          installHint={installHint}
+          installStatus={installStatus}
+          isAppInstalled={isAppInstalled}
           jumpToPageSection={jumpToPageSection}
           liveReadyDeskCount={liveReadyDeskCount}
           navigateToPage={navigateToPage}
+          onInstallApp={installApp}
           setFeedbackForm={setFeedbackForm}
           settingsStatus={settingsStatus}
           shareStatus={shareStatus}
@@ -2028,20 +3046,27 @@ export default function App() {
   }
 
   if (!currentUser) {
-    if (authStage === "landing") {
-      return <LandingShell initialLaunch={preAuthLaunch} onContinue={handleLandingContinue} />;
-    }
-
     return (
       <AuthShell
         authMode={authMode}
+        authView={authView}
         authForm={authForm}
+        resetForm={resetForm}
         authStatus={authStatus}
+        resetStatus={resetStatus}
+        resetHintCode={resetHintCode}
         launchSelection={preAuthLaunch}
-        onBack={() => setAuthStage("landing")}
+        onBack={authStage === "landing" ? () => setAuthStage("auth") : null}
         onModeChange={setAuthMode}
         onSubmit={handleAuthSubmit}
         onFieldChange={handleAuthFieldChange}
+        onResetFieldChange={handleResetFieldChange}
+        onForgotPassword={openForgotPassword}
+        onPasswordResetRequest={handleResetRequest}
+        onPasswordResetConfirm={handleResetConfirm}
+        onReturnToLogin={returnToLogin}
+        onDemo={() => handleDemoLaunch(preAuthLaunch)}
+        demoBusy={demoLaunchBusy}
       />
     );
   }
@@ -2066,7 +3091,7 @@ export default function App() {
           </button>
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandWordmark">COLLECTRADE</div>
+              <div className="brandWordmark">BRICK ALPHA</div>
               <div className="brandSub">Workspace build for partner testing</div>
             </button>
           </div>
@@ -2138,19 +3163,50 @@ export default function App() {
         </div>
 
         <div className="mobileTitleBar">
-          <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">CT</div>
-            <div className="mobileBrandCopy">
-              <strong>Collecttrade</strong>
-              <small>{currentWorkspaceCard.label}</small>
-            </div>
-          </button>
+          <div className="mobileTitleLead">
+            {canGoBack ? (
+              <button
+                type="button"
+                className="mobileBackButton"
+                aria-label="Go back"
+                onClick={handleAppBack}
+              >
+                <span>&lt;</span>
+              </button>
+            ) : null}
+            <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
+              <div className="brandMark">CT</div>
+              <div className="mobileBrandCopy">
+                <strong>Brick Alpha</strong>
+                <small>{currentWorkspaceCard.label}</small>
+              </div>
+            </button>
+          </div>
 
           <div className="mobileTitleActions">
             <div className="mobileTitleMeta">
               <span>{labelDesk(activeDesk)}</span>
               <strong>{marketModeLabel(signalsResponse.marketData?.mode)}</strong>
             </div>
+            {!isAppInstalled ? (
+              <button
+                type="button"
+                className="mobileInboxButton"
+                aria-label={installActionLabel}
+                onClick={installApp}
+              >
+                <span>Install</span>
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`mobileInboxButton ${notificationUnreadCount ? "hasUnread" : ""}`}
+              aria-label="Open alerts inbox"
+              onClick={openNotificationCenter}
+            >
+              <span>Inbox</span>
+              {notificationUnreadCount ? <em>{notificationUnreadCount}</em> : null}
+            </button>
             <button
               type="button"
               className="mobileMenuButton"
@@ -2184,6 +3240,23 @@ export default function App() {
             <div className={`livePill ${statusTone(signalsResponse.marketData?.mode)}`}>
               {marketModeLabel(signalsResponse.marketData?.mode)}
             </div>
+            {!isAppInstalled ? (
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={installApp}
+              >
+                {installActionLabel}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`ghostButton topbarInboxButton ${notificationUnreadCount ? "hasUnread" : ""}`}
+              onClick={openNotificationCenter}
+            >
+              <span>Alerts inbox</span>
+              <strong>{notificationUnreadCount}</strong>
+            </button>
             <button
               type="button"
               className="ghostButton"
@@ -2236,6 +3309,21 @@ export default function App() {
           ))}
         </nav>
 
+        {notificationCenterVisible ? (
+          <NotificationCenter
+            activeDesk={activeDesk}
+            alertSummary={alertSummary}
+            appSettings={appSettings}
+            busyKey={watchlistBusyKey}
+            notificationsResponse={notificationsResponse}
+            onClose={closeNotificationCenter}
+            onMarkAllRead={markAllNotificationsRead}
+            onMarkRead={markNotificationRead}
+            onOpenHomeFeed={openNotificationHomeFeed}
+            onOpenNotification={openNotificationDestination}
+          />
+        ) : null}
+
         {menuVisible ? (
           <div className="mobileMenuBackdrop" onClick={closeMenu}>
             <div className="mobileMenuScreen" onClick={(event) => event.stopPropagation()}>
@@ -2244,8 +3332,8 @@ export default function App() {
                   <span>Navigation</span>
                   <strong>Choose where to go</strong>
                   <small>
-                    {currentUser?.name || currentUser?.email || "Current session"} ·{" "}
-                    {labelDesk(activeDesk)} · {currentWorkspaceCard.label}
+                    {currentUser?.name || currentUser?.email || "Current session"} |{" "}
+                    {labelDesk(activeDesk)} | {currentWorkspaceCard.label}
                   </small>
                 </div>
                 <button type="button" className="ghostButton mobileMenuClose" onClick={closeMenu}>
@@ -2261,7 +3349,7 @@ export default function App() {
                       <strong>{item.label}</strong>
                       <small>{item.detail}</small>
                     </div>
-                    <div className="mobileMenuRowArrow">→</div>
+                    <div className="mobileMenuRowArrow">-&gt;</div>
                   </button>
                 ))}
               </div>
@@ -2284,7 +3372,7 @@ export default function App() {
               </div>
 
               <div className="mobileMenuScreenSection">
-                <span>More screens</span>
+                <span>Workspace &amp; Support</span>
                 <div className="mobileMenuSupportList">
                   {menuSupportItems.map((item) => (
                     <button key={item.id} type="button" className="mobileMenuSupportCard" onClick={item.action}>
@@ -2326,10 +3414,10 @@ export default function App() {
               : orderTicket?.kind === "collectible"
                 ? {
                     mode: "paper",
-                    providerLabel: "Collecttrade Paper",
+                    providerLabel: "Brick Alpha Paper",
                     pair: null,
                     ready: true,
-                    detail: "Collectibles stay inside the app as paper inventory trades.",
+                    detail: "LEGO investment positions stay inside the app as paper holdings.",
                   }
                 : null
           }

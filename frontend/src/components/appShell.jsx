@@ -1,11 +1,13 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import {
-  INTRO_ACTIONS,
-  NAV_ITEMS,
   PARTNER_TEST_FLOW,
-  SCREEN_PREVIEWS,
   TRADE_PATHS,
 } from "../appConfig";
+import {
+  buildHomeEntrySelection,
+  buildPrimaryServiceRows,
+  ENTRY_ONBOARDING_SLIDES,
+} from "../serviceRegistry";
 import {
   defaultIntroIdForPage,
   defaultSectionIdForIntro,
@@ -150,11 +152,11 @@ export function WorkspaceCommandBar({
 
 export function BootSplash() {
   return (
-    <div className="bootSplashShell" aria-label="Collecttrade is opening">
+    <div className="bootSplashShell" aria-label="Brick Alpha is opening">
       <div className="bootSplashPanel">
         <div className="bootSplashMark">CT</div>
-        <div className="bootSplashWordmark">COLLECTRADE</div>
-        <div className="bootSplashTag">Signals | News | Collectibles</div>
+        <div className="bootSplashWordmark">BRICK ALPHA</div>
+        <div className="bootSplashTag">Signals | News | LEGO Alpha</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
           <span />
@@ -169,164 +171,21 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
   const savedLaunch = readLaunchPreference();
   const launchDesk = savedLaunch?.desk || normalizeDesk(activeDesk);
   const defaultTradingDesk = launchDesk === "crypto" ? "forex" : launchDesk;
-  const partnerLaunch = {
-    page: "home",
-    desk: "forex",
-    introId: "home",
-    sectionId: "home-partner",
-  };
-  const savedLaunchLabel = savedLaunch ? workspaceLabel(savedLaunch.page, savedLaunch.desk) : null;
-  const serviceMenuRows = [
-    {
-      id: "news",
-      ordinal: "01",
-      glyph: "NW",
-      title: "News",
-      tag: "Macro tape",
-      tone: "news",
-      detail: `${labelDesk(launchDesk)} headlines, South African context, and the live desk narrative.`,
-      selection: {
-        page: "news",
-        desk: launchDesk,
-        introId: "news",
-        sectionId: "macro-feed",
-      },
-    },
-    {
-      id: "trading",
-      ordinal: "02",
-      glyph: "TR",
-      title: "Trading",
-      tag: "Signal desk",
-      tone: "trade",
-      detail: `${labelDesk(defaultTradingDesk)} signals, tickets, and structure planning.`,
-      selection: {
-        page: "signals",
-        desk: defaultTradingDesk,
-        introId: "trade",
-        sectionId: "signals-grid",
-      },
-    },
-    {
-      id: "crypto",
-      ordinal: "03",
-      glyph: "CR",
-      title: "Crypto",
-      tag: "BTC lane",
-      tone: "crypto",
-      detail: "Jump straight into the crypto desk, technical pulse, and RSI context.",
-      selection: {
-        page: "signals",
-        desk: "crypto",
-        introId: "trade",
-        sectionId: "signals-grid",
-      },
-    },
-    {
-      id: "collectibles",
-      ordinal: "04",
-      glyph: "CL",
-      title: "Collectibles",
-      tag: "Alt assets",
-      tone: "collectibles",
-      detail: "Open LEGO, Pokemon, and the tradable inventory workflow.",
-      selection: {
-        page: "collectibles",
-        desk: launchDesk,
-        introId: "collectibles",
-        sectionId: "collectibles-focus",
-      },
-    },
-    {
-      id: "portfolio",
-      ordinal: "05",
-      glyph: "PF",
-      title: "Portfolio",
-      tag: "Review",
-      tone: "portfolio",
-      detail: "See open positions, recent activity, and the current book at a glance.",
-      selection: {
-        page: "portfolio",
-        desk: launchDesk,
-        introId: "portfolio",
-        sectionId: "open-positions",
-      },
-    },
-  ];
-  const supportMenuRows = [
-    {
-      id: "reports",
-      title: "Reports",
-      detail: "Performance graphs",
-      selection: { page: "reports", desk: launchDesk, introId: "reports", sectionId: "reports-performance" },
-    },
-    {
-      id: "tools",
-      title: "Tools",
-      detail: "Analyzer and simulator",
-      selection: { page: "tools", desk: launchDesk, introId: "tools", sectionId: "tools-workbench" },
-    },
-    {
-      id: "connections",
-      title: "Connections",
-      detail: "Feeds and routing",
-      selection: {
-        page: "connections",
-        desk: launchDesk,
-        introId: "connections",
-        sectionId: "connections-overview",
-      },
-    },
-    {
-      id: "settings",
-      title: "Settings",
-      detail: "Account and setup",
-      selection: { page: "settings", desk: launchDesk, introId: "settings", sectionId: "news-region" },
-    },
-  ];
-  const onboardingSlides = [
-    {
-      id: "news",
-      glyph: "NW",
-      eyebrow: "Macro first",
-      title: "Read the market before you act.",
-      description:
-        "Start with desk-aware headlines, South African context, and the macro tape that frames the session.",
-      accent: "news",
-      bars: [48, 82, 62, 92],
-    },
-    {
-      id: "trade",
-      glyph: "TR",
-      eyebrow: "Structured execution",
-      title: "Trade from signals and structure.",
-      description:
-        "Charts, 8/21 EMA setups, stop and target planning, and tickets stay connected in one flow.",
-      accent: "trade",
-      bars: [56, 74, 88, 68],
-    },
-    {
-      id: "collectibles",
-      glyph: "CL",
-      eyebrow: "Alternative assets",
-      title: "Keep collectibles in the same workspace.",
-      description:
-        "LEGO, Pokemon, portfolio review, and route readiness all sit inside the same mobile product shell.",
-      accent: "collectibles",
-      bars: [42, 68, 54, 80],
-    },
-  ];
-  const [onboardingStep, setOnboardingStep] = useState(0);
+  const homeLaunch = buildHomeEntrySelection(launchDesk);
+  const serviceMenuRows = buildPrimaryServiceRows({
+    launchDesk,
+    launchDeskLabel: labelDesk(launchDesk),
+    defaultTradingDesk,
+    defaultTradingDeskLabel: labelDesk(defaultTradingDesk),
+  });
+  const onboardingSlides = ENTRY_ONBOARDING_SLIDES;
+  const [onboardingStep, setOnboardingStep] = useState(onboardingSlides.length);
   const onboardingComplete = onboardingStep >= onboardingSlides.length;
   const currentOnboardingSlide =
     onboardingSlides[Math.min(onboardingStep, onboardingSlides.length - 1)];
 
   const advanceOnboarding = () => {
     setOnboardingStep((step) => Math.min(step + 1, onboardingSlides.length));
-  };
-
-  const resetOnboarding = () => {
-    setOnboardingStep(0);
   };
 
   const skipOnboarding = () => {
@@ -338,7 +197,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashShell splashShellMobile">
         <div className="onboardingPanel">
           <div className="onboardingTopBar">
-            <div className="authBrand">COLLECTRADE</div>
+            <div className="authBrand">BRICK ALPHA</div>
             <button type="button" className="ghostButton onboardingSkipButton" onClick={skipOnboarding}>
               Skip
             </button>
@@ -393,111 +252,48 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
 
   return (
     <div className="splashShell splashShellMobile">
-      <div className="splashPanel splashPanelCompact splashMenuBackdrop">
+      <div className="splashPanel splashPanelCompact splashMenuBackdrop splashPanelServicesOnly">
         <div className="splashCompactHeader">
-          <div className="authBrand">COLLECTRADE</div>
-          <button type="button" className="ghostButton onboardingSkipButton" onClick={resetOnboarding}>
-            View Intro
-          </button>
-        </div>
-
-        <div className="splashCompactHero">
-          <div className="splashEyebrow">Main Menu</div>
-          <h1>Choose a service.</h1>
-          <p className="authBlurb">Open one lane now. Each menu item takes you straight into its own screen.</p>
-          <div className="splashHeroPillRow" aria-hidden="true">
-            <span className="splashHeroPill">Macro</span>
-            <span className="splashHeroPill">Signals</span>
-            <span className="splashHeroPill">Collectibles</span>
+          <div className="authBrandLockup splashServiceBrandLockup">
+            <div className="brandMark authBrandMark">CT</div>
+            <div className="authBrandMeta">
+              <div className="authBrand">BRICK ALPHA</div>
+              <small>Services</small>
+            </div>
           </div>
         </div>
 
-        {savedLaunch ? (
-          <button
-            type="button"
-            className="chooserResumeBar"
-            onClick={() => onLaunch(savedLaunch)}
-            disabled={!ready}
-          >
-            <div className="chooserResumeCopy">
-              <span>Resume</span>
-              <strong>{savedLaunchLabel}</strong>
-              <small>Continue from your last route.</small>
-            </div>
-            <div className="mobileMenuRowArrow">-&gt;</div>
-          </button>
-        ) : null}
-
-        <section className="splashSection splashSectionCompact">
-          <div className="splashSectionHeader">
-            <div>
-              <span>Services</span>
-              <strong>Main workspaces</strong>
-            </div>
-          </div>
-
-          <div className="mobileMenuScreenList splashServiceMenuList">
-            {serviceMenuRows.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`mobileMenuRow mobileMenuRow-${item.tone}`}
-                onClick={() => onLaunch(item.selection)}
-                disabled={!ready}
-              >
-                <div className="mobileMenuRowGlyph">{item.glyph}</div>
-                <div className="mobileMenuRowCopy">
-                  <div className="mobileMenuRowTop">
-                    <span>{item.ordinal}</span>
-                    <small>{item.tag}</small>
-                  </div>
-                  <strong>{item.title}</strong>
-                  <small>{item.detail}</small>
+        <div className="mobileMenuScreenList splashServiceMenuList splashServiceMenuOnly">
+          {serviceMenuRows.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`mobileMenuRow mobileMenuRow-${item.tone || "support"} launchMenuRow`}
+              onClick={() => onLaunch(item.selection)}
+              disabled={!ready}
+            >
+              <div className="mobileMenuRowGlyph">{item.glyph}</div>
+              <div className="mobileMenuRowCopy">
+                <div className="mobileMenuRowTop">
+                  <span>{item.ordinal}</span>
+                  <small>{item.tag}</small>
                 </div>
-                <div className="mobileMenuRowArrow">-&gt;</div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="splashSection splashSectionCompact">
-          <div className="splashSectionHeader">
-            <div>
-              <span>More</span>
-              <strong>Reports and setup</strong>
-            </div>
-          </div>
-
-          <div className="mobileMenuSupportList chooserSupportList">
-            {supportMenuRows.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="mobileMenuSupportCard"
-                onClick={() => onLaunch(item.selection)}
-                disabled={!ready}
-              >
                 <strong>{item.title}</strong>
                 <small>{item.detail}</small>
-              </button>
-            ))}
-          </div>
-        </section>
+              </div>
+              <div className="mobileMenuRowArrow" aria-hidden="true">{">"}</div>
+            </button>
+          ))}
+        </div>
 
         <div className="chooserActionRow chooserActionRowSplit">
           <button
             type="button"
-            className="ghostButton splashRailButton"
-            onClick={() => onLaunch(partnerLaunch)}
+            className="primaryButton splashRailPrimary"
+            onClick={() => onLaunch(homeLaunch)}
+            disabled={!ready}
           >
-            Partner route
-          </button>
-          <button
-            type="button"
-            className="ghostButton splashRailButton"
-            onClick={resetOnboarding}
-          >
-            Replay intro
+            Continue to Home
           </button>
         </div>
       </div>
@@ -534,12 +330,19 @@ function describeLaunchSelection(page, desk, sectionId) {
     };
   }
 
-  if (page === "reports") {
-    return {
-      label: "Reports",
-      hint: "You'll land on the visual reporting workspace with performance, exposure, and signal analytics.",
-    };
-  }
+    if (page === "reports") {
+      return {
+        label: "Research Center",
+        hint: "You'll land on the visual research workspace with performance, exposure, and signal analytics.",
+      };
+    }
+
+    if (page === "subscriptions") {
+      return {
+        label: "Subscriptions",
+        hint: "You'll land on the plan workspace with premium value, tiers, and upgrade paths.",
+      };
+    }
 
   return {
     label: workspaceLabel(page, desk),
@@ -547,7 +350,7 @@ function describeLaunchSelection(page, desk, sectionId) {
   };
 }
 
-export function LandingShell({ initialLaunch, onContinue }) {
+export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = false, demoStatus = "" }) {
   const landingActions = [
     {
       id: "news",
@@ -589,13 +392,13 @@ export function LandingShell({ initialLaunch, onContinue }) {
       id: "collectibles",
       glyph: "CL",
       eyebrow: "Alt",
-      title: "Collectibles",
+      title: "LEGO Investments",
       page: "collectibles",
       introId: "collectibles",
       sectionId: "collectibles-focus",
-      destination: "Collectibles focus",
+      destination: "LEGO Investments focus",
       bestFor: "Trade alternatives",
-      blurb: "Trade LEGO, Pokemon, and alternative inventory with the same disciplined ticket flow.",
+      blurb: "Analyze LEGO sets and investment-grade collectibles with the same disciplined ticket flow.",
     },
   ];
   const secondaryActions = [
@@ -621,20 +424,31 @@ export function LandingShell({ initialLaunch, onContinue }) {
       destination: "Open positions",
       blurb: "Review open positions, PnL, and recent closes before you put on the next trade.",
     },
-    {
-      id: "reports",
-      glyph: "RP",
-      eyebrow: "Review",
-      title: "Reports",
+      {
+        id: "reports",
+        glyph: "RP",
+        eyebrow: "Review",
+        title: "Research Center",
       page: "reports",
       introId: "reports",
       sectionId: "reports-performance",
-      destination: "Performance reports",
-      blurb: "Open visual reporting with performance curves, desk exposure, and signal analytics.",
-    },
-    {
-      id: "tools",
-      glyph: "TL",
+        destination: "Performance research",
+        blurb: "Open visual research with performance curves, desk exposure, and signal analytics.",
+      },
+      {
+        id: "subscriptions",
+        glyph: "SB",
+        eyebrow: "Plans",
+        title: "Subscriptions",
+        page: "subscriptions",
+        introId: "subscriptions",
+        sectionId: "subscriptions-overview",
+        destination: "Subscription plans",
+        blurb: "Show plan tiers, premium features, and the value path that makes the service commercially real.",
+      },
+      {
+        id: "tools",
+        glyph: "TL",
       eyebrow: "Assist",
       title: "Tools",
       page: "tools",
@@ -711,14 +525,70 @@ export function LandingShell({ initialLaunch, onContinue }) {
       <div className="splashPanel landingPanel">
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
-            <div className="authBrand">COLLECTRADE</div>
+            <div className="authBrand">BRICK ALPHA</div>
             <div className="splashEyebrow">TRADING WORKSPACE</div>
-            <h1>One professional workspace for news, signals, trade execution, and collectibles.</h1>
+            <h1>Start your trading workspace.</h1>
             <p className="authBlurb">
-              Collecttrade brings macro context, alpha signals, disciplined tickets, portfolio tracking,
-              and alternative inventory into one professional workspace. Pick where you want to start,
-              then sign in to continue.
+              Open news, signals, trade execution, and LEGO investments in one mobile-first product.
+              Create an account first, or try the live demo before signing up.
             </p>
+
+            <div className="landingHeroActions">
+              <button
+                type="button"
+                className="primaryButton"
+                onClick={() =>
+                  onContinue(
+                    {
+                      page: selectedPage,
+                      desk: selectedDesk,
+                      introId: selectedIntroId,
+                      sectionId: selectedSectionId,
+                      landingId: selectedActionId,
+                    },
+                    "register",
+                  )
+                }
+              >
+                Create Account
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={() =>
+                  onContinue(
+                    {
+                      page: selectedPage,
+                      desk: selectedDesk,
+                      introId: selectedIntroId,
+                      sectionId: selectedSectionId,
+                      landingId: selectedActionId,
+                    },
+                    "login",
+                  )
+                }
+              >
+                Sign In
+              </button>
+              {onDemo ? (
+                <button
+                  type="button"
+                  className="secondaryButton"
+                  onClick={() =>
+                    onDemo({
+                      page: selectedPage,
+                      desk: selectedDesk,
+                      introId: selectedIntroId,
+                      sectionId: selectedSectionId,
+                      landingId: selectedActionId,
+                    })
+                  }
+                  disabled={demoBusy}
+                >
+                  {demoBusy ? "Opening Demo..." : "Explore Live Demo"}
+                </button>
+              ) : null}
+            </div>
 
             <div className="landingValueGrid">
               <div className="landingValueCard">
@@ -745,7 +615,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
               </div>
               <div className="landingFeatureChip">
                 <span>Alternative book</span>
-                <strong>Collectibles inventory</strong>
+                <strong>LEGO investment holdings</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Support stack</span>
@@ -759,7 +629,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
             <div className="landingTesterCard">
               <span>Partner testing route</span>
-              <strong>Landing, News, Trade Desk, Collectibles, Feedback Board</strong>
+              <strong>Landing, News, Trade Desk, LEGO Investments, Feedback Board</strong>
               <small>
                 If this session is for partner feedback, use the built-in test pass so notes land in one
                 place and cover the main product surfaces.
@@ -799,7 +669,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
               </div>
               <div className="splashPreviewCard">
                 <span>Mode</span>
-                <strong>Authentication required</strong>
+                <strong>{onDemo ? "Demo or sign-in" : "Authentication required"}</strong>
               </div>
             </div>
 
@@ -825,7 +695,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
               <div className="landingRouteStep">
                 <span>03</span>
                 <div>
-                  <strong>Sign in and continue</strong>
+                  <strong>Create account or sign in</strong>
                   <small>Your selected route is carried through auth and restored on entry.</small>
                 </div>
               </div>
@@ -833,12 +703,12 @@ export function LandingShell({ initialLaunch, onContinue }) {
           </div>
         </div>
 
-        <div className="splashSection">
+        <div className="splashSection splashSectionPrimary">
           <div className="splashSectionHeader">
             <div>
               <span>Choose Your Start</span>
-              <strong>Pick the workspace you want first</strong>
-              <p>This is the app introduction screen your users should see before the login form.</p>
+              <strong>Choose where to start</strong>
+              <p>Pick the first lane you want to open after account access.</p>
             </div>
           </div>
 
@@ -873,11 +743,11 @@ export function LandingShell({ initialLaunch, onContinue }) {
           </div>
         </div>
 
-        <div className="splashSection">
+        <div className="splashSection splashSectionSecondary">
           <div className="splashSectionHeader">
             <div>
               <span>More Workspaces</span>
-              <strong>Open the supporting parts of the platform first if thatâ€™s your priority</strong>
+              <strong>Open the supporting parts of the platform first if that’s your priority</strong>
               <p>These usually support the main trading flow, but they should still be available from the first screen.</p>
             </div>
           </div>
@@ -902,7 +772,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
         </div>
 
         {selectedPage === "signals" || selectedPage === "news" ? (
-          <div className="splashSection">
+          <div className="splashSection splashSectionDeskChoice">
             <div className="splashSectionHeader">
               <div>
                 <span>Desk Choice</span>
@@ -939,42 +809,25 @@ export function LandingShell({ initialLaunch, onContinue }) {
         ) : null}
 
         <div className="panelActions landingActions">
-          <button
-            type="button"
-            className="primaryButton"
-            onClick={() =>
-              onContinue(
-                {
+          {demoStatus ? <div className="statusBanner">{demoStatus}</div> : null}
+          {onDemo ? (
+            <button
+              type="button"
+              className="secondaryButton"
+              onClick={() =>
+                onDemo({
                   page: selectedPage,
                   desk: selectedDesk,
                   introId: selectedIntroId,
                   sectionId: selectedSectionId,
                   landingId: selectedActionId,
-                },
-                "login",
-              )
-            }
-          >
-            Sign In to Continue
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() =>
-              onContinue(
-                {
-                  page: selectedPage,
-                  desk: selectedDesk,
-                  introId: selectedIntroId,
-                  sectionId: selectedSectionId,
-                  landingId: selectedActionId,
-                },
-                "register",
-              )
-            }
-          >
-            Create Account
-          </button>
+                })
+              }
+              disabled={demoBusy}
+            >
+              {demoBusy ? "Opening Demo..." : "Explore Live Demo"}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -983,95 +836,69 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
 export function AuthShell({
   authMode,
+  authView = "auth",
   authForm,
+  resetForm,
   authStatus,
-  launchSelection,
+  resetStatus,
+  resetHintCode,
   onBack,
   onModeChange,
   onSubmit,
   onFieldChange,
+  onResetFieldChange,
+  onForgotPassword,
+  onPasswordResetRequest,
+  onPasswordResetConfirm,
+  onReturnToLogin,
+  onDemo,
+  demoBusy = false,
 }) {
-  const launchDetails = launchSelection
-    ? describeLaunchSelection(launchSelection.page, launchSelection.desk, launchSelection.sectionId)
-    : null;
+  const isResetRequest = authView === "forgot-request";
+  const isResetConfirm = authView === "forgot-reset";
+  const isResetFlow = isResetRequest || isResetConfirm;
 
   return (
     <div className="authShell">
       <div className="authShellInner">
-        <section className="authStage">
-          <div className="authBrand">COLLECTRADE</div>
+        <section className="authStage authStageCompact">
+          <div className="authBrand">BRICK ALPHA</div>
           <div className="splashEyebrow">MARKET ACCESS</div>
-          <h1>Sign in to the desk before the market moves.</h1>
+          <h1>{isResetFlow ? "Reset your password." : "Create an account or sign in."}</h1>
           <p className="authBlurb">
-            South Africa-aware macro flow, 8/21 EMA execution, route-aware tickets, and a
-            cleaner portfolio workspace in one product shell.
+            {isResetFlow
+              ? "Request a reset code, choose a new password, and return straight to sign in."
+              : "A dedicated login screen first. Once you are in, the app will show services and then open Home."}
           </p>
-
-          {launchDetails ? (
-            <div className="authJourneyCard">
-              <span>Selected route</span>
-              <strong>{launchDetails.label}</strong>
-              <small>{launchDetails.hint}</small>
-              <div className="authJourneyGrid">
-                <div className="authJourneyCell">
-                  <span>Step 1</span>
-                  <strong>Authenticate</strong>
-                </div>
-                <div className="authJourneyCell">
-                  <span>Step 2</span>
-                  <strong>Restore workspace</strong>
-                </div>
-                <div className="authJourneyCell">
-                  <span>Step 3</span>
-                  <strong>Resume flow</strong>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="authHighlightGrid">
-            <div className="authHighlightCard">
-              <span>Signal engine</span>
-              <strong>8 / 21 EMA workflow</strong>
-              <small>Crosses, retests, structure-driven stops, and visible trade plans.</small>
-            </div>
-            <div className="authHighlightCard">
-              <span>Market context</span>
-              <strong>SA + global macro tape</strong>
-              <small>Honest timestamps, route context, and desk-aware news flow.</small>
-            </div>
-            <div className="authHighlightCard">
-              <span>Execution</span>
-              <strong>Paper first, live where ready</strong>
-              <small>Venue-aware tickets with risk budget, targets, and support/resistance structure.</small>
-            </div>
-          </div>
-
-          <div className="authProofRow">
-            <div className="authProofChip">
-              <span>Account state</span>
-              <strong>Saved routes and settings</strong>
-            </div>
-            <div className="authProofChip">
-              <span>Desk continuity</span>
-              <strong>Portfolio and ticket flow restored</strong>
-            </div>
-            <div className="authProofChip">
-              <span>Execution model</span>
-              <strong>Paper by default, live where connected</strong>
-            </div>
-          </div>
         </section>
 
-        <div className="authPanel">
+        <div className="authPanel authPanelStandalone">
           <div className="authPanelHeader">
             <div>
-              <div className="authBrand">COLLECTRADE</div>
-              <h2>{authMode === "login" ? "Welcome back" : "Create your trading workspace"}</h2>
+              <div className="authBrandLockup">
+                <div className="brandMark authBrandMark">CT</div>
+                <div className="authBrandMeta">
+                  <div className="authBrand">BRICK ALPHA</div>
+                  <small>Mobile market workspace</small>
+                </div>
+              </div>
+              <h2>
+                {isResetRequest
+                  ? "Reset your password"
+                  : isResetConfirm
+                    ? "Set a new password"
+                    : authMode === "login"
+                      ? "Welcome back"
+                      : "Create your trading workspace"}
+              </h2>
               <p>
-                {authMode === "login"
-                  ? "Open your desks, sync your state, and get back to the active setup."
-                  : "Create an account to save desks, settings, signals, and portfolio flow."}
+                {isResetRequest
+                  ? "Enter your email and we will prepare a reset code for this build."
+                  : isResetConfirm
+                    ? "Use the reset code, choose a new password, and then sign in again."
+                    : authMode === "login"
+                      ? "Sign in and return to your workspace."
+                      : "Create an account to save your desks, settings, and app flow."}
               </p>
             </div>
             {onBack ? (
@@ -1081,95 +908,181 @@ export function AuthShell({
             ) : null}
           </div>
 
-          {launchDetails ? (
-            <div className="authRouteCard">
-              <span>Next stop</span>
-              <strong>{launchDetails.label}</strong>
-              <small>{launchDetails.hint}</small>
-            </div>
-          ) : null}
-
-          <div className="authAccessBar">
-            <div className="authAccessCell">
-              <span>Access</span>
-              <strong>{authMode === "login" ? "Existing workspace" : "New workspace"}</strong>
-            </div>
-            <div className="authAccessCell">
-              <span>State</span>
-              <strong>Secure session required</strong>
-            </div>
-          </div>
-
-          <div className="segmentedControl authModeSwitch">
-            <button
-              type="button"
-              className={authMode === "login" ? "active" : ""}
-              onClick={() => onModeChange("login")}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              className={authMode === "register" ? "active" : ""}
-              onClick={() => onModeChange("register")}
-            >
-              Create account
-            </button>
-          </div>
-
-          <form className="authForm" onSubmit={onSubmit}>
-            {authMode === "register" ? (
+          {isResetFlow ? (
+            <form className="authForm" onSubmit={isResetRequest ? onPasswordResetRequest : onPasswordResetConfirm}>
               <label>
-                <span>Name</span>
+                <span>Email</span>
                 <input
-                  type="text"
-                  value={authForm.name}
-                  onChange={(event) => onFieldChange("name", event.target.value)}
-                  placeholder="Darren"
-                  autoComplete="name"
+                  type="email"
+                  value={resetForm.email}
+                  onChange={(event) => onResetFieldChange("email", event.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
                 />
               </label>
-            ) : null}
 
-            <label>
-              <span>Email</span>
-              <input
-                type="email"
-                value={authForm.email}
-                onChange={(event) => onFieldChange("email", event.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </label>
+              {isResetConfirm ? (
+                <>
+                  <label>
+                    <span>Reset code</span>
+                    <input
+                      type="text"
+                      value={resetForm.code}
+                      onChange={(event) => onResetFieldChange("code", event.target.value)}
+                      placeholder="6-digit code"
+                      autoComplete="one-time-code"
+                    />
+                  </label>
 
-            <label>
-              <span>Password</span>
-              <input
-                type="password"
-                value={authForm.password}
-                onChange={(event) => onFieldChange("password", event.target.value)}
-                placeholder="Minimum 8 characters"
-                autoComplete={authMode === "login" ? "current-password" : "new-password"}
-              />
-            </label>
+                  {resetHintCode ? (
+                    <div className="statusBanner subtleBanner">
+                      <strong>Partner-stage reset code</strong>
+                      <small>
+                        Use <strong>{resetHintCode}</strong> for this build. Email delivery can be added later.
+                      </small>
+                    </div>
+                  ) : null}
 
-            {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
+                  <label>
+                    <span>New password</span>
+                    <input
+                      type="password"
+                      value={resetForm.password}
+                      onChange={(event) => onResetFieldChange("password", event.target.value)}
+                      placeholder="Minimum 8 characters"
+                      autoComplete="new-password"
+                    />
+                  </label>
 
-            <button className="primaryButton" type="submit">
-              {authMode === "login" ? "Sign in" : "Create account"}
-            </button>
-          </form>
+                  <label>
+                    <span>Confirm password</span>
+                    <input
+                      type="password"
+                      value={resetForm.confirmPassword}
+                      onChange={(event) => onResetFieldChange("confirmPassword", event.target.value)}
+                      placeholder="Repeat the new password"
+                      autoComplete="new-password"
+                    />
+                  </label>
+                </>
+              ) : null}
 
-          <div className="authFooterNote">
-            <span>After sign-in</span>
-            <strong>{launchDetails ? launchDetails.label : "Your chosen workspace"}</strong>
-            <small>Weâ€™ll carry your selection straight through to the desk you chose on entry.</small>
-          </div>
+              {resetStatus ? <div className="statusBanner">{resetStatus}</div> : null}
+
+              <button className="primaryButton" type="submit">
+                {isResetRequest ? "Send reset code" : "Reset password"}
+              </button>
+
+              <div className="authAuxActions">
+                <button type="button" className="ghostButton authLinkButton" onClick={onReturnToLogin}>
+                  Back to sign in
+                </button>
+                {isResetConfirm ? (
+                  <button type="button" className="ghostButton authLinkButton" onClick={onPasswordResetRequest}>
+                    Request new code
+                  </button>
+                ) : null}
+              </div>
+            </form>
+          ) : (
+            <>
+              <div className="segmentedControl authModeSwitch">
+                <button
+                  type="button"
+                  className={authMode === "login" ? "active" : ""}
+                  onClick={() => onModeChange("login")}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  className={authMode === "register" ? "active" : ""}
+                  onClick={() => onModeChange("register")}
+                >
+                  Create account
+                </button>
+              </div>
+
+              <form className="authForm" onSubmit={onSubmit}>
+                {authMode === "register" ? (
+                  <label>
+                    <span>Name</span>
+                    <input
+                      type="text"
+                      value={authForm.name}
+                      onChange={(event) => onFieldChange("name", event.target.value)}
+                      placeholder="Darren"
+                      autoComplete="name"
+                    />
+                  </label>
+                ) : null}
+
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={authForm.email}
+                    onChange={(event) => onFieldChange("email", event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </label>
+
+                <label>
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={authForm.password}
+                    onChange={(event) => onFieldChange("password", event.target.value)}
+                    placeholder="Minimum 8 characters"
+                    autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                  />
+                </label>
+
+                {authMode === "login" ? (
+                  <div className="authAuxActions">
+                    <button type="button" className="ghostButton authLinkButton" onClick={onForgotPassword}>
+                      Forgot password?
+                    </button>
+                  </div>
+                ) : null}
+
+                {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
+
+                <button className="primaryButton" type="submit">
+                  {authMode === "login" ? "Sign in" : "Create account"}
+                </button>
+                {onDemo ? (
+                  <button
+                    type="button"
+                    className="secondaryButton"
+                    onClick={onDemo}
+                    disabled={demoBusy}
+                  >
+                    {demoBusy ? "Opening Demo..." : "Explore live demo"}
+                  </button>
+                ) : null}
+              </form>
+
+              <div className="authValueCard">
+                <span>Why Brick Alpha</span>
+                <strong>Make your money work with a smarter market workspace.</strong>
+                <ul className="authValueList">
+                  <li>AI-driven market coverage designed to watch the desk around the clock.</li>
+                  <li>Full transparency through signals, research, alerts, and routine history.</li>
+                  <li>Built with South African banking and funding workflows in mind as connectivity expands.</li>
+                </ul>
+                <small>We're not just a platform - we're your partner at every step of the journey.</small>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+
 
 
 

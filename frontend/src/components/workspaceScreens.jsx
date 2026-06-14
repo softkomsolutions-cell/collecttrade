@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  ALERT_SUBSCRIPTION_OPTIONS,
   DEFAULT_EXECUTION_PROFILES,
   DESK_FILTERS,
   MARKET_DESKS,
@@ -8,7 +9,10 @@ import {
 } from "../appConfig";
 import {
   actionTone,
+  alertDigestWindowLabel,
+  alertKindLabel,
   findDeskMeta,
+  formatAlertThreshold,
   formatCollectiblePrice,
   formatDateTime,
   formatTickerPrice,
@@ -22,6 +26,7 @@ import {
   positiveTone,
   providerLabel,
   statusTone,
+  subscriptionTierLabel,
   venueDetailLabel,
 } from "../appUtils";
 import {
@@ -30,6 +35,10 @@ import {
   WorkspaceHero,
   WorkspaceSectionBar,
 } from "./appShell";
+import {
+  buildPrimaryLaunchDefinitions,
+  buildSecondaryLaunchDefinitions,
+} from "../serviceRegistry";
 import {
   ConnectorCard,
   PositionDetailCard,
@@ -47,6 +56,43 @@ function average(values) {
     return 0;
   }
   return safeValues.reduce((sum, value) => sum + value, 0) / safeValues.length;
+}
+
+function previousUtcDateKey(dateKey) {
+  const utcMs = Date.parse(`${dateKey}T00:00:00Z`);
+  if (!Number.isFinite(utcMs)) {
+    return null;
+  }
+  return new Date(utcMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function buildBestWeekActivityCount(activeDates) {
+  const ordered = Array.from(new Set(activeDates || []))
+    .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value)))
+    .sort();
+
+  if (!ordered.length) {
+    return 0;
+  }
+
+  const activeSet = new Set(ordered);
+  let best = 0;
+
+  ordered.forEach((dateKey) => {
+    let cursor = dateKey;
+    let count = 0;
+
+    for (let index = 0; index < 7 && cursor; index += 1) {
+      if (activeSet.has(cursor)) {
+        count += 1;
+      }
+      cursor = previousUtcDateKey(cursor);
+    }
+
+    best = Math.max(best, count);
+  });
+
+  return best;
 }
 
 function reportDeskKeyForTrade(trade) {
@@ -72,7 +118,7 @@ function reportDeskKeyForTrade(trade) {
 
 function reportDeskLabel(deskKey) {
   if (deskKey === "collectibles") {
-    return "Collectibles";
+    return "LEGO Investments";
   }
 
   return labelDesk(deskKey);
@@ -295,6 +341,7 @@ function ReportBarList({ items, valueFormatter = (value) => value }) {
 export function HomeScreen({
   activeDesk,
   activePageSections,
+  alertsResponse,
   appSettings,
   collectiblesResponse,
   connectedProviderCount,
@@ -302,12 +349,29 @@ export function HomeScreen({
   health,
   jumpToPageSection,
   liveReadyDeskCount,
+  markAllNotificationsRead,
+  markNotificationRead,
   navigateToPage,
   newsResponse,
+  notificationsResponse,
+  onOpenWatchlistSignal,
+  onRemoveAlertRule,
+  onRemoveWatchlistItem,
+  onToggleAlertRule,
   openTrades,
+  routineResponse,
+  routineStatus,
+  dismissRoutineReminder,
+  acknowledgeRoutineCompletion,
+  setRoutineMode,
+  resetRoutine,
+  setRoutineStep,
   shareStatus,
   signalsResponse,
   totalOpenPnl,
+  watchlistBusyKey,
+  watchlistResponse,
+  watchlistStatus,
 }) {
   const feedbackSummary = feedbackResponse.summary || {};
   const allSignals = signalsResponse.signals || [];
@@ -316,6 +380,114 @@ export function HomeScreen({
   const latestFeedbackItem = feedbackResponse.items?.[0] || null;
   const latestOpenTrade = openTrades?.[0] || null;
   const shareIsLive = shareStatus?.status === "live" && shareStatus?.publicUrl;
+  const watchlistItems = watchlistResponse.items || [];
+  const alertItems = alertsResponse.items || [];
+  const alertSummary = alertsResponse.summary || {};
+  const currentAlertPlan =
+    ALERT_SUBSCRIPTION_OPTIONS.find(
+      (option) => option.id === (alertSummary.subscriptionTier || appSettings.subscriptionTier || "starter"),
+    ) || ALERT_SUBSCRIPTION_OPTIONS[0];
+  const nextAlertPlan =
+    currentAlertPlan.id === "starter"
+      ? ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === "pro")
+      : currentAlertPlan.id === "pro"
+        ? ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === "elite")
+        : null;
+  const notificationItems = notificationsResponse.items || [];
+  const notificationSummary = notificationsResponse.summary || {};
+  const routineCompletedIds = routineResponse.completedStepIds || [];
+  const routineStreakCount = Number(routineResponse.streakCount || 0);
+  const routineBestStreakCount = Number(routineResponse.bestStreakCount || 0);
+  const routineWeekActiveCount = Number(routineResponse.weekActiveCount || 0);
+  const routineSessionMode = String(routineResponse.sessionMode || "morning");
+  const routineCompletedAt = routineResponse.completedAt || null;
+  const routineIsComplete = Boolean(routineResponse.isComplete);
+  const routineCurrentDate = routineResponse.currentDate || null;
+  const routineReminderDismissedDate = routineResponse.reminderDismissedDate || null;
+  const routineCompletionAcknowledgedDate = routineResponse.completionAcknowledgedDate || null;
+  const routinePreferences = appSettings.routinePreferences || {};
+  const routineActivityDates = useMemo(
+    () =>
+      (routineResponse.activeDates || []).slice(0, 6).map((dateKey) => {
+        const formatted = new Intl.DateTimeFormat("en-ZA", {
+          month: "short",
+          day: "numeric",
+          timeZone: appSettings.timezone,
+        }).format(new Date(`${dateKey}T12:00:00Z`));
+        return {
+          id: dateKey,
+          dateKey,
+          formatted,
+          isToday: dateKey === routineCurrentDate,
+        };
+      }),
+    [appSettings.timezone, routineCurrentDate, routineResponse.activeDates],
+  );
+  const routineBestWeekCount = useMemo(
+    () => buildBestWeekActivityCount(routineResponse.activeDates || []),
+    [routineResponse.activeDates],
+  );
+  const routineWeekEntries = useMemo(() => {
+    if (!routineCurrentDate) {
+      return [];
+    }
+
+    const activeSet = new Set(routineResponse.activeDates || []);
+    const entries = [];
+    let cursor = routineCurrentDate;
+
+    for (let index = 0; index < 7 && cursor; index += 1) {
+      const date = new Date(`${cursor}T12:00:00Z`);
+      entries.push({
+        id: cursor,
+        dateKey: cursor,
+        shortLabel: new Intl.DateTimeFormat("en-ZA", {
+          weekday: "short",
+          timeZone: appSettings.timezone,
+        })
+          .format(date)
+          .slice(0, 3)
+          .toUpperCase(),
+        dayLabel: new Intl.DateTimeFormat("en-ZA", {
+          day: "numeric",
+          month: "short",
+          timeZone: appSettings.timezone,
+        }).format(date),
+        active: activeSet.has(cursor),
+        isToday: cursor === routineCurrentDate,
+      });
+      cursor = previousUtcDateKey(cursor);
+    }
+
+    return entries.reverse();
+  }, [appSettings.timezone, routineCurrentDate, routineResponse.activeDates]);
+  const routineCadenceReview = useMemo(() => {
+    if (!routineActivityDates.length) {
+      return {
+        label: "Starting out",
+        detail: "The routine layer is ready. A few completed sessions will start turning this into a real usage rhythm.",
+      };
+    }
+
+    if (routineWeekActiveCount >= 5 || routineBestStreakCount >= 5) {
+      return {
+        label: "Strong rhythm",
+        detail: "Usage is starting to look sticky. The user is returning often enough for the product to become part of a real workflow.",
+      };
+    }
+
+    if (routineWeekActiveCount >= 3 || routineStreakCount >= 3) {
+      return {
+        label: "Building well",
+        detail: "There is repeat behaviour here. The next job is to keep the daily brief, alerts, and research worth opening every session.",
+      };
+    }
+
+    return {
+      label: "Early pattern",
+      detail: "The habit loop is forming, but it still needs a little more pull from alerts, review, and subscriber value.",
+    };
+  }, [routineActivityDates.length, routineBestStreakCount, routineStreakCount, routineWeekActiveCount]);
   const strongestSignal =
     allSignals
       .slice()
@@ -350,72 +522,81 @@ export function HomeScreen({
       ),
     ),
   );
-  const launchCards = [
-    {
-      id: "news",
-      label: "News",
-      glyph: "NW",
-      hint: "Read the tape before you act.",
-      action: () => jumpToPageSection("news", "macro-feed", activeDesk),
+  const serviceLaunchDefinitions = buildPrimaryLaunchDefinitions(activeDesk);
+  const supportLaunchDefinitions = buildSecondaryLaunchDefinitions(activeDesk);
+  const launchMetaById = {
+    news: {
       metaLabel: "Lead source",
       metaValue: leadNewsItem?.sourceName || "Waiting",
     },
-    {
-      id: "signals",
-      label: "Trade Desk",
-      glyph: "TR",
-      hint: "Open the chart, structure plan, and ticket.",
-      action: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+    trading: {
       metaLabel: "Lead setup",
       metaValue: leadSignal ? `${leadSignal.action} ${leadSignal.label}` : "No setup yet",
     },
-    {
-      id: "collectibles",
-      label: "Collectibles",
-      glyph: "CL",
-      hint: "Alternative-assets inventory with the same discipline.",
-      action: () => jumpToPageSection("collectibles", "collectibles-grid"),
-      metaLabel: "Inventory",
+    crypto: {
+      metaLabel: "Lead setup",
+      metaValue: leadSignal?.desk === "crypto" ? `${leadSignal.action} ${leadSignal.label}` : "Crypto lane ready",
+    },
+    collectibles: {
+      metaLabel: "Holdings",
       metaValue: `${collectiblesResponse.items?.length || 0} items`,
     },
-    {
-      id: "portfolio",
-      label: "Portfolio",
-      glyph: "PF",
-      hint: "Review open positions and your latest close decisions.",
-      action: () => jumpToPageSection("portfolio", "open-positions"),
+    portfolio: {
       metaLabel: "Open positions",
       metaValue: `${openTrades.length}`,
     },
-    {
-      id: "reports",
-      label: "Reports",
-      glyph: "RP",
-      hint: "Open performance graphs, desk exposure, and signal analytics.",
-      action: () => jumpToPageSection("reports", "reports-performance"),
+    reports: {
       metaLabel: "Report mode",
       metaValue: "Graphs ready",
     },
-    {
-      id: "tools",
-      label: "Tools",
-      glyph: "TL",
-      hint: "Mentor, analyzer, simulator, and research stack.",
-      action: () => jumpToPageSection("tools", "tools-workbench", activeDesk),
-      metaLabel: "Research reports",
+    subscriptions: {
+      metaLabel: "Current plan",
+      metaValue: subscriptionTierLabel(appSettings.subscriptionTier),
+    },
+    tools: {
+      metaLabel: "Research notes",
       metaValue: "Desk-linked",
     },
-    {
-      id: "connections",
-      label: "Connections",
-      glyph: "CN",
-      hint: "Feeds, brokers, and live-routing readiness.",
-      action: () => jumpToPageSection("connections", "connections-overview", activeDesk),
+    connections: {
       metaLabel: "Configured",
       metaValue: `${connectedProviderCount} providers`,
     },
-  ];
+    settings: {
+      metaLabel: "Region",
+      metaValue: appSettings.preferredRegion || "South Africa",
+    },
+  };
+  const buildLaunchCard = (definition) => ({
+    id: definition.id,
+    label: definition.title,
+    glyph: definition.glyph,
+    hint: definition.homeHint,
+    action: () =>
+      jumpToPageSection(
+        definition.selection.page,
+        definition.selection.sectionId,
+        definition.selection.desk || activeDesk,
+      ),
+    metaLabel: launchMetaById[definition.id]?.metaLabel || "Ready",
+    metaValue: launchMetaById[definition.id]?.metaValue || "Open",
+  });
+  const launchCards = serviceLaunchDefinitions.map(buildLaunchCard);
+  const supportLaunchCards = supportLaunchDefinitions.map(buildLaunchCard);
   const homeActions = [
+    {
+      id: "brief",
+      label: "Daily Brief",
+      meta: `${notificationSummary.unread || 0} unread`,
+      detail: "Open the premium daily brief with market posture, macro pressure, and desk attention points.",
+      onClick: () => jumpToPageSection("home", "home-brief", activeDesk),
+    },
+    {
+      id: "workflow",
+      label: "Workflow",
+      meta: `${watchlistItems.length + (alertSummary.enabled || 0)}`,
+      detail: "Review the guided session flow so the next action is always obvious.",
+      onClick: () => jumpToPageSection("home", "home-workflow", activeDesk),
+    },
     {
       id: "trade",
       label: "Today's Signal",
@@ -439,20 +620,256 @@ export function HomeScreen({
     },
     {
       id: "reports",
-      label: "Reports",
+      label: "Research Center",
       meta: `${sessionReadinessScore}%`,
-      detail: "Open the chart-rich reporting workspace and review the book visually.",
-      onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
-    },
-  ];
+        detail: "Open the chart-rich research center and review the book visually.",
+        onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+      },
+      {
+        id: "subscriptions",
+        label: "Subscriptions",
+        meta: subscriptionTierLabel(appSettings.subscriptionTier),
+        detail: "Review tiers, premium value, and the alert plan story clients will actually pay for.",
+        onClick: () => jumpToPageSection("subscriptions", "subscriptions-overview", activeDesk),
+      },
+    ];
+    const routineModeMeta = {
+      morning: {
+        label: "Morning brief",
+        shortLabel: "Morning",
+        detail: "Start with macro context, the lead signal, and the first return path for the day.",
+        primaryCta: "Open News",
+        primaryAction: () => jumpToPageSection("news", "macro-feed", activeDesk),
+      },
+      live: {
+        label: "Live desk",
+        shortLabel: "Live",
+        detail: "Stay close to alerts, structure, and the next clean execution window while the desk is active.",
+        primaryCta: "Open Trade",
+        primaryAction: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+      },
+      review: {
+        label: "Close review",
+        shortLabel: "Review",
+        detail: "Wrap the session with research, portfolio attention, and a calmer end-of-day check.",
+        primaryCta: "Open Research Center",
+        primaryAction: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+      },
+    };
+    const routineModeOrder = {
+      morning: ["macro", "signal", "watchlist", "alerts", "reports", "subscriptions"],
+      live: ["signal", "alerts", "watchlist", "macro", "reports", "subscriptions"],
+      review: ["reports", "alerts", "signal", "macro", "watchlist", "subscriptions"],
+    };
+    const workflowSteps = [
+      {
+        id: "macro",
+        ordinal: "01",
+        title: "Read the macro tape",
+        detail: leadNewsItem?.title || "Open the macro feed and anchor the next decision in current context.",
+        complete: Boolean(leadNewsItem),
+        cta: "Open News",
+        onClick: () => jumpToPageSection("news", "macro-feed", activeDesk),
+      },
+      {
+        id: "signal",
+        ordinal: "02",
+        title: "Review the lead signal",
+        detail: strongestSignal
+          ? `${strongestSignal.label} is leading at ${strongestSignal.confidence}% confidence.`
+          : "Open the trade desk when the engine promotes the next clean setup.",
+        complete: Boolean(strongestSignal),
+        cta: "Open Trade",
+        onClick: () => jumpToPageSection("signals", "chart-panel", strongestSignal?.desk || activeDesk),
+      },
+      {
+        id: "watchlist",
+        ordinal: "03",
+        title: "Build the return path",
+        detail: watchlistItems.length
+          ? `${watchlistItems.length} watchlist items are already saving useful return points.`
+          : "Save at least one instrument so the app starts behaving like a daily service, not just a screen you visit once.",
+        complete: watchlistItems.length > 0,
+        cta: "Review Watchlist",
+        onClick: () => jumpToPageSection("home", "home-watchlist", activeDesk),
+      },
+      {
+        id: "alerts",
+        ordinal: "04",
+        title: "Arm alert coverage",
+        detail:
+          alertSummary.enabled > 0
+            ? `${alertSummary.enabled} live alerts are active across the desk.`
+            : "Set breakout or RSI alerts so Brick Alpha can pull the user back in at the right moment.",
+        complete: (alertSummary.enabled || 0) > 0,
+        cta: "Open Alerts",
+        onClick: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+      },
+      {
+        id: "reports",
+        ordinal: "05",
+        title: "Review research and performance",
+        detail:
+          openTrades.length > 0
+            ? `${openTrades.length} open positions are already feeding the research layer.`
+            : "Open the research center and keep the analytics story visible even before the book gets deeper.",
+        complete: openTrades.length > 0,
+        cta: "Open Research Center",
+        onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+      },
+      {
+        id: "subscriptions",
+        ordinal: "06",
+        title: "Check premium value",
+        detail:
+          currentAlertPlan.id !== "starter"
+            ? `${subscriptionTierLabel(currentAlertPlan.id)} is already active, so the premium path is visible in the app.`
+            : "Open subscriptions and see how plans, alerts, research, and the daily brief connect into a paid product story.",
+        complete: currentAlertPlan.id !== "starter",
+        cta: "Open Plans",
+        onClick: () => navigateToPage("subscriptions", false, activeDesk),
+      },
+    ].map((step) => ({
+      ...step,
+      completed: routineCompletedIds.includes(step.id),
+    }));
+    const workflowCompleted = workflowSteps.filter((step) => step.completed).length;
+    const workflowProgress = Math.round((workflowCompleted / workflowSteps.length) * 100);
+    const weeklyRoutineScore = useMemo(() => {
+      const weeklyCoverage = (routineWeekActiveCount / 7) * 100;
+      const bestWeekCoverage = (routineBestWeekCount / 7) * 100;
+      const currentRunValue = Math.min(routineStreakCount * 18, 100);
+      const bestRunValue = Math.min(routineBestStreakCount * 14, 100);
+      const completionValue = routineIsComplete ? 100 : workflowProgress;
+
+      return Math.max(
+        18,
+        Math.min(
+          99,
+          Math.round(
+            average([weeklyCoverage, bestWeekCoverage, currentRunValue, bestRunValue, completionValue]),
+          ),
+        ),
+      );
+    }, [
+      routineBestStreakCount,
+      routineBestWeekCount,
+      routineIsComplete,
+      routineStreakCount,
+      routineWeekActiveCount,
+      workflowProgress,
+    ]);
+    const weeklyRoutineScoreLabel =
+      weeklyRoutineScore >= 85
+        ? "Elite rhythm"
+        : weeklyRoutineScore >= 65
+          ? "Consistent"
+          : weeklyRoutineScore >= 45
+            ? "Developing"
+            : "Starting";
+    const weeklyRoutineInsight =
+      weeklyRoutineScore >= 85
+        ? "This is the kind of repeat engagement that turns Brick Alpha into a daily service people rely on, not just a tool they remember occasionally."
+        : weeklyRoutineScore >= 65
+          ? "The habit loop is working. Alerts, the daily brief, and workflow memory are doing enough to keep the user coming back with purpose."
+          : weeklyRoutineScore >= 45
+            ? "There is a real usage pattern forming here. The next job is to keep the premium touchpoints strong enough that routine becomes expectation."
+            : "The workflow is still early. The app needs a little more pull from alerts, research, and visible value to become part of the user's weekly rhythm.";
+    const preferredWorkflowOrder = routineModeOrder[routineSessionMode] || routineModeOrder.morning;
+    const nextWorkflowStep =
+      preferredWorkflowOrder
+        .map((stepId) => workflowSteps.find((step) => step.id === stepId))
+        .find((step) => step && !step.completed) ||
+      workflowSteps[workflowSteps.length - 1];
+    const activeRoutineMode = routineModeMeta[routineSessionMode] || routineModeMeta.morning;
+    const completedAtLabel = routineCompletedAt
+      ? formatDateTime(routineCompletedAt, appSettings.timezone)
+      : null;
+    const nudgeWindow = routinePreferences.nudgeWindow || "active";
+    const incompleteStepCount = workflowSteps.length - workflowCompleted;
+    const reminderShouldSurface =
+      nudgeWindow === "quiet"
+        ? incompleteStepCount >= 3
+        : nudgeWindow === "focused"
+          ? incompleteStepCount >= 2
+          : incompleteStepCount >= 1;
+    const showRoutineReminder =
+      routinePreferences.remindersEnabled !== false &&
+      !routineIsComplete &&
+      routineReminderDismissedDate !== routineCurrentDate &&
+      reminderShouldSurface;
+    const showRoutineCelebration =
+      routinePreferences.celebrationEnabled !== false &&
+      routineIsComplete &&
+      routineCompletionAcknowledgedDate !== routineCurrentDate;
+    const briefCards = [
+      {
+        id: "market-posture",
+        label: "Market posture",
+        value: strongestSignal ? `${strongestSignal.action} ${strongestSignal.label}` : "Stand by",
+        detail: strongestSignal
+          ? `${strongestSignal.confidence}% confidence | ${strongestSignal.setup}`
+          : "The next clean setup will surface here once the desk settles.",
+      },
+      {
+        id: "macro-watch",
+        label: "Macro watch",
+        value: leadNewsItem?.sourceName || "Tape warming up",
+        detail:
+          leadNewsItem?.title ||
+          "The lead macro line will sit here once the news feed refreshes.",
+      },
+      {
+        id: "alerts",
+        label: "Alert pressure",
+        value: `${alertSummary.triggered || 0} live | ${notificationSummary.unread || 0} unread`,
+        detail:
+          alertSummary.triggered || notificationSummary.unread
+            ? "There is fresh alert activity worth checking before you route the next move."
+            : "No urgent alert pressure right now. The book is calm.",
+      },
+      {
+        id: "portfolio",
+        label: "Portfolio attention",
+        value: latestOpenTrade?.marketLabel || latestOpenTrade?.label || "No open positions",
+        detail: latestOpenTrade
+          ? `${latestOpenTrade.side} | ${latestOpenTrade.executionLabel || "Paper"} | ${formatDateTime(
+              latestOpenTrade.updatedAt || latestOpenTrade.createdAt,
+              appSettings.timezone,
+            )}`
+          : "No active position needs attention yet.",
+      },
+    ];
+    const dailyBriefText = [
+      `Brick Alpha daily brief | ${formatDateTime(new Date().toISOString(), appSettings.timezone)}`,
+      "",
+      `Desk focus: ${labelDesk(activeDesk)}`,
+      `Routine mode: ${activeRoutineMode.label}`,
+      `Market posture: ${strongestSignal ? `${strongestSignal.action} ${strongestSignal.label} at ${strongestSignal.confidence}% confidence` : "Waiting for the next clean setup"}`,
+      `Macro watch: ${leadNewsItem?.sourceName || "Waiting"}${leadNewsItem?.title ? ` | ${leadNewsItem.title}` : ""}`,
+      `Alerts: ${alertSummary.triggered || 0} triggered, ${notificationSummary.unread || 0} unread, ${alertSummary.enabled || 0} active`,
+      `Portfolio: ${openTrades.length} open positions${Number.isFinite(totalOpenPnl) ? ` | ${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL` : ""}`,
+      `Readiness: ${sessionReadinessScore}%`,
+    ].join("\n");
+    const copyDailyBrief = async () => {
+      if (!navigator.clipboard?.writeText) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(dailyBriefText);
+      } catch {
+        // Ignore clipboard errors; the brief is still visible on screen.
+      }
+    };
 
   return (
     <>
       <WorkspaceHero
         tone="home"
-        eyebrow="Daily Command Center"
+        eyebrow="App Home"
         title="Home"
-        description="A premium session hub for subscribers: today's best setup, macro context, portfolio pulse, and launch paths into every workspace."
+        description="Open a service, check the lead setup, and move through the app from one clean mobile hub."
         statusLabel="Session readiness"
         statusValue={`${sessionReadinessScore}% ready`}
         metrics={[
@@ -475,12 +892,12 @@ export function HomeScreen({
           },
         ]}
         primaryAction={{
-          label: "Open Today's Signal",
+          label: "Open Trade Desk",
           onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
         }}
         secondaryAction={{
-          label: "Open Reports",
-          onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+          label: "Open Services",
+          onClick: () => jumpToPageSection("home", "home-launchpad", activeDesk),
         }}
       />
       <WorkspaceSectionBar
@@ -489,12 +906,65 @@ export function HomeScreen({
       />
       <WorkspaceCommandBar
         tone="home"
-        title="Subscriber Shortcuts"
-        hint="Move straight into the next high-value workflow without hunting around the app."
+        title="Quick Actions"
+        hint="Move into the next part of the app without losing context."
         actions={homeActions}
       />
 
-      <section className="homeCommandDeck" id="home-overview">
+      <section className="homeTodayStack" id="home-overview">
+        <div className="homeTodayHeader">
+          <div>
+            <span>Today</span>
+            <strong>{activeRoutineMode.label}</strong>
+          </div>
+          <div className="homeTodayScore">
+            <span>Ready</span>
+            <strong>{sessionReadinessScore}%</strong>
+          </div>
+        </div>
+
+        <div className="homeTodayPrimary">
+          <span>{strongestSignal ? `${strongestSignal.action} setup` : "Market watch"}</span>
+          <strong>{strongestSignal?.headline || strongestSignal?.label || "Waiting for a clean setup"}</strong>
+          <small>
+            {strongestSignal
+              ? `${labelDesk(strongestSignal.desk)} | RSI ${strongestSignal.rsi || "--"} | ${strongestSignal.confidence}% confidence`
+              : "The app is monitoring the desk and will surface the next clean signal here."}
+          </small>
+        </div>
+
+        <div className="homeTodayActionGrid">
+          <button
+            type="button"
+            className="homeTodayAction"
+            onClick={() => jumpToPageSection("news", "macro-feed", activeDesk)}
+          >
+            <span>01</span>
+            <strong>News</strong>
+            <small>{leadNewsItem?.sourceName || "Macro tape"}</small>
+          </button>
+          <button
+            type="button"
+            className="homeTodayAction"
+            onClick={() => jumpToPageSection("signals", "chart-panel", strongestSignal?.desk || activeDesk)}
+          >
+            <span>02</span>
+            <strong>Trade</strong>
+            <small>{strongestSignal?.label || "Signal desk"}</small>
+          </button>
+          <button
+            type="button"
+            className="homeTodayAction"
+            onClick={() => jumpToPageSection("portfolio", "open-positions")}
+          >
+            <span>03</span>
+            <strong>Book</strong>
+            <small>{openTrades.length} open</small>
+          </button>
+        </div>
+      </section>
+
+      <section className="homeCommandDeck">
         <article className="homeLeadPanel">
           <div className="homeLeadTop">
             <div>
@@ -555,7 +1025,7 @@ export function HomeScreen({
               Read Macro Context
             </button>
           </div>
-        </article>
+          </article>
 
         <div className="homePulseGrid">
           <button
@@ -585,7 +1055,7 @@ export function HomeScreen({
             className="homePulseCard"
             onClick={() => jumpToPageSection("reports", "reports-performance", activeDesk)}
           >
-            <span>Reports pulse</span>
+            <span>Research pulse</span>
             <strong>{openTrades.length ? "Live curve" : "Analytics ready"}</strong>
             <small>Performance graphs, desk exposure, and signal pressure are live.</small>
           </button>
@@ -638,8 +1108,8 @@ export function HomeScreen({
         <section className="panel" id="home-launchpad">
           <div className="panelHeader">
             <div>
-              <h2>Open a workspace</h2>
-              <p>Move from the command center into the exact lane you want without losing context.</p>
+              <h2>Services</h2>
+              <p>Open the exact service screen you want from Home.</p>
             </div>
             <div className="headerStatus">
               <span>Current desk</span>
@@ -668,6 +1138,403 @@ export function HomeScreen({
                 </div>
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="panel" id="home-brief">
+          <div className="panelHeader">
+            <div>
+              <h2>Daily Brief</h2>
+              <p>A premium subscriber-style summary of what matters now, what changed, and where to act next.</p>
+            </div>
+            <div className="headerStatus">
+              <span>Desk focus</span>
+              <strong>{labelDesk(activeDesk)}</strong>
+            </div>
+          </div>
+
+          <div className="summaryGrid compactSummaryGrid">
+            {briefCards.map((card) => (
+              <article className="summaryCard" key={card.id}>
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
+                <small>{card.detail}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="splitGrid">
+            <section className="subPanel">
+              <div className="panelHeader">
+                <div>
+                  <h3>Subscriber morning note</h3>
+                  <p>This is the kind of short briefing a premium client should be able to skim in under a minute.</p>
+                </div>
+              </div>
+
+              <div className="briefNoteCard">
+                <strong>{strongestSignal?.headline || strongestSignal?.label || "The desk is waiting for the next clean setup."}</strong>
+                <p>
+                  {strongestSignal?.thesis ||
+                    "No clean lead setup has broken away from the pack yet, so the brief stays in monitoring mode."}
+                </p>
+                <ul className="briefBulletList">
+                  <li>
+                    <strong>Macro:</strong> {leadNewsItem?.sourceName || "Waiting"}{leadNewsItem?.summary ? ` - ${leadNewsItem.summary}` : " - The tape is still warming up."}
+                  </li>
+                  <li>
+                    <strong>Signals:</strong> {allSignals.length} visible setups, with {alertSummary.triggered || 0} currently lighting up active rules.
+                  </li>
+                  <li>
+                    <strong>Book:</strong> {openTrades.length} open positions{Number.isFinite(totalOpenPnl) ? ` and ${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL.` : "."}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="panelActions">
+                <button type="button" className="primaryButton" onClick={copyDailyBrief}>
+                  Copy Daily Brief
+                </button>
+                <button
+                  type="button"
+                  className="ghostButton"
+                  onClick={() => jumpToPageSection("signals", "chart-panel", strongestSignal?.desk || activeDesk)}
+                >
+                  Open Lead Signal
+                </button>
+              </div>
+            </section>
+
+            <section className="subPanel">
+              <div className="panelHeader">
+                <div>
+                  <h3>Immediate next actions</h3>
+                  <p>Keep the service side crisp: what the user should do next should never be a mystery.</p>
+                </div>
+              </div>
+
+              <div className="watchlistStack">
+                <article className="watchItemCard">
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">01</span>
+                      <span className={`signalBadge ${actionTone(strongestSignal?.action || "HOLD")}`}>{strongestSignal?.action || "WAIT"}</span>
+                    </div>
+                    <strong>Open the highest-conviction setup</strong>
+                    <small>
+                      {strongestSignal
+                        ? `${strongestSignal.label} is leading the desk at ${strongestSignal.confidence}% confidence.`
+                        : "Wait for the next promoted lead signal before routing a trade."}
+                    </small>
+                  </div>
+                </article>
+                <article className="watchItemCard">
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">02</span>
+                      <span className="signalMiniTag">MACRO</span>
+                    </div>
+                    <strong>Check the tape before execution</strong>
+                    <small>
+                      {leadNewsItem?.title || "Read the lead story so the next decision stays anchored in real context."}
+                    </small>
+                  </div>
+                </article>
+                <article className="watchItemCard">
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">03</span>
+                      <span className="signalMiniTag">ALERTS</span>
+                    </div>
+                    <strong>Clear triggered alerts and unread events</strong>
+                    <small>
+                      {notificationSummary.unread || alertSummary.triggered
+                        ? `${notificationSummary.unread || 0} unread notifications and ${alertSummary.triggered || 0} triggered alerts are waiting.`
+                        : "No fresh alert pressure is waiting on you right now."}
+                    </small>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section className="panel" id="home-workflow">
+          <div className="panelHeader">
+            <div>
+              <h2>Guided workflow</h2>
+              <p>Keep the product journey tight: context first, setup second, return loop third, premium value always visible.</p>
+            </div>
+            <div className="headerStatus">
+              <span>Progress</span>
+              <strong>{workflowProgress}%</strong>
+            </div>
+          </div>
+
+          {routineStatus ? <div className="statusBanner subtleBanner">{routineStatus}</div> : null}
+
+          <div className="splitGrid">
+            <section className="subPanel">
+              {showRoutineReminder ? (
+                <div className="workflowReminderCard">
+                  <div className="workflowReminderTop">
+                    <span className="signalMiniTag">ROUTINE NUDGE</span>
+                    <span className="signalBadge hold">{activeRoutineMode.shortLabel}</span>
+                  </div>
+                  <strong>{nextWorkflowStep.title} is still open.</strong>
+                  <p>
+                    {activeRoutineMode.detail} Next best move: {nextWorkflowStep.detail}
+                  </p>
+                  <div className="watchItemActions">
+                    <button type="button" className="primaryButton slimButton" onClick={nextWorkflowStep.onClick}>
+                      {nextWorkflowStep.cta}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={watchlistBusyKey === "routine:reminder"}
+                      onClick={dismissRoutineReminder}
+                    >
+                      Dismiss today
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="workflowModeRow">
+                {Object.entries(routineModeMeta).map(([modeId, mode]) => (
+                  <button
+                    key={modeId}
+                    type="button"
+                    className={`workflowModeButton ${routineSessionMode === modeId ? "active" : ""}`.trim()}
+                    disabled={watchlistBusyKey === `routine-mode:${modeId}`}
+                    onClick={() => setRoutineMode(modeId)}
+                  >
+                    <span>{mode.shortLabel}</span>
+                    <strong>{mode.label}</strong>
+                    <small>{mode.detail}</small>
+                  </button>
+                ))}
+              </div>
+
+              <div className="summaryGrid compactSummaryGrid">
+                <div className="summaryCard summaryCardAccent">
+                  <span>Completed steps</span>
+                  <strong>
+                    {workflowCompleted}/{workflowSteps.length}
+                  </strong>
+                  <small>The app is already coaching the next best move instead of leaving the user to guess.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Next best move</span>
+                  <strong>{nextWorkflowStep.title}</strong>
+                  <small>{nextWorkflowStep.detail}</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Current streak</span>
+                  <strong>{routineStreakCount} day{routineStreakCount === 1 ? "" : "s"}</strong>
+                  <small>Days with at least one completed workflow step saved to this account.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Best streak</span>
+                  <strong>{routineBestStreakCount} day{routineBestStreakCount === 1 ? "" : "s"}</strong>
+                  <small>Your strongest consistency run so far on this account.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Reminder mode</span>
+                  <strong>
+                    {routinePreferences.remindersEnabled === false
+                      ? "Off"
+                      : routinePreferences.nudgeWindow === "focused"
+                        ? "Focused"
+                        : routinePreferences.nudgeWindow === "quiet"
+                          ? "Quiet"
+                          : "Active"}
+                  </strong>
+                  <small>Change this any time under Settings - Routine.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>7-day cadence</span>
+                  <strong>{routineWeekActiveCount}/7 active</strong>
+                  <small>A quick read on whether the product is becoming part of the user's routine.</small>
+                </div>
+              </div>
+
+              {routineIsComplete ? (
+                <div className="workflowCompleteCard">
+                  <div className="workflowCompleteTop">
+                    <span className="signalMiniTag">{showRoutineCelebration ? "NICE WORK" : "TODAY COMPLETE"}</span>
+                    <span className="signalBadge buy">{showRoutineCelebration ? "DONE" : "READY"}</span>
+                  </div>
+                  <strong>Your core routine is done for today.</strong>
+                  <p>
+                    The app has your macro check, lead signal, watchlist return path, alerts,
+                    research, and premium review saved. {completedAtLabel ? `Finished at ${completedAtLabel}.` : ""}
+                  </p>
+                  <div className="watchItemActions">
+                    {showRoutineCelebration ? (
+                      <button
+                        type="button"
+                        className="primaryButton slimButton"
+                        disabled={watchlistBusyKey === "routine:ack"}
+                        onClick={acknowledgeRoutineCompletion}
+                      >
+                        Keep going
+                      </button>
+                    ) : null}
+                    <button type="button" className="primaryButton slimButton" onClick={activeRoutineMode.primaryAction}>
+                      {activeRoutineMode.primaryCta}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={watchlistBusyKey === "routine:reset"}
+                      onClick={resetRoutine}
+                    >
+                      Reset Today
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="workflowProgressTrack" aria-hidden="true">
+                <div className="workflowProgressFill" style={{ width: `${workflowProgress}%` }} />
+              </div>
+
+              <div className="panelActions">
+                <button
+                  type="button"
+                  className="primaryButton"
+                  onClick={routineIsComplete ? activeRoutineMode.primaryAction : nextWorkflowStep.onClick}
+                >
+                  {routineIsComplete ? activeRoutineMode.primaryCta : nextWorkflowStep.cta}
+                </button>
+                <button
+                  type="button"
+                  className="ghostButton"
+                  onClick={() => jumpToPageSection("home", "home-launchpad", activeDesk)}
+                >
+                  Open Launchpad
+                </button>
+              </div>
+
+              <div className="workflowHistoryRow">
+                {routineWeekEntries.length ? (
+                  routineWeekEntries.map((entry) => (
+                    <div
+                      className={`workflowHistoryChip ${entry.active ? "active" : "idle"} ${entry.isToday ? "today" : ""}`.trim()}
+                      key={entry.id}
+                    >
+                      <span>{entry.shortLabel}</span>
+                      <strong>{entry.active ? "Done" : "--"}</strong>
+                      <small>{entry.isToday ? "Today" : entry.dayLabel}</small>
+                    </div>
+                  ))
+                ) : (
+                  <div className="workflowHistoryEmpty">
+                    <strong>No saved rhythm yet</strong>
+                    <small>Complete a few workflow steps and the app will start showing your recent routine trail here.</small>
+                  </div>
+                )}
+              </div>
+
+              {routineActivityDates.length ? (
+                <div className="workflowHistorySummary">
+                  <strong>Recent completions</strong>
+                  <small>
+                    {routineActivityDates
+                      .map((entry) => (entry.isToday ? "Today" : entry.formatted))
+                      .join(" | ")}
+                  </small>
+                </div>
+              ) : null}
+
+              <div className="workflowReviewCard">
+                <div className="workflowReviewTop">
+                  <div>
+                    <span className="signalMiniTag">WEEKLY REVIEW</span>
+                    <strong>{routineCadenceReview.label}</strong>
+                  </div>
+                  <span className="signalBadge hold">{weeklyRoutineScore}%</span>
+                </div>
+                <p>{routineCadenceReview.detail}</p>
+
+                <div className="workflowInsightCard">
+                  <span>Why this matters</span>
+                  <strong>{weeklyRoutineScoreLabel}</strong>
+                  <small>{weeklyRoutineInsight}</small>
+                </div>
+
+                <div className="workflowReviewStats">
+                  <div className="workflowReviewStat">
+                    <span>This week</span>
+                    <strong>{routineWeekActiveCount}/7</strong>
+                  </div>
+                  <div className="workflowReviewStat">
+                    <span>Best week</span>
+                    <strong>{routineBestWeekCount}/7</strong>
+                  </div>
+                  <div className="workflowReviewStat">
+                    <span>Best streak</span>
+                    <strong>{routineBestStreakCount}d</strong>
+                  </div>
+                  <div className="workflowReviewStat">
+                    <span>Weekly score</span>
+                    <strong>{weeklyRoutineScore}%</strong>
+                  </div>
+                </div>
+
+                <div className="watchItemActions">
+                  <button
+                    type="button"
+                    className="primaryButton slimButton"
+                    onClick={() => jumpToPageSection("reports", "reports-performance", activeDesk)}
+                  >
+                    Open Weekly Research
+                  </button>
+                  <button
+                    type="button"
+                    className="ghostButton slimButton"
+                    onClick={() => jumpToPageSection("home", "home-brief", activeDesk)}
+                  >
+                    Review Daily Brief
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className="subPanel">
+              <div className="workflowStepGrid">
+                {workflowSteps.map((step) => (
+                  <article
+                    key={step.id}
+                    className={`workflowStepCard ${step.completed ? "complete" : step.complete ? "ready" : "pending"}`.trim()}
+                  >
+                    <div className="workflowStepTop">
+                      <span className="signalMiniTag">{step.ordinal}</span>
+                      <span className={`signalBadge ${step.completed ? "buy" : step.complete ? "hold" : "sell"}`}>
+                        {step.completed ? "DONE" : step.complete ? "READY" : "NEXT"}
+                      </span>
+                    </div>
+                    <strong>{step.title}</strong>
+                    <p>{step.detail}</p>
+                    <div className="watchItemActions">
+                      <button type="button" className="ghostButton slimButton" onClick={step.onClick}>
+                        {step.cta}
+                      </button>
+                      <button
+                        type="button"
+                        className={step.completed ? "ghostButton slimButton" : "primaryButton slimButton"}
+                        disabled={watchlistBusyKey === `routine:${step.id}`}
+                        onClick={() => setRoutineStep(step.id, !step.completed)}
+                      >
+                        {step.completed ? "Mark undone" : "Mark done"}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           </div>
         </section>
 
@@ -734,6 +1601,288 @@ export function HomeScreen({
           </div>
         </section>
       </div>
+
+      <section className="panel" id="home-support-menu">
+        <div className="panelHeader">
+          <div>
+            <h2>Support &amp; Admin</h2>
+            <p>Keep research, subscriptions, tools, connections, and settings in their own menu lane.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Separate lane</span>
+            <strong>Non-service</strong>
+          </div>
+        </div>
+
+        <div className="homeLaunchGrid">
+          {supportLaunchCards.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              className="homeLaunchCard"
+              onClick={card.action}
+            >
+              <div className="homeLaunchTop">
+                <span className="navGlyph">{card.glyph}</span>
+                <div className="homeLaunchCopy">
+                  <strong>{card.label}</strong>
+                  <small>{card.hint}</small>
+                </div>
+              </div>
+              <div className="homeLaunchMeta">
+                <span>{card.metaLabel}</span>
+                <strong>{card.metaValue}</strong>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel" id="home-watchlist">
+        <div className="panelHeader">
+          <div>
+            <h2>Watchlist and alerts</h2>
+            <p>Give subscribers a reason to return daily: saved instruments, live trigger checks, and one-tap paths back into the desk.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Triggered now</span>
+            <strong>{alertSummary.triggered || 0}</strong>
+          </div>
+        </div>
+
+        {watchlistStatus ? <div className="statusBanner subtleBanner">{watchlistStatus}</div> : null}
+
+        {currentAlertPlan.id !== "elite" || Number(alertSummary.remaining ?? currentAlertPlan.maxAlerts) <= 1 ? (
+          <div className="subscriptionPromptCard subscriptionPromptInline">
+            <div className="subscriptionPromptTop">
+              <div>
+                <span className="homePanelEyebrow">Upgrade path</span>
+                <h3>Turn alerts into a stronger subscriber habit loop</h3>
+                <p>
+                  {subscriptionTierLabel(currentAlertPlan.id)} is live now with{" "}
+                  {alertSummary.total || 0}/{alertSummary.maxAllowed || currentAlertPlan.maxAlerts} slots in use.
+                  {nextAlertPlan
+                    ? ` ${nextAlertPlan.label} unlocks more alert coverage${
+                        nextAlertPlan.emailEnabled ? ", queued delivery," : ""
+                      } and a more obviously premium daily workflow.`
+                    : " You are already on the highest-capacity plan."}
+                </p>
+              </div>
+              <div className="subscriptionPromptMeta">
+                <span>Next step</span>
+                <strong>{nextAlertPlan ? nextAlertPlan.label : "Elite active"}</strong>
+                <small>{alertSummary.remaining ?? 0} slots left</small>
+              </div>
+            </div>
+
+            <div className="panelActions">
+              <button
+                type="button"
+                className="primaryButton"
+                onClick={() => navigateToPage("subscriptions", false, activeDesk)}
+              >
+                Open Subscription Plans
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={() => jumpToPageSection("settings", "alerts-plan", activeDesk)}
+              >
+                Manage Alert Plan
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+          <div className="summaryGrid compactSummaryGrid">
+            <div className="summaryCard">
+              <span>Watchlist</span>
+              <strong>{watchlistItems.length}</strong>
+            </div>
+          <div className="summaryCard">
+            <span>Alerts live</span>
+            <strong>{alertSummary.enabled || 0}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Triggered</span>
+            <strong>{alertSummary.triggered || 0}</strong>
+          </div>
+            <div className="summaryCard">
+              <span>RSI rules</span>
+              <strong>{alertSummary.rsiAlerts || 0}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Plan</span>
+              <strong>{subscriptionTierLabel(alertSummary.subscriptionTier)}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Slots left</span>
+              <strong>{alertSummary.remaining ?? 0}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Email queue</span>
+              <strong>{alertSummary.emailQueued || 0}</strong>
+            </div>
+          </div>
+
+        <div className="splitGrid homeWatchGrid">
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Saved instruments</h3>
+                <p>Fast jump points back into the desks that matter most.</p>
+              </div>
+            </div>
+
+            <div className="watchlistStack">
+              {watchlistItems.length ? (
+                watchlistItems.slice(0, 8).map((item) => (
+                  <article className="watchItemCard" key={item.id}>
+                    <button type="button" className="watchItemMain" onClick={() => onOpenWatchlistSignal(item)}>
+                      <div className="watchItemTop">
+                        <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                        <span className={`signalBadge ${actionTone(item.action || "HOLD")}`}>{item.action || "WAIT"}</span>
+                      </div>
+                      <strong>{item.label}</strong>
+                      <small>
+                        {item.currentPrice != null
+                          ? `${formatTickerPrice(item.ticker, item.currentPrice)} | RSI ${item.currentRsi ?? "--"}`
+                          : "Waiting for live desk data"}
+                      </small>
+                    </button>
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={watchlistBusyKey === `watch:remove:${item.id}`}
+                      onClick={() => onRemoveWatchlistItem(item.id)}
+                    >
+                      Remove
+                    </button>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="No watchlist yet"
+                  body="Save signals from the trade desk and they will appear here as daily return points."
+                />
+              )}
+            </div>
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Active alerts</h3>
+                <p>Simple, honest trigger tracking for price and RSI conditions.</p>
+              </div>
+            </div>
+
+            <div className="watchlistStack">
+              {alertItems.length ? (
+                alertItems.slice(0, 8).map((item) => (
+                  <article className={`watchItemCard alertItemCard ${item.triggered ? "triggered" : ""}`} key={item.id}>
+                    <div className="watchItemMain">
+                      <div className="watchItemTop">
+                        <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                        <span className={`signalBadge ${item.triggered ? "buy" : item.enabled ? "hold" : "sell"}`}>
+                          {item.triggered ? "LIVE" : item.enabled ? "ON" : "OFF"}
+                        </span>
+                      </div>
+                      <strong>{item.label}</strong>
+                      <small>
+                        {alertKindLabel(item.kind)} {formatAlertThreshold(item.ticker, item.kind, item.threshold)}
+                        {item.metricValue != null ? ` | Now ${formatAlertThreshold(item.ticker, item.kind, item.metricValue)}` : ""}
+                      </small>
+                    </div>
+                    <div className="watchItemActions">
+                      <button
+                        type="button"
+                        className="ghostButton slimButton"
+                        disabled={watchlistBusyKey === `alert:toggle:${item.id}`}
+                        onClick={() => onToggleAlertRule(item.id, !item.enabled)}
+                      >
+                        {item.enabled ? "Pause" : "Resume"}
+                      </button>
+                      <button
+                        type="button"
+                        className="ghostButton slimButton"
+                        disabled={watchlistBusyKey === `alert:remove:${item.id}`}
+                        onClick={() => onRemoveAlertRule(item.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="No alerts yet"
+                  body="Create breakout or RSI alerts from the trade desk and the live trigger state will show here."
+                />
+              )}
+            </div>
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Notification feed</h3>
+                <p>Unread alert events and recent trigger activity, kept short and actionable.</p>
+              </div>
+              <div className="headerStatus">
+                <span>Unread</span>
+                <strong>{notificationSummary.unread || 0}</strong>
+              </div>
+            </div>
+
+            <div className="panelActions">
+              <button
+                type="button"
+                className="ghostButton"
+                disabled={!notificationSummary.unread || watchlistBusyKey === "notification:all"}
+                onClick={markAllNotificationsRead}
+              >
+                Mark all read
+              </button>
+            </div>
+
+            <div className="watchlistStack">
+              {notificationItems.length ? (
+                notificationItems.slice(0, 8).map((item) => (
+                  <article className={`watchItemCard notificationCard ${item.status === "unread" ? "unread" : ""}`} key={item.id}>
+                    <div className="watchItemMain">
+                      <div className="watchItemTop">
+                        <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                        <span className={`signalBadge ${item.status === "unread" ? "buy" : "hold"}`}>
+                          {item.status === "unread" ? "NEW" : "READ"}
+                        </span>
+                      </div>
+                      <strong>{item.title}</strong>
+                      <small>{item.message}</small>
+                      <small>{formatDateTime(item.createdAt, appSettings.timezone)}</small>
+                    </div>
+                    <div className="watchItemActions">
+                      <button
+                        type="button"
+                        className="ghostButton slimButton"
+                        disabled={item.status !== "unread" || watchlistBusyKey === `notification:${item.id}`}
+                        onClick={() => markNotificationRead(item.id)}
+                      >
+                        Mark read
+                      </button>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="No alert activity yet"
+                  body="As watchlist rules start triggering, the most recent events will show up here."
+                />
+              )}
+            </div>
+          </section>
+        </div>
+      </section>
 
       <section className="panel" id="home-activity">
         <div className="panelHeader">
@@ -912,7 +2061,7 @@ export function NewsScreen({
               <strong>{activeDeskNewsLabel}</strong>
             </div>
             <div className="deskStat">
-              <span>Sources</span>
+              <span>Market Intelligence</span>
               <strong>{newsResponse.sources.length}</strong>
             </div>
           </div>
@@ -973,7 +2122,7 @@ export function NewsScreen({
             <>
               <div className="signalCommandGrid">
                 <div className="signalCommandMetric">
-                  <span>Source</span>
+                  <span>Market Intelligence</span>
                   <strong>{leadNewsItem.sourceName}</strong>
                 </div>
                 <div className="signalCommandMetric">
@@ -1008,14 +2157,14 @@ export function NewsScreen({
                   className="ghostButton"
                   onClick={() => openExternal(leadNewsItem.link || newsSourceMap[leadNewsItem.sourceId])}
                 >
-                  Read Source
+                  Read Market Intelligence
                 </button>
               </div>
             </>
           ) : (
             <EmptyState
               title="News is refreshing"
-              body="The feed is warming up and the lead headline will appear once the sources respond."
+              body="The feed is warming up and the lead headline will appear once the market intelligence responds."
             />
           )}
         </section>
@@ -1115,7 +2264,7 @@ export function NewsScreen({
           {!newsResponse.items.length ? (
             <EmptyState
               title="News is refreshing"
-              body="The feed is warming up and will fill in as sources respond."
+              body="The feed is warming up and will fill in as market intelligence responds."
             />
           ) : null}
         </div>
@@ -1267,7 +2416,7 @@ export function ToolsScreen({
           {
             label: "Research",
             value: activeResearchReports.length,
-            detail: "Desk-linked reports",
+            detail: "Desk-linked research",
           },
         ]}
         primaryAction={{
@@ -1493,7 +2642,7 @@ export function ToolsScreen({
           <div className="panelHeader">
             <div>
               <h2>Research Library</h2>
-              <p>Keep the desk anchored to the reports and playbooks already informing the workflow.</p>
+              <p>Keep the desk anchored to the research and playbooks already informing the workflow.</p>
             </div>
           </div>
 
@@ -1519,7 +2668,7 @@ export function ToolsScreen({
             {!activeResearchReports.length ? (
               <EmptyState
                 title="No research pinned to this desk"
-                body="Switch desks or add more desk-linked reports to expand the tool shelf."
+                body="Switch desks or add more desk-linked research to expand the tool shelf."
               />
             ) : null}
           </div>
@@ -1573,14 +2722,14 @@ export function CollectiblesScreen({
   const collectibleActions = [
     {
       id: "inventory",
-      label: "Tradable Inventory",
+      label: "Holdings",
       meta: `${filteredCollectibles.length}`,
-      detail: "Stay inside Collecttrade and scan the items you can actually act on.",
+      detail: "Stay inside Brick Alpha and scan the items you can actually act on.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
     },
     {
       id: "source",
-      label: "Official Sources",
+      label: "Market Intelligence",
       meta: legoReferenceShelf?.sourceName || "Reference",
       detail: "Verify lineups and product context without leaving the core workflow too early.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-reference"),
@@ -1597,7 +2746,7 @@ export function CollectiblesScreen({
       id: "portfolio",
       label: "Portfolio",
       meta: "Review book",
-      detail: "Check how collectibles are sitting inside the wider portfolio.",
+      detail: "Check how LEGO investment positions sit inside the wider portfolio.",
       onClick: () => jumpToPageSection("portfolio", "open-positions"),
     },
   ];
@@ -1606,16 +2755,16 @@ export function CollectiblesScreen({
     <>
       <WorkspaceHero
         tone="collectibles"
-        eyebrow="Alternative Inventory"
-        title="Collectibles"
-        description="Trade LEGO, Pokemon, and other alternative inventory with proper buy and sell tickets."
+        eyebrow="LEGO Investments"
+        title="LEGO Investments"
+        description="Analyze LEGO sets and investment-grade collectibles with proper buy and sell tickets."
         statusLabel="Desk refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
           {
             label: "Tradable items",
             value: collectibles.length,
-            detail: "Live desk inventory",
+            detail: "Live LEGO holdings",
           },
           {
             label: "Brands",
@@ -1652,7 +2801,7 @@ export function CollectiblesScreen({
       />
       <WorkspaceCommandBar
         tone="collectibles"
-        title="Collectibles Shortcuts"
+        title="LEGO Investment Shortcuts"
         hint="Keep trading, verification, and portfolio review in one tidy flow."
         actions={collectibleActions}
       />
@@ -1679,7 +2828,7 @@ export function CollectiblesScreen({
           className="summaryCard summaryCardButton"
           onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
         >
-          <span>Official sources</span>
+          <span>Market intelligence</span>
           <strong>{legoReferenceShelf?.sourceName || "Reference"}</strong>
         </button>
       </section>
@@ -1687,9 +2836,9 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-lanes">
         <div className="panelHeader">
           <div>
-            <h2>Collectibles Workflow</h2>
+            <h2>LEGO Investment Workflow</h2>
             <p>
-              Keep the trading workflow and the source-verification workflow distinct so the app
+              Keep the trading workflow and the market-verification workflow distinct so the app
               feels like a real desk, not a bundle of outbound links.
             </p>
           </div>
@@ -1701,10 +2850,10 @@ export function CollectiblesScreen({
             className="collectibleLaneCard"
             onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
           >
-            <span>Tradable Inventory</span>
-            <strong>Work inside Collecttrade</strong>
+            <span>Holdings</span>
+            <strong>Work inside Brick Alpha</strong>
             <small>
-              Scan inventory ideas, compare thesis, open buy or sell tickets, and keep the trade
+              Scan investment ideas, compare thesis, open buy or sell tickets, and keep the trade
               planning flow inside the app.
             </small>
           </button>
@@ -1714,10 +2863,10 @@ export function CollectiblesScreen({
             className="collectibleLaneCard"
             onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
           >
-            <span>Official Sources</span>
+            <span>Market Intelligence</span>
             <strong>Verify the product context</strong>
             <small>
-              Use official LEGO ZA and related source pages to validate lineups, themes, and retail
+              Use official LEGO ZA and related market intelligence pages to validate lineups, themes, and retail
               context without making them the primary experience.
             </small>
           </button>
@@ -1786,7 +2935,7 @@ export function CollectiblesScreen({
                 className="ghostButton"
                 onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
               >
-                View Source Notes
+                View Market Notes
               </button>
             ) : null}
           </div>
@@ -1796,9 +2945,9 @@ export function CollectiblesScreen({
       <section className="panel" id="collectibles-trading">
         <div className="panelHeader">
           <div>
-            <h2>Tradable Inventory</h2>
+            <h2>Holdings</h2>
             <p>
-              These are the items you act on inside Collecttrade. Search, filter, compare, then
+              These are the items you act on inside Brick Alpha. Search, filter, compare, then
               move into the collectible ticket flow.
             </p>
           </div>
@@ -1827,18 +2976,18 @@ export function CollectiblesScreen({
             </small>
           </div>
           <div className="deskBriefCard">
-            <span>Inventory source</span>
-            <strong>Collecttrade tracked</strong>
+            <span>Holdings source</span>
+            <strong>Brick Alpha tracked</strong>
             <small>
-              Pricing and thesis here are part of your tradable inventory layer, separate from
+              Pricing and thesis here are part of your LEGO investment holdings layer, separate from
               official retail references.
             </small>
           </div>
           <div className="deskBriefCard">
             <span>Verification lane</span>
-            <strong>{legoReferenceShelf?.sourceName || "Official sources"}</strong>
+            <strong>{legoReferenceShelf?.sourceName || "Market intelligence"}</strong>
             <small>
-              Use the source lane only when you want to verify an official product page or series
+              Use the market intelligence lane only when you want to verify an official product page or series
               lineup.
             </small>
           </div>
@@ -1945,7 +3094,7 @@ export function CollectiblesScreen({
                     className="ghostButton"
                     onClick={() => openExternal(item.url || legoReferenceShelf.url)}
                   >
-                    Verify Source
+                    Verify Market Intelligence
                   </button>
                 </div>
               </article>
@@ -1954,7 +3103,7 @@ export function CollectiblesScreen({
 
           <div className="panelActions">
             <div className="collectibleSourceHint">
-              Collecttrade stays the main workspace. Official LEGO ZA links are here for source verification, not as the primary route.
+              Brick Alpha stays the main workspace. Official LEGO ZA links are here for market verification, not as the primary route.
             </div>
             {legoReferenceShelf.aboutUrl ? (
               <button
@@ -1986,10 +3135,10 @@ export function CollectiblesScreen({
                 <h2>{group.brand}</h2>
                 <p>
                   {group.brand === "LEGO"
-                    ? "Display-led sets, minifigures, and collector inventory with the official source shelf available beside the trade flow."
+                    ? "Display-led sets, minifigures, and collector holdings with the market intelligence shelf available beside the trade flow."
                     : group.brand === "Pokemon"
-                      ? "Sealed and graded trading-card inventory with faster collector demand read-through."
-                      : "Alternative inventory tracked inside the same ticket and portfolio workflow."}
+                      ? "Sealed and graded trading-card holdings with faster collector demand read-through."
+                      : "collectibles tracked inside the same ticket and portfolio workflow."}
                 </p>
               </div>
               <div className="headerStatus">
@@ -2013,7 +3162,7 @@ export function CollectiblesScreen({
         ))}
         {!filteredCollectibles.length ? (
           <EmptyState
-            title="No collectibles match that filter"
+            title="No LEGO investments match that filter"
             body="Try another brand, category, or a broader search term."
           />
         ) : null}
@@ -2357,8 +3506,8 @@ export function ReportsScreen({
     <>
       <WorkspaceHero
         tone="reports"
-        eyebrow="Reporting Suite"
-        title="Reports"
+        eyebrow="Research Center"
+        title="Research Center"
         description="Performance curves, desk exposure, signal pressure, and execution analytics in one visual review workspace."
         statusLabel="Last engine tick"
         statusValue={formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}
@@ -2394,7 +3543,7 @@ export function ReportsScreen({
       />
       <WorkspaceCommandBar
         tone="reports"
-        title="Reporting Shortcuts"
+        title="Research Shortcuts"
         hint="Move between performance, exposure, signal analytics, and the live book without losing context."
         actions={reportActions}
       />
@@ -2455,7 +3604,7 @@ export function ReportsScreen({
           <div className="panelHeader">
             <div>
               <h2>Desk Exposure</h2>
-              <p>{openTrades.length ? "Open-book" : "Recent-book"} distribution across forex, ETFs, crypto, JSE, and collectibles.</p>
+              <p>{openTrades.length ? "Open-book" : "Recent-book"} distribution across forex, ETFs, crypto, JSE, and LEGO investments.</p>
             </div>
           </div>
 
@@ -2534,31 +3683,455 @@ export function ReportsScreen({
   );
 }
 
+export function SubscriptionsScreen({
+  activeDesk,
+  activePageSections,
+  alertsResponse,
+  appSettings,
+  jumpToPageSection,
+  navigateToPage,
+  notificationsResponse,
+  openTrades,
+  totalOpenPnl,
+}) {
+  const currentPlanId = appSettings.subscriptionTier || "starter";
+  const currentPlan =
+    ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === currentPlanId) ||
+    ALERT_SUBSCRIPTION_OPTIONS[0];
+  const alertSummary = alertsResponse.summary || {};
+  const alertPlan = alertsResponse.plan || currentPlan;
+  const deliverySummary = alertsResponse.deliverySummary || {};
+  const notificationSummary = notificationsResponse.summary || {};
+  const upgradeActions = [
+    {
+      id: "manage-plan",
+      label: "Manage Plan",
+      meta: subscriptionTierLabel(currentPlanId),
+      detail: "Open alert plan controls and shape what a paying client gets from delivery and alert coverage.",
+      onClick: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+    },
+    {
+      id: "daily-brief",
+      label: "Daily Brief",
+      meta: `${notificationSummary.unread || 0} unread`,
+      detail: "Open the premium-style daily brief and see how the subscription story already lands on Home.",
+      onClick: () => jumpToPageSection("home", "home-brief", activeDesk),
+    },
+    {
+      id: "reports",
+      label: "Premium Research",
+      meta: `${openTrades.length} open`,
+      detail: "Show partners the visual research layer that helps justify recurring value.",
+      onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+    },
+    {
+      id: "trade",
+      label: "Open Trade Desk",
+      meta: `${alertSummary.enabled || 0} active`,
+      detail: "Jump back into the live signal desk where watchlists, alerts, and tickets turn into daily habit.",
+      onClick: () => navigateToPage("signals", false, activeDesk),
+    },
+  ];
+  const tierCards = ALERT_SUBSCRIPTION_OPTIONS.map((option) => {
+    const isCurrent = option.id === currentPlanId;
+    const features =
+      option.id === "starter"
+        ? [
+            "Core market desks and onboarding flow",
+            `${option.maxAlerts} active alert slots`,
+            "In-app notifications and daily brief access",
+          ]
+        : option.id === "pro"
+          ? [
+              "Deeper alert coverage across desks",
+              "Queued email delivery preview",
+              "Better fit for committed daily users",
+            ]
+          : [
+              "High-capacity alert coverage",
+              "Priority workflow for heavy desk usage",
+              "Strongest commercial offer for power users",
+            ];
+
+    return {
+      ...option,
+      isCurrent,
+      features,
+    };
+  });
+  const premiumSurfaces = [
+    {
+      id: "alerts",
+      title: "Alerts and delivery",
+      detail: "The clearest paid value layer today: more alert coverage, email-style delivery, and a stronger daily monitoring loop.",
+      actionLabel: "Open alert controls",
+      action: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+    },
+    {
+      id: "brief",
+      title: "Daily brief",
+      detail: "A subscriber-style morning note that turns the app from a tool you visit into a service you rely on.",
+      actionLabel: "Open daily brief",
+      action: () => jumpToPageSection("home", "home-brief", activeDesk),
+    },
+    {
+      id: "reports",
+      title: "Research Center",
+      detail: "Performance curves, desk exposure, and signal pressure are the kind of visuals clients expect from a serious product.",
+      actionLabel: "Open Research Center",
+      action: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+    },
+    {
+      id: "trade",
+      title: "Execution desk",
+      detail: "Signals, charts, RSI, structure plans, and ticket flow make the premium layers feel grounded in actual trading value.",
+      actionLabel: "Open trade desk",
+      action: () => navigateToPage("signals", false, activeDesk),
+    },
+  ];
+
+  return (
+    <>
+      <WorkspaceHero
+        tone="subscriptions"
+        eyebrow="Commercial Layer"
+        title="Subscriptions"
+        description="Plan tiers, premium product value, and the upgrade path that turns Brick Alpha into a credible subscription business."
+        statusLabel="Current plan"
+        statusValue={subscriptionTierLabel(currentPlanId)}
+        metrics={[
+          {
+            label: "Alert coverage",
+            value: `${alertSummary.total || 0}/${alertSummary.maxAllowed || alertPlan.maxAlerts || currentPlan.maxAlerts}`,
+            detail: `${alertSummary.remaining ?? Math.max((alertPlan.maxAlerts || currentPlan.maxAlerts) - (alertSummary.total || 0), 0)} slots left`,
+          },
+          {
+            label: "Unread notifications",
+            value: notificationSummary.unread || 0,
+            detail: `${deliverySummary.queued || 0} email-style deliveries queued`,
+          },
+          {
+            label: "Open book",
+            value: openTrades.length,
+            detail: Number.isFinite(totalOpenPnl)
+              ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL`
+              : "No live PnL yet",
+          },
+        ]}
+        primaryAction={{
+          label: "Manage Alert Plan",
+          onClick: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+        }}
+        secondaryAction={{
+          label: "Open Research Center",
+          onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+        }}
+      />
+      <WorkspaceSectionBar
+        sections={activePageSections}
+        onSelect={(sectionId) => jumpToPageSection("subscriptions", sectionId, activeDesk)}
+      />
+      <WorkspaceCommandBar
+        tone="subscriptions"
+        title="Commercial Shortcuts"
+        hint="Move between the current plan, premium surfaces, and the app areas that sell the value best."
+        actions={upgradeActions}
+      />
+
+      <section className="summaryGrid" id="subscriptions-overview">
+        <div className="summaryCard summaryCardAccent">
+          <span>Current tier</span>
+          <strong>{subscriptionTierLabel(currentPlanId)}</strong>
+          <small>{currentPlan.description}</small>
+        </div>
+        <div className="summaryCard">
+          <span>Alert slots</span>
+          <strong>{alertPlan.maxAlerts || currentPlan.maxAlerts}</strong>
+          <small>{alertSummary.enabled || 0} enabled right now</small>
+        </div>
+        <div className="summaryCard">
+          <span>Email eligibility</span>
+          <strong>{alertPlan.emailEnabled ? "Enabled" : "Planned"}</strong>
+          <small>{deliverySummary.queued || 0} queued deliveries</small>
+        </div>
+        <div className="summaryCard">
+          <span>Premium habit loop</span>
+          <strong>{notificationSummary.unread || 0} unread</strong>
+          <small>Notifications, brief, and alerts are reinforcing daily return.</small>
+        </div>
+      </section>
+
+      <div className="splitGrid">
+        <section className="panel subscriptionNarrativePanel">
+          <div className="panelHeader">
+            <div>
+              <h2>What clients should feel</h2>
+              <p>This screen is where we make the commercial story legible: trust, habit, and a clearer reason to upgrade.</p>
+            </div>
+          </div>
+
+          <div className="subscriptionPillRow">
+            <span className="signalMiniTag">Signals with context</span>
+            <span className="signalMiniTag">Daily brief</span>
+            <span className="signalMiniTag">Watchlists and alerts</span>
+            <span className="signalMiniTag">Research and analytics</span>
+            <span className="signalMiniTag">Tools and execution</span>
+          </div>
+
+          <ul className="subscriptionFeatureList">
+            <li>
+              <strong>Starter</strong>
+              <span>Enough to explore the platform, understand the signal engine, and build trust with light alerting.</span>
+            </li>
+            <li>
+              <strong>Pro</strong>
+              <span>The first serious paid plan, with meaningful alert capacity and delivery that supports daily use.</span>
+            </li>
+            <li>
+              <strong>Elite</strong>
+              <span>A higher-coverage lane for heavier desks, more notifications, and the most demanding subscribers.</span>
+            </li>
+          </ul>
+
+          <div className="panelActions">
+            <button
+              type="button"
+              className="primaryButton"
+              onClick={() => jumpToPageSection("settings", "alerts-plan", activeDesk)}
+            >
+              Open Alert Plan Controls
+            </button>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => jumpToPageSection("home", "home-brief", activeDesk)}
+            >
+              Review Daily Brief
+            </button>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div>
+              <h2>Current subscriber posture</h2>
+              <p>An honest read on where the product already feels monetization-ready and where the value is strongest today.</p>
+            </div>
+          </div>
+
+          <div className="subscriptionValueGrid">
+            <div className="briefNoteCard">
+              <strong>Daily service value</strong>
+              <p>The daily brief, live notifications, and signal desk together already feel closer to a service than a one-off dashboard.</p>
+            </div>
+            <div className="briefNoteCard">
+              <strong>Best upsell surface</strong>
+              <p>Alert capacity and delivery are the clearest premium lever because users immediately understand the difference in daily utility.</p>
+            </div>
+            <div className="briefNoteCard">
+              <strong>Trust layer</strong>
+              <p>Research, RSI visibility, and honest feed status keep the subscription story anchored in credibility instead of marketing copy.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section className="panel" id="subscriptions-tiers">
+        <div className="panelHeader">
+          <div>
+            <h2>Plan Tiers</h2>
+            <p>Three simple steps from discovery to power-user coverage, without overcomplicating the commercial story.</p>
+          </div>
+        </div>
+
+        <div className="subscriptionTierGrid">
+          {tierCards.map((card) => (
+            <article
+              key={card.id}
+              className={`subscriptionTierCard ${card.isCurrent ? "subscriptionTierCardActive" : ""}`.trim()}
+            >
+              <div className="subscriptionTierTop">
+                <div>
+                  <span className="collectibleCategory">{card.label}</span>
+                  <h3>{card.maxAlerts} alert slots</h3>
+                </div>
+                {card.isCurrent ? <span className="subscriptionTierBadge">Current</span> : null}
+              </div>
+
+              <p>{card.description}</p>
+
+              <ul className="subscriptionFeatureList">
+                {card.features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+
+              <div className="panelActions">
+                <button
+                  type="button"
+                  className={card.isCurrent ? "ghostButton" : "primaryButton"}
+                  onClick={() => jumpToPageSection("settings", "alerts-plan", activeDesk)}
+                >
+                  {card.isCurrent ? "Manage in Settings" : `View ${card.label} Setup`}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel" id="subscriptions-premium">
+        <div className="panelHeader">
+          <div>
+            <h2>Premium Surfaces Inside the App</h2>
+            <p>These are the places where the product already shows the difference between a nice tool and a paid daily service.</p>
+          </div>
+        </div>
+
+        <div className="subscriptionRouteList">
+          {premiumSurfaces.map((surface) => (
+            <div className="subscriptionRouteItem" key={surface.id}>
+              <div>
+                <strong>{surface.title}</strong>
+                <small>{surface.detail}</small>
+              </div>
+              <button type="button" className="ghostButton" onClick={surface.action}>
+                {surface.actionLabel}
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function ConnectionsScreen({
   activeDesk,
   activePageSections,
   appSettings,
   connectedProviderCount,
   connectorBusyKey,
+  connectorForms,
   connectors,
   cryptoConnector,
   degradedSourceCount,
   disconnectConnector,
-  handleValrFieldChange,
+  handleConnectorFieldChange,
   health,
   jumpToPageSection,
   liveReadyDeskCount,
   newsResponse,
   refreshContext,
   refreshCore,
-  saveValrConnector,
+  saveConnector,
   settingsStatus,
   signalsResponse,
   syncConnectorBalances,
   testConnectorConnection,
   updateExecutionProfile,
-  valrForm,
 }) {
+  const deskLeadSignal =
+    signalsResponse.signals?.find((signal) => signal.desk === activeDesk) ||
+    signalsResponse.leadSignal ||
+    null;
+  const indicativePrice = Number(deskLeadSignal?.price || 0);
+  const depthStep =
+    activeDesk === "crypto"
+      ? Math.max(indicativePrice * 0.001, 5)
+      : activeDesk === "forex"
+        ? 0.01
+        : Math.max(indicativePrice * 0.002, 0.1);
+  const marketDepthRows = indicativePrice
+    ? Array.from({ length: 5 }).map((_, index) => {
+        const level = index + 1;
+        const bid = Number((indicativePrice - depthStep * level).toFixed(4));
+        const ask = Number((indicativePrice + depthStep * level).toFixed(4));
+        return {
+          level,
+          bid,
+          ask,
+          bidSize: Math.max(1, 8 - index) * (activeDesk === "crypto" ? 0.25 : 1000),
+          askSize: Math.max(1, 7 - index) * (activeDesk === "crypto" ? 0.22 : 900),
+        };
+      })
+    : [];
+  const upcomingCalendarItems = [
+    {
+      id: "cpi-za",
+      time: "Wed 08:00",
+      market: "South Africa",
+      event: "CPI YoY",
+      impact: "High",
+      note: "Watch JSE risk tone and USD/ZAR volatility.",
+    },
+    {
+      id: "fed-minutes",
+      time: "Wed 20:00",
+      market: "United States",
+      event: "FOMC Minutes",
+      impact: "High",
+      note: "Can reset macro tone across forex, crypto, and ETFs.",
+    },
+    {
+      id: "gdp-us",
+      time: "Thu 14:30",
+      market: "United States",
+      event: "GDP Second Estimate",
+      impact: "Medium",
+      note: "Useful for ETF desk bias and broad risk sentiment.",
+    },
+    {
+      id: "pce-us",
+      time: "Fri 14:30",
+      market: "United States",
+      event: "Core PCE",
+      impact: "High",
+      note: "Key inflation release for rates, FX, and crypto reaction.",
+    },
+  ];
+  const apiCoverageCards = [
+    {
+      id: "market-data",
+      label: "Market Data API",
+      value: signalsResponse.marketData?.provider || "Simulator",
+      detail:
+        signalsResponse.marketData?.mode === "simulated"
+          ? "Live candle connection is staged, with simulator fallback active."
+          : "Live candle connection is active for the current session.",
+    },
+    {
+      id: "news-feeds",
+      label: "News Feed APIs",
+      value: `${(newsResponse.sourceStatus || []).length}`,
+      detail: "RSS and feed ingestion power the macro tape and headline routing.",
+    },
+    {
+      id: "execution",
+      label: "Execution APIs",
+      value: connectedProviderCount,
+      detail: "VALR is the active live-route candidate; other brokers stay manual until OAuth or gateway setup is complete.",
+    },
+    {
+      id: "banking",
+      label: "Banking APIs",
+      value: "Planned",
+      detail:
+        "South African bank funding and statement connectivity are mapped next for FNB, Absa, Nedbank, Standard Bank, and Capitec once provider selection is locked.",
+    },
+    {
+      id: "calendar",
+      label: "Economic Calendar API",
+      value: "Staged",
+      detail: "Calendar surface is ready in-app; provider integration is the next step.",
+    },
+    {
+      id: "depth",
+      label: "Level 2 / Depth",
+      value: activeDesk === "crypto" ? "Best candidate" : "Planned",
+      detail: "Market depth fits best where the broker or exchange exposes order book data cleanly.",
+    },
+  ];
   const connectionActions = [
     {
       id: "brokers",
@@ -2575,21 +4148,18 @@ export function ConnectionsScreen({
       onClick: () => jumpToPageSection("connections", "market-feed-status", activeDesk),
     },
     {
-      id: "refresh",
-      label: "Refresh Health",
-      meta: `${degradedSourceCount} issues`,
-      detail: "Pull source state and service health again.",
-      onClick: () => {
-        refreshCore();
-        refreshContext();
-      },
+      id: "apis",
+      label: "API Coverage",
+      meta: "Matrix",
+      detail: "Review what is live, staged, manual, or still planned.",
+      onClick: () => jumpToPageSection("connections", "api-coverage", activeDesk),
     },
     {
-      id: "partner",
-      label: "Partner Testing",
-      meta: "Share lane",
-      detail: "Jump to the share status and feedback handoff flow.",
-      onClick: () => jumpToPageSection("settings", "partner-testing"),
+      id: "calendar",
+      label: "Calendar",
+      meta: `${upcomingCalendarItems.length}`,
+      detail: "See the upcoming macro events that can move the desk.",
+      onClick: () => jumpToPageSection("connections", "economic-calendar", activeDesk),
     },
   ];
 
@@ -2616,7 +4186,7 @@ export function ConnectionsScreen({
           {
             label: "Feed issues",
             value: degradedSourceCount,
-            detail: "Sources needing attention",
+            detail: "Market intelligence needing attention",
           },
         ]}
         primaryAction={{
@@ -2663,6 +4233,25 @@ export function ConnectionsScreen({
         </div>
       </section>
 
+      <section className="panel" id="api-coverage">
+        <div className="panelHeader">
+          <div>
+            <h2>API Coverage</h2>
+            <p>Keep the integration picture honest: what is live now, what is staged, and what still needs provider work.</p>
+          </div>
+        </div>
+
+        <div className="deskBriefGrid">
+          {apiCoverageCards.map((card) => (
+            <div className="deskBriefCard" key={card.id}>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.detail}</small>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="panel" id="connections-overview">
         <div className="panelHeader">
           <div>
@@ -2699,7 +4288,7 @@ export function ConnectionsScreen({
                         ? `Live routing enabled through ${providerLabel(profile.providerId)} on ${
                             cryptoConnector?.config?.preferredPair || profile.pair
                           }.`
-                        : "Paper mode keeps crypto orders inside Collecttrade until you deliberately switch."
+                        : "Paper mode keeps crypto orders inside Brick Alpha until you deliberately switch."
                       : "This desk is still paper-first until its provider OAuth or gateway flow is completed."}
                   </small>
                 </div>
@@ -2754,10 +4343,10 @@ export function ConnectionsScreen({
               key={provider.id}
               provider={provider}
               timeZone={appSettings.timezone}
-              valrForm={valrForm}
+              formValues={connectorForms?.[provider.id] || {}}
               busyKey={connectorBusyKey}
-              onValrFieldChange={handleValrFieldChange}
-              onSaveValr={saveValrConnector}
+              onFieldChange={handleConnectorFieldChange}
+              onSave={saveConnector}
               onTest={testConnectorConnection}
               onSync={syncConnectorBalances}
               onDisconnect={disconnectConnector}
@@ -2765,6 +4354,77 @@ export function ConnectionsScreen({
           ))}
         </div>
       </section>
+
+      <div className="splitGrid">
+        <section className="panel" id="market-depth">
+          <div className="panelHeader">
+            <div>
+              <h2>Market Depth / Level 2</h2>
+              <p>Indicative order-book style depth for the active desk until a provider-backed Level 2 feed is connected.</p>
+            </div>
+            <div className="headerStatus">
+              <span>Desk</span>
+              <strong>{labelDesk(activeDesk)}</strong>
+            </div>
+          </div>
+
+          {marketDepthRows.length ? (
+            <div className="tableShell">
+              <div className="tableHeaderRow history">
+                <span>Level</span>
+                <span>Bid</span>
+                <span>Bid Size</span>
+                <span>Ask</span>
+                <span>Ask Size</span>
+              </div>
+
+              {marketDepthRows.map((row) => (
+                <div className="tableRow history" key={row.level}>
+                  <span>L{row.level}</span>
+                  <span>{formatTickerPrice(deskLeadSignal?.ticker, row.bid)}</span>
+                  <span>{row.bidSize}</span>
+                  <span>{formatTickerPrice(deskLeadSignal?.ticker, row.ask)}</span>
+                  <span>{row.askSize}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Depth view is waiting for an active market"
+              body="Once the desk has a live reference price, the app can show a staged Level 2 surface here."
+            />
+          )}
+        </section>
+
+        <section className="panel" id="economic-calendar">
+          <div className="panelHeader">
+            <div>
+              <h2>Economic Calendar</h2>
+              <p>Upcoming macro events and central-bank moments that can move the trading screens.</p>
+            </div>
+          </div>
+
+          <div className="tableShell">
+            <div className="tableHeaderRow history">
+              <span>Time</span>
+              <span>Market</span>
+              <span>Event</span>
+              <span>Impact</span>
+              <span>Desk Note</span>
+            </div>
+
+            {upcomingCalendarItems.map((item) => (
+              <div className="tableRow history" key={item.id}>
+                <span>{item.time}</span>
+                <span>{item.market}</span>
+                <span>{item.event}</span>
+                <span className={statusTone(item.impact === "High" ? "warning" : "watch")}>{item.impact}</span>
+                <span>{item.note}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
       <div className="splitGrid">
         <section className="panel">
@@ -2825,17 +4485,17 @@ export function ConnectionsScreen({
         </section>
       </div>
 
-      <section className="panel" id="strategy-state">
+      <section className="panel" id="source-status">
         <div className="panelHeader">
           <div>
-            <h2>Source Status</h2>
+            <h2>Market Intelligence Status</h2>
             <p>Feed-level visibility so you can see what is loading and what is degraded.</p>
           </div>
         </div>
 
         <div className="tableShell">
           <div className="tableHeaderRow history">
-            <span>Source</span>
+            <span>Market Intelligence</span>
             <span>Region</span>
             <span>Status</span>
             <span>Items</span>
@@ -2861,6 +4521,7 @@ export function SettingsScreen({
   activeDesk,
   activePageSections,
   addTarget,
+  alertsResponse,
   appSettings,
   connectedProviderCount,
   currentUser,
@@ -2868,9 +4529,14 @@ export function SettingsScreen({
   feedbackForm,
   feedbackResponse,
   feedbackStatus,
+  installActionLabel,
+  installHint,
+  installStatus,
+  isAppInstalled,
   jumpToPageSection,
   liveReadyDeskCount,
   navigateToPage,
+  onInstallApp,
   setFeedbackForm,
   settingsStatus,
   shareStatus,
@@ -2885,6 +4551,11 @@ export function SettingsScreen({
   const feedbackSummary = feedbackResponse.summary || {};
   const canManageFeedback = currentUser.role === "owner";
   const shareIsLive = shareStatus?.status === "live" && shareStatus?.publicUrl;
+  const alertSummary = alertsResponse.summary || {};
+  const alertPlan = alertsResponse.plan || {};
+  const deliverySummary = alertsResponse.deliverySummary || {};
+  const deliveryQueue = alertsResponse.deliveryQueue || [];
+  const planAllowsEmail = Boolean(alertPlan.emailEnabled);
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState("open");
   const [feedbackAreaFilter, setFeedbackAreaFilter] = useState("all");
   const openPartnerStep = (step) => {
@@ -2907,7 +4578,7 @@ export function SettingsScreen({
     });
   }, [feedbackAreaFilter, feedbackItems, feedbackStatusFilter]);
   const partnerInviteMessage = [
-    "Collecttrade partner test pass",
+    "Brick Alpha partner test pass",
     "",
     `Access: ${shareIsLive ? shareStatus.publicUrl : shareStatus?.localUrl || "http://127.0.0.1:5000"}`,
     "",
@@ -2929,6 +4600,27 @@ export function SettingsScreen({
   };
   const settingsActions = [
     {
+      id: "install",
+      label: "Install App",
+      meta: isAppInstalled ? "Installed" : "Mobile-ready",
+      detail: "Pin Brick Alpha to a phone home screen for a cleaner partner demo.",
+      onClick: () => jumpToPageSection("settings", "install-app"),
+    },
+    {
+      id: "alerts",
+      label: "Alert Plan",
+      meta: `${alertSummary.total || 0}/${alertSummary.maxAllowed || alertPlan.maxAlerts || 5}`,
+      detail: "Set the subscriber tier, delivery channels, and queue behavior.",
+      onClick: () => jumpToPageSection("settings", "alerts-plan"),
+    },
+    {
+      id: "routine",
+      label: "Routine",
+      meta: appSettings.routinePreferences?.remindersEnabled === false ? "Muted" : "Live",
+      detail: "Tune daily nudges, workflow tone, and the completion moment on Home.",
+      onClick: () => jumpToPageSection("settings", "routine-preferences"),
+    },
+    {
       id: "partner",
       label: "Partner Testing",
       meta: shareIsLive ? "Live" : "Private",
@@ -2947,7 +4639,7 @@ export function SettingsScreen({
       label: "Saved Targets",
       meta: `${targets.length}`,
       detail: "Jump to the saved targets and monitoring preferences.",
-      onClick: () => jumpToPageSection("settings", "saved-targets"),
+      onClick: () => jumpToPageSection("settings", "web-targets"),
     },
     {
       id: "connections",
@@ -2955,6 +4647,13 @@ export function SettingsScreen({
       meta: `${connectedProviderCount} linked`,
       detail: "Move into feeds and brokers when account setup needs attention.",
       onClick: () => navigateToPage("connections", false, activeDesk),
+    },
+    {
+      id: "subscriptions",
+      label: "Subscriptions",
+      meta: subscriptionTierLabel(appSettings.subscriptionTier),
+      detail: "Open the commercial layer and review the plan story partners and clients will see.",
+      onClick: () => navigateToPage("subscriptions", false, activeDesk),
     },
   ];
 
@@ -2974,9 +4673,9 @@ export function SettingsScreen({
             detail: appSettings.timezone,
           },
           {
-            label: "Risk mode",
-            value: appSettings.riskMode,
-            detail: "Desk-wide default",
+            label: "Alert plan",
+            value: subscriptionTierLabel(appSettings.subscriptionTier),
+            detail: `${alertSummary.total || 0}/${alertSummary.maxAllowed || alertPlan.maxAlerts || 5} slots used`,
           },
           {
             label: "Partner board",
@@ -3035,6 +4734,49 @@ export function SettingsScreen({
           </div>
         </section>
 
+        <section className="panel" id="install-app">
+          <div className="panelHeader">
+            <div>
+              <h2>Install App</h2>
+              <p>Use the live web system like an app on a phone home screen for the cleanest Tuesday demo.</p>
+            </div>
+          </div>
+
+          <div className="summaryGrid compactSummaryGrid">
+            <div className="summaryCard">
+              <span>Status</span>
+              <strong>{isAppInstalled ? "Installed" : "Ready to install"}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Access</span>
+              <strong>{shareIsLive ? "Public link live" : "Local or staging"}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Best use</span>
+              <strong>Phone demo</strong>
+            </div>
+          </div>
+
+          <div className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Install path</h3>
+                <p>{installHint}</p>
+              </div>
+            </div>
+
+            <div className="toolCardList">
+              <button type="button" className="toolCard toolCardButton" onClick={onInstallApp}>
+                <span>Install Brick Alpha</span>
+                <strong>{installActionLabel}</strong>
+                <small>{shareIsLive ? `Best on the public demo link: ${shareStatus.publicUrl}` : "Works on a public demo or production-style staging link."}</small>
+              </button>
+            </div>
+
+            {installStatus ? <div className="statusBanner subtleBanner">{installStatus}</div> : null}
+          </div>
+        </section>
+
         <section className="panel" id="news-region">
           <div className="panelHeader">
             <div>
@@ -3057,6 +4799,397 @@ export function SettingsScreen({
           </div>
         </section>
       </div>
+
+      <section className="panel" id="alerts-plan">
+        <div className="panelHeader">
+          <div>
+            <h2>Alert Plan and Delivery</h2>
+            <p>Shape the subscriber experience: plan tier, alert slot budget, and how triggered setups should reach you.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Slots used</span>
+            <strong>
+              {alertSummary.total || 0}/{alertSummary.maxAllowed || alertPlan.maxAlerts || 5}
+            </strong>
+          </div>
+        </div>
+
+        <div className="summaryGrid compactSummaryGrid">
+          <div className="summaryCard">
+            <span>Current plan</span>
+            <strong>{subscriptionTierLabel(appSettings.subscriptionTier)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Remaining slots</span>
+            <strong>{alertSummary.remaining ?? Math.max((alertPlan.maxAlerts || 5) - (alertSummary.total || 0), 0)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Delivery</span>
+            <strong>{appSettings.alertPreferences?.inAppEnabled === false ? "Paused" : "In-app live"}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Email queue</span>
+            <strong>{deliverySummary.queued || 0}</strong>
+          </div>
+        </div>
+
+        {alertSummary.overLimit ? (
+          <div className="statusBanner subtleBanner">
+            This plan is carrying {alertSummary.overLimit} more alert slots than it allows. Remove older rules or move back up a tier before adding new ones.
+          </div>
+        ) : null}
+
+        <div className="subPanel">
+          <div className="panelHeader">
+            <div>
+              <h3>Subscriber tier</h3>
+              <p>Use these tiers to shape what a future paying client gets from alerting.</p>
+            </div>
+          </div>
+
+          <div className="segmentedControl">
+            {ALERT_SUBSCRIPTION_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={appSettings.subscriptionTier === option.id ? "active" : ""}
+                onClick={() => updateSettings({ subscriptionTier: option.id })}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="summaryGrid compactSummaryGrid">
+            {ALERT_SUBSCRIPTION_OPTIONS.map((option) => (
+              <div
+                key={option.id}
+                className={`summaryCard ${appSettings.subscriptionTier === option.id ? "summaryCardAccent" : ""}`}
+              >
+                <span>{option.label}</span>
+                <strong>{option.maxAlerts} alert slots</strong>
+                <small>{option.description}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="splitGrid">
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Delivery channels</h3>
+                <p>In-app alerts are live now. Email stays honest as a launch-stage delivery queue until the sender is connected.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.alertPreferences?.inAppEnabled !== false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      inAppEnabled: true,
+                    },
+                  })
+                }
+              >
+                In-app On
+              </button>
+              <button
+                type="button"
+                className={appSettings.alertPreferences?.inAppEnabled === false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      inAppEnabled: false,
+                    },
+                  })
+                }
+              >
+                In-app Off
+              </button>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.alertPreferences?.emailEnabled ? "active" : ""}
+                disabled={!planAllowsEmail}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      emailEnabled: true,
+                    },
+                  })
+                }
+              >
+                Email Queue On
+              </button>
+              <button
+                type="button"
+                className={!appSettings.alertPreferences?.emailEnabled ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      emailEnabled: false,
+                    },
+                  })
+                }
+              >
+                Email Queue Off
+              </button>
+            </div>
+
+            {!planAllowsEmail ? (
+              <div className="statusBanner subtleBanner">
+                Starter keeps alerting in-app only. Move to Pro or Elite to stage queued email delivery.
+              </div>
+            ) : null}
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Digest timing</h3>
+                <p>Choose how queued email alerts should be grouped once outbound delivery is connected.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              {["instant", "hourly", "daily"].map((windowKey) => (
+                <button
+                  key={windowKey}
+                  type="button"
+                  className={appSettings.alertPreferences?.digestWindow === windowKey ? "active" : ""}
+                  onClick={() =>
+                    updateSettings({
+                      alertPreferences: {
+                        ...appSettings.alertPreferences,
+                        digestWindow: windowKey,
+                      },
+                    })
+                  }
+                >
+                  {alertDigestWindowLabel(windowKey)}
+                </button>
+              ))}
+            </div>
+
+            <div className="summaryGrid compactSummaryGrid">
+              <div className="summaryCard">
+                <span>Current mode</span>
+                <strong>{alertDigestWindowLabel(appSettings.alertPreferences?.digestWindow)}</strong>
+              </div>
+              <div className="summaryCard">
+                <span>Email eligible</span>
+                <strong>{planAllowsEmail ? "Yes" : "No"}</strong>
+              </div>
+              <div className="summaryCard">
+                <span>Queue state</span>
+                <strong>{deliverySummary.queued || 0} pending</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="subPanel">
+          <div className="panelHeader">
+            <div>
+              <h3>Queued delivery preview</h3>
+              <p>This is the honest launch-stage view of what will be handed to outbound email once we wire the sender.</p>
+            </div>
+          </div>
+
+          <div className="watchlistStack">
+            {deliveryQueue.length ? (
+              deliveryQueue.map((item) => (
+                <article className="watchItemCard notificationCard" key={item.id}>
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                      <span className="signalMiniTag">{alertDigestWindowLabel(item.digestWindow)}</span>
+                    </div>
+                    <strong>{item.title}</strong>
+                    <small>{item.message}</small>
+                    <small>
+                      {item.recipientEmail} | {formatDateTime(item.createdAt, appSettings.timezone)}
+                    </small>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <EmptyState
+                title="No queued delivery yet"
+                body="Once alerts trigger with email queue enabled, the launch-stage delivery preview will show here."
+              />
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel" id="routine-preferences">
+        <div className="panelHeader">
+          <div>
+            <h2>Routine Preferences</h2>
+            <p>Shape how Home nudges the user through the day so the product feels supportive instead of noisy.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Routine tone</span>
+            <strong>
+              {appSettings.routinePreferences?.remindersEnabled === false
+                ? "Muted"
+                : appSettings.routinePreferences?.nudgeWindow === "focused"
+                  ? "Focused"
+                  : appSettings.routinePreferences?.nudgeWindow === "quiet"
+                    ? "Quiet"
+                    : "Active"}
+            </strong>
+          </div>
+        </div>
+
+        <div className="summaryGrid compactSummaryGrid">
+          <div className="summaryCard">
+            <span>Daily nudges</span>
+            <strong>{appSettings.routinePreferences?.remindersEnabled === false ? "Off" : "On"}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Nudge style</span>
+            <strong>
+              {appSettings.routinePreferences?.nudgeWindow === "focused"
+                ? "Focused"
+                : appSettings.routinePreferences?.nudgeWindow === "quiet"
+                  ? "Quiet"
+                  : "Active"}
+            </strong>
+          </div>
+          <div className="summaryCard">
+            <span>Completion card</span>
+            <strong>{appSettings.routinePreferences?.celebrationEnabled === false ? "Minimal" : "Visible"}</strong>
+          </div>
+        </div>
+
+        <div className="splitGrid">
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Reminder behavior</h3>
+                <p>Decide how readily the app should surface unfinished workflow steps on Home.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.remindersEnabled !== false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      remindersEnabled: true,
+                    },
+                  })
+                }
+              >
+                Nudges On
+              </button>
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.remindersEnabled === false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      remindersEnabled: false,
+                    },
+                  })
+                }
+              >
+                Nudges Off
+              </button>
+            </div>
+
+            <div className="segmentedControl">
+              {["active", "focused", "quiet"].map((modeKey) => (
+                <button
+                  key={modeKey}
+                  type="button"
+                  className={appSettings.routinePreferences?.nudgeWindow === modeKey ? "active" : ""}
+                  onClick={() =>
+                    updateSettings({
+                      routinePreferences: {
+                        ...appSettings.routinePreferences,
+                        nudgeWindow: modeKey,
+                      },
+                    })
+                  }
+                >
+                  {modeKey === "active" ? "Active" : modeKey === "focused" ? "Focused" : "Quiet"}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Completion feel</h3>
+                <p>Keep the end-of-routine moment visible, or switch to a more minimal finish.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.celebrationEnabled !== false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      celebrationEnabled: true,
+                    },
+                  })
+                }
+              >
+                Celebration On
+              </button>
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.celebrationEnabled === false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      celebrationEnabled: false,
+                    },
+                  })
+                }
+              >
+                Minimal
+              </button>
+            </div>
+
+            <div className="summaryGrid compactSummaryGrid">
+              <div className="summaryCard">
+                <span>What changes</span>
+                <strong>
+                  {appSettings.routinePreferences?.nudgeWindow === "quiet"
+                    ? "Lower prompt frequency"
+                    : appSettings.routinePreferences?.nudgeWindow === "focused"
+                      ? "Only stronger nudges"
+                      : "Every open step stays visible"}
+                </strong>
+                <small>Home now adapts how quickly it shows the workflow reminder and completion state.</small>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
 
       <section className="panel" id="source-status">
         <div className="panelHeader">
@@ -3170,7 +5303,7 @@ export function SettingsScreen({
           </div>
           <div className="partnerTestingCard">
             <span>Suggested partner pass</span>
-            <strong>Landing - News - Trade - Collectibles - Feedback</strong>
+            <strong>Landing - News - Trade - LEGO Investments - Feedback</strong>
             <small>
               That route covers the front door, tape, execution flow, alternative-assets lane, and the
               final feedback handoff.
@@ -3330,7 +5463,7 @@ export function SettingsScreen({
                 <option value="landing">Landing / Login</option>
                 <option value="news">News</option>
                 <option value="trade">Trade</option>
-                <option value="collectibles">Collectibles</option>
+                <option value="collectibles">LEGO Investments</option>
                 <option value="portfolio">Portfolio</option>
                 <option value="tools">Tools</option>
                 <option value="connections">Connections</option>
@@ -3415,7 +5548,7 @@ export function SettingsScreen({
                 <p>{item.notes}</p>
 
                 <div className="feedbackMetaRow">
-                  <span>{item.authorName || item.authorEmail || "Collecttrade partner"}</span>
+                  <span>{item.authorName || item.authorEmail || "Brick Alpha partner"}</span>
                   <span>{formatDateTime(item.updatedAt || item.createdAt, appSettings.timezone)}</span>
                 </div>
 

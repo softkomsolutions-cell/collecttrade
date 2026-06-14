@@ -1,5 +1,5 @@
 import Chart from "../Chart";
-import { DESK_FILTERS, DESK_PLAYBOOKS } from "../appConfig";
+import { ALERT_SUBSCRIPTION_OPTIONS, DESK_FILTERS, DESK_PLAYBOOKS } from "../appConfig";
 import {
   findDeskMeta,
   formatDateTime,
@@ -7,6 +7,7 @@ import {
   labelDesk,
   marketModeLabel,
   openExternal,
+  subscriptionTierLabel,
 } from "../appUtils";
 import {
   EmptyState,
@@ -24,8 +25,11 @@ export default function TradeScreen({
   activeDesk,
   activePageSections,
   activeSignalExecutionPlan,
+  addSignalToWatchlist,
+  alertsResponse,
   appSettings,
   applyChartLevelToTicket,
+  createSignalAlert,
   effectiveDeskKey,
   executionPlanForCard,
   filteredSignals,
@@ -34,6 +38,7 @@ export default function TradeScreen({
   jumpToPageSection,
   leadSignal,
   marketSourceMap,
+  navigateToPage,
   newsItemsForDesk,
   newsSourceMap,
   openMarketTicket,
@@ -41,6 +46,8 @@ export default function TradeScreen({
   orderTicket,
   signalsResponse,
   tradeStatus,
+  watchlistBusyKey,
+  watchlistStatus,
 }) {
   if (!leadSignal) {
     return (
@@ -87,6 +94,21 @@ export default function TradeScreen({
   const deskMeta = findDeskMeta(effectiveDeskKey);
   const deskPlaybook = DESK_PLAYBOOKS[effectiveDeskKey] || DESK_PLAYBOOKS.all;
   const macroTape = newsItemsForDesk.slice(0, 6);
+  const alertSummary = alertsResponse.summary || {};
+  const currentPlanId = appSettings.subscriptionTier || alertSummary.subscriptionTier || "starter";
+  const currentPlan =
+    ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === currentPlanId) ||
+    ALERT_SUBSCRIPTION_OPTIONS[0];
+  const nextPlan =
+    currentPlanId === "starter"
+      ? ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === "pro")
+      : currentPlanId === "pro"
+        ? ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === "elite")
+        : null;
+  const showUpgradePrompt =
+    currentPlanId !== "elite" ||
+    Number(alertSummary.remaining ?? currentPlan.maxAlerts) <= 1 ||
+    !(alertSummary.emailEligible ?? currentPlan.emailEnabled);
   const tradeActions = [
     {
       id: "ticket",
@@ -129,7 +151,7 @@ export default function TradeScreen({
         statusValue={
           activeSignalExecutionPlan.mode === "live"
             ? `${activeSignalExecutionPlan.providerLabel}${activeSignalExecutionPlan.pair ? ` | ${activeSignalExecutionPlan.pair}` : ""}`
-            : "Collecttrade Paper"
+            : "Brick Alpha Paper"
         }
         metrics={[
           {
@@ -170,6 +192,57 @@ export default function TradeScreen({
       />
 
       {tradeStatus ? <div className="statusBanner subtleBanner">{tradeStatus}</div> : null}
+      {watchlistStatus ? <div className="statusBanner subtleBanner">{watchlistStatus}</div> : null}
+
+      {showUpgradePrompt ? (
+        <section className="panel subscriptionPromptCard">
+          <div className="subscriptionPromptTop">
+            <div>
+              <span className="homePanelEyebrow">Premium alerting</span>
+              <h2>Make this desk feel more like a paid service</h2>
+              <p>
+                You are on {subscriptionTierLabel(currentPlanId)} with{" "}
+                {alertSummary.total || 0}/{alertSummary.maxAllowed || currentPlan.maxAlerts} alert slots in use.
+                {nextPlan
+                  ? ` ${nextPlan.label} is the next clean step for more coverage and stronger delivery.`
+                  : " This is already the highest alert coverage lane in the app."}
+              </p>
+            </div>
+            <div className="subscriptionPromptMeta">
+              <span>Current plan</span>
+              <strong>{subscriptionTierLabel(currentPlanId)}</strong>
+              <small>
+                {alertSummary.remaining ?? Math.max((alertSummary.maxAllowed || currentPlan.maxAlerts) - (alertSummary.total || 0), 0)} slots left
+              </small>
+            </div>
+          </div>
+
+          <div className="subscriptionPillRow">
+            <span className="signalMiniTag">{alertSummary.enabled || 0} live alerts</span>
+            <span className="signalMiniTag">
+              {alertSummary.emailEligible ?? currentPlan.emailEnabled ? "Email-ready" : "In-app only"}
+            </span>
+            <span className="signalMiniTag">{openTrades.length} open positions</span>
+          </div>
+
+          <div className="panelActions">
+            <button
+              type="button"
+              className="primaryButton"
+              onClick={() => navigateToPage("subscriptions", false, effectiveDeskKey)}
+            >
+              View Subscription Plans
+            </button>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => jumpToPageSection("settings", "alerts-plan", effectiveDeskKey)}
+            >
+              Manage Alert Plan
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="panel deskPanel" id="desk-selector">
         <div className="panelHeader">
@@ -284,7 +357,7 @@ export default function TradeScreen({
                 <small>
                   {activeSignalExecutionPlan.mode === "live"
                     ? `${activeSignalExecutionPlan.providerLabel}${activeSignalExecutionPlan.pair ? ` | ${activeSignalExecutionPlan.pair}` : ""}`
-                    : "Collecttrade Paper"}
+                    : "Brick Alpha Paper"}
                 </small>
               </div>
             </div>
@@ -318,6 +391,68 @@ export default function TradeScreen({
                 <span>Resistance</span>
                 <strong>{formatTickerPrice(leadSignal.ticker, activeChartPlan?.resistance ?? null)}</strong>
               </div>
+            </div>
+
+            <div className="signalCommandActions">
+              <button
+                type="button"
+                className="ghostButton"
+                disabled={watchlistBusyKey === `watch:${leadSignal.ticker}`}
+                onClick={() => addSignalToWatchlist(leadSignal)}
+              >
+                Save to Watchlist
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                disabled={
+                  watchlistBusyKey === `alert:${leadSignal.ticker}:price_above` ||
+                  !Number.isFinite(Number(activeChartPlan?.resistance))
+                }
+                onClick={() =>
+                  createSignalAlert(
+                    leadSignal,
+                    "price_above",
+                    activeChartPlan?.resistance,
+                    `${leadSignal.label} breakout watch`,
+                  )
+                }
+              >
+                Alert Above Resistance
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                disabled={
+                  watchlistBusyKey === `alert:${leadSignal.ticker}:price_below` ||
+                  !Number.isFinite(Number(activeChartPlan?.support))
+                }
+                onClick={() =>
+                  createSignalAlert(
+                    leadSignal,
+                    "price_below",
+                    activeChartPlan?.support,
+                    `${leadSignal.label} support watch`,
+                  )
+                }
+              >
+                Alert Below Support
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                disabled={watchlistBusyKey === `alert:${leadSignal.ticker}:${leadSignal.action === "SELL" ? "rsi_below" : "rsi_above"}`}
+                onClick={() =>
+                  createSignalAlert(
+                    leadSignal,
+                    leadSignal.action === "SELL" ? "rsi_below" : "rsi_above",
+                    leadSignal.action === "SELL" ? 30 : 70,
+                    `${leadSignal.label} RSI watch`,
+                  )
+                }
+              >
+                Alert on RSI
+              </button>
             </div>
           </div>
 
@@ -395,7 +530,7 @@ export default function TradeScreen({
                     className="ghostButton"
                     onClick={() => openExternal(item.link || newsSourceMap[item.sourceId])}
                   >
-                    Read Source
+                    Read Market Intelligence
                   </button>
                 </div>
               </article>
@@ -403,7 +538,7 @@ export default function TradeScreen({
             {!macroTape.length ? (
               <EmptyState
                 title="No macro tape yet"
-                body="The desk-aligned news feed will appear here once the sources finish loading."
+                body="The desk-aligned news feed will appear here once the market intelligence finishes loading."
               />
             ) : null}
           </div>
@@ -470,6 +605,7 @@ export default function TradeScreen({
               isActive={signal.ticker === leadSignal.ticker}
               onSelect={handleSelectSignal}
               onFastTrade={openMarketTicket}
+              onWatch={addSignalToWatchlist}
             />
           ))}
         </div>

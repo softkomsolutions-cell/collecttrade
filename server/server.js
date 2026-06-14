@@ -46,6 +46,17 @@ const DEFAULT_SETTINGS = {
   preferredRegion: "south-africa",
   timezone: "Africa/Johannesburg",
   riskMode: "balanced",
+  subscriptionTier: "starter",
+  alertPreferences: {
+    inAppEnabled: true,
+    emailEnabled: false,
+    digestWindow: "instant",
+  },
+  routinePreferences: {
+    remindersEnabled: true,
+    nudgeWindow: "active",
+    celebrationEnabled: true,
+  },
   executionProfiles: {
     forex: {
       mode: "paper",
@@ -64,6 +75,27 @@ const DEFAULT_SETTINGS = {
       mode: "paper",
       providerId: "easyequities",
     },
+  },
+};
+
+const ALERT_SUBSCRIPTION_TIERS = {
+  starter: {
+    id: "starter",
+    label: "Starter",
+    maxAlerts: 5,
+    emailEnabled: false,
+  },
+  pro: {
+    id: "pro",
+    label: "Pro",
+    maxAlerts: 20,
+    emailEnabled: true,
+  },
+  elite: {
+    id: "elite",
+    label: "Elite",
+    maxAlerts: 50,
+    emailEnabled: true,
   },
 };
 
@@ -210,7 +242,7 @@ const TRADEABLE_COLLECTIBLES = [
     brand: "LEGO",
     name: "Star Wars Imperial Star Destroyer",
     category: "LEGO Retired Set",
-    market: "Global Collectibles",
+    market: "Global LEGO Investments",
     sku: "75252",
     description: "Large retired UCS set with steady sealed-box demand and collector liquidity.",
     thesis: "Retired LEGO flagships usually tighten in supply before the next repricing leg.",
@@ -517,6 +549,43 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function southAfricaDateKey(value = Date.now()) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Johannesburg",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(new Date(value));
+}
+
+function southAfricaHour(value = Date.now()) {
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Johannesburg",
+    hour: "2-digit",
+    hourCycle: "h23",
+  });
+  return Number(formatter.format(new Date(value)));
+}
+
+function dateKeyToUtcMs(dateKey) {
+  const normalized = String(dateKey || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return null;
+  }
+
+  return Date.parse(`${normalized}T00:00:00Z`);
+}
+
+function previousDateKey(dateKey) {
+  const utcMs = dateKeyToUtcMs(dateKey);
+  if (!utcMs) {
+    return null;
+  }
+
+  return southAfricaDateKey(utcMs - 24 * 60 * 60 * 1000);
+}
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -685,10 +754,14 @@ function resolvePreferredOwnerId(records) {
 function sanitizeUserRecord(input, index = 0, preferredOwnerId = null) {
   return {
     id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
-    name: sanitizeOptionalText(input?.name, 120) || `Collecttrade User ${index + 1}`,
+    name: sanitizeOptionalText(input?.name, 120) || `Brick Alpha User ${index + 1}`,
     email: normalizeEmail(input?.email),
     passwordSalt: String(input?.passwordSalt || ""),
     passwordHash: String(input?.passwordHash || ""),
+    passwordResetSalt: String(input?.passwordResetSalt || ""),
+    passwordResetHash: String(input?.passwordResetHash || ""),
+    passwordResetRequestedAt: input?.passwordResetRequestedAt ? toUtcIso(input.passwordResetRequestedAt) : null,
+    passwordResetExpiresAt: input?.passwordResetExpiresAt ? toUtcIso(input.passwordResetExpiresAt) : null,
     role: sanitizeUserRole(
       input?.role,
       Boolean(preferredOwnerId && preferredOwnerId === (sanitizeOptionalText(input?.id, 80) || "")),
@@ -712,6 +785,142 @@ function sanitizeFeedbackSeverity(value) {
 
 function sanitizeFeedbackStatus(value) {
   return ["new", "reviewing", "planned", "resolved"].includes(value) ? value : "new";
+}
+
+function sanitizeWatchlistDesk(value) {
+  return ["forex", "etfs", "crypto", "jse", "collectibles"].includes(value) ? value : "forex";
+}
+
+function sanitizeWatchlistItem(input) {
+  return {
+    id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
+    ticker: sanitizeOptionalText(input?.ticker, 40).toUpperCase(),
+    label: sanitizeOptionalText(input?.label, 80),
+    desk: sanitizeWatchlistDesk(input?.desk),
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : null,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : null,
+  };
+}
+
+function sortWatchlistItems(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = Date.parse(left.updatedAt || left.createdAt || 0) || 0;
+    const rightTime = Date.parse(right.updatedAt || right.createdAt || 0) || 0;
+    return rightTime - leftTime;
+  });
+}
+
+function sanitizeAlertKind(value) {
+  return ["price_above", "price_below", "rsi_above", "rsi_below"].includes(value)
+    ? value
+    : "price_above";
+}
+
+function sanitizeAlertRule(input) {
+  const kind = sanitizeAlertKind(input?.kind);
+  const threshold = Number(input?.threshold);
+  return {
+    id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
+    ticker: sanitizeOptionalText(input?.ticker, 40).toUpperCase(),
+    label: sanitizeOptionalText(input?.label, 120),
+    desk: sanitizeWatchlistDesk(input?.desk),
+    kind,
+    threshold: Number.isFinite(threshold) ? Number(threshold.toFixed(8)) : null,
+    enabled: input?.enabled !== false,
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : null,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : null,
+    lastTriggeredAt: input?.lastTriggeredAt ? toUtcIso(input.lastTriggeredAt) : null,
+    lastTriggerState: input?.lastTriggerState === true,
+  };
+}
+
+function buildAlertSummary(items) {
+  const total = items.length;
+  const enabled = items.filter((item) => item.enabled).length;
+  const triggered = items.filter((item) => item.triggered).length;
+  const disabled = total - enabled;
+  const priceAlerts = items.filter((item) => item.kind.startsWith("price_")).length;
+  const rsiAlerts = items.filter((item) => item.kind.startsWith("rsi_")).length;
+
+  return {
+    total,
+    enabled,
+    disabled,
+    triggered,
+    priceAlerts,
+    rsiAlerts,
+  };
+}
+
+function sanitizeNotificationStatus(value) {
+  return ["unread", "read"].includes(value) ? value : "unread";
+}
+
+function sanitizeNotificationItem(input) {
+  return {
+    id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
+    ticker: sanitizeOptionalText(input?.ticker, 40).toUpperCase(),
+    label: sanitizeOptionalText(input?.label, 120),
+    desk: sanitizeWatchlistDesk(input?.desk),
+    title: sanitizeOptionalText(input?.title, 160),
+    message: sanitizeOptionalText(input?.message, 320),
+    type: sanitizeOptionalText(input?.type, 40) || "alert",
+    status: sanitizeNotificationStatus(input?.status),
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : null,
+  };
+}
+
+function sortNotificationItems(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = Date.parse(left.createdAt || 0) || 0;
+    const rightTime = Date.parse(right.createdAt || 0) || 0;
+    return rightTime - leftTime;
+  });
+}
+
+function buildNotificationSummary(items) {
+  const total = items.length;
+  const unread = items.filter((item) => item.status === "unread").length;
+  const read = total - unread;
+  return { total, unread, read };
+}
+
+function sanitizeAlertEmailQueueStatus(value) {
+  return value === "sent" || value === "cancelled" ? value : "queued";
+}
+
+function sanitizeAlertEmailQueueItem(input) {
+  return {
+    id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
+    ticker: sanitizeOptionalText(input?.ticker, 40).toUpperCase(),
+    label: sanitizeOptionalText(input?.label, 120),
+    desk: sanitizeWatchlistDesk(input?.desk),
+    title: sanitizeOptionalText(input?.title, 160),
+    message: sanitizeOptionalText(input?.message, 320),
+    recipientEmail: sanitizeOptionalText(input?.recipientEmail, 120),
+    digestWindow:
+      input?.digestWindow === "hourly" || input?.digestWindow === "daily"
+        ? input.digestWindow
+        : "instant",
+    status: sanitizeAlertEmailQueueStatus(input?.status),
+    createdAt: input?.createdAt ? toUtcIso(input.createdAt) : null,
+  };
+}
+
+function sortAlertEmailQueueItems(items) {
+  return [...items].sort((left, right) => {
+    const leftTime = Date.parse(left.createdAt || 0) || 0;
+    const rightTime = Date.parse(right.createdAt || 0) || 0;
+    return rightTime - leftTime;
+  });
+}
+
+function buildAlertEmailQueueSummary(items) {
+  const total = items.length;
+  const queued = items.filter((item) => item.status === "queued").length;
+  const sent = items.filter((item) => item.status === "sent").length;
+  const cancelled = items.filter((item) => item.status === "cancelled").length;
+  return { total, queued, sent, cancelled };
 }
 
 function sanitizeFeedbackItem(input) {
@@ -811,6 +1020,31 @@ function sanitizeConnectorConfig(providerId, input) {
     };
   }
 
+  if (providerId === "ibkr") {
+    return {
+      gatewayUrl: String(input?.gatewayUrl || "").trim().slice(0, 180),
+      accountId: String(input?.accountId || "").trim().slice(0, 80),
+      environment: input?.environment === "live" ? "live" : "paper",
+    };
+  }
+
+  if (providerId === "saxo") {
+    return {
+      environment: input?.environment === "live" ? "live" : "simulation",
+    };
+  }
+
+  if (providerId === "easyequities") {
+    const fundingBank = String(input?.fundingBank || "").trim().toLowerCase();
+    return {
+      accountLabel: String(input?.accountLabel || "").trim().slice(0, 120),
+      fundingBank:
+        ["absa", "capitec", "fnb", "nedbank", "standard-bank"].includes(fundingBank)
+          ? fundingBank
+          : "",
+    };
+  }
+
   return {};
 }
 
@@ -841,6 +1075,26 @@ function sanitizeExecutionProfiles(input) {
       sanitizeExecutionProfile(desk, input?.[desk]),
     ]),
   );
+}
+
+function sanitizeSubscriptionTier(value) {
+  return value === "pro" || value === "elite" ? value : "starter";
+}
+
+function alertPlanForTier(tier) {
+  return ALERT_SUBSCRIPTION_TIERS[sanitizeSubscriptionTier(tier)];
+}
+
+function sanitizeAlertPreferences(input, subscriptionTier) {
+  const plan = alertPlanForTier(subscriptionTier);
+  return {
+    inAppEnabled: input?.inAppEnabled !== false,
+    emailEnabled: plan.emailEnabled ? input?.emailEnabled === true : false,
+    digestWindow:
+      input?.digestWindow === "hourly" || input?.digestWindow === "daily"
+        ? input.digestWindow
+        : "instant",
+  };
 }
 
 function sanitizeBalanceEntry(entry) {
@@ -892,7 +1146,12 @@ function sanitizeConnectorRecord(providerId, input) {
   }
 
   const authBlob = typeof input?.authBlob === "string" ? input.authBlob : null;
-  const configured = Boolean(authBlob);
+  const config = sanitizeConnectorConfig(providerId, input?.config);
+  const configured =
+    Boolean(authBlob) ||
+    Object.values(config).some(
+      (value) => !(value === null || value === undefined || value === "" || value === false),
+    );
   const baselineStatus = connectorBaselineStatus(providerId);
   const requestedStatus =
     typeof input?.status === "string" && input.status.trim() ? input.status.trim() : baselineStatus;
@@ -903,7 +1162,7 @@ function sanitizeConnectorRecord(providerId, input) {
     lastTestAt: input?.lastTestAt ? toUtcIso(input.lastTestAt) : null,
     lastSyncAt: input?.lastSyncAt ? toUtcIso(input.lastSyncAt) : null,
     lastError: input?.lastError ? String(input.lastError).slice(0, 220) : null,
-    config: sanitizeConnectorConfig(providerId, input?.config),
+    config,
     authBlob,
     accountSnapshot: sanitizeAccountSnapshot(input?.accountSnapshot),
   };
@@ -918,12 +1177,273 @@ function sanitizeSettings(input) {
     input?.riskMode === "defensive" || input?.riskMode === "aggressive"
       ? input.riskMode
       : "balanced";
+  const subscriptionTier = sanitizeSubscriptionTier(input?.subscriptionTier);
+  const routinePreferences = {
+    remindersEnabled: input?.routinePreferences?.remindersEnabled !== false,
+    nudgeWindow:
+      input?.routinePreferences?.nudgeWindow === "quiet" ||
+      input?.routinePreferences?.nudgeWindow === "focused"
+        ? input.routinePreferences.nudgeWindow
+        : "active",
+    celebrationEnabled: input?.routinePreferences?.celebrationEnabled !== false,
+  };
 
   return {
     preferredRegion,
     riskMode,
     timezone: "Africa/Johannesburg",
+    subscriptionTier,
+    alertPreferences: sanitizeAlertPreferences(input?.alertPreferences, subscriptionTier),
+    routinePreferences,
     executionProfiles: sanitizeExecutionProfiles(input?.executionProfiles),
+  };
+}
+
+function sanitizeRoutineStepId(value) {
+  const candidate = String(value || "").trim().toLowerCase();
+  const allowed = new Set(["macro", "signal", "watchlist", "alerts", "reports", "subscriptions"]);
+  return allowed.has(candidate) ? candidate : "";
+}
+
+const ROUTINE_STEP_IDS = ["macro", "signal", "watchlist", "alerts", "reports", "subscriptions"];
+
+function sanitizeRoutineSessionMode(value) {
+  const candidate = String(value || "").trim().toLowerCase();
+  const allowed = new Set(["morning", "live", "review"]);
+  return allowed.has(candidate) ? candidate : "";
+}
+
+function inferRoutineSessionMode(value = Date.now()) {
+  const hour = southAfricaHour(value);
+  if (hour < 11) {
+    return "morning";
+  }
+  if (hour < 17) {
+    return "live";
+  }
+  return "review";
+}
+
+function sortRoutineDates(values) {
+  return uniqueStrings(values)
+    .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
+    .sort((left, right) => {
+      const leftTime = dateKeyToUtcMs(left) || 0;
+      const rightTime = dateKeyToUtcMs(right) || 0;
+      return rightTime - leftTime;
+    });
+}
+
+function defaultRoutineState() {
+  return {
+    currentDate: southAfricaDateKey(),
+    completedStepIds: [],
+    activeDates: [],
+    sessionMode: inferRoutineSessionMode(),
+    completedAt: null,
+    reminderDismissedDate: null,
+    completionAcknowledgedDate: null,
+    updatedAt: null,
+  };
+}
+
+function sanitizeRoutineState(input) {
+  const today = southAfricaDateKey();
+  const currentDate =
+    /^\d{4}-\d{2}-\d{2}$/.test(String(input?.currentDate || "").trim())
+      ? String(input.currentDate).trim()
+      : today;
+
+  return {
+    currentDate,
+    completedStepIds: uniqueStrings(input?.completedStepIds || [])
+      .map(sanitizeRoutineStepId)
+      .filter(Boolean),
+    activeDates: sortRoutineDates(input?.activeDates || []),
+    sessionMode: sanitizeRoutineSessionMode(input?.sessionMode) || inferRoutineSessionMode(),
+    completedAt: input?.completedAt ? toUtcIso(input.completedAt) : null,
+    reminderDismissedDate:
+      /^\d{4}-\d{2}-\d{2}$/.test(String(input?.reminderDismissedDate || "").trim())
+        ? String(input.reminderDismissedDate).trim()
+        : null,
+    completionAcknowledgedDate:
+      /^\d{4}-\d{2}-\d{2}$/.test(String(input?.completionAcknowledgedDate || "").trim())
+        ? String(input.completionAcknowledgedDate).trim()
+        : null,
+    updatedAt: input?.updatedAt ? toUtcIso(input.updatedAt) : null,
+  };
+}
+
+function advanceRoutineState(state) {
+  const routine = sanitizeRoutineState(state);
+  const today = southAfricaDateKey();
+
+  if (routine.currentDate !== today) {
+    return {
+      ...routine,
+      currentDate: today,
+      completedStepIds: [],
+      sessionMode: inferRoutineSessionMode(),
+      completedAt: null,
+      reminderDismissedDate: null,
+      completionAcknowledgedDate: null,
+      updatedAt: routine.updatedAt,
+    };
+  }
+
+  return routine;
+}
+
+function buildRoutineStreak(activeDates) {
+  const ordered = sortRoutineDates(activeDates);
+  if (!ordered.length) {
+    return 0;
+  }
+
+  let streak = 1;
+  for (let index = 1; index < ordered.length; index += 1) {
+    if (ordered[index] !== previousDateKey(ordered[index - 1])) {
+      break;
+    }
+    streak += 1;
+  }
+
+  return streak;
+}
+
+function buildRoutineBestStreak(activeDates) {
+  const ordered = sortRoutineDates(activeDates);
+  if (!ordered.length) {
+    return 0;
+  }
+
+  let best = 1;
+  let current = 1;
+
+  for (let index = 1; index < ordered.length; index += 1) {
+    if (ordered[index] === previousDateKey(ordered[index - 1])) {
+      current += 1;
+      best = Math.max(best, current);
+    } else {
+      current = 1;
+    }
+  }
+
+  return best;
+}
+
+function buildRoutineWeekCount(activeDates, currentDate) {
+  const activeSet = new Set(sortRoutineDates(activeDates));
+  let cursor = currentDate;
+  let count = 0;
+
+  for (let index = 0; index < 7 && cursor; index += 1) {
+    if (activeSet.has(cursor)) {
+      count += 1;
+    }
+    cursor = previousDateKey(cursor);
+  }
+
+  return count;
+}
+
+function buildRoutineView(state) {
+  const routine = advanceRoutineState(state);
+  return {
+    currentDate: routine.currentDate,
+    completedStepIds: routine.completedStepIds,
+    activeDates: routine.activeDates,
+    streakCount: buildRoutineStreak(routine.activeDates),
+    bestStreakCount: buildRoutineBestStreak(routine.activeDates),
+    weekActiveCount: buildRoutineWeekCount(routine.activeDates, routine.currentDate),
+    sessionMode: routine.sessionMode,
+    completedAt: routine.completedAt,
+    isComplete: routine.completedStepIds.length >= ROUTINE_STEP_IDS.length,
+    reminderDismissedDate: routine.reminderDismissedDate,
+    completionAcknowledgedDate: routine.completionAcknowledgedDate,
+    updatedAt: routine.updatedAt,
+  };
+}
+
+function updateRoutineStep(state, stepId, completed) {
+  const routine = advanceRoutineState(state);
+  const safeStepId = sanitizeRoutineStepId(stepId);
+  if (!safeStepId) {
+    return routine;
+  }
+
+  const completedSteps = new Set(routine.completedStepIds);
+  const activeDates = new Set(routine.activeDates);
+  const today = routine.currentDate;
+
+  if (completed) {
+    completedSteps.add(safeStepId);
+  } else {
+    completedSteps.delete(safeStepId);
+  }
+
+  const nextCompletedStepIds = Array.from(completedSteps);
+  if (nextCompletedStepIds.length) {
+    activeDates.add(today);
+  } else {
+    activeDates.delete(today);
+  }
+
+  const routineIsComplete = ROUTINE_STEP_IDS.every((candidate) => completedSteps.has(candidate));
+
+  return {
+    ...routine,
+    completedStepIds: nextCompletedStepIds,
+    activeDates: sortRoutineDates(Array.from(activeDates)).slice(0, 60),
+    completedAt: routineIsComplete ? nowIso() : null,
+    reminderDismissedDate: completed ? routine.reminderDismissedDate : null,
+    completionAcknowledgedDate:
+      routineIsComplete && completed ? routine.completionAcknowledgedDate : null,
+    updatedAt: nowIso(),
+  };
+}
+
+function updateRoutineSessionMode(state, sessionMode) {
+  const routine = advanceRoutineState(state);
+  const safeSessionMode = sanitizeRoutineSessionMode(sessionMode);
+  if (!safeSessionMode) {
+    return routine;
+  }
+
+  return {
+    ...routine,
+    sessionMode: safeSessionMode,
+    updatedAt: nowIso(),
+  };
+}
+
+function resetRoutineForToday(state) {
+  const routine = advanceRoutineState(state);
+  return {
+    ...routine,
+    completedStepIds: [],
+    completedAt: null,
+    reminderDismissedDate: null,
+    completionAcknowledgedDate: null,
+    updatedAt: nowIso(),
+  };
+}
+
+function dismissRoutineReminderForToday(state) {
+  const routine = advanceRoutineState(state);
+  return {
+    ...routine,
+    reminderDismissedDate: routine.currentDate,
+    updatedAt: nowIso(),
+  };
+}
+
+function acknowledgeRoutineCompletionForToday(state) {
+  const routine = advanceRoutineState(state);
+  return {
+    ...routine,
+    completionAcknowledgedDate: routine.currentDate,
+    updatedAt: nowIso(),
   };
 }
 
@@ -931,6 +1451,11 @@ function defaultUserState() {
   return {
     trades: [],
     intakeRequests: [],
+    watchlistItems: [],
+    alertRules: [],
+    notifications: [],
+    alertEmailQueue: [],
+    routine: defaultRoutineState(),
     settings: sanitizeSettings(DEFAULT_SETTINGS),
     newsTargets: [...DEFAULT_TARGETS],
     connectors: defaultConnectorsState(),
@@ -966,11 +1491,38 @@ function loadStore() {
           ...defaultUserState(),
           ...state,
           settings: sanitizeSettings(state?.settings),
+          routine: advanceRoutineState(state?.routine),
           newsTargets: uniqueStrings(state?.newsTargets || DEFAULT_TARGETS),
           trades: Array.isArray(state?.trades) ? state.trades : [],
-          intakeRequests: Array.isArray(state?.intakeRequests)
-            ? state.intakeRequests.map(sanitizeIntakeRequest)
+          watchlistItems: sortWatchlistItems(
+            Array.isArray(state?.watchlistItems)
+              ? state.watchlistItems
+                  .map(sanitizeWatchlistItem)
+                  .filter((item) => item.ticker && item.label)
+              : [],
+          ),
+          alertRules: Array.isArray(state?.alertRules)
+            ? state.alertRules
+                .map(sanitizeAlertRule)
+                .filter((item) => item.ticker && item.label && item.threshold != null)
             : [],
+            notifications: sortNotificationItems(
+              Array.isArray(state?.notifications)
+                ? state.notifications
+                    .map(sanitizeNotificationItem)
+                    .filter((item) => item.title && item.message)
+                : [],
+            ).slice(0, 40),
+            alertEmailQueue: sortAlertEmailQueueItems(
+              Array.isArray(state?.alertEmailQueue)
+                ? state.alertEmailQueue
+                    .map(sanitizeAlertEmailQueueItem)
+                    .filter((item) => item.title && item.message && item.recipientEmail)
+                : [],
+            ).slice(0, 40),
+            intakeRequests: Array.isArray(state?.intakeRequests)
+              ? state.intakeRequests.map(sanitizeIntakeRequest)
+              : [],
           connectors: Object.fromEntries(
             CONNECTOR_PROVIDERS.map((provider) => [
               provider.id,
@@ -1063,6 +1615,24 @@ function getUserState(userId) {
   if (!Array.isArray(userStates[userId].intakeRequests)) {
     userStates[userId].intakeRequests = [];
   }
+
+  if (!Array.isArray(userStates[userId].watchlistItems)) {
+    userStates[userId].watchlistItems = [];
+  }
+
+  if (!Array.isArray(userStates[userId].alertRules)) {
+    userStates[userId].alertRules = [];
+  }
+
+  if (!Array.isArray(userStates[userId].notifications)) {
+    userStates[userId].notifications = [];
+  }
+
+  if (!Array.isArray(userStates[userId].alertEmailQueue)) {
+    userStates[userId].alertEmailQueue = [];
+  }
+
+  userStates[userId].routine = advanceRoutineState(userStates[userId].routine);
 
   return userStates[userId];
 }
@@ -1163,6 +1733,13 @@ function buildConnectorView(providerId, rawState) {
           apiKeyMasked: credentials.apiKey ? maskValue(credentials.apiKey) : "",
           hasSecret: Boolean(credentials.apiSecret),
         }
+      : providerId === "saxo"
+        ? {
+            environment: state.config.environment || "simulation",
+            appKeyMasked: credentials.appKey ? maskValue(credentials.appKey) : "",
+            accountKeyMasked: credentials.accountKey ? maskValue(credentials.accountKey) : "",
+            hasSecret: Boolean(credentials.appSecret),
+          }
       : state.config;
 
   return {
@@ -1181,6 +1758,7 @@ function buildConnectorView(providerId, rawState) {
     lastError: state.lastError,
     config: maskedConfig,
     accountSnapshot: state.accountSnapshot,
+    supportsSync: providerId === "valr",
   };
 }
 
@@ -1194,6 +1772,31 @@ function hashPassword(password, salt) {
 
 function verifyPassword(password, user) {
   return hashPassword(password, user.passwordSalt) === user.passwordHash;
+}
+
+function verifySecret(value, salt, hash) {
+  if (!value || !salt || !hash) {
+    return false;
+  }
+
+  return hashPassword(value, salt) === hash;
+}
+
+function clearPasswordReset(user) {
+  user.passwordResetSalt = "";
+  user.passwordResetHash = "";
+  user.passwordResetRequestedAt = null;
+  user.passwordResetExpiresAt = null;
+}
+
+function issuePasswordResetCode(user) {
+  const resetCode = String(Math.floor(100000 + Math.random() * 900000));
+  const resetSalt = crypto.randomBytes(16).toString("hex");
+  user.passwordResetSalt = resetSalt;
+  user.passwordResetHash = hashPassword(resetCode, resetSalt);
+  user.passwordResetRequestedAt = nowIso();
+  user.passwordResetExpiresAt = new Date(Date.now() + 1000 * 60 * 15).toISOString();
+  return resetCode;
 }
 
 function encodeToken(payload) {
@@ -2341,6 +2944,7 @@ function rebuildSignalsFromSeries() {
   latestSignals = MARKETS.map((market) => classifySignal(market, marketSeries[market.ticker]));
   leadSignal = chooseLeadSignal(latestSignals);
   lastEngineTickAt = nowIso();
+  syncAlertNotificationsForAllUsers();
 }
 
 function syncTradeBookToLatestSignals() {
@@ -2516,7 +3120,7 @@ function buildFallbackNews() {
       title: "South African macro desk waiting for a cleaner USD/ZAR pullback into the 21 EMA",
       link: "",
       sourceId: "fallback",
-      sourceName: "Collecttrade Desk",
+      sourceName: "Brick Alpha Desk",
       region: "south-africa",
       marketTicker: "USDZAR",
       publishedAt: null,
@@ -2528,7 +3132,7 @@ function buildFallbackNews() {
       title: "Crypto risk appetite remains sensitive to momentum acceleration above the fast EMA",
       link: "",
       sourceId: "fallback",
-      sourceName: "Collecttrade Desk",
+      sourceName: "Brick Alpha Desk",
       region: "global",
       marketTicker: "BTCUSD",
       publishedAt: null,
@@ -2688,6 +3292,200 @@ function targetsForRequest(req) {
 
 function settingsForRequest(req) {
   return req.userState ? req.userState.settings : appSettings;
+}
+
+function latestSignalMap() {
+  return new Map(latestSignals.map((signal) => [signal.ticker, signal]));
+}
+
+function alertLabelForKind(kind) {
+  switch (kind) {
+    case "price_below":
+      return "Price below";
+    case "rsi_above":
+      return "RSI above";
+    case "rsi_below":
+      return "RSI below";
+    case "price_above":
+    default:
+      return "Price above";
+  }
+}
+
+function evaluateAlertRule(rule, signal) {
+  if (!signal || !rule.enabled) {
+    return {
+      ...rule,
+      metricValue: null,
+      triggered: false,
+      kindLabel: alertLabelForKind(rule.kind),
+    };
+  }
+
+  const price = Number(signal.price);
+  const rsi = Number(signal.rsi);
+  let metricValue = null;
+  let triggered = false;
+
+  if (rule.kind === "price_above" || rule.kind === "price_below") {
+    metricValue = Number.isFinite(price) ? Number(price.toFixed(8)) : null;
+    triggered =
+      metricValue != null &&
+      (rule.kind === "price_above" ? metricValue >= rule.threshold : metricValue <= rule.threshold);
+  } else if (rule.kind === "rsi_above" || rule.kind === "rsi_below") {
+    metricValue = Number.isFinite(rsi) ? Number(rsi.toFixed(2)) : null;
+    triggered =
+      metricValue != null &&
+      (rule.kind === "rsi_above" ? metricValue >= rule.threshold : metricValue <= rule.threshold);
+  }
+
+  return {
+    ...rule,
+    currentPrice: Number.isFinite(price) ? Number(price.toFixed(8)) : null,
+    currentRsi: Number.isFinite(rsi) ? Number(rsi.toFixed(2)) : null,
+    action: signal.action,
+    confidence: signal.confidence,
+    kindLabel: alertLabelForKind(rule.kind),
+    metricValue,
+    triggered,
+  };
+}
+
+function buildWatchlistView(items) {
+  const signalMap = latestSignalMap();
+  return items.map((item) => {
+    const signal = signalMap.get(item.ticker);
+    return {
+      ...item,
+      currentPrice: signal ? signal.price : null,
+      currentRsi: signal ? signal.rsi : null,
+      action: signal ? signal.action : null,
+      confidence: signal ? signal.confidence : null,
+      headline: signal ? signal.headline : null,
+      thesis: signal ? signal.thesis : null,
+      feedMode: signal?.marketData?.mode || null,
+    };
+  });
+}
+
+function buildAlertsView(items) {
+  const signalMap = latestSignalMap();
+  return items.map((item) => evaluateAlertRule(item, signalMap.get(item.ticker)));
+}
+
+function buildAlertResponsePayload(userState) {
+  const items = buildAlertsView(userState.alertRules || []);
+  const plan = alertPlanForTier(userState.settings?.subscriptionTier);
+  const deliveryQueue = sortAlertEmailQueueItems(userState.alertEmailQueue || []).slice(0, 8);
+  return {
+    items,
+    summary: {
+      ...buildAlertSummary(items),
+      maxAllowed: plan.maxAlerts,
+      remaining: Math.max(plan.maxAlerts - items.length, 0),
+      overLimit: Math.max(items.length - plan.maxAlerts, 0),
+      subscriptionTier: plan.id,
+      emailEligible: Boolean(plan.emailEnabled),
+      emailQueued: buildAlertEmailQueueSummary(userState.alertEmailQueue || []).queued,
+    },
+    plan: {
+      id: plan.id,
+      label: plan.label,
+      maxAlerts: plan.maxAlerts,
+      emailEnabled: plan.emailEnabled,
+    },
+    deliverySummary: buildAlertEmailQueueSummary(userState.alertEmailQueue || []),
+    deliveryQueue,
+  };
+}
+
+function appendNotification(userState, input) {
+  const notification = sanitizeNotificationItem({
+    id: crypto.randomUUID(),
+    status: "unread",
+    createdAt: nowIso(),
+    ...input,
+  });
+  userState.notifications = sortNotificationItems([notification, ...(userState.notifications || [])]).slice(0, 40);
+  return notification;
+}
+
+function appendAlertEmailQueueItem(userState, input) {
+  const item = sanitizeAlertEmailQueueItem({
+    id: crypto.randomUUID(),
+    status: "queued",
+    createdAt: nowIso(),
+    ...input,
+  });
+  userState.alertEmailQueue = sortAlertEmailQueueItems([
+    item,
+    ...(userState.alertEmailQueue || []),
+  ]).slice(0, 40);
+  return item;
+}
+
+function syncAlertNotificationsForUser(userId, userState) {
+  let changed = false;
+  const signalMap = latestSignalMap();
+  const settings = sanitizeSettings(userState.settings);
+  const plan = alertPlanForTier(settings.subscriptionTier);
+  const user = users.find((candidate) => candidate.id === userId);
+
+  userState.alertRules.forEach((rule) => {
+    const evaluated = evaluateAlertRule(rule, signalMap.get(rule.ticker));
+    const nextTriggered = Boolean(evaluated.triggered);
+
+    if (nextTriggered && !rule.lastTriggerState) {
+      rule.lastTriggeredAt = nowIso();
+      const message = `${evaluated.kindLabel} ${rule.threshold} is live${evaluated.metricValue != null ? ` (now ${evaluated.metricValue})` : ""}.`;
+      if (settings.alertPreferences?.inAppEnabled !== false) {
+        appendNotification(userState, {
+          ticker: rule.ticker,
+          label: rule.label,
+          desk: rule.desk,
+          type: "alert",
+          title: `${rule.label} alert triggered`,
+          message,
+        });
+      }
+      if (
+        plan.emailEnabled &&
+        settings.alertPreferences?.emailEnabled &&
+        user?.email
+      ) {
+        appendAlertEmailQueueItem(userState, {
+          ticker: rule.ticker,
+          label: rule.label,
+          desk: rule.desk,
+          title: `${rule.label} email alert queued`,
+          message,
+          recipientEmail: user.email,
+          digestWindow: settings.alertPreferences?.digestWindow,
+        });
+      }
+      changed = true;
+    }
+
+    if (rule.lastTriggerState !== nextTriggered) {
+      rule.lastTriggerState = nextTriggered;
+      rule.updatedAt = nowIso();
+      changed = true;
+    }
+  });
+
+  return changed;
+}
+
+function syncAlertNotificationsForAllUsers() {
+  let changed = false;
+  Object.entries(userStates).forEach(([userId, userState]) => {
+    if (syncAlertNotificationsForUser(userId, userState)) {
+      changed = true;
+    }
+  });
+  if (changed) {
+    persistStore();
+  }
 }
 
 function normalizeValrBalances(payload) {
@@ -2990,10 +3788,30 @@ async function testConnector(providerId, record) {
     };
   }
 
+  if (providerId === "ibkr") {
+    return {
+      status: "manual_setup",
+      detail: record.configured
+        ? "IBKR gateway profile is saved. The dedicated Client Portal / Web API handshake is still required before live testing can run here."
+        : "Save an IBKR gateway URL and account ID first, then complete the provider handshake.",
+    };
+  }
+
+  if (providerId === "saxo") {
+    return {
+      status: "manual_setup",
+      detail: record.configured
+        ? "Saxo app credentials are saved. The OAuth session flow still needs to be completed before live testing can run here."
+        : "Save your Saxo app credentials first, then complete the OAuth flow.",
+    };
+  }
+
   if (providerId === "easyequities") {
     return {
       status: "unsupported",
-      detail: "No public EasyEquities trading API is wired into Collecttrade yet.",
+      detail: record.configured
+        ? "EasyEquities is saved as a manual profile. No public trading API is wired into Brick Alpha yet."
+        : "No public EasyEquities trading API is wired into Brick Alpha yet.",
     };
   }
 
@@ -3098,7 +3916,7 @@ function createCollectibleTrade(item, side, userId, overrides = {}) {
       marketTicker: `COLLECTIBLE:${item.id}`,
       currentPrice: markedPrice,
       market: item.market || item.family || item.brand,
-      venue: item.venue || item.sourceSheet || "Collectibles",
+      venue: item.venue || item.sourceSheet || "LEGO Investments",
       note: item.note || item.thesis || item.description || "",
       unitLabel: "items",
       ...overrides,
@@ -3185,7 +4003,7 @@ function buildHealth() {
       newsItems: newsItems.length,
       catalogItems: PRODUCT_CATALOG.length,
       catalogImportedAt: PRODUCT_CATALOG_DATA.generatedAt,
-      catalogSourceLabel: PRODUCT_CATALOG_DATA.sourceLabel,
+      catalogMarket IntelligenceLabel: PRODUCT_CATALOG_DATA.sourceLabel,
       feedbackItems: feedbackItems.length,
       unresolvedFeedbackItems: feedbackItems.filter((item) => item.status !== "resolved").length,
       productionFrontendReady,
@@ -3258,7 +4076,7 @@ app.get("/", (_req, res) => {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Collecttrade API</title>
+    <title>Brick Alpha API</title>
     <style>
       body {
         margin: 0;
@@ -3303,7 +4121,7 @@ app.get("/", (_req, res) => {
   </head>
   <body>
     <main>
-      <h1>Collecttrade API is running</h1>
+      <h1>Brick Alpha API is running</h1>
       <p>This is the backend service. The app UI lives on the frontend dev server.</p>
       <ul>
         <li>Frontend: <a href="http://127.0.0.1:5173/">http://127.0.0.1:5173/</a></li>
@@ -3389,6 +4207,108 @@ app.post("/api/auth/login", (req, res) => {
     token: issueToken(user),
     user: publicUser(user),
     settings: getUserState(user.id).settings,
+  });
+});
+
+app.post("/api/auth/forgot-password/request", (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+
+  if (!email.includes("@")) {
+    res.status(400).json({ ok: false, error: "invalid_email" });
+    return;
+  }
+
+  const user = users.find((candidate) => candidate.email === email);
+  let demoCode = null;
+  let expiresAt = null;
+
+  if (user && user.passwordHash) {
+    demoCode = issuePasswordResetCode(user);
+    expiresAt = user.passwordResetExpiresAt;
+    persistStore();
+  }
+
+  res.json({
+    ok: true,
+    message: "If that account exists, a reset code has been prepared for this build.",
+    demoCode,
+    expiresAt,
+  });
+});
+
+app.post("/api/auth/forgot-password/confirm", (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  const resetCode = String(req.body?.code || "").trim();
+  const password = String(req.body?.password || "");
+  const user = users.find((candidate) => candidate.email === email);
+
+  if (!email.includes("@")) {
+    res.status(400).json({ ok: false, error: "invalid_email" });
+    return;
+  }
+
+  if (!resetCode) {
+    res.status(400).json({ ok: false, error: "reset_code_required" });
+    return;
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({ ok: false, error: "password_too_short" });
+    return;
+  }
+
+  if (!user || !user.passwordResetHash || !user.passwordResetSalt) {
+    res.status(400).json({ ok: false, error: "invalid_reset_code" });
+    return;
+  }
+
+  const expiresAt = Date.parse(user.passwordResetExpiresAt || "");
+  if (!expiresAt || Date.now() > expiresAt) {
+    clearPasswordReset(user);
+    persistStore();
+    res.status(400).json({ ok: false, error: "reset_code_expired" });
+    return;
+  }
+
+  if (!verifySecret(resetCode, user.passwordResetSalt, user.passwordResetHash)) {
+    res.status(400).json({ ok: false, error: "invalid_reset_code" });
+    return;
+  }
+
+  const passwordSalt = crypto.randomBytes(16).toString("hex");
+  user.passwordSalt = passwordSalt;
+  user.passwordHash = hashPassword(password, passwordSalt);
+  clearPasswordReset(user);
+  persistStore();
+
+  res.json({
+    ok: true,
+    message: "Password updated. Sign in with your new password.",
+  });
+});
+
+app.post("/api/auth/demo", (req, res) => {
+  const demoName = sanitizeOptionalText(req.body?.name, 120) || "Partner Demo";
+  const demoUser = {
+    id: crypto.randomUUID(),
+    name: demoName,
+    email: `demo-${Date.now()}-${Math.floor(Math.random() * 100000)}@collecttrade.local`,
+    passwordSalt: "",
+    passwordHash: "",
+    role: "partner",
+    createdAt: nowIso(),
+    lastLoginAt: nowIso(),
+  };
+
+  users.push(demoUser);
+  getUserState(demoUser.id);
+  persistStore();
+
+  res.status(201).json({
+    ok: true,
+    token: issueToken(demoUser),
+    user: publicUser(demoUser),
+    settings: getUserState(demoUser.id).settings,
   });
 });
 
@@ -3489,6 +4409,275 @@ app.get("/api/feedback", requireAuth, (req, res) => {
     permissions: {
       canManage: req.user.role === "owner",
     },
+  });
+});
+
+app.get("/api/watchlist", requireAuth, (req, res) => {
+  const items = buildWatchlistView(req.userState.watchlistItems);
+  res.json({
+    ok: true,
+    items,
+  });
+});
+
+app.post("/api/watchlist", requireAuth, (req, res) => {
+  const ticker = sanitizeOptionalText(req.body?.ticker, 40).toUpperCase();
+  const signal = latestSignals.find((candidate) => candidate.ticker === ticker);
+
+  if (!signal) {
+    res.status(400).json({ ok: false, error: "unknown_market" });
+    return;
+  }
+
+  const existing = req.userState.watchlistItems.find((item) => item.ticker === ticker);
+  if (existing) {
+    existing.updatedAt = nowIso();
+    req.userState.watchlistItems = sortWatchlistItems(req.userState.watchlistItems);
+    persistStore();
+    res.json({
+      ok: true,
+      item: buildWatchlistView([existing])[0],
+      items: buildWatchlistView(req.userState.watchlistItems),
+    });
+    return;
+  }
+
+  const item = sanitizeWatchlistItem({
+    id: crypto.randomUUID(),
+    ticker,
+    label: req.body?.label || signal.label,
+    desk: req.body?.desk || signal.desk,
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  });
+
+  req.userState.watchlistItems = sortWatchlistItems([item, ...req.userState.watchlistItems]).slice(0, 24);
+  persistStore();
+
+  res.status(201).json({
+    ok: true,
+    item: buildWatchlistView([item])[0],
+    items: buildWatchlistView(req.userState.watchlistItems),
+  });
+});
+
+app.delete("/api/watchlist/:watchId", requireAuth, (req, res) => {
+  const initialLength = req.userState.watchlistItems.length;
+  req.userState.watchlistItems = req.userState.watchlistItems.filter(
+    (item) => item.id !== req.params.watchId,
+  );
+
+  if (req.userState.watchlistItems.length === initialLength) {
+    res.status(404).json({ ok: false, error: "unknown_watchlist_item" });
+    return;
+  }
+
+  persistStore();
+
+  res.json({
+    ok: true,
+    items: buildWatchlistView(req.userState.watchlistItems),
+  });
+});
+
+app.get("/api/alerts", requireAuth, (req, res) => {
+  res.json({
+    ok: true,
+    ...buildAlertResponsePayload(req.userState),
+  });
+});
+
+app.get("/api/notifications", requireAuth, (req, res) => {
+  const items = sortNotificationItems(req.userState.notifications || []);
+  res.json({
+    ok: true,
+    items,
+    summary: buildNotificationSummary(items),
+  });
+});
+
+app.get("/api/session-routine", requireAuth, (req, res) => {
+  req.userState.routine = advanceRoutineState(req.userState.routine);
+  persistStore();
+
+  res.json({
+    ok: true,
+    routine: buildRoutineView(req.userState.routine),
+  });
+});
+
+app.put("/api/session-routine", requireAuth, (req, res) => {
+  const stepId = sanitizeRoutineStepId(req.body?.stepId);
+  const sessionMode = sanitizeRoutineSessionMode(req.body?.sessionMode);
+  const reset = req.body?.reset === true;
+  const dismissReminder = req.body?.dismissReminder === true;
+  const acknowledgeCompletion = req.body?.acknowledgeCompletion === true;
+
+  if (reset) {
+    req.userState.routine = resetRoutineForToday(req.userState.routine);
+  } else if (dismissReminder) {
+    req.userState.routine = dismissRoutineReminderForToday(req.userState.routine);
+  } else if (acknowledgeCompletion) {
+    req.userState.routine = acknowledgeRoutineCompletionForToday(req.userState.routine);
+  } else if (sessionMode) {
+    req.userState.routine = updateRoutineSessionMode(req.userState.routine, sessionMode);
+  } else if (stepId) {
+    req.userState.routine = updateRoutineStep(
+      req.userState.routine,
+      stepId,
+      req.body?.completed !== false,
+    );
+  } else {
+    res.status(400).json({ ok: false, error: "invalid_routine_update" });
+    return;
+  }
+
+  persistStore();
+
+  res.json({
+    ok: true,
+    routine: buildRoutineView(req.userState.routine),
+  });
+});
+
+app.post("/api/alerts", requireAuth, (req, res) => {
+  const ticker = sanitizeOptionalText(req.body?.ticker, 40).toUpperCase();
+  const signal = latestSignals.find((candidate) => candidate.ticker === ticker);
+
+  if (!signal) {
+    res.status(400).json({ ok: false, error: "unknown_market" });
+    return;
+  }
+
+  const rule = sanitizeAlertRule({
+    id: crypto.randomUUID(),
+    ticker,
+    label: req.body?.label || signal.label,
+    desk: req.body?.desk || signal.desk,
+    kind: req.body?.kind,
+    threshold: req.body?.threshold,
+    enabled: req.body?.enabled !== false,
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  });
+
+  if (rule.threshold == null) {
+    res.status(400).json({ ok: false, error: "alert_threshold_required" });
+    return;
+  }
+
+  const duplicate = req.userState.alertRules.find(
+    (item) =>
+      item.ticker === rule.ticker &&
+      item.kind === rule.kind &&
+      Number(item.threshold) === Number(rule.threshold),
+  );
+
+  if (duplicate) {
+    duplicate.updatedAt = nowIso();
+    duplicate.enabled = true;
+    persistStore();
+    res.json({
+      ok: true,
+      item: evaluateAlertRule(duplicate, signal),
+      ...buildAlertResponsePayload(req.userState),
+    });
+    return;
+  }
+
+  const alertPlan = alertPlanForTier(req.userState.settings?.subscriptionTier);
+  if ((req.userState.alertRules || []).length >= alertPlan.maxAlerts) {
+    res.status(403).json({
+      ok: false,
+      error: "alert_limit_reached",
+      plan: {
+        id: alertPlan.id,
+        label: alertPlan.label,
+        maxAlerts: alertPlan.maxAlerts,
+      },
+    });
+    return;
+  }
+
+  req.userState.alertRules = [rule, ...req.userState.alertRules].slice(0, 64);
+  persistStore();
+
+  res.status(201).json({
+    ok: true,
+    item: evaluateAlertRule(rule, signal),
+    ...buildAlertResponsePayload(req.userState),
+  });
+});
+
+app.patch("/api/alerts/:alertId", requireAuth, (req, res) => {
+  const rule = req.userState.alertRules.find((item) => item.id === req.params.alertId);
+  if (!rule) {
+    res.status(404).json({ ok: false, error: "unknown_alert" });
+    return;
+  }
+
+    if (typeof req.body?.enabled === "boolean") {
+      rule.enabled = req.body.enabled;
+    }
+    rule.updatedAt = nowIso();
+    persistStore();
+    const signal = latestSignals.find((candidate) => candidate.ticker === rule.ticker);
+  
+    res.json({
+      ok: true,
+      item: evaluateAlertRule(rule, signal),
+      ...buildAlertResponsePayload(req.userState),
+    });
+  });
+
+app.delete("/api/alerts/:alertId", requireAuth, (req, res) => {
+  const initialLength = req.userState.alertRules.length;
+  req.userState.alertRules = req.userState.alertRules.filter((item) => item.id !== req.params.alertId);
+
+  if (req.userState.alertRules.length === initialLength) {
+    res.status(404).json({ ok: false, error: "unknown_alert" });
+    return;
+    }
+  
+    persistStore();
+  
+    res.json({
+      ok: true,
+      ...buildAlertResponsePayload(req.userState),
+    });
+  });
+
+app.patch("/api/notifications/:notificationId", requireAuth, (req, res) => {
+  const notification = req.userState.notifications.find((item) => item.id === req.params.notificationId);
+  if (!notification) {
+    res.status(404).json({ ok: false, error: "unknown_notification" });
+    return;
+  }
+
+  notification.status = sanitizeNotificationStatus(req.body?.status || notification.status);
+  persistStore();
+  const items = sortNotificationItems(req.userState.notifications);
+
+  res.json({
+    ok: true,
+    item: notification,
+    items,
+    summary: buildNotificationSummary(items),
+  });
+});
+
+app.post("/api/notifications/mark-all-read", requireAuth, (req, res) => {
+  req.userState.notifications = (req.userState.notifications || []).map((item) => ({
+    ...item,
+    status: "read",
+  }));
+  persistStore();
+  const items = sortNotificationItems(req.userState.notifications);
+
+  res.json({
+    ok: true,
+    items,
+    summary: buildNotificationSummary(items),
   });
 });
 
@@ -3749,7 +4938,7 @@ app.post("/api/trades", requireAuth, async (req, res) => {
         riskBudget,
         executionMode: "paper",
         executionProvider: executionProfile.providerId,
-        executionLabel: "Collecttrade Paper",
+        executionLabel: "Brick Alpha Paper",
       });
     }
 
@@ -3820,7 +5009,7 @@ app.post("/api/collectibles/trades", requireAuth, (req, res) => {
     riskBudget,
     executionMode: "paper",
     executionProvider: "collecttrade",
-    executionLabel: "Collecttrade Paper",
+    executionLabel: "Brick Alpha Paper",
   });
 
   req.userState.trades.unshift(trade);
@@ -3966,30 +5155,63 @@ app.put("/api/connectors/:providerId", requireAuth, (req, res) => {
     return;
   }
 
-  if (providerId !== "valr") {
-    res.status(400).json({ ok: false, error: "manual_connector_setup" });
-    return;
-  }
-
   const connector = connectorStateForUser(req.userState, providerId);
-  const existingCredentials = connectorCredentials(connector);
-  const nextCredentials = {
-    apiKey: String(req.body?.apiKey || existingCredentials.apiKey || "").trim(),
-    apiSecret: String(req.body?.apiSecret || existingCredentials.apiSecret || "").trim(),
-  };
-
-  if (!nextCredentials.apiKey || !nextCredentials.apiSecret) {
-    res.status(400).json({ ok: false, error: "connector_credentials_required" });
-    return;
-  }
-
   connector.config = sanitizeConnectorConfig(providerId, {
     ...connector.config,
     ...req.body,
   });
-  connector.authBlob = encryptConnectorPayload(nextCredentials);
+
+  if (providerId === "valr") {
+    const existingCredentials = connectorCredentials(connector);
+    const nextCredentials = {
+      apiKey: String(req.body?.apiKey || existingCredentials.apiKey || "").trim(),
+      apiSecret: String(req.body?.apiSecret || existingCredentials.apiSecret || "").trim(),
+    };
+
+    if (!nextCredentials.apiKey || !nextCredentials.apiSecret) {
+      res.status(400).json({ ok: false, error: "connector_credentials_required" });
+      return;
+    }
+
+    connector.authBlob = encryptConnectorPayload(nextCredentials);
+    connector.status = "configured";
+  } else if (providerId === "saxo") {
+    const existingCredentials = connectorCredentials(connector);
+    const nextCredentials = {
+      appKey: String(req.body?.appKey || existingCredentials.appKey || "").trim(),
+      appSecret: String(req.body?.appSecret || existingCredentials.appSecret || "").trim(),
+      accountKey: String(req.body?.accountKey || existingCredentials.accountKey || "").trim(),
+    };
+
+    if (!nextCredentials.appKey || !nextCredentials.appSecret) {
+      res.status(400).json({ ok: false, error: "connector_credentials_required" });
+      return;
+    }
+
+    connector.authBlob = encryptConnectorPayload(nextCredentials);
+    connector.status = "manual_setup";
+  } else if (providerId === "ibkr") {
+    if (!connector.config.gatewayUrl || !connector.config.accountId) {
+      res.status(400).json({ ok: false, error: "connector_profile_required" });
+      return;
+    }
+
+    connector.authBlob = null;
+    connector.status = "manual_setup";
+  } else if (providerId === "easyequities") {
+    if (!connector.config.accountLabel) {
+      res.status(400).json({ ok: false, error: "connector_profile_required" });
+      return;
+    }
+
+    connector.authBlob = null;
+    connector.status = "unsupported";
+  } else {
+    connector.authBlob = null;
+    connector.status = connectorBaselineStatus(providerId);
+  }
+
   connector.configured = true;
-  connector.status = "configured";
   connector.lastTestAt = null;
   connector.lastSyncAt = null;
   connector.lastError = null;
@@ -3998,6 +5220,16 @@ app.put("/api/connectors/:providerId", requireAuth, (req, res) => {
 
   res.json({
     ok: true,
+    detail:
+      providerId === "valr"
+        ? "VALR credentials saved."
+        : providerId === "saxo"
+          ? "Saxo setup saved. OAuth and live sync still need the dedicated provider flow."
+          : providerId === "ibkr"
+            ? "IBKR gateway profile saved. Client Portal / Web API setup remains the next step."
+            : providerId === "easyequities"
+              ? "EasyEquities profile saved for manual tracking."
+              : "Connector setup saved.",
     provider: buildConnectorView(providerId, connector),
   });
 });
@@ -4145,5 +5377,5 @@ setInterval(() => {
 }, NEWS_REFRESH_MS);
 
 app.listen(PORT, () => {
-  console.log(`Collecttrade API listening on ${PORT}`);
+  console.log(`Brick Alpha API listening on ${PORT}`);
 });

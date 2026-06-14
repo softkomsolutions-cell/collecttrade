@@ -25,8 +25,43 @@ export const DEFAULT_SETTINGS = {
   preferredRegion: "south-africa",
   timezone: "Africa/Johannesburg",
   riskMode: "balanced",
+  subscriptionTier: "starter",
+  alertPreferences: {
+    inAppEnabled: true,
+    emailEnabled: false,
+    digestWindow: "instant",
+  },
+  routinePreferences: {
+    remindersEnabled: true,
+    nudgeWindow: "active",
+    celebrationEnabled: true,
+  },
   executionProfiles: DEFAULT_EXECUTION_PROFILES,
 };
+
+export const ALERT_SUBSCRIPTION_OPTIONS = [
+  {
+    id: "starter",
+    label: "Starter",
+    maxAlerts: 5,
+    emailEnabled: false,
+    description: "Light alert tracking for partner testing and daily monitoring.",
+  },
+  {
+    id: "pro",
+    label: "Pro",
+    maxAlerts: 20,
+    emailEnabled: true,
+    description: "The first paid tier with deeper alert coverage and queued email delivery.",
+  },
+  {
+    id: "elite",
+    label: "Elite",
+    maxAlerts: 50,
+    emailEnabled: true,
+    description: "High-coverage alerting for heavier desks and premium subscriber workflows.",
+  },
+];
 
 export const VALR_PAIR_OPTIONS = [
   { value: "BTCUSDT", label: "BTC/USDT" },
@@ -58,10 +93,10 @@ export const NAV_ITEMS = [
   },
   {
     id: "collectibles",
-    label: "Collectibles",
+    label: "LEGO Investments",
     glyph: "CL",
     section: "Market",
-    hint: "Alternative inventory desk",
+    hint: "collectibles desk",
   },
   {
     id: "portfolio",
@@ -72,10 +107,17 @@ export const NAV_ITEMS = [
   },
   {
     id: "reports",
-    label: "Reports",
+    label: "Research Center",
     glyph: "RP",
     section: "Platform",
     hint: "Performance graphs and analytics",
+  },
+  {
+    id: "subscriptions",
+    label: "Subscriptions",
+    glyph: "SB",
+    section: "Platform",
+    hint: "Plans, premium value, and upgrade path",
   },
   {
     id: "tools",
@@ -102,7 +144,7 @@ export const NAV_ITEMS = [
 
 export const NAV_GROUPS = [
   { id: "market", label: "Market Workspaces" },
-  { id: "platform", label: "Platform Control" },
+  { id: "platform", label: "Support & Admin" },
 ];
 
 export const SCREEN_PREVIEWS = {
@@ -111,16 +153,20 @@ export const SCREEN_PREVIEWS = {
   signals: "Live 8/21 EMA setups, chart structure, and execution tickets.",
   tools: "AI mentor, chart analyzer, simulator, and research workspace for decision support.",
   connections: "Broker, venue, feed, and execution controls with live readiness and sync status.",
-  collectibles: "Tradable LEGO, Pokemon, and other alternative inventory positions.",
+  collectibles: "Tradable LEGO, Pokemon, and other LEGO investment holdings positions.",
   portfolio: "Tracked positions, close workflow, and execution history.",
   reports: "Performance reporting, signal analytics, desk exposure, and visual review graphs.",
-  settings: "Desk controls, health status, sources, and account preferences.",
+  subscriptions: "Plan tiers, premium feature value, and the commercial upgrade path.",
+  settings: "Desk controls, health status, market intelligence, and account preferences.",
 };
 
 export const PAGE_SECTION_LINKS = {
   home: [
     { id: "home-overview", label: "Overview" },
+    { id: "home-brief", label: "Brief" },
+    { id: "home-workflow", label: "Workflow" },
     { id: "home-launchpad", label: "Launchpad" },
+    { id: "home-watchlist", label: "Watchlist" },
     { id: "home-partner", label: "Partner" },
     { id: "home-activity", label: "Activity" },
   ],
@@ -145,14 +191,17 @@ export const PAGE_SECTION_LINKS = {
   ],
   connections: [
     { id: "connections-overview", label: "Modes" },
+    { id: "api-coverage", label: "APIs" },
     { id: "broker-connections", label: "Brokers" },
     { id: "market-feed-status", label: "Feed" },
-    { id: "source-status", label: "Sources" },
+    { id: "market-depth", label: "Depth" },
+    { id: "economic-calendar", label: "Calendar" },
+    { id: "source-status", label: "Market Intelligence" },
   ],
   collectibles: [
     { id: "collectibles-focus", label: "Focus" },
     { id: "collectibles-reference", label: "Reference" },
-    { id: "collectibles-grid", label: "Inventory" },
+    { id: "collectibles-grid", label: "Holdings" },
   ],
   portfolio: [
     { id: "position-detail", label: "Detail" },
@@ -165,9 +214,17 @@ export const PAGE_SECTION_LINKS = {
     { id: "reports-exposure", label: "Exposure" },
     { id: "reports-signals", label: "Signals" },
   ],
+  subscriptions: [
+    { id: "subscriptions-overview", label: "Overview" },
+    { id: "subscriptions-tiers", label: "Tiers" },
+    { id: "subscriptions-premium", label: "Premium" },
+  ],
   settings: [
     { id: "account-settings", label: "Account" },
+    { id: "install-app", label: "Install" },
     { id: "news-region", label: "Region" },
+    { id: "alerts-plan", label: "Alerts" },
+    { id: "routine-preferences", label: "Routine" },
     { id: "partner-testing", label: "Testing" },
     { id: "feedback-board", label: "Feedback" },
     { id: "web-targets", label: "Targets" },
@@ -330,14 +387,14 @@ export const ORDER_TICKET_PRESETS = {
     ],
   },
   collectible: {
-    deskLabel: "Collectibles desk",
+    deskLabel: "LEGO investment desk",
     unitLabel: "items",
     defaultQuantity: "1",
     quantityStep: "1",
     minQuantity: "1",
     timingHint: "Think in holding horizon, buyer depth, and resale friction.",
     notePlaceholder: "Why this item should appreciate, how long you expect to hold it, and what would change your mind.",
-    executionCue: "These positions are paper-tracked inventory ideas, not live venue orders.",
+    executionCue: "These positions are paper-tracked investment ideas, not live venue orders.",
     stopDistancePercent: 8,
     targetDistancePercent: 18,
     defaultRiskBudget: "1500",
@@ -395,11 +452,11 @@ export const INTRO_ACTIONS = [
     ordinal: "03",
     glyph: "CL",
     eyebrow: "Alt",
-    title: "Collectibles",
+    title: "LEGO Investments",
     page: "collectibles",
     sectionId: "collectibles-focus",
-    destination: "Collectibles Focus",
-    blurb: "Open LEGO, Pokemon, and alternative inventory positions with their own ticket workflow.",
+    destination: "LEGO Investment Focus",
+    blurb: "Open LEGO, Pokemon, and LEGO investment holdings positions with their own ticket workflow.",
   },
   {
     id: "portfolio",
@@ -421,22 +478,33 @@ export const INTRO_ACTIONS = [
     page: "settings",
     sectionId: "news-region",
     destination: "Account Controls",
-    blurb: "Check region, source status, connectors, and desk configuration before you start.",
+    blurb: "Check region, market intelligence status, connectors, and desk configuration before you start.",
   },
   {
     id: "reports",
     ordinal: "06",
     glyph: "RP",
     eyebrow: "Review",
-    title: "Reports",
+    title: "Research Center",
     page: "reports",
     sectionId: "reports-performance",
-    destination: "Performance Reports",
+    destination: "Performance Research",
     blurb: "Review trade performance, signal pressure, desk exposure, and portfolio analytics in one visual workspace.",
   },
   {
-    id: "tools",
+    id: "subscriptions",
     ordinal: "07",
+    glyph: "SB",
+    eyebrow: "Plans",
+    title: "Subscriptions",
+    page: "subscriptions",
+    sectionId: "subscriptions-overview",
+    destination: "Subscription plans",
+    blurb: "Show what is included today, what becomes premium, and how the product monetizes cleanly.",
+  },
+  {
+    id: "tools",
+    ordinal: "08",
     glyph: "TL",
     eyebrow: "Assist",
     title: "Tools",
@@ -447,7 +515,7 @@ export const INTRO_ACTIONS = [
   },
   {
     id: "connections",
-    ordinal: "08",
+    ordinal: "09",
     glyph: "CN",
     eyebrow: "Route",
     title: "Connections",
@@ -505,9 +573,9 @@ export const TRADE_PATHS = [
     desk: null,
     glyph: "AL",
     eyebrow: "ALT",
-    title: "Trade Collectibles",
-    destination: "Collectibles",
-    blurb: "Buy and sell LEGO, Pokemon, and other alternative inventory with the same ticket workflow.",
+    title: "Analyze LEGO Investments",
+    destination: "LEGO Investments",
+    blurb: "Analyze LEGO sets and investment-grade collectibles with the same ticket workflow.",
   },
 ];
 
@@ -576,8 +644,8 @@ export const PARTNER_TEST_FLOW = [
   {
     id: "collectibles",
     ordinal: "04",
-    title: "Collectibles",
-    detail: "Review tradable inventory versus official sources and test whether the workflow stays inside Collecttrade.",
+    title: "LEGO Investments",
+    detail: "Review LEGO investment holdings versus market intelligence and test whether the workflow stays inside Brick Alpha.",
     page: "collectibles",
     desk: null,
     sectionId: "collectibles-grid",
