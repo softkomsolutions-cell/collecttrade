@@ -41,6 +41,10 @@ import {
   EmptyState,
   SplashScreen,
 } from "./components/appShell";
+import {
+  enrichBrickAlphaCollectible,
+  enrichBrickAlphaTrade,
+} from "./brickAlphaModel";
 
 function lazyNamedExport(factory, exportName) {
   return lazy(() =>
@@ -1370,12 +1374,33 @@ export default function App() {
   const globalHeadlineCount = newsItemsForDesk.filter((item) => item.region === "global").length;
   const newsSourceMap = useMemo(() => buildSourceMap(newsResponse.sources), [newsResponse.sources]);
 
+  const enrichedCollectiblesResponse = useMemo(
+    () => ({
+      ...collectiblesResponse,
+      items: (collectiblesResponse.items || []).map((item) => enrichBrickAlphaCollectible(item)),
+    }),
+    [collectiblesResponse],
+  );
+
   const filteredCollectibles = useMemo(() => {
     const query = collectibleQuery.trim().toLowerCase();
-    return (collectiblesResponse.items || []).filter((item) => {
+    return (enrichedCollectiblesResponse.items || []).filter((item) => {
       const matchesQuery =
         !query ||
-        [item.name, item.brand, item.category, item.description, item.thesis, item.sku]
+        [
+          item.name,
+          item.brand,
+          item.category,
+          item.description,
+          item.thesis,
+          item.sku,
+          item.recommendation,
+          item.investmentGrade,
+          item.retirementStatus,
+          item.legoTheme,
+          ...(item.alphaSignals || []),
+          item.storeSource,
+        ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(query));
       const matchesBrand = collectibleBrand === "all" || item.brand === collectibleBrand;
@@ -1383,8 +1408,8 @@ export default function App() {
         collectibleCategory === "all" || item.category === collectibleCategory;
       return matchesQuery && matchesBrand && matchesCategory;
     });
-  }, [collectibleBrand, collectibleCategory, collectibleQuery, collectiblesResponse.items]);
-  const collectibles = collectiblesResponse.items || [];
+  }, [collectibleBrand, collectibleCategory, collectibleQuery, enrichedCollectiblesResponse.items]);
+  const collectibles = enrichedCollectiblesResponse.items || [];
   const resolvedSelectedCollectibleId =
     filteredCollectibles.some((item) => item.id === selectedCollectibleId)
       ? selectedCollectibleId
@@ -1395,21 +1420,25 @@ export default function App() {
     filteredCollectibles[0] ||
     null;
 
+  const enrichedPortfolio = useMemo(
+    () => portfolio.map((trade) => enrichBrickAlphaTrade(trade, collectibles, portfolio)),
+    [collectibles, portfolio],
+  );
   const openTrades = useMemo(
-    () => portfolio.filter((trade) => trade.status === "open"),
-    [portfolio],
+    () => enrichedPortfolio.filter((trade) => trade.status === "open"),
+    [enrichedPortfolio],
   );
   const closedTrades = useMemo(
-    () => portfolio.filter((trade) => trade.status !== "open"),
-    [portfolio],
+    () => enrichedPortfolio.filter((trade) => trade.status !== "open"),
+    [enrichedPortfolio],
   );
 
-  const resolvedSelectedTradeId = portfolio.some((trade) => trade.id === selectedTradeId)
+  const resolvedSelectedTradeId = enrichedPortfolio.some((trade) => trade.id === selectedTradeId)
     ? selectedTradeId
-    : portfolio[0]?.id || null;
+    : enrichedPortfolio[0]?.id || null;
 
   const activePortfolioTrade =
-    portfolio.find((trade) => trade.id === resolvedSelectedTradeId) ||
+    enrichedPortfolio.find((trade) => trade.id === resolvedSelectedTradeId) ||
     openTrades[0] ||
     closedTrades[0] ||
     null;
@@ -2914,7 +2943,7 @@ export default function App() {
           collectibleCategory={collectibleCategory}
           collectibleQuery={collectibleQuery}
           collectibles={collectibles}
-          collectiblesResponse={collectiblesResponse}
+          collectiblesResponse={enrichedCollectiblesResponse}
           filteredCollectibles={filteredCollectibles}
           handleCollectibleSelect={handleCollectibleSelect}
           jumpToPageSection={jumpToPageSection}

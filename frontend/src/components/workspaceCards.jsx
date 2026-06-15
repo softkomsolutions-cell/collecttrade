@@ -25,6 +25,23 @@ import {
   venueDetailLabel,
 } from "../appUtils";
 import { EmptyState } from "./appShell";
+import { alphaSignalTone } from "../brickAlphaModel";
+
+export function AlphaSignalBadges({ signals = [] }) {
+  if (!signals.length) {
+    return null;
+  }
+
+  return (
+    <div className="alphaSignalRow">
+      {signals.map((signal) => (
+        <span className={`signalBadge ${alphaSignalTone(signal)}`} key={signal}>
+          {signal}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export function SignalCard({ signal, executionPlan, marketSource, isActive, onSelect, onFastTrade, onWatch }) {
   const routeLabel =
@@ -159,23 +176,36 @@ export function TradeCollectibleCard({ item, isActive, onSelect, onTrade }) {
 
       <h3>{item.name}</h3>
       <p>{item.thesis || item.description}</p>
+      <AlphaSignalBadges signals={item.alphaSignals} />
 
       <div className="collectibleStats">
         <div>
-          <span>Price</span>
-          <strong>{formatCollectiblePrice(item.price)}</strong>
+          <span>Brick Alpha</span>
+          <strong>{item.brickAlphaScore ? `${item.brickAlphaScore}/100` : "--"}</strong>
         </div>
         <div>
-          <span>Move</span>
-          <strong className={positiveTone(item.changePercent)}>{item.changePercent}%</strong>
+          <span>Grade</span>
+          <strong>{item.investmentGrade || "--"}</strong>
         </div>
         <div>
-          <span>Liquidity</span>
-          <strong>{item.liquidity}</strong>
+          <span>Action</span>
+          <strong>{item.recommendation || "Watch"}</strong>
         </div>
         <div>
-          <span>Venue</span>
-          <strong>{item.venue}</strong>
+          <span>Theme</span>
+          <strong>{item.legoTheme || "--"}</strong>
+        </div>
+        <div>
+          <span>Discount</span>
+          <strong className={positiveTone(item.discountPercentage)}>
+            {Number.isFinite(item.discountPercentage) ? `${item.discountPercentage.toFixed(1)}%` : "--"}
+          </strong>
+        </div>
+        <div>
+          <span>ROI</span>
+          <strong className={positiveTone(item.estimatedRoi)}>
+            {Number.isFinite(item.estimatedRoi) ? `${item.estimatedRoi.toFixed(1)}%` : "--"}
+          </strong>
         </div>
       </div>
 
@@ -1353,7 +1383,66 @@ export function PositionDetailCard({ trade, timeZone, onNavigate, onCloseTrade }
           <span>Risk Budget</span>
           <strong>{formatTradePrice(trade, trade.riskBudget)}</strong>
         </div>
+        {trade.assetClass === "collectible" ? (
+          <>
+            <div>
+              <span>Brick Alpha Score</span>
+              <strong>{trade.brickAlphaScore ? `${trade.brickAlphaScore}/100` : "--"}</strong>
+            </div>
+            <div>
+              <span>Investment Grade</span>
+              <strong>{trade.investmentGrade || "--"}</strong>
+            </div>
+            <div>
+              <span>Recommendation</span>
+              <strong>{trade.recommendation || "Hold"}</strong>
+            </div>
+            <div>
+              <span>Sell-by Target</span>
+              <strong>{trade.sellByTargetDate || "--"}</strong>
+            </div>
+            <div>
+              <span>Retirement Status</span>
+              <strong>{trade.retirementStatus || "--"}</strong>
+            </div>
+            <div>
+              <span>Retirement Probability</span>
+              <strong>
+                {Number.isFinite(trade.retirementProbability)
+                  ? `${Math.round(trade.retirementProbability)}%`
+                  : "--"}
+              </strong>
+            </div>
+            <div>
+              <span>Risk Score</span>
+              <strong>{trade.riskScore ? `${trade.riskScore}/100` : "--"}</strong>
+            </div>
+          </>
+        ) : null}
       </div>
+
+      {trade.assetClass === "collectible" && trade.investmentThesis ? (
+        <div className="investmentThesisGrid">
+          {trade.alphaSignals?.length ? (
+            <div className="positionNote">
+              <span>Alpha Signals</span>
+              <AlphaSignalBadges signals={trade.alphaSignals} />
+            </div>
+          ) : null}
+          <div className="positionNote">
+            <span>Why Attractive</span>
+            <p>{trade.investmentThesis.attractive}</p>
+          </div>
+          <div className="positionNote">
+            <span>Upside Drivers</span>
+            <p>{trade.investmentThesis.upsideDrivers.join(" | ")}</p>
+          </div>
+          <div className="positionNote">
+            <span>Exit Strategy</span>
+            <p>{trade.investmentThesis.exitStrategy}</p>
+          </div>
+        </div>
+      ) : null}
 
       {trade.orderNote ? (
         <div className="positionNote">

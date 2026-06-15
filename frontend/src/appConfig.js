@@ -200,10 +200,12 @@ export const PAGE_SECTION_LINKS = {
   ],
   collectibles: [
     { id: "collectibles-focus", label: "Focus" },
+    { id: "collectibles-trading", label: "Holdings" },
     { id: "collectibles-reference", label: "Reference" },
     { id: "collectibles-grid", label: "Holdings" },
   ],
   portfolio: [
+    { id: "portfolio-dashboard", label: "Dashboard" },
     { id: "position-detail", label: "Detail" },
     { id: "open-positions", label: "Open" },
     { id: "order-history", label: "History" },

@@ -43,7 +43,9 @@ import {
   ConnectorCard,
   PositionDetailCard,
   TradeCollectibleCard,
+  AlphaSignalBadges,
 } from "./workspaceCards";
+import { summarizeBrickAlphaPortfolio } from "../brickAlphaModel";
 
 function numberOrZero(value) {
   const numeric = Number(value);
@@ -131,6 +133,11 @@ function formatSignedPercent(value) {
   }
 
   return `${numeric >= 0 ? "+" : ""}${numeric.toFixed(2)}%`;
+}
+
+function formatScore(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? `${Math.round(numeric)}/100` : "--";
 }
 
 function buildPerformancePoints(trades) {
@@ -2772,14 +2779,18 @@ export function CollectiblesScreen({
             detail: "Across tracked categories",
           },
           {
-            label: "Lead item",
-            value: activeCollectible?.brand || "Waiting",
-            detail: activeCollectible?.name || "Select an item",
+            label: "Lead score",
+            value: activeCollectible ? formatScore(activeCollectible.brickAlphaScore) : "Waiting",
+            detail: activeCollectible?.investmentGrade || "Select an item",
           },
           {
-            label: "Official shelf",
-            value: legoReferenceShelf?.sourceName || "Waiting",
-            detail: legoReferenceShelf?.title || "Reference layer",
+            label: "Portfolio value",
+            value: activeCollectible
+              ? formatCollectiblePrice(
+                  activeCollectible.currentMarketValue * activeCollectible.quantityOwned,
+                )
+              : "Waiting",
+            detail: activeCollectible?.sellByTargetDate || "Exit target",
           },
         ]}
         primaryAction={{
@@ -2820,16 +2831,20 @@ export function CollectiblesScreen({
           <strong>{(collectiblesResponse.categories || []).length}</strong>
         </div>
         <div className="summaryCard">
-          <span>Updated</span>
-          <strong>{formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}</strong>
+          <span>Avg Brick Alpha Score</span>
+          <strong>
+            {collectibles.length
+              ? formatScore(average(collectibles.map((item) => item.brickAlphaScore)))
+              : "--"}
+          </strong>
         </div>
         <button
           type="button"
           className="summaryCard summaryCardButton"
           onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
         >
-          <span>Market intelligence</span>
-          <strong>{legoReferenceShelf?.sourceName || "Reference"}</strong>
+          <span>Decision engine</span>
+          <strong>{activeCollectible?.recommendation || "Waiting"}</strong>
         </button>
       </section>
 
@@ -2879,6 +2894,7 @@ export function CollectiblesScreen({
             <div>
               <h2>{activeCollectible.name}</h2>
               <p>{activeCollectible.thesis || activeCollectible.description}</p>
+              <AlphaSignalBadges signals={activeCollectible.alphaSignals} />
             </div>
             <div className="priceCluster">
               <span>{formatCollectiblePrice(activeCollectible.price)}</span>
@@ -2890,20 +2906,149 @@ export function CollectiblesScreen({
 
           <div className="stateGrid">
             <div>
-              <span>Category</span>
-              <strong>{activeCollectible.category}</strong>
+              <span>Retail Price</span>
+              <strong>{formatCollectiblePrice(activeCollectible.retailPrice)}</strong>
             </div>
             <div>
-              <span>Brand</span>
-              <strong>{activeCollectible.brand}</strong>
+              <span>Buy Price</span>
+              <strong>{formatCollectiblePrice(activeCollectible.buyPrice)}</strong>
             </div>
             <div>
-              <span>Liquidity</span>
-              <strong>{activeCollectible.liquidity}</strong>
+              <span>Discount</span>
+              <strong className={positiveTone(activeCollectible.discountPercentage)}>
+                {activeCollectible.discountPercentage.toFixed(1)}%
+              </strong>
             </div>
             <div>
-              <span>Venue</span>
-              <strong>{activeCollectible.venue}</strong>
+              <span>Margin of Safety</span>
+              <strong>{activeCollectible.marginOfSafety.toFixed(1)}%</strong>
+            </div>
+            <div>
+              <span>Quantity Owned</span>
+              <strong>{activeCollectible.quantityOwned}</strong>
+            </div>
+            <div>
+              <span>Current Market Value</span>
+              <strong>{formatCollectiblePrice(activeCollectible.currentMarketValue)}</strong>
+            </div>
+            <div>
+              <span>Projected Value</span>
+              <strong>{formatCollectiblePrice(activeCollectible.projectedFutureValue)}</strong>
+            </div>
+            <div>
+              <span>Estimated ROI</span>
+              <strong className={positiveTone(activeCollectible.estimatedRoi)}>
+                {activeCollectible.estimatedRoi.toFixed(1)}%
+              </strong>
+            </div>
+            <div>
+              <span>Risk Score</span>
+              <strong>{formatScore(activeCollectible.riskScore)}</strong>
+            </div>
+            <div>
+              <span>Purchase Date</span>
+              <strong>{activeCollectible.purchaseDate}</strong>
+            </div>
+            <div>
+              <span>LEGO Theme</span>
+              <strong>{activeCollectible.legoTheme}</strong>
+            </div>
+            <div>
+              <span>Theme Target</span>
+              <strong>{activeCollectible.themeAllocationTarget}%</strong>
+            </div>
+            <div>
+              <span>Retirement Status</span>
+              <strong>{activeCollectible.retirementStatus}</strong>
+            </div>
+            <div>
+              <span>Retirement Date</span>
+              <strong>{activeCollectible.actualRetirementDate || activeCollectible.expectedRetirementDate}</strong>
+            </div>
+            <div>
+              <span>Retirement Probability</span>
+              <strong>{Math.round(activeCollectible.retirementProbability)}%</strong>
+            </div>
+            <div>
+              <span>Retirement Confidence</span>
+              <strong>{Math.round(activeCollectible.retirementConfidence)}%</strong>
+            </div>
+            <div>
+              <span>Sell By</span>
+              <strong>{activeCollectible.sellByTargetDate}</strong>
+            </div>
+          </div>
+
+          <div className="brickAlphaDecisionGrid">
+            <section className="brickAlphaDecisionCard">
+              <span>Investment Grade</span>
+              <strong>{activeCollectible.investmentGrade}</strong>
+              <small>
+                Score {formatScore(activeCollectible.brickAlphaScore)} | {activeCollectible.recommendation} | Holding period{" "}
+                {activeCollectible.holdingPeriod} | Source {activeCollectible.storeSource}
+              </small>
+            </section>
+            <section className="brickAlphaDecisionCard">
+              <span>Investment Thesis</span>
+              <strong>{activeCollectible.investmentThesis.attractive}</strong>
+              <small>{activeCollectible.investmentThesis.exitStrategy}</small>
+            </section>
+          </div>
+
+          <div className="brickAlphaScoreGrid">
+            {[
+              ["Minifigure quality", activeCollectible.minifigureQuality],
+              ["Exclusive minifigures", activeCollectible.exclusiveMinifigures],
+              ["Number of minifigures", activeCollectible.numberOfMinifigures],
+              ["Theme strength", activeCollectible.themeStrength],
+              ["Theme allocation target", activeCollectible.themeAllocationTarget],
+              ["Retirement timeline", activeCollectible.retirementTimeline],
+              ["Retirement probability", activeCollectible.retirementProbability],
+              ["Retirement confidence", activeCollectible.retirementConfidence],
+              ["Discount to retail", activeCollectible.discountPercentage],
+              ["Demand", activeCollectible.demandForSet],
+              ["Supply / scarcity", activeCollectible.supplyScarcity],
+              ["Display appeal", activeCollectible.displayAppeal],
+              ["Part-out value", activeCollectible.partOutValue],
+              ["Liquidity", activeCollectible.liquidityScore],
+              ["Historical performance", activeCollectible.historicalPerformance],
+              ["Portfolio fit", activeCollectible.portfolioFit],
+            ].map(([label, value]) => (
+              <div className="brickAlphaScoreRow" key={label}>
+                <span>{label}</span>
+                <strong>
+                  {label.includes("minifigures") && !label.includes("quality")
+                    ? value
+                    : label.includes("allocation target")
+                      ? `${Math.round(value)}%`
+                    : label.includes("probability") || label.includes("confidence")
+                      ? `${Math.round(value)}%`
+                      : formatScore(value)}
+                </strong>
+              </div>
+            ))}
+            <div className="brickAlphaScoreRow">
+              <span>Retirement status</span>
+              <strong>{activeCollectible.retirementStatus}</strong>
+            </div>
+            <div className="brickAlphaScoreRow">
+              <span>Size tier</span>
+              <strong>{activeCollectible.sizeTier}</strong>
+            </div>
+          </div>
+
+          <div className="investmentThesisGrid">
+            <div className="positionNote">
+              <span>Upside Drivers</span>
+              <p>{activeCollectible.investmentThesis.upsideDrivers.join(" | ")}</p>
+            </div>
+            <div className="positionNote">
+              <span>Main Risks</span>
+              <p>{activeCollectible.investmentThesis.risks.join(" | ")}</p>
+            </div>
+            <div className="positionNote">
+              <span>Suggested Action</span>
+              <p>{activeCollectible.investmentThesis.suggestedAction}</p>
             </div>
           </div>
 
@@ -3185,6 +3330,10 @@ export function PortfolioScreen({
   openTrades,
   totalOpenPnl,
 }) {
+  const brickAlphaPortfolio = useMemo(
+    () => summarizeBrickAlphaPortfolio([...openTrades, ...closedTrades]),
+    [closedTrades, openTrades],
+  );
   const portfolioActions = [
     {
       id: "positions",
@@ -3240,6 +3389,11 @@ export function PortfolioScreen({
             label: "Live PnL",
             value: `${totalOpenPnl.toFixed(2)}%`,
             detail: "Open-book change",
+          },
+          {
+            label: "Net Asset Value",
+            value: formatCollectiblePrice(brickAlphaPortfolio.netAssetValue),
+            detail: `${brickAlphaPortfolio.collectionGrade} collection grade`,
           },
         ]}
         primaryAction={{
@@ -3299,9 +3453,117 @@ export function PortfolioScreen({
           className="summaryCard summaryCardButton"
           onClick={() => jumpToPageSection("signals", "chart-panel")}
         >
-          <span>Last update</span>
-          <strong>{formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}</strong>
+          <span>Avg Brick Alpha Score</span>
+          <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
         </button>
+      </section>
+
+      <section className="panel" id="portfolio-dashboard">
+        <div className="panelHeader">
+          <div>
+            <h2>Portfolio Dashboard</h2>
+            <p>
+              LEGO investment positions roll up into NAV, cost basis, gains, risk, diversification,
+              and confidence before the recommendation engine adjusts the next decision.
+            </p>
+          </div>
+          <div className="headerStatus">
+            <span>Collection grade</span>
+            <strong>{brickAlphaPortfolio.collectionGrade}</strong>
+          </div>
+        </div>
+
+        <div className="stateGrid">
+          <div>
+            <span>Net Asset Value</span>
+            <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
+          </div>
+          <div>
+            <span>Cost Basis</span>
+            <strong>{formatCollectiblePrice(brickAlphaPortfolio.costBasis)}</strong>
+          </div>
+          <div>
+            <span>Unrealized Gain</span>
+            <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
+              {formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)}
+            </strong>
+          </div>
+          <div>
+            <span>Realized Gain</span>
+            <strong className={positiveTone(brickAlphaPortfolio.realizedGain)}>
+              {formatCollectiblePrice(brickAlphaPortfolio.realizedGain)}
+            </strong>
+          </div>
+          <div>
+            <span>Risk Level</span>
+            <strong>{brickAlphaPortfolio.riskLevel}</strong>
+          </div>
+          <div>
+            <span>Diversification</span>
+            <strong>{formatScore(brickAlphaPortfolio.diversificationScore)}</strong>
+          </div>
+          <div>
+            <span>Confidence</span>
+            <strong>{formatScore(brickAlphaPortfolio.confidenceScore)}</strong>
+          </div>
+          <div>
+            <span>Avg Brick Alpha Score</span>
+            <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
+          </div>
+        </div>
+
+        <div className="themeAllocationPanel">
+          <div className="panelHeader">
+            <div>
+              <h3>Theme Allocation</h3>
+              <p>Target LEGO theme mix versus current NAV-weighted book exposure.</p>
+            </div>
+          </div>
+          <div className="themeAllocationGrid">
+            {(brickAlphaPortfolio.themeAllocation?.breakdown || []).map((row) => (
+              <div className="themeAllocationRow" key={row.theme}>
+                <div className="themeAllocationLabel">
+                  <span>{row.theme}</span>
+                  <strong>
+                    {Math.round(row.actual)}% / {row.target}%
+                  </strong>
+                </div>
+                <div className="themeAllocationBar" aria-hidden="true">
+                  <span
+                    className="themeAllocationBarActual"
+                    style={{ width: `${Math.min(100, Math.max(0, row.actual))}%` }}
+                  />
+                  <span
+                    className="themeAllocationBarTarget"
+                    style={{ left: `${Math.min(100, Math.max(0, row.target))}%` }}
+                  />
+                </div>
+                <small className={positiveTone(-row.drift)}>
+                  {row.drift === 0
+                    ? "On target"
+                    : row.drift > 0
+                      ? `${Math.round(row.drift)}% overweight`
+                      : `${Math.round(Math.abs(row.drift))}% underweight`}
+                </small>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="portfolioFlywheel">
+          {[
+            "Purchase data",
+            "Valuation",
+            "Performance tracking",
+            "Recommendation adjustment",
+            "Improved future buying decisions",
+          ].map((step, index) => (
+            <div className="portfolioFlywheelStep" key={step}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{step}</strong>
+            </div>
+          ))}
+        </div>
       </section>
 
       <div className="splitGrid">

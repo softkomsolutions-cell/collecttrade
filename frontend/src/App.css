@@ -722,6 +722,83 @@
   gap: 4px;
 }
 
+.brickAlphaDecisionGrid,
+.investmentThesisGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.brickAlphaDecisionCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.brickAlphaDecisionCard span,
+.brickAlphaScoreRow span,
+.portfolioFlywheelStep span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brickAlphaDecisionCard strong {
+  color: #f5f7fb;
+  line-height: 1.35;
+}
+
+.brickAlphaDecisionCard small {
+  color: #b3c1de;
+  line-height: 1.5;
+}
+
+.brickAlphaScoreGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.brickAlphaScoreRow {
+  min-height: 68px;
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(116, 132, 171, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.brickAlphaScoreRow strong,
+.portfolioFlywheelStep strong {
+  color: #f5f7fb;
+}
+
+.portfolioFlywheel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.portfolioFlywheelStep {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(74, 139, 255, 0.16);
+  background: rgba(74, 139, 255, 0.055);
+}
+
 .collectibleSourceHint {
   flex: 1 1 320px;
   padding: 14px 16px;
@@ -4111,6 +4188,87 @@
   text-transform: uppercase;
 }
 
+.themeAllocationPanel {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.themeAllocationPanel h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.themeAllocationPanel p {
+  margin: 8px 0 0;
+  color: #8da2c8;
+}
+
+.themeAllocationGrid {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.themeAllocationRow {
+  display: grid;
+  gap: 8px;
+}
+
+.themeAllocationLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.themeAllocationLabel span {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.themeAllocationBar {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.themeAllocationBarActual {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(74, 139, 255, 0.85), rgba(96, 214, 255, 0.75));
+}
+
+.themeAllocationBarTarget {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: #f5d565;
+  box-shadow: 0 0 0 1px rgba(15, 24, 40, 0.45);
+}
+
+.themeAllocationRow small {
+  color: #8da2c8;
+}
+
+.alphaSignalRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.panelHeader .alphaSignalRow {
+  margin-top: 12px;
+}
+
 .summaryCard {
   padding: 18px;
 }
@@ -6308,6 +6466,7 @@
   .workspaceCommandGrid,
   .opsLaneGrid,
   .summaryGrid,
+  .portfolioFlywheel,
   .homeLeadStats,
   .homePulseGrid,
   .homeDeskPulseGrid,
@@ -6320,7 +6479,9 @@
   .feedbackToolbar,
   .collectibleInventoryMeta,
   .collectibleLaneGrid,
-  .collectibleReferenceGrid {
+  .collectibleReferenceGrid,
+  .brickAlphaDecisionGrid,
+  .investmentThesisGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -6412,6 +6573,10 @@
   .collectibleInventoryMeta,
   .collectibleLaneGrid,
   .collectibleReferenceGrid,
+  .brickAlphaDecisionGrid,
+  .brickAlphaScoreGrid,
+  .investmentThesisGrid,
+  .portfolioFlywheel,
   .subscriptionTierGrid,
   .subscriptionValueGrid {
     grid-template-columns: 1fr;
