@@ -4003,7 +4003,7 @@ function buildHealth() {
       newsItems: newsItems.length,
       catalogItems: PRODUCT_CATALOG.length,
       catalogImportedAt: PRODUCT_CATALOG_DATA.generatedAt,
-      catalogMarket IntelligenceLabel: PRODUCT_CATALOG_DATA.sourceLabel,
+      catalogSourceLabel: PRODUCT_CATALOG_DATA.sourceLabel,
       feedbackItems: feedbackItems.length,
       unresolvedFeedbackItems: feedbackItems.filter((item) => item.status !== "resolved").length,
       productionFrontendReady,
