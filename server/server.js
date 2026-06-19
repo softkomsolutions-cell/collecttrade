@@ -16,12 +16,30 @@ const app = express();
 const parser = new Parser();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+app.use((error, req, res, next) => {
+  if (error?.type === "entity.too.large") {
+    res.status(413).json({ ok: false, error: "payload_too_large" });
+    return;
+  }
+
+  if (error instanceof SyntaxError && req.is("application/json")) {
+    res.status(400).json({ ok: false, error: "invalid_json" });
+    return;
+  }
+
+  next(error);
+});
 
 const PORT = Number(process.env.PORT || 5000);
+const DEFAULT_AUTH_SECRET = "collecttrade-local-development-secret";
 const AUTH_SECRET =
-  process.env.AUTH_SECRET || "collecttrade-local-development-secret";
+  process.env.AUTH_SECRET || DEFAULT_AUTH_SECRET;
 const CONNECTOR_SECRET = process.env.CONNECTOR_SECRET || AUTH_SECRET;
+
+if (process.env.NODE_ENV === "production" && AUTH_SECRET === DEFAULT_AUTH_SECRET) {
+  throw new Error("AUTH_SECRET must be set in production.");
+}
 const ENGINE_TICK_MS = 5000;
 const MARKET_REFRESH_MS = 60 * 1000;
 const NEWS_REFRESH_MS = 10 * 60 * 1000;
@@ -4892,6 +4910,14 @@ app.post("/api/news/targets", requireAuth, (req, res) => {
   res.status(201).json({
     ok: true,
     items: req.userState.newsTargets,
+  });
+});
+
+app.use("/api", (_req, res) => {
+  res.status(404).json({
+    ok: false,
+    error: "not_found",
+    message: "This Build Alpha API route does not exist.",
   });
 });
 

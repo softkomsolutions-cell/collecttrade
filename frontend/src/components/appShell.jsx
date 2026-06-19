@@ -530,6 +530,18 @@ export function LandingShell({ initialLaunch, onContinue }) {
       blurb: "Value LEGO sets, minifigures, sealed items, and reviewed collection positions.",
     },
     {
+      id: "portfolio-home",
+      glyph: "PF",
+      eyebrow: "Home",
+      title: "Portfolio Home",
+      page: "collectibles",
+      introId: "collectibles",
+      sectionId: "collectibles-portfolio",
+      destination: "Dashboard",
+      bestFor: "Review portfolio",
+      blurb: "Open the dashboard with saved holdings, estimates, projections, and recent activity.",
+    },
+    {
       id: "inventory",
       glyph: "IN",
       eyebrow: "Own",
@@ -880,10 +892,25 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
 export function AuthShell({
   authForm,
+  mode = "register",
   authStatus,
+  busy = false,
   onSubmit,
   onFieldChange,
+  onModeChange,
+  onBackToLanding,
 }) {
+  const isLogin = mode === "login";
+  const title = isLogin ? "Sign in" : "Create account";
+  const body = isLogin
+    ? "Welcome back. Sign in to restore your portfolio, route, and partner feedback workspace."
+    : "Create a secure Build Alpha workspace for valuations, holdings, reports, and feedback.";
+  const ctaLabel = busy
+    ? isLogin
+      ? "Signing in..."
+      : "Creating account..."
+    : title;
+
   return (
     <div className="authShell authShellMinimal">
       <div className="authPanel authPanelMinimal">
@@ -895,21 +922,25 @@ export function AuthShell({
         <div className="authPanel">
           <div className="authPanelHeader">
             <div>
-              <h2>Create account</h2>
+              <h2>{title}</h2>
+              <p>{body}</p>
             </div>
           </div>
 
           <form className="authForm" onSubmit={onSubmit}>
-            <label>
-              <span>Name</span>
-              <input
-                type="text"
-                value={authForm.name}
-                onChange={(event) => onFieldChange("name", event.target.value)}
-                placeholder="Your name"
-                autoComplete="name"
-              />
-            </label>
+            {!isLogin ? (
+              <label>
+                <span>Name</span>
+                <input
+                  type="text"
+                  value={authForm.name}
+                  onChange={(event) => onFieldChange("name", event.target.value)}
+                  placeholder="Your name"
+                  autoComplete="name"
+                  disabled={busy}
+                />
+              </label>
+            ) : null}
 
             <label>
               <span>Email</span>
@@ -919,6 +950,7 @@ export function AuthShell({
                 onChange={(event) => onFieldChange("email", event.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
+                disabled={busy}
               />
             </label>
 
@@ -929,16 +961,42 @@ export function AuthShell({
                 value={authForm.password}
                 onChange={(event) => onFieldChange("password", event.target.value)}
                 placeholder="Minimum 8 characters"
-                autoComplete="new-password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                disabled={busy}
               />
             </label>
 
-            {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
+            {authStatus ? (
+              <div className="statusBanner warningBanner" role="alert">
+                {authStatus}
+              </div>
+            ) : null}
 
-            <button className="primaryButton" type="submit">
-              Create account
+            <button className="primaryButton" type="submit" disabled={busy} aria-busy={busy}>
+              {ctaLabel}
             </button>
           </form>
+
+          <div className="authModeSwitch">
+            <span>{isLogin ? "Need a workspace?" : "Already have an account?"}</span>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => onModeChange(isLogin ? "register" : "login")}
+              disabled={busy}
+            >
+              {isLogin ? "Create account" : "Sign in"}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="authBackButton"
+            onClick={onBackToLanding}
+            disabled={busy}
+          >
+            Back to product overview
+          </button>
         </div>
       </div>
     </div>

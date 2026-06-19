@@ -8,8 +8,23 @@ import {
   MARKET_DESKS,
   NAV_ITEMS,
   ORDER_TICKET_PRESETS,
+  PAGE_SECTION_LINKS,
   VALR_PAIR_OPTIONS,
 } from "./appConfig";
+
+const COLLECTIBLE_SERVICES = [
+  "valuation",
+  "collection",
+  "inventory",
+  "catalog",
+  "documentation",
+  "digital-registry",
+  "activity",
+  "reports",
+  "imports",
+  "sources",
+  "research",
+];
 
 export function normalizePage(page) {
   const candidate = String(page || "").trim().toLowerCase();
@@ -21,6 +36,20 @@ export function normalizeDesk(desk) {
   return DESK_FILTERS.some((item) => item.id === candidate) ? candidate : DEFAULT_DESK;
 }
 
+export function normalizeCollectibleService(service) {
+  const candidate = String(service || "").trim().toLowerCase();
+  return COLLECTIBLE_SERVICES.includes(candidate) ? candidate : "collection";
+}
+
+function normalizeSectionId(page, introId, sectionId) {
+  const candidate = typeof sectionId === "string" ? sectionId.trim() : "";
+  const normalizedPage = normalizePage(page);
+  const pageSections = PAGE_SECTION_LINKS[normalizedPage] || [];
+  return pageSections.some((section) => section.id === candidate)
+    ? candidate
+    : defaultSectionIdForIntro(normalizedPage, introId);
+}
+
 export function parseHashState(hashValue) {
   const normalized = String(hashValue || "").replace(/^#\/?/, "");
   const [pathValue, queryString = ""] = normalized.split("?");
@@ -28,12 +57,12 @@ export function parseHashState(hashValue) {
   return {
     page: normalizePage(pathValue.split("/")[0]),
     desk: normalizeDesk(params.get("desk")),
-    service: params.get("service") || "collection",
+    service: normalizeCollectibleService(params.get("service")),
   };
 }
 
 export function buildHash(page, desk, service = "collection") {
-  return `#/${normalizePage(page)}?desk=${encodeURIComponent(normalizeDesk(desk))}&service=${encodeURIComponent(service)}`;
+  return `#/${normalizePage(page)}?desk=${encodeURIComponent(normalizeDesk(desk))}&service=${encodeURIComponent(normalizeCollectibleService(service))}`;
 }
 
 export function findDeskMeta(desk) {
@@ -165,12 +194,11 @@ export function readLaunchPreference() {
     const introId = INTRO_ACTIONS.some((action) => action.id === parsed?.introId)
       ? parsed.introId
       : defaultIntroIdForPage(page);
-    const sectionId =
-      typeof parsed?.sectionId === "string" && parsed.sectionId
-        ? parsed.sectionId
-        : defaultSectionIdForIntro(page, introId);
+    const sectionId = normalizeSectionId(page, introId, parsed?.sectionId);
+    const landingId =
+      typeof parsed?.landingId === "string" && parsed.landingId ? parsed.landingId : introId;
 
-    return { page, desk, introId, sectionId };
+    return { page, desk, introId, sectionId, landingId };
   } catch {
     return null;
   }
@@ -186,10 +214,11 @@ export function writeLaunchPreference(preference) {
         introId:
           INTRO_ACTIONS.find((action) => action.id === preference?.introId)?.id ||
           defaultIntroIdForPage(preference?.page),
-        sectionId:
-          typeof preference?.sectionId === "string" && preference.sectionId
-            ? preference.sectionId
-            : defaultSectionIdForIntro(preference?.page, preference?.introId),
+        sectionId: normalizeSectionId(preference?.page, preference?.introId, preference?.sectionId),
+        landingId:
+          typeof preference?.landingId === "string" && preference.landingId
+            ? preference.landingId
+            : preference?.introId || defaultIntroIdForPage(preference?.page),
       }),
     );
   } catch {
