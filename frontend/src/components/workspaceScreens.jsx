@@ -118,6 +118,22 @@ function formatZar(value) {
     : "--";
 }
 
+function formatInvestmentScore(item) {
+  const brickAlphaScore = Number(item?.brickAlphaScore);
+  if (Number.isFinite(brickAlphaScore) && brickAlphaScore > 0) {
+    return `${Number.isInteger(brickAlphaScore) ? brickAlphaScore : brickAlphaScore.toFixed(1)}/100`;
+  }
+
+  const score = Number(item?.score);
+  if (!Number.isFinite(score) || score <= 0) {
+    return "--";
+  }
+
+  return score > 10
+    ? `${Number.isInteger(score) ? score : score.toFixed(1)}/100`
+    : `${score.toFixed(1)}/10`;
+}
+
 const LEGO_ASSET_VISUALS = {
   "10316": {
     theme: "valley",
@@ -220,7 +236,7 @@ function collectibleErrorMessage(error) {
   return messages[error] || "The collectible valuation could not be completed. Please try again.";
 }
 
-function CollectibleValuationPanel({ authToken, onSaved }) {
+function CollectibleValuationPanel({ authToken, collectiblePortfolio, onSaved }) {
   const [category] = useState("lego");
   const [identifier, setIdentifier] = useState("30725");
   const [itemName, setItemName] = useState("");
@@ -257,6 +273,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     evidenceNotes,
     certificationNotes,
     quantity: Number(quantity),
+    portfolioHoldings: collectiblePortfolio?.items || [],
   };
 
   const handleSubmit = async (event) => {
@@ -323,7 +340,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestPayload),
         }),
-        `collecttrade-lego-valuation-${identifier || "report"}.pdf`,
+        `brickalpha-lego-valuation-${identifier || "report"}.pdf`,
       );
       setStatus("Valuation report downloaded.");
     } catch (error) {
@@ -389,7 +406,9 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
     {
       id: "score",
       label: "Investment score",
-      status: valuation ? `${valuation.score}/10 ${valuation.recommendation}` : "Pending verdict",
+      status: valuation
+        ? `${valuation.brickAlphaScore || valuation.score * 10}/100 ${valuation.recommendation}`
+        : "Pending verdict",
       active: scanStage === "review",
       complete: Boolean(valuation),
     },
@@ -529,7 +548,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
       <section className="analysisPipelinePanel" aria-label="Investment analysis pipeline">
         <div className="analysisPipelineHeader">
           <span className="legoPanelEyebrow">AI analysis pipeline</span>
-          <h3>Collecttrade is preparing the investment verdict</h3>
+          <h3>BrickAlpha is preparing the investment verdict</h3>
         </div>
         <div className="analysisPipelineGrid">
           {analysisPipeline.map((item) => (
@@ -685,7 +704,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
               <span className="legoPanelEyebrow">Investment verdict</span>
               <h3>{valuation.name}</h3>
               <div className="legoVerdictScore">
-                <strong>{valuation.score}/10</strong>
+                <strong>{valuation.brickAlphaScore || Math.round(valuation.score * 10)}/100</strong>
                 <span>{valuation.recommendation}</span>
               </div>
               <div className="legoVerdictMetrics">
@@ -733,8 +752,8 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
               </p>
             </div>
             <div className="legoScore">
-              <strong>{valuation.score}</strong>
-              <span>/ 10</span>
+              <strong>{valuation.brickAlphaScore || Math.round(valuation.score * 10)}</strong>
+              <span>/ 100</span>
               <small>{valuation.recommendation}</small>
             </div>
           </div>
@@ -780,6 +799,52 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
               <strong>{formatZar(valuation.projections.tenYears)}</strong>
             </div>
           </div>
+
+          {valuation.scoreBreakdown?.metrics?.length ? (
+            <section className="brickAlphaScorecard" aria-label="BrickAlpha investment scorecard">
+              <div className="brickAlphaScorecardHeader">
+                <div>
+                  <span className="legoPanelEyebrow">BrickAlpha Investment Score</span>
+                  <h3>{valuation.scoreBreakdown.total}/100 weighted score</h3>
+                  <p>
+                    Ten LEGO investment metrics weighted by appreciation drivers, margin of safety,
+                    collector demand, and portfolio exposure.
+                  </p>
+                </div>
+                <div className="brickAlphaScorecardBadge">
+                  <strong>{valuation.scoreBreakdown.label}</strong>
+                  <span>{valuation.scoreBreakdown.methodology}</span>
+                </div>
+              </div>
+
+              <div className="brickAlphaMetricGrid">
+                {valuation.scoreBreakdown.metrics.map((metric) => (
+                  <article className="brickAlphaMetricCard" key={metric.id}>
+                    <div className="brickAlphaMetricTop">
+                      <span>{metric.label}</span>
+                      <strong>{metric.weight}%</strong>
+                    </div>
+                    <div className="brickAlphaMetricScore">
+                      <strong>{metric.score}</strong>
+                      <span>/100</span>
+                    </div>
+                    <div className="brickAlphaMetricTrack" aria-hidden="true">
+                      <span style={{ width: `${metric.score}%` }} />
+                    </div>
+                    <small>{metric.detail}</small>
+                  </article>
+                ))}
+              </div>
+
+              {valuation.scoreBreakdown.portfolioContext ? (
+                <div className="brickAlphaPortfolioContext">
+                  <span>Collection / Portfolio holdings</span>
+                  <strong>{valuation.scoreBreakdown.portfolioContext.status}</strong>
+                  <small>{valuation.scoreBreakdown.portfolioContext.note}</small>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           <div className="legoValuationDetailGrid">
             <div>
@@ -2383,6 +2448,7 @@ export function CollectiblesScreen({
           reference: holding.identifier,
           value: numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1),
           score: holding.score,
+          brickAlphaScore: holding.brickAlphaScore,
           tone: holding.recommendation || "Hold",
         }))
     : [
@@ -2419,8 +2485,9 @@ export function CollectiblesScreen({
         value: numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1),
         purchasePriceZAR: numberOrZero(holding.purchasePriceZAR) * numberOrZero(holding.quantity || 1),
         score: holding.score,
+        brickAlphaScore: holding.brickAlphaScore,
         tone: holding.recommendation || "Hold",
-        risk: numberOrZero(holding.score) >= 8.5 ? "Low" : "Medium",
+        risk: numberOrZero(holding.brickAlphaScore || holding.score * 10) >= 85 ? "Low" : "Medium",
         rarity: holding.rarity || "Review required",
         thesis: holding.notes?.length
           ? holding.notes.slice(0, 3)
@@ -2441,7 +2508,7 @@ export function CollectiblesScreen({
           rarity: "Major Icons display set",
           thesis: ["Adult collector demand", "High display value", "Strong long-term franchise appeal"],
           projections: { oneYear: 14200, fiveYears: 21500, tenYears: 34500 },
-          sources: [{ id: "demo", label: "Collecttrade demo benchmark", status: "available" }],
+          sources: [{ id: "demo", label: "BrickAlpha demo benchmark", status: "available" }],
         },
         {
           id: "detail-40766",
@@ -2455,7 +2522,7 @@ export function CollectiblesScreen({
           rarity: "Gift With Purchase",
           thesis: ["Limited production run", "Exclusive Jane Austen minifigure", "Literary crossover demand"],
           projections: { oneYear: 1115, fiveYears: 1516, tenYears: 2228 },
-          sources: [{ id: "benchmark", label: "Collecttrade benchmark", status: "available" }],
+          sources: [{ id: "benchmark", label: "BrickAlpha benchmark", status: "available" }],
         },
         {
           id: "detail-30725",
@@ -2469,7 +2536,7 @@ export function CollectiblesScreen({
           rarity: "Retail paperbag with exclusive minifigure",
           thesis: ["Low entry price", "Exclusive Anti-Venom minifigure", "Packaging condition matters"],
           projections: { oneYear: 103, fiveYears: 140, tenYears: 205 },
-          sources: [{ id: "benchmark", label: "Collecttrade benchmark", status: "available" }],
+          sources: [{ id: "benchmark", label: "BrickAlpha benchmark", status: "available" }],
         },
       ];
   const selectedAssetDetail =
@@ -2683,7 +2750,7 @@ export function CollectiblesScreen({
         await fetch("/api/collectibles/portfolio/pdf", {
           headers: { Authorization: `Bearer ${authToken}` },
         }),
-        "collecttrade-lego-inventory.pdf",
+        "brickalpha-lego-inventory.pdf",
       );
       setPortfolioStatus("Inventory register PDF downloaded.");
     } catch {
@@ -2760,7 +2827,7 @@ export function CollectiblesScreen({
       id: "inventory",
       label: "Tradable Inventory",
       meta: `${filteredCollectibles.length}`,
-      detail: "Stay inside Collecttrade and scan the items you can actually act on.",
+      detail: "Stay inside BrickAlpha and scan the items you can actually act on.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
     },
     {
@@ -2845,7 +2912,11 @@ export function CollectiblesScreen({
         actions={collectibleActions}
       />
 
-      <CollectibleValuationPanel authToken={authToken} onSaved={refreshContext} />
+      <CollectibleValuationPanel
+        authToken={authToken}
+        collectiblePortfolio={collectiblePortfolio}
+        onSaved={refreshContext}
+      />
 
       <section className="panel" id="collectibles-portfolio">
         <div className="panelHeader">
@@ -3051,7 +3122,7 @@ export function CollectiblesScreen({
                     <small>{asset.tone}</small>
                   </div>
                   <div>
-                    <span>{asset.score}/10</span>
+                    <span>{formatInvestmentScore(asset)}</span>
                     <strong>{formatZar(asset.value)}</strong>
                     <button className="ghostButton portfolioAssetDetailButton" type="button" onClick={() => openAssetDetail(asset.reference)}>
                       Detail
@@ -3078,7 +3149,7 @@ export function CollectiblesScreen({
                   LEGO {selectedAssetDetail.reference} | {selectedAssetDetail.rarity}
                 </p>
                 <div className="assetDetailVerdict">
-                  <strong>{selectedAssetDetail.score}/10</strong>
+                  <strong>{formatInvestmentScore(selectedAssetDetail)}</strong>
                   <span>{selectedAssetDetail.tone}</span>
                   <small>Risk: {selectedAssetDetail.risk}</small>
                 </div>
@@ -3202,7 +3273,7 @@ export function CollectiblesScreen({
               <article className="collectibleReferenceCard" key={holding.id}>
                 <div className="collectibleReferenceTop">
                   <span>{holding.categoryLabel}</span>
-                  <strong>{holding.score}/10</strong>
+                  <strong>{formatInvestmentScore(holding)}</strong>
                 </div>
                 <h3>{holding.name}</h3>
                 <p>
@@ -3390,7 +3461,7 @@ export function CollectiblesScreen({
                     <div><dt>Qty</dt><dd>{holding.quantity}</dd></div>
                     <div><dt>Cost</dt><dd>{formatZar(holding.purchasePriceZAR * holding.quantity)}</dd></div>
                     <div><dt>Estimate</dt><dd>{formatZar(holding.currentValueZAR * holding.quantity)}</dd></div>
-                    <div><dt>Score</dt><dd>{holding.score}/10</dd></div>
+                    <div><dt>Score</dt><dd>{formatInvestmentScore(holding)}</dd></div>
                     <div><dt>Risk</dt><dd>{holding.riskRating || "Review"}</dd></div>
                     <div><dt>Confidence</dt><dd>{holding.confidenceLabel || holding.confidence || "Review"}</dd></div>
                   </dl>
@@ -3429,7 +3500,7 @@ export function CollectiblesScreen({
                     <td>{formatZar(holding.purchasePriceZAR * holding.quantity)}</td>
                     <td>{formatZar(holding.currentValueZAR * holding.quantity)}</td>
                     <td>{formatZar(holding.profitZAR * holding.quantity)}</td>
-                    <td>{holding.score}/10</td>
+                    <td>{formatInvestmentScore(holding)}</td>
                     <td>{holding.riskRating || "Review"}</td>
                     <td>{holding.confidenceLabel || holding.confidence || "Review"}</td>
                     <td>{formatDateTime(holding.lastValuedAt, appSettings.timezone)}</td>
@@ -3778,7 +3849,7 @@ export function CollectiblesScreen({
         <div className="betaReportHero">
           <div>
             <span className="legoPanelEyebrow">What to test</span>
-            <h3>Can Collecttrade answer: is this a good collectible investment?</h3>
+            <h3>Can BrickAlpha answer: is this a good collectible investment?</h3>
             <p>
               The partner test should take less than 30 seconds for the first pass, then another
               minute to inspect the saved asset and PDF output.
@@ -4092,7 +4163,7 @@ export function CollectiblesScreen({
             onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
           >
             <span>Research Inventory</span>
-            <strong>Review opportunities inside Collecttrade</strong>
+            <strong>Review opportunities inside BrickAlpha</strong>
             <small>
               Scan inventory ideas, compare thesis, open purchase or sale tickets, and keep the
               investment workflow inside the app.
@@ -4188,7 +4259,7 @@ export function CollectiblesScreen({
           <div>
             <h2>Research Inventory</h2>
             <p>
-              These are the items you act on inside Collecttrade. Search, filter, compare, then
+              These are the items you act on inside BrickAlpha. Search, filter, compare, then
               move into the collectible purchase or sale flow.
             </p>
           </div>
@@ -4218,7 +4289,7 @@ export function CollectiblesScreen({
           </div>
           <div className="deskBriefCard">
             <span>Inventory source</span>
-            <strong>Collecttrade tracked</strong>
+            <strong>BrickAlpha tracked</strong>
             <small>
               Pricing and thesis here are part of your tradable inventory layer, separate from
               official retail references.
@@ -4344,7 +4415,7 @@ export function CollectiblesScreen({
 
           <div className="panelActions">
             <div className="collectibleSourceHint">
-              Collecttrade stays the main workspace. Official LEGO ZA links are here for source verification, not as the primary route.
+              BrickAlpha stays the main workspace. Official LEGO ZA links are here for source verification, not as the primary route.
             </div>
             {legoReferenceShelf.aboutUrl ? (
               <button
@@ -5086,7 +5157,7 @@ export function ConnectionsScreen({
                         ? `Live routing enabled through ${providerLabel(profile.providerId)} on ${
                             cryptoConnector?.config?.preferredPair || profile.pair
                           }.`
-                        : "Paper mode keeps crypto orders inside Collecttrade until you deliberately switch."
+                        : "Paper mode keeps crypto orders inside BrickAlpha until you deliberately switch."
                       : "This desk is still paper-first until its provider OAuth or gateway flow is completed."}
                   </small>
                 </div>
@@ -5294,7 +5365,7 @@ export function SettingsScreen({
     });
   }, [feedbackAreaFilter, feedbackItems, feedbackStatusFilter]);
   const partnerInviteMessage = [
-    "Collecttrade partner test pass",
+    "BrickAlpha partner test pass",
     "",
     `Access: ${shareIsLive ? shareStatus.publicUrl : shareStatus?.localUrl || "http://127.0.0.1:5000"}`,
     "",
@@ -5802,7 +5873,7 @@ export function SettingsScreen({
                 <p>{item.notes}</p>
 
                 <div className="feedbackMetaRow">
-                  <span>{item.authorName || item.authorEmail || "Collecttrade partner"}</span>
+                  <span>{item.authorName || item.authorEmail || "BrickAlpha partner"}</span>
                   <span>{formatDateTime(item.updatedAt || item.createdAt, appSettings.timezone)}</span>
                 </div>
 

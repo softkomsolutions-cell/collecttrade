@@ -9,7 +9,7 @@ const CATEGORY_PROFILES = {
     identifierPlaceholder: "30725",
     itemNamePlaceholder: "Optional when a set number is available",
     annualGrowthPercent: 6,
-    evidenceHint: "Collecttrade checks configured BrickLink and BrickEconomy sources.",
+    evidenceHint: "BrickAlpha checks configured BrickLink and BrickEconomy sources.",
     riskNotes: [
       "Sealed condition, box quality, retirement timing, and minifigure exclusivity can change resale value.",
     ],
@@ -166,6 +166,7 @@ async function getCollectibleValuation(input) {
       purchasePriceZAR: input?.purchasePriceZAR,
       purchaseDate: input?.purchaseDate,
       certificationNotes: input?.certificationNotes,
+      portfolioHoldings: input?.portfolioHoldings,
     });
     return {
       ...valuation,

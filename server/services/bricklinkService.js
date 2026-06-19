@@ -85,7 +85,7 @@ async function request(pathname, query = {}) {
       headers: {
         Accept: "application/json",
         Authorization: oauthHeader("GET", baseUrl, query),
-        "User-Agent": "Collecttrade-Beta/1.0",
+        "User-Agent": "BrickAlpha-Beta/1.0",
       },
       signal: AbortSignal.timeout(8000),
     });

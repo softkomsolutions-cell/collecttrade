@@ -33,6 +33,7 @@ import {
   AuthShell,
   BootSplash,
   EmptyState,
+  LandingShell,
   SplashScreen,
 } from "./components/appShell";
 
@@ -531,6 +532,24 @@ function createRequestHeaders(token, hasBody) {
   return headers;
 }
 
+const FRIENDLY_ERROR_MESSAGES = {
+  bad_response: "BrickAlpha received an unexpected response. Please retry in a moment.",
+  email_in_use: "That email already has a workspace. Sign in instead, or use the same password to resume it.",
+  invalid_credentials: "Those sign-in details do not match a BrickAlpha workspace.",
+  invalid_email: "Enter a valid email address.",
+  invalid_json: "BrickAlpha could not read that request. Please retry.",
+  name_too_short: "Enter your name so the workspace can label your account.",
+  payload_too_large: "That request is too large. Try a smaller upload or shorter note.",
+  password_too_short: "Use at least 8 characters for your password.",
+  not_found: "That BrickAlpha endpoint is not available in this environment.",
+  target_required: "Add a research target before saving.",
+};
+
+function friendlyApiError(error, fallback = "Something went wrong. Please retry.") {
+  const code = error?.payload?.error || error?.message;
+  return FRIENDLY_ERROR_MESSAGES[code] || error?.payload?.message || error?.message || fallback;
+}
+
 async function requestJson(path, options = {}) {
   const { method = "GET", body, token } = options;
   const response = await fetch(path, {
@@ -539,10 +558,24 @@ async function requestJson(path, options = {}) {
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  let data = {};
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = {
+        ok: false,
+        error: "bad_response",
+        message: response.ok
+          ? "The server returned a response BrickAlpha could not read."
+          : response.statusText || "The server returned an unreadable error response.",
+      };
+    }
+  }
 
   if (!response.ok) {
-    const error = new Error(data?.error || data?.message || response.statusText);
+    const error = new Error(data?.error || data?.message || response.statusText || "request_failed");
     error.status = response.status;
     error.payload = data;
     throw error;
@@ -556,7 +589,7 @@ function LoadingShell({ message }) {
     <div className="authShell">
       <div className="authShellInner">
         <section className="authStage">
-          <div className="authBrand">COLLECTRADE</div>
+          <div className="authBrand">BRICKALPHA</div>
           <div className="splashEyebrow">RESTORING WORKSPACE</div>
           <h1>Opening the session cleanly.</h1>
           <p className="authBlurb">{message}</p>
@@ -594,11 +627,14 @@ export default function App() {
   const [bootSplashVisible, setBootSplashVisible] = useState(true);
   const [authToken, setAuthToken] = useState(() => window.localStorage.getItem(TOKEN_KEY) || "");
   const [currentUser, setCurrentUser] = useState(null);
-  const [authMode] = useState("register");
+  const [authMode, setAuthMode] = useState("register");
+  const [authBusy, setAuthBusy] = useState(false);
   const [authStatus, setAuthStatus] = useState("");
   const [authForm, setAuthForm] = useState(INITIAL_AUTH_FORM);
+  const [preAuthStep, setPreAuthStep] = useState("landing");
   const [splashVisible, setSplashVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [systemNotice, setSystemNotice] = useState(null);
   const [preAuthLaunch, setPreAuthLaunch] = useState({
     page: normalizePage(initialPage),
     desk: normalizeDesk(initialDesk),
@@ -648,7 +684,10 @@ export default function App() {
     setAuthToken("");
     setCurrentUser(null);
     setAuthStatus("");
+    setAuthBusy(false);
+    setPreAuthStep("landing");
     setSplashVisible(false);
+    setSystemNotice(null);
     setPortfolio([]);
     setCollectiblePortfolio(EMPTY_COLLECTIBLE_PORTFOLIO);
     setCollectibleImports([]);
@@ -671,6 +710,18 @@ export default function App() {
 
   const rememberLaunch = useCallback((preference) => {
     writeLaunchPreference(preference);
+  }, []);
+
+  const showLoadError = useCallback((scope, error, fallback) => {
+    setSystemNotice({
+      scope,
+      title: scope === "context" ? "Workspace data did not finish loading" : "Live data did not finish loading",
+      body: friendlyApiError(error, fallback),
+    });
+  }, []);
+
+  const clearLoadError = useCallback((scope) => {
+    setSystemNotice((current) => (current?.scope === scope ? null : current));
   }, []);
 
   const navigateToPage = useCallback(
@@ -769,7 +820,8 @@ export default function App() {
       marketSources: healthData.marketSources || [],
       connectors: healthData.connectors || [],
     });
-  }, [appSettings.preferredRegion]);
+    clearLoadError("core");
+  }, [appSettings.preferredRegion, clearLoadError]);
 
   const refreshContext = useCallback(
     async (tokenOverride = authToken) => {
@@ -834,6 +886,7 @@ export default function App() {
           summary: collectiblePortfolioData.summary || {},
         });
         setCollectibleImports(collectibleImportsData.items || []);
+        clearLoadError("context");
       } catch (error) {
         if (error.status === 401) {
           clearSession();
@@ -842,7 +895,7 @@ export default function App() {
         throw error;
       }
     },
-    [authToken, clearSession],
+    [authToken, clearLoadError, clearSession],
   );
 
   useEffect(() => {
@@ -903,11 +956,13 @@ export default function App() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      refreshCore().catch(() => {});
+      refreshCore().catch((error) =>
+        showLoadError("core", error, "Live market and collectible data could not be refreshed."),
+      );
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [refreshCore]);
+  }, [refreshCore, showLoadError]);
 
   useEffect(() => {
     if (!currentUser || !authToken) {
@@ -915,22 +970,28 @@ export default function App() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      refreshContext().catch(() => {});
+      refreshContext().catch((error) =>
+        showLoadError("context", error, "Your portfolio workspace could not be refreshed."),
+      );
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [authToken, currentUser, refreshContext]);
+  }, [authToken, currentUser, refreshContext, showLoadError]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      refreshCore().catch(() => {});
+      refreshCore().catch((error) =>
+        showLoadError("core", error, "Live market and collectible data could not be refreshed."),
+      );
       if (currentUser && authToken) {
-        refreshContext().catch(() => {});
+        refreshContext().catch((error) =>
+          showLoadError("context", error, "Your portfolio workspace could not be refreshed."),
+        );
       }
     }, 20000);
 
     return () => window.clearInterval(interval);
-  }, [authToken, currentUser, refreshContext, refreshCore]);
+  }, [authToken, currentUser, refreshContext, refreshCore, showLoadError]);
 
   useEffect(() => {
     if (!pendingSectionTarget) {
@@ -1091,7 +1152,7 @@ export default function App() {
       setCurrentUser(user);
       setAppSettings(normalizeAppSettings(settings));
       setAuthStatus("");
-      setSplashVisible(true);
+      setSplashVisible(false);
       const launch = launchSelection || preAuthLaunch;
       const nextPage = normalizePage(launch?.page || page);
       const nextDesk = normalizeDesk(launch?.desk || activeDesk);
@@ -1104,7 +1165,9 @@ export default function App() {
       });
       setPage(nextPage);
       setActiveDesk(nextDesk);
-      syncHashRoute(nextPage, nextDesk);
+      const nextService = COLLECTIBLE_SERVICE_BY_SECTION[launch?.sectionId] || activeCollectibleService;
+      setActiveCollectibleService(nextService);
+      syncHashRoute(nextPage, nextDesk, nextService);
       if (launch?.sectionId) {
         setPendingSectionTarget({
           page: nextPage,
@@ -1112,15 +1175,25 @@ export default function App() {
           sectionId: launch.sectionId,
         });
       }
-      await Promise.all([refreshCore(), refreshContext(token)]);
+      const refreshResults = await Promise.allSettled([refreshCore(), refreshContext(token)]);
+      const failedRefresh = refreshResults.find((result) => result.status === "rejected");
+      if (failedRefresh) {
+        showLoadError(
+          "context",
+          failedRefresh.reason,
+          "Your workspace opened, but some live data could not be refreshed.",
+        );
+      }
     },
     [
       activeDesk,
+      activeCollectibleService,
       page,
       preAuthLaunch,
       refreshContext,
       refreshCore,
       rememberLaunch,
+      showLoadError,
       syncHashRoute,
     ],
   );
@@ -1128,7 +1201,11 @@ export default function App() {
   const handleAuthSubmit = useCallback(
     async (event) => {
       event.preventDefault();
+      if (authBusy) {
+        return;
+      }
       setAuthStatus("");
+      setAuthBusy(true);
 
       const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/register";
       const body =
@@ -1150,10 +1227,12 @@ export default function App() {
         });
         await handleAuthenticatedRoute(data.token, data.user, data.settings, preAuthLaunch);
       } catch (error) {
-        setAuthStatus(String(error.message || "Authentication failed."));
+        setAuthStatus(friendlyApiError(error, "Authentication failed. Please retry."));
+      } finally {
+        setAuthBusy(false);
       }
     },
-    [authForm, authMode, handleAuthenticatedRoute, preAuthLaunch],
+    [authBusy, authForm, authMode, handleAuthenticatedRoute, preAuthLaunch],
   );
 
   const handleAuthFieldChange = useCallback((field, value) => {
@@ -1162,6 +1241,26 @@ export default function App() {
       [field]: value,
     }));
   }, []);
+
+  const handleAuthModeChange = useCallback((mode) => {
+    setAuthMode(mode === "login" ? "login" : "register");
+    setAuthStatus("");
+  }, []);
+
+  const handlePreAuthContinue = useCallback(
+    (launchSelection, mode) => {
+      const nextLaunch = launchSelection || preAuthLaunch;
+      setPreAuthLaunch((current) => ({
+        ...current,
+        ...nextLaunch,
+      }));
+      setAuthMode(mode === "login" ? "login" : "register");
+      setAuthStatus("");
+      setPreAuthStep("auth");
+      rememberLaunch(nextLaunch);
+    },
+    [preAuthLaunch, rememberLaunch],
+  );
 
   const handleSplashLaunch = useCallback(
     (selection) => {
@@ -1685,6 +1784,17 @@ export default function App() {
   const activeSignalExecutionPlan = leadSignal
     ? executionPlanForSignal(leadSignal, appSettings, connectors)
     : executionPlanForSignal({ desk: effectiveDeskKey }, appSettings, connectors);
+  const retryWorkspaceRefresh = useCallback(() => {
+    setSystemNotice(null);
+    refreshCore().catch((error) =>
+      showLoadError("core", error, "Live market and collectible data could not be refreshed."),
+    );
+    if (currentUser && authToken) {
+      refreshContext().catch((error) =>
+        showLoadError("context", error, "Your portfolio workspace could not be refreshed."),
+      );
+    }
+  }, [authToken, currentUser, refreshContext, refreshCore, showLoadError]);
 
   const currentWorkspaceCard = {
     label: workspaceLabel(page, activeDesk),
@@ -2031,12 +2141,20 @@ export default function App() {
   }
 
   if (!currentUser) {
+    if (preAuthStep === "landing") {
+      return <LandingShell initialLaunch={preAuthLaunch} onContinue={handlePreAuthContinue} />;
+    }
+
     return (
       <AuthShell
         authForm={authForm}
+        mode={authMode}
         authStatus={authStatus}
+        busy={authBusy}
         onSubmit={handleAuthSubmit}
         onFieldChange={handleAuthFieldChange}
+        onModeChange={handleAuthModeChange}
+        onBackToLanding={() => setPreAuthStep("landing")}
       />
     );
   }
@@ -2057,11 +2175,11 @@ export default function App() {
       <aside className="sidebar">
         <div className="brandLockup">
           <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">CT</div>
+            <div className="brandMark">BA</div>
           </button>
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandWordmark">COLLECTRADE</div>
+              <div className="brandWordmark">BRICKALPHA</div>
               <div className="brandSub">AI investment intelligence for collectibles</div>
             </button>
           </div>
@@ -2127,9 +2245,9 @@ export default function App() {
       <div className="workspaceShell">
         <div className="mobileTitleBar">
           <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">CT</div>
+            <div className="brandMark">BA</div>
             <div className="mobileBrandCopy">
-              <strong>Collecttrade</strong>
+              <strong>BrickAlpha</strong>
               <small>{currentWorkspaceCard.label}</small>
             </div>
           </button>
@@ -2185,6 +2303,20 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {systemNotice ? (
+          <div className="systemStatusRail">
+            <div className="statusBanner warningBanner appStatusBanner" role="alert">
+              <div>
+                <strong>{systemNotice.title}</strong>
+                <span>{systemNotice.body}</span>
+              </div>
+              <button type="button" className="ghostButton" onClick={retryWorkspaceRefresh}>
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mobileUtilityRail">
           {utilityNavItems.map((item) => (
@@ -2321,7 +2453,7 @@ export default function App() {
               : orderTicket?.kind === "collectible"
                 ? {
                     mode: "paper",
-                    providerLabel: "Collecttrade Paper",
+                    providerLabel: "BrickAlpha Paper",
                     pair: null,
                     ready: true,
                     detail: "Collectible purchase and sale records stay inside the investment workspace.",

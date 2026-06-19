@@ -16,12 +16,37 @@ const app = express();
 const parser = new Parser();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+app.use((error, req, res, next) => {
+  if (error?.type === "entity.too.large") {
+    res.status(413).json({ ok: false, error: "payload_too_large" });
+    return;
+  }
+
+  if (error instanceof SyntaxError && req.is("application/json")) {
+    res.status(400).json({ ok: false, error: "invalid_json" });
+    return;
+  }
+
+  next(error);
+});
 
 const PORT = Number(process.env.PORT || 5000);
+const DEFAULT_AUTH_SECRET = "collecttrade-local-development-secret";
 const AUTH_SECRET =
-  process.env.AUTH_SECRET || "collecttrade-local-development-secret";
+  process.env.AUTH_SECRET || DEFAULT_AUTH_SECRET;
 const CONNECTOR_SECRET = process.env.CONNECTOR_SECRET || AUTH_SECRET;
+
+const IS_VERCEL_PREVIEW =
+  process.env.VERCEL === "1" && process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production";
+
+if (
+  process.env.NODE_ENV === "production" &&
+  AUTH_SECRET === DEFAULT_AUTH_SECRET &&
+  !IS_VERCEL_PREVIEW
+) {
+  throw new Error("AUTH_SECRET must be set in production.");
+}
 const ENGINE_TICK_MS = 5000;
 const MARKET_REFRESH_MS = 60 * 1000;
 const NEWS_REFRESH_MS = 10 * 60 * 1000;
@@ -852,7 +877,7 @@ function resolvePreferredOwnerId(records) {
 function sanitizeUserRecord(input, index = 0, preferredOwnerId = null) {
   return {
     id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
-    name: sanitizeOptionalText(input?.name, 120) || `Collecttrade User ${index + 1}`,
+    name: sanitizeOptionalText(input?.name, 120) || `BrickAlpha User ${index + 1}`,
     email: normalizeEmail(input?.email),
     passwordSalt: String(input?.passwordSalt || ""),
     passwordHash: String(input?.passwordHash || ""),
@@ -1132,6 +1157,10 @@ function sanitizeCollectibleHolding(input) {
     roiPercent: Number(input?.roiPercent || 0),
     discountPercent: Number(input?.discountPercent || 0),
     score: Number(input?.score || 0),
+    brickAlphaScore: Number(input?.brickAlphaScore || 0),
+    brickAlphaScoreMax: Number(input?.brickAlphaScoreMax || 100),
+    scoreBreakdown:
+      input?.scoreBreakdown && typeof input.scoreBreakdown === "object" ? input.scoreBreakdown : null,
     recommendation: cleanCollectibleText(input?.recommendation, 80),
     confidence: cleanCollectibleText(input?.confidence, 80),
     confidenceLabel: cleanCollectibleText(input?.confidenceLabel, 80),
@@ -2873,7 +2902,7 @@ function buildFallbackNews() {
       title: "South African macro desk waiting for a cleaner USD/ZAR pullback into the 21 EMA",
       link: "",
       sourceId: "fallback",
-      sourceName: "Collecttrade Desk",
+      sourceName: "BrickAlpha Desk",
       region: "south-africa",
       marketTicker: "USDZAR",
       publishedAt: null,
@@ -2885,7 +2914,7 @@ function buildFallbackNews() {
       title: "Crypto risk appetite remains sensitive to momentum acceleration above the fast EMA",
       link: "",
       sourceId: "fallback",
-      sourceName: "Collecttrade Desk",
+      sourceName: "BrickAlpha Desk",
       region: "global",
       marketTicker: "BTCUSD",
       publishedAt: null,
@@ -3350,7 +3379,7 @@ async function testConnector(providerId, record) {
   if (providerId === "easyequities") {
     return {
       status: "unsupported",
-      detail: "No public EasyEquities trading API is wired into Collecttrade yet.",
+      detail: "No public EasyEquities trading API is wired into BrickAlpha yet.",
     };
   }
 
@@ -3615,7 +3644,7 @@ app.get("/", (_req, res) => {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Collecttrade API</title>
+    <title>BrickAlpha API</title>
     <style>
       body {
         margin: 0;
@@ -3660,7 +3689,7 @@ app.get("/", (_req, res) => {
   </head>
   <body>
     <main>
-      <h1>Collecttrade API is running</h1>
+      <h1>BrickAlpha API is running</h1>
       <p>This is the backend service. The app UI lives on the frontend dev server.</p>
       <ul>
         <li>Frontend: <a href="http://127.0.0.1:5173/">http://127.0.0.1:5173/</a></li>
@@ -3923,7 +3952,10 @@ app.get("/api/collectibles/portfolio/pdf", requireAuth, (req, res) => {
 app.post("/api/collectibles/portfolio", requireAuth, async (req, res) => {
   try {
     const quantity = Math.max(1, Math.round(Number(req.body?.quantity || 1)));
-    const valuation = await getCollectibleValuation(req.body);
+    const valuation = await getCollectibleValuation({
+      ...req.body,
+      portfolioHoldings: req.userState.collectibleHoldings,
+    });
     const holding = sanitizeCollectibleHolding({
       ...valuation,
       quantity,
@@ -3982,7 +4014,12 @@ app.post("/api/collectibles/portfolio/:holdingId/revalue", requireAuth, async (r
     }
 
     const existing = req.userState.collectibleHoldings[holdingIndex];
-    const valuation = await getCollectibleValuation(existing.inputSnapshot);
+    const valuation = await getCollectibleValuation({
+      ...existing.inputSnapshot,
+      portfolioHoldings: req.userState.collectibleHoldings.filter(
+        (holding) => holding.id !== existing.id,
+      ),
+    });
     const refreshed = sanitizeCollectibleHolding({
       ...existing,
       ...valuation,
@@ -4527,7 +4564,7 @@ app.post("/api/trades", requireAuth, async (req, res) => {
         riskBudget,
         executionMode: "paper",
         executionProvider: executionProfile.providerId,
-        executionLabel: "Collecttrade Paper",
+        executionLabel: "BrickAlpha Paper",
       });
     }
 
@@ -4598,7 +4635,7 @@ app.post("/api/collectibles/trades", requireAuth, (req, res) => {
     riskBudget,
     executionMode: "paper",
     executionProvider: "collecttrade",
-    executionLabel: "Collecttrade Paper",
+    executionLabel: "BrickAlpha Paper",
   });
 
   req.userState.trades.unshift(trade);
@@ -4895,6 +4932,14 @@ app.post("/api/news/targets", requireAuth, (req, res) => {
   });
 });
 
+app.use("/api", (_req, res) => {
+  res.status(404).json({
+    ok: false,
+    error: "not_found",
+    message: "This BrickAlpha API route does not exist.",
+  });
+});
+
 if (fs.existsSync(FRONTEND_INDEX_FILE)) {
   app.use(express.static(FRONTEND_DIST_DIR));
   app.get(/^\/(?!api(?:\/|$)).*/, (_req, res) => {
@@ -4902,26 +4947,38 @@ if (fs.existsSync(FRONTEND_INDEX_FILE)) {
   });
 }
 
-engineTick();
-refreshMarketDataOnce().catch((error) => {
-  marketDataMeta.lastError = error.message;
-});
-refreshNewsOnce().catch((error) => {
-  newsMeta.lastError = error.message;
-});
-
-setInterval(engineTick, ENGINE_TICK_MS);
-setInterval(() => {
+function warmRuntime() {
+  engineTick();
   refreshMarketDataOnce().catch((error) => {
     marketDataMeta.lastError = error.message;
   });
-}, MARKET_REFRESH_MS);
-setInterval(() => {
   refreshNewsOnce().catch((error) => {
     newsMeta.lastError = error.message;
   });
-}, NEWS_REFRESH_MS);
+}
 
-app.listen(PORT, () => {
-  console.log(`Collecttrade API listening on ${PORT}`);
-});
+function startBackgroundJobs() {
+  warmRuntime();
+  setInterval(engineTick, ENGINE_TICK_MS);
+  setInterval(() => {
+    refreshMarketDataOnce().catch((error) => {
+      marketDataMeta.lastError = error.message;
+    });
+  }, MARKET_REFRESH_MS);
+  setInterval(() => {
+    refreshNewsOnce().catch((error) => {
+      newsMeta.lastError = error.message;
+    });
+  }, NEWS_REFRESH_MS);
+}
+
+if (process.env.VERCEL === "1") {
+  warmRuntime();
+} else {
+  startBackgroundJobs();
+  app.listen(PORT, () => {
+    console.log(`BrickAlpha API listening on ${PORT}`);
+  });
+}
+
+module.exports = app;

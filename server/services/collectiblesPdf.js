@@ -92,19 +92,19 @@ function drawFooter(doc) {
       .fillColor(COLORS.muted)
       .font("Helvetica")
       .fontSize(7)
-      .text("COLLECTRADE | Private LEGO collection intelligence", 42, 802)
+      .text("BRICKALPHA | Private LEGO collection intelligence", 42, 802)
       .text(`Page ${index + 1} of ${range.count}`, 490, 802, { align: "right", width: 63 });
   }
 }
 
 function streamValuationPdf(res, valuation) {
   const identifier = valuation.setNum || valuation.identifier || "lego";
-  const doc = createDocument(res, `collecttrade-lego-valuation-${filenamePart(identifier)}.pdf`);
+  const doc = createDocument(res, `brickalpha-lego-valuation-${filenamePart(identifier)}.pdf`);
   drawHeader(
     doc,
     "LEGO investment valuation",
     valuation.name || `LEGO ${identifier}`,
-    `Set ${identifier} | Generated ${formatDate()} | Investment score ${valuation.score}/10`,
+    `Set ${identifier} | Generated ${formatDate()} | BrickAlpha score ${valuation.brickAlphaScore || Math.round((valuation.score || 0) * 10)}/100`,
   );
   drawMetricRow(doc, [
     { label: "Purchase price", value: formatZar(valuation.purchasePriceZAR) },
@@ -144,6 +144,43 @@ function streamValuationPdf(res, valuation) {
     doc.text(`Certification / evidence: ${valuation.certificationNotes}`);
   }
   doc.moveDown(0.7);
+
+  if (valuation.scoreBreakdown?.metrics?.length) {
+    drawSectionTitle(doc, "BrickAlpha scorecard");
+    doc
+      .fillColor(COLORS.ink)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(
+        `${valuation.scoreBreakdown.total}/100 | ${valuation.scoreBreakdown.label} | ${valuation.scoreBreakdown.methodology}`,
+      );
+    doc.moveDown(0.4);
+    valuation.scoreBreakdown.metrics.forEach((metric) => {
+      doc
+        .fillColor(COLORS.ink)
+        .font("Helvetica-Bold")
+        .fontSize(8)
+        .text(`${metric.label} (${metric.weight}%)`, { continued: true })
+        .fillColor(COLORS.brass)
+        .text(`  ${metric.score}/100`)
+        .fillColor(COLORS.muted)
+        .font("Helvetica")
+        .text(metric.detail, { paragraphGap: 2 });
+    });
+    if (valuation.scoreBreakdown.portfolioContext) {
+      doc
+        .moveDown(0.3)
+        .fillColor(COLORS.ink)
+        .font("Helvetica-Bold")
+        .fontSize(8)
+        .text("Collection / Portfolio holdings", { continued: true })
+        .fillColor(COLORS.muted)
+        .font("Helvetica")
+        .text(`  ${valuation.scoreBreakdown.portfolioContext.status}`);
+      doc.text(valuation.scoreBreakdown.portfolioContext.note);
+    }
+    doc.moveDown(0.6);
+  }
 
   drawSectionTitle(doc, "Future value scenarios");
   drawMetricRow(doc, [
@@ -197,7 +234,7 @@ function streamValuationPdf(res, valuation) {
 }
 
 function streamInventoryPdf(res, { items, summary, ownerName }) {
-  const doc = createDocument(res, `collecttrade-lego-inventory-${filenamePart(formatDate())}.pdf`);
+  const doc = createDocument(res, `brickalpha-lego-inventory-${filenamePart(formatDate())}.pdf`);
   drawHeader(
     doc,
     "Private LEGO inventory register",

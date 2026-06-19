@@ -11,8 +11,12 @@ const BETA_BENCHMARKS = {
     name: "Spider-Man vs. Anti-Venom Heist",
     currentValueUSD: 5.33,
     rarity: "Retail paperbag with exclusive Anti-Venom minifigure",
+    theme: "Marvel",
+    retirementStatus: "available",
+    exclusivity: "Retail paperbag",
+    supplyProfile: "Mass retail paperbag",
+    displayProfile: "Small character-led impulse display",
     annualGrowthPercent: 8,
-    benchmarkScore: 7.5,
     investmentGrade: "Entry-level hold",
     investmentGradeDetail:
       "A sensible low-cost sealed hold with an exclusive minifigure, but retail availability and paperbag supply keep it below top-tier investment grade.",
@@ -42,6 +46,11 @@ const BETA_BENCHMARKS = {
     name: "Tribute to Jane Austen's Books",
     currentValueUSD: 59.44,
     rarity: "Gift With Purchase",
+    theme: "Ideas / Literary",
+    retirementStatus: "retired",
+    exclusivity: "Gift With Purchase",
+    supplyProfile: "Limited promotional run",
+    displayProfile: "Bookshelf display with literary crossover demand",
     annualGrowthPercent: 8,
     investmentGrade: "Strong niche GWP",
     investmentGradeDetail:
@@ -108,11 +117,248 @@ function buildProjection(currentValueZAR, annualGrowthPercent, years) {
   return Math.round(currentValueZAR * (1 + annualGrowthPercent / 100) ** years);
 }
 
-function scoreValuation({ discountPercent, dataConfidence, isGwp }) {
-  const confidencePoints = dataConfidence === "live" ? 1.3 : dataConfidence === "benchmark" ? 0.5 : 0;
-  const discountPoints = Math.min(5, Math.max(0, discountPercent / 18));
-  const scarcityPoints = isGwp ? 1.2 : 0.4;
-  return Math.min(10, Math.max(1, Number((2.5 + confidencePoints + discountPoints + scarcityPoints).toFixed(1))));
+const BRICK_ALPHA_SCORE_METRICS = [
+  {
+    id: "retirementTimeline",
+    label: "Retirement Timeline",
+    weight: 15,
+    why: "Biggest driver of short-term appreciation.",
+  },
+  {
+    id: "minifigureQuality",
+    label: "Minifigure Quality",
+    weight: 20,
+    why: "Often the largest source of value creation.",
+  },
+  {
+    id: "discountToRetail",
+    label: "Discount to Retail",
+    weight: 15,
+    why: "Your margin of safety.",
+  },
+  {
+    id: "themeStrength",
+    label: "Theme Strength",
+    weight: 10,
+    why: "Collector demand differs materially by theme.",
+  },
+  {
+    id: "exclusivity",
+    label: "Exclusivity",
+    weight: 10,
+    why: "LEGO Store, D2C, and limited releases tend to outperform.",
+  },
+  {
+    id: "supplyRisk",
+    label: "Supply Risk",
+    weight: 10,
+    why: "Mass-produced sets can struggle after retirement.",
+  },
+  {
+    id: "historicalPerformance",
+    label: "Historical Performance",
+    weight: 5,
+    why: "Similar retired sets provide a useful demand signal.",
+  },
+  {
+    id: "displayAppeal",
+    label: "Display Appeal",
+    weight: 5,
+    why: "Collectors pay up for visually impressive sets.",
+  },
+  {
+    id: "partOutValue",
+    label: "Part-Out Value",
+    weight: 5,
+    why: "Underlying asset value provides a floor.",
+  },
+  {
+    id: "liquidity",
+    label: "Liquidity",
+    weight: 5,
+    why: "High buyer depth makes exits easier.",
+  },
+];
+
+const THEME_STRENGTH = {
+  "star wars": 96,
+  icons: 88,
+  ideas: 82,
+  marvel: 78,
+  "harry potter": 76,
+  disney: 74,
+  technic: 72,
+  city: 58,
+  friends: 54,
+};
+
+function clampScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function scoreBand(score) {
+  if (score >= 85) return "Excellent";
+  if (score >= 72) return "Strong";
+  if (score >= 60) return "Watch";
+  if (score >= 45) return "Weak";
+  return "Risk";
+}
+
+function includesAny(value, terms) {
+  const normalized = String(value || "").toLowerCase();
+  return terms.some((term) => normalized.includes(term));
+}
+
+function themeStrengthScore(benchmark) {
+  const theme = String(benchmark?.theme || benchmark?.rarity || benchmark?.name || "").toLowerCase();
+  const match = Object.entries(THEME_STRENGTH).find(([key]) => theme.includes(key));
+  if (match) {
+    return match[1];
+  }
+  if (includesAny(theme, ["gift", "gwp", "promotional"])) return 78;
+  return 62;
+}
+
+function buildPortfolioContext(setNum, portfolioHoldings = []) {
+  const holdings = Array.isArray(portfolioHoldings) ? portfolioHoldings : [];
+  const matchingHoldings = holdings.filter(
+    (holding) => String(holding?.identifier || holding?.setNum || "").split("-")[0] === setNum,
+  );
+  const legoHoldings = holdings.filter(
+    (holding) => holding?.category === "lego" || holding?.categoryLabel === "LEGO",
+  );
+  const currentHoldingCount = matchingHoldings.reduce(
+    (sum, holding) => sum + Math.max(1, Number(holding?.quantity || 1)),
+    0,
+  );
+  const totalLegoQuantity = legoHoldings.reduce(
+    (sum, holding) => sum + Math.max(1, Number(holding?.quantity || 1)),
+    0,
+  );
+  const duplicateExposurePercent = totalLegoQuantity
+    ? Number(((currentHoldingCount / totalLegoQuantity) * 100).toFixed(1))
+    : 0;
+
+  return {
+    currentHoldingCount,
+    legoHoldingCount: totalLegoQuantity,
+    duplicateExposurePercent,
+    status: currentHoldingCount
+      ? `${currentHoldingCount} already held`
+      : legoHoldings.length
+        ? "New set for portfolio"
+        : "No LEGO holdings yet",
+    note: currentHoldingCount
+      ? "Existing exposure reduces the marginal buy score unless the entry price is exceptional."
+      : "No duplicate exposure detected in the current LEGO holdings.",
+  };
+}
+
+function metricDetail(id, score, context) {
+  const { benchmark, discountPercent, dataConfidence, minifigures, annualGrowthPercent, portfolioContext } = context;
+  const exclusiveCount = minifigures.filter((item) => item.exclusive).length;
+  const details = {
+    retirementTimeline: benchmark?.retirementStatus
+      ? `${benchmark.retirementStatus}; retirement timing is treated as a primary appreciation driver.`
+      : "Retirement date is not confirmed, so this metric stays conservative.",
+    minifigureQuality: minifigures.length
+      ? `${minifigures.length} minifigure(s), ${exclusiveCount} exclusive.`
+      : "No minifigure value evidence supplied.",
+    discountToRetail: `${Number(discountPercent || 0).toFixed(1)}% margin versus current market estimate.`,
+    themeStrength: benchmark?.theme
+      ? `${benchmark.theme} demand profile.`
+      : "Theme demand inferred from available benchmark context.",
+    exclusivity: benchmark?.exclusivity || benchmark?.rarity || "No exclusivity signal supplied.",
+    supplyRisk: benchmark?.supplyProfile || "Supply depth is not confirmed; score remains conservative.",
+    historicalPerformance: `${annualGrowthPercent}% annual scenario from benchmark or category default.`,
+    displayAppeal: benchmark?.displayProfile || "Display appeal inferred from set type and collector context.",
+    partOutValue: minifigures.length
+      ? "Minifigure and component value provides a partial floor."
+      : "Part-out floor is estimated from current market value only.",
+    liquidity:
+      dataConfidence === "live"
+        ? "Live source data improves resale liquidity confidence."
+        : "Benchmark-only pricing reduces liquidity confidence until sources are connected.",
+  };
+
+  if (id === "supplyRisk" && portfolioContext.currentHoldingCount) {
+    return `${details[id]} Portfolio already holds this set, adding concentration risk.`;
+  }
+
+  return `${scoreBand(score)}: ${details[id]}`;
+}
+
+function buildBrickAlphaScore({
+  benchmark,
+  currentValueZAR,
+  purchasePriceZAR,
+  discountPercent,
+  dataConfidence,
+  minifigures,
+  annualGrowthPercent,
+  portfolioContext,
+}) {
+  const isGwp = benchmark?.rarity === "Gift With Purchase" || includesAny(benchmark?.exclusivity, ["gift", "gwp"]);
+  const hasRetiredSignal = includesAny(benchmark?.retirementStatus, ["retired", "retiring", "ended"]);
+  const hasAvailableSignal = includesAny(benchmark?.retirementStatus, ["available", "current"]);
+  const exclusiveMinifigCount = minifigures.filter((item) => item.exclusive).length;
+  const minifigureValueZAR = minifigures.reduce(
+    (sum, item) => sum + Number(item.estimatedValueUSD || 0) * USD_ZAR_RATE,
+    0,
+  );
+  const minifigureValueRatio = currentValueZAR ? minifigureValueZAR / currentValueZAR : 0;
+  const duplicatePenalty = Math.min(18, portfolioContext.currentHoldingCount * 6);
+
+  const rawScores = {
+    retirementTimeline: hasRetiredSignal ? 92 : isGwp ? 84 : hasAvailableSignal ? 54 : 62,
+    minifigureQuality: minifigures.length
+      ? 48 + minifigures.length * 8 + exclusiveMinifigCount * 18 + minifigureValueRatio * 35
+      : 32,
+    discountToRetail: 50 + Number(discountPercent || 0) * 1.15,
+    themeStrength: themeStrengthScore(benchmark),
+    exclusivity: isGwp ? 95 : exclusiveMinifigCount ? 82 : includesAny(benchmark?.exclusivity, ["exclusive", "d2c"]) ? 84 : 48,
+    supplyRisk: (isGwp ? 88 : includesAny(benchmark?.supplyProfile, ["limited", "short"]) ? 78 : 52) - duplicatePenalty,
+    historicalPerformance: 35 + Math.max(0, Number(annualGrowthPercent || 0)) * 6,
+    displayAppeal: includesAny(benchmark?.displayProfile, ["display", "bookshelf", "icons", "flagship"])
+      ? 84
+      : currentValueZAR > 3000
+        ? 78
+        : 56,
+    partOutValue: 42 + Math.min(38, minifigureValueRatio * 100) + (exclusiveMinifigCount ? 10 : 0),
+    liquidity: (dataConfidence === "live" ? 78 : 58) + (themeStrengthScore(benchmark) - 60) * 0.25 - duplicatePenalty * 0.4,
+  };
+
+  const metrics = BRICK_ALPHA_SCORE_METRICS.map((metric) => {
+    const score = clampScore(rawScores[metric.id]);
+    const contribution = Number(((score * metric.weight) / 100).toFixed(1));
+    return {
+      ...metric,
+      score,
+      contribution,
+      detail: metricDetail(metric.id, score, {
+        benchmark,
+        discountPercent,
+        dataConfidence,
+        minifigures,
+        annualGrowthPercent,
+        portfolioContext,
+      }),
+    };
+  });
+  const total = Number(metrics.reduce((sum, metric) => sum + metric.contribution, 0).toFixed(1));
+
+  return {
+    total,
+    max: 100,
+    label: scoreBand(total),
+    methodology: "BrickAlpha weighted LEGO investment score",
+    metrics,
+    portfolioContext,
+  };
 }
 
 function recommendationForScore(score) {
@@ -157,6 +403,7 @@ async function getLegoValuation(input) {
   const purchasePriceZAR = asPositiveNumber(input?.purchasePriceZAR);
   const purchaseDate = cleanInputText(input?.purchaseDate, 40);
   const certificationNotes = cleanInputText(input?.certificationNotes, 700);
+  const portfolioContext = buildPortfolioContext(setNum, input?.portfolioHoldings);
 
   if (!/^\d{3,8}$/.test(setNum)) {
     throw new Error("lego_set_number_required");
@@ -165,7 +412,7 @@ async function getLegoValuation(input) {
     throw new Error("purchase_price_required");
   }
 
-  const cacheKey = `${setNum}:${purchasePriceZAR}:${purchaseDate}:${certificationNotes}`;
+  const cacheKey = `${setNum}:${purchasePriceZAR}:${purchaseDate}:${certificationNotes}:${portfolioContext.currentHoldingCount}:${portfolioContext.legoHoldingCount}`;
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return { ...cached.value, cache: "fresh" };
@@ -196,10 +443,21 @@ async function getLegoValuation(input) {
   const roiPercent = (profitZAR / purchasePriceZAR) * 100;
   const isGwp = benchmark?.rarity === "Gift With Purchase";
   const annualGrowthPercent = benchmark?.annualGrowthPercent || (isGwp ? 8 : 6);
-  const score =
-    dataConfidence === "benchmark" && benchmark?.benchmarkScore
-      ? benchmark.benchmarkScore
-      : scoreValuation({ discountPercent, dataConfidence, isGwp });
+  const minifigures = (benchmark?.minifigures || []).map((minifigure) => ({
+    ...minifigure,
+    estimatedValueZAR: Math.round(minifigure.estimatedValueUSD * USD_ZAR_RATE),
+  }));
+  const brickAlphaScore = buildBrickAlphaScore({
+    benchmark,
+    currentValueZAR,
+    purchasePriceZAR,
+    discountPercent,
+    dataConfidence,
+    minifigures,
+    annualGrowthPercent,
+    portfolioContext,
+  });
+  const score = Number((brickAlphaScore.total / 10).toFixed(1));
   const valuation = {
     ok: true,
     setNum,
@@ -214,6 +472,9 @@ async function getLegoValuation(input) {
     roiPercent: Number(roiPercent.toFixed(1)),
     discountPercent: Number(discountPercent.toFixed(1)),
     score,
+    brickAlphaScore: brickAlphaScore.total,
+    brickAlphaScoreMax: brickAlphaScore.max,
+    scoreBreakdown: brickAlphaScore,
     recommendation: recommendationForScore(score),
     investmentGrade: benchmark?.investmentGrade || recommendationForScore(score),
     investmentGradeDetail:
@@ -224,10 +485,7 @@ async function getLegoValuation(input) {
     riskRating: riskRatingForScore(score, dataConfidence),
     certificationNotes,
     rarity: benchmark?.rarity || "Standard Set",
-    minifigures: (benchmark?.minifigures || []).map((minifigure) => ({
-      ...minifigure,
-      estimatedValueZAR: Math.round(minifigure.estimatedValueUSD * USD_ZAR_RATE),
-    })),
+    minifigures,
     projections: {
       oneYear: buildProjection(currentValueZAR, annualGrowthPercent, 1),
       fiveYears: buildProjection(currentValueZAR, annualGrowthPercent, 5),
@@ -243,7 +501,7 @@ async function getLegoValuation(input) {
       sourceView("brickeconomy", "BrickEconomy", brickEconomyResponse),
       {
         id: "benchmark",
-        label: "Collecttrade benchmark",
+        label: "BrickAlpha benchmark",
         status: benchmark ? "available" : "unavailable",
         detail: benchmark
           ? "Used only when configured external sources cannot return a fresh quote."

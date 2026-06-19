@@ -37,3 +37,61 @@ input {
 a {
   color: inherit;
 }
+
+.appErrorBoundary {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 18px;
+  padding: 32px;
+  color: #f7f0df;
+  background:
+    radial-gradient(circle at top, rgba(214, 179, 110, 0.14), transparent 34%),
+    #05070c;
+  text-align: center;
+}
+
+.appErrorBoundary .brandMark {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(214, 179, 110, 0.14);
+  color: #ecd294;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.appErrorBoundary h1,
+.appErrorBoundary p {
+  margin: 0;
+}
+
+.appErrorBoundary p {
+  max-width: 520px;
+  color: #b9aa8b;
+  line-height: 1.6;
+}
+
+.appErrorBoundary pre {
+  max-width: min(720px, 90vw);
+  overflow: auto;
+  padding: 12px;
+  border-radius: 12px;
+  color: #ffd6d6;
+  background: rgba(255, 255, 255, 0.06);
+  text-align: left;
+}
+
+.appErrorBoundary button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: #d6b36e;
+  color: #160f07;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
