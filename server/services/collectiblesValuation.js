@@ -166,6 +166,7 @@ async function getCollectibleValuation(input) {
       purchasePriceZAR: input?.purchasePriceZAR,
       purchaseDate: input?.purchaseDate,
       certificationNotes: input?.certificationNotes,
+      portfolioHoldings: input?.portfolioHoldings,
     });
     return {
       ...valuation,

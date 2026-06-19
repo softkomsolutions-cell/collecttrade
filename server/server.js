@@ -1150,6 +1150,10 @@ function sanitizeCollectibleHolding(input) {
     roiPercent: Number(input?.roiPercent || 0),
     discountPercent: Number(input?.discountPercent || 0),
     score: Number(input?.score || 0),
+    brickAlphaScore: Number(input?.brickAlphaScore || 0),
+    brickAlphaScoreMax: Number(input?.brickAlphaScoreMax || 100),
+    scoreBreakdown:
+      input?.scoreBreakdown && typeof input.scoreBreakdown === "object" ? input.scoreBreakdown : null,
     recommendation: cleanCollectibleText(input?.recommendation, 80),
     confidence: cleanCollectibleText(input?.confidence, 80),
     confidenceLabel: cleanCollectibleText(input?.confidenceLabel, 80),
@@ -3941,7 +3945,10 @@ app.get("/api/collectibles/portfolio/pdf", requireAuth, (req, res) => {
 app.post("/api/collectibles/portfolio", requireAuth, async (req, res) => {
   try {
     const quantity = Math.max(1, Math.round(Number(req.body?.quantity || 1)));
-    const valuation = await getCollectibleValuation(req.body);
+    const valuation = await getCollectibleValuation({
+      ...req.body,
+      portfolioHoldings: req.userState.collectibleHoldings,
+    });
     const holding = sanitizeCollectibleHolding({
       ...valuation,
       quantity,
@@ -4000,7 +4007,12 @@ app.post("/api/collectibles/portfolio/:holdingId/revalue", requireAuth, async (r
     }
 
     const existing = req.userState.collectibleHoldings[holdingIndex];
-    const valuation = await getCollectibleValuation(existing.inputSnapshot);
+    const valuation = await getCollectibleValuation({
+      ...existing.inputSnapshot,
+      portfolioHoldings: req.userState.collectibleHoldings.filter(
+        (holding) => holding.id !== existing.id,
+      ),
+    });
     const refreshed = sanitizeCollectibleHolding({
       ...existing,
       ...valuation,

@@ -1437,6 +1437,136 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.brickAlphaScorecard {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(214, 179, 110, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(214, 179, 110, 0.1), transparent 34%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.brickAlphaScorecardHeader,
+.brickAlphaMetricTop,
+.brickAlphaPortfolioContext {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brickAlphaScorecardHeader {
+  align-items: start;
+}
+
+.brickAlphaScorecardHeader h3,
+.brickAlphaScorecardHeader p {
+  margin: 0;
+}
+
+.brickAlphaScorecardHeader h3 {
+  color: #f5f7fb;
+  font-size: 24px;
+}
+
+.brickAlphaScorecardHeader p,
+.brickAlphaMetricCard small,
+.brickAlphaPortfolioContext small {
+  color: #8da2c8;
+  line-height: 1.55;
+}
+
+.brickAlphaScorecardBadge {
+  min-width: 190px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(214, 179, 110, 0.22);
+  background: rgba(5, 7, 12, 0.46);
+  display: grid;
+  gap: 4px;
+  text-align: right;
+}
+
+.brickAlphaScorecardBadge strong {
+  color: #ecd294;
+  font-size: 18px;
+}
+
+.brickAlphaScorecardBadge span {
+  color: #aaa99f;
+  font-size: 12px;
+}
+
+.brickAlphaMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.brickAlphaMetricCard {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+  display: grid;
+  gap: 10px;
+}
+
+.brickAlphaMetricTop span,
+.brickAlphaPortfolioContext span {
+  color: #ffbf72;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brickAlphaMetricTop strong {
+  color: #ecd294;
+}
+
+.brickAlphaMetricScore {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.brickAlphaMetricScore strong {
+  color: #00d46a;
+  font-size: 26px;
+}
+
+.brickAlphaMetricScore span {
+  color: #8da2c8;
+}
+
+.brickAlphaMetricTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.brickAlphaMetricTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d6b36e, #00d46a);
+}
+
+.brickAlphaPortfolioContext {
+  align-items: center;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(214, 179, 110, 0.18);
+  background: rgba(214, 179, 110, 0.06);
+}
+
+.brickAlphaPortfolioContext strong {
+  color: #f5f7fb;
+}
+
 .legoValuationDetailGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -2737,8 +2867,19 @@
   .verdictNextStepCard,
   .legoValuationForm,
   .legoMetricGrid,
+  .brickAlphaMetricGrid,
   .legoValuationDetailGrid {
     grid-template-columns: 1fr;
+  }
+
+  .brickAlphaScorecardHeader,
+  .brickAlphaPortfolioContext {
+    flex-direction: column;
+  }
+
+  .brickAlphaScorecardBadge {
+    min-width: 0;
+    text-align: left;
   }
 
   .legoValuationHeadline {
