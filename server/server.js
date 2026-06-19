@@ -852,7 +852,7 @@ function resolvePreferredOwnerId(records) {
 function sanitizeUserRecord(input, index = 0, preferredOwnerId = null) {
   return {
     id: sanitizeOptionalText(input?.id, 80) || crypto.randomUUID(),
-    name: sanitizeOptionalText(input?.name, 120) || `Collecttrade User ${index + 1}`,
+    name: sanitizeOptionalText(input?.name, 120) || `Build Alpha User ${index + 1}`,
     email: normalizeEmail(input?.email),
     passwordSalt: String(input?.passwordSalt || ""),
     passwordHash: String(input?.passwordHash || ""),
@@ -2873,7 +2873,7 @@ function buildFallbackNews() {
       title: "South African macro desk waiting for a cleaner USD/ZAR pullback into the 21 EMA",
       link: "",
       sourceId: "fallback",
-      sourceName: "Collecttrade Desk",
+      sourceName: "Build Alpha Desk",
       region: "south-africa",
       marketTicker: "USDZAR",
       publishedAt: null,
@@ -2885,7 +2885,7 @@ function buildFallbackNews() {
       title: "Crypto risk appetite remains sensitive to momentum acceleration above the fast EMA",
       link: "",
       sourceId: "fallback",
-      sourceName: "Collecttrade Desk",
+      sourceName: "Build Alpha Desk",
       region: "global",
       marketTicker: "BTCUSD",
       publishedAt: null,
@@ -3350,7 +3350,7 @@ async function testConnector(providerId, record) {
   if (providerId === "easyequities") {
     return {
       status: "unsupported",
-      detail: "No public EasyEquities trading API is wired into Collecttrade yet.",
+      detail: "No public EasyEquities trading API is wired into Build Alpha yet.",
     };
   }
 
@@ -3615,7 +3615,7 @@ app.get("/", (_req, res) => {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Collecttrade API</title>
+    <title>Build Alpha API</title>
     <style>
       body {
         margin: 0;
@@ -3660,7 +3660,7 @@ app.get("/", (_req, res) => {
   </head>
   <body>
     <main>
-      <h1>Collecttrade API is running</h1>
+      <h1>Build Alpha API is running</h1>
       <p>This is the backend service. The app UI lives on the frontend dev server.</p>
       <ul>
         <li>Frontend: <a href="http://127.0.0.1:5173/">http://127.0.0.1:5173/</a></li>
@@ -4527,7 +4527,7 @@ app.post("/api/trades", requireAuth, async (req, res) => {
         riskBudget,
         executionMode: "paper",
         executionProvider: executionProfile.providerId,
-        executionLabel: "Collecttrade Paper",
+        executionLabel: "Build Alpha Paper",
       });
     }
 
@@ -4598,7 +4598,7 @@ app.post("/api/collectibles/trades", requireAuth, (req, res) => {
     riskBudget,
     executionMode: "paper",
     executionProvider: "collecttrade",
-    executionLabel: "Collecttrade Paper",
+    executionLabel: "Build Alpha Paper",
   });
 
   req.userState.trades.unshift(trade);
@@ -4923,5 +4923,5 @@ setInterval(() => {
 }, NEWS_REFRESH_MS);
 
 app.listen(PORT, () => {
-  console.log(`Collecttrade API listening on ${PORT}`);
+  console.log(`Build Alpha API listening on ${PORT}`);
 });

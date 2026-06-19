@@ -14,8 +14,8 @@ const checks = [
     expectJson: false,
     validate: async (response) => {
       const text = await response.text();
-      if (!text.includes("COLLECTTRADE") && !text.includes("Collecttrade")) {
-        throw new Error("Root page did not contain Collecttrade shell markup.");
+      if (!text.includes("BUILD ALPHA") && !text.includes("Build Alpha")) {
+        throw new Error("Root page did not contain Build Alpha shell markup.");
       }
       return "App shell responded";
     },

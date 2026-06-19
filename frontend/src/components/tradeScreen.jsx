@@ -129,7 +129,7 @@ export default function TradeScreen({
         statusValue={
           activeSignalExecutionPlan.mode === "live"
             ? `${activeSignalExecutionPlan.providerLabel}${activeSignalExecutionPlan.pair ? ` | ${activeSignalExecutionPlan.pair}` : ""}`
-            : "Collecttrade Paper"
+            : "Build Alpha Paper"
         }
         metrics={[
           {
@@ -284,7 +284,7 @@ export default function TradeScreen({
                 <small>
                   {activeSignalExecutionPlan.mode === "live"
                     ? `${activeSignalExecutionPlan.providerLabel}${activeSignalExecutionPlan.pair ? ` | ${activeSignalExecutionPlan.pair}` : ""}`
-                    : "Collecttrade Paper"}
+                    : "Build Alpha Paper"}
                 </small>
               </div>
             </div>

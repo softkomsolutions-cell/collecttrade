@@ -1050,7 +1050,7 @@ export function CloseTradeModal({ trade, busy, onClose, onFieldChange, onSubmit 
         ) : (
           <div className="statusBanner subtleBanner">
             <strong>Paper close</strong>
-            <span>This closes the position inside Collecttrade only.</span>
+            <span>This closes the position inside Build Alpha only.</span>
           </div>
         )}
 
@@ -1154,7 +1154,7 @@ export function PositionDetailCard({ trade, timeZone, onNavigate, onCloseTrade }
           <strong>
             {trade.executionMode === "live"
               ? venueDetailLabel(providerLabel(trade.executionProvider), trade.executionPair)
-              : "Collecttrade Paper"}
+              : "Build Alpha Paper"}
           </strong>
         </div>
         <div>

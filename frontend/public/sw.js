@@ -1,4 +1,4 @@
-const CACHE_NAME = "collecttrade-pro-v2";
+const CACHE_NAME = "build-alpha-v1";
 const APP_SHELL = ["/", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {

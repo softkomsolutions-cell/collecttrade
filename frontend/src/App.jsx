@@ -556,7 +556,7 @@ function LoadingShell({ message }) {
     <div className="authShell">
       <div className="authShellInner">
         <section className="authStage">
-          <div className="authBrand">COLLECTRADE</div>
+          <div className="authBrand">BUILD ALPHA</div>
           <div className="splashEyebrow">RESTORING WORKSPACE</div>
           <h1>Opening the session cleanly.</h1>
           <p className="authBlurb">{message}</p>
@@ -2057,11 +2057,11 @@ export default function App() {
       <aside className="sidebar">
         <div className="brandLockup">
           <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">CT</div>
+            <div className="brandMark">BA</div>
           </button>
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandWordmark">COLLECTRADE</div>
+              <div className="brandWordmark">BUILD ALPHA</div>
               <div className="brandSub">AI investment intelligence for collectibles</div>
             </button>
           </div>
@@ -2127,9 +2127,9 @@ export default function App() {
       <div className="workspaceShell">
         <div className="mobileTitleBar">
           <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">CT</div>
+            <div className="brandMark">BA</div>
             <div className="mobileBrandCopy">
-              <strong>Collecttrade</strong>
+              <strong>Build Alpha</strong>
               <small>{currentWorkspaceCard.label}</small>
             </div>
           </button>
@@ -2321,7 +2321,7 @@ export default function App() {
               : orderTicket?.kind === "collectible"
                 ? {
                     mode: "paper",
-                    providerLabel: "Collecttrade Paper",
+                    providerLabel: "Build Alpha Paper",
                     pair: null,
                     ready: true,
                     detail: "Collectible purchase and sale records stay inside the investment workspace.",

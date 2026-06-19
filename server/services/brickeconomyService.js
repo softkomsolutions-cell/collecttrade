@@ -35,7 +35,7 @@ async function getSet(setNum) {
       {
         headers: {
           Accept: "application/json",
-          "User-Agent": "Collecttrade-Beta/1.0",
+          "User-Agent": "BuildAlpha-Beta/1.0",
           "x-apikey": process.env.BRICKECONOMY_API_KEY,
         },
         signal: AbortSignal.timeout(8000),
