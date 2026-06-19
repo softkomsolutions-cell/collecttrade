@@ -37,7 +37,14 @@ const AUTH_SECRET =
   process.env.AUTH_SECRET || DEFAULT_AUTH_SECRET;
 const CONNECTOR_SECRET = process.env.CONNECTOR_SECRET || AUTH_SECRET;
 
-if (process.env.NODE_ENV === "production" && AUTH_SECRET === DEFAULT_AUTH_SECRET) {
+const IS_VERCEL_PREVIEW =
+  process.env.VERCEL === "1" && process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production";
+
+if (
+  process.env.NODE_ENV === "production" &&
+  AUTH_SECRET === DEFAULT_AUTH_SECRET &&
+  !IS_VERCEL_PREVIEW
+) {
   throw new Error("AUTH_SECRET must be set in production.");
 }
 const ENGINE_TICK_MS = 5000;
@@ -4940,26 +4947,38 @@ if (fs.existsSync(FRONTEND_INDEX_FILE)) {
   });
 }
 
-engineTick();
-refreshMarketDataOnce().catch((error) => {
-  marketDataMeta.lastError = error.message;
-});
-refreshNewsOnce().catch((error) => {
-  newsMeta.lastError = error.message;
-});
-
-setInterval(engineTick, ENGINE_TICK_MS);
-setInterval(() => {
+function warmRuntime() {
+  engineTick();
   refreshMarketDataOnce().catch((error) => {
     marketDataMeta.lastError = error.message;
   });
-}, MARKET_REFRESH_MS);
-setInterval(() => {
   refreshNewsOnce().catch((error) => {
     newsMeta.lastError = error.message;
   });
-}, NEWS_REFRESH_MS);
+}
 
-app.listen(PORT, () => {
-  console.log(`BrickAlpha API listening on ${PORT}`);
-});
+function startBackgroundJobs() {
+  warmRuntime();
+  setInterval(engineTick, ENGINE_TICK_MS);
+  setInterval(() => {
+    refreshMarketDataOnce().catch((error) => {
+      marketDataMeta.lastError = error.message;
+    });
+  }, MARKET_REFRESH_MS);
+  setInterval(() => {
+    refreshNewsOnce().catch((error) => {
+      newsMeta.lastError = error.message;
+    });
+  }, NEWS_REFRESH_MS);
+}
+
+if (process.env.VERCEL === "1") {
+  warmRuntime();
+} else {
+  startBackgroundJobs();
+  app.listen(PORT, () => {
+    console.log(`BrickAlpha API listening on ${PORT}`);
+  });
+}
+
+module.exports = app;

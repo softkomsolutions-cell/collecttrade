@@ -186,6 +186,42 @@ After deploy:
 3. create a partner test account
 4. ask partners to use `Settings -> Feedback Board`
 
+## Vercel Preview / Testing
+
+The repo also includes a Vercel deployment config:
+
+- `vercel.json`
+- `api/index.js`
+
+Vercel builds the React app from `frontend/`, serves `frontend/dist`, and routes `/api/*` to the
+Express API through a serverless function.
+
+Required Vercel project settings:
+
+- Framework preset: `Other`
+- Build command: handled by `vercel.json`
+- Output directory: handled by `vercel.json`
+- Environment variables for production:
+  - `AUTH_SECRET`
+  - `CONNECTOR_SECRET`
+
+Recommended optional environment variables:
+
+- `TWELVE_DATA_API_KEY`
+- `TWELVE_DATA_INTERVAL`
+- `BRICKECONOMY_API_KEY`
+- `BRICKLINK_CONSUMER_KEY`
+- `BRICKLINK_CONSUMER_SECRET`
+- `BRICKLINK_TOKEN`
+- `BRICKLINK_TOKEN_SECRET`
+- `USD_ZAR_RATE`
+
+Notes:
+
+- Vercel preview deployments can boot without custom secrets for quick UI testing.
+- Vercel production deployments require `AUTH_SECRET`; the server intentionally fails fast without it.
+- Serverless storage is ephemeral, so long-running partner tests should still use a persistent host for durable account and portfolio data.
+
 ## Temporary Public Share Link
 
 Once staging is already running on port `5000`, open a temporary public link with:
