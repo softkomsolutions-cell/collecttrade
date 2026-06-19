@@ -1,4 +1,4 @@
-# Build Alpha Hosting Plan
+# BrickAlpha Hosting Plan
 
 ## Current Recommendation
 
@@ -79,7 +79,7 @@ Why:
 
 - strong long-term production platform
 - good fit for scaling, security, monitoring, and reliability
-- many future architecture paths if Build Alpha grows into a larger subscription product
+- many future architecture paths if BrickAlpha grows into a larger subscription product
 
 **Why it is not the default staging choice**
 
@@ -89,7 +89,7 @@ Why:
 
 **Why it remains a serious production candidate**
 
-- if Build Alpha needs a more enterprise-grade production stack later, AWS is a strong option
+- if BrickAlpha needs a more enterprise-grade production stack later, AWS is a strong option
 - suitable paths could include:
   - Lightsail for simpler VPS-style hosting
   - Elastic Beanstalk for easier application deployment

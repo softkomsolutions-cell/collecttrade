@@ -150,10 +150,10 @@ export function WorkspaceCommandBar({
 
 export function BootSplash() {
   return (
-    <div className="bootSplashShell" aria-label="Build Alpha is opening">
+    <div className="bootSplashShell" aria-label="BrickAlpha is opening">
       <div className="bootSplashPanel">
         <div className="bootSplashMark">BA</div>
-        <div className="bootSplashWordmark">BUILD ALPHA</div>
+        <div className="bootSplashWordmark">BRICKALPHA</div>
         <div className="bootSplashTag">AI-powered investment intelligence for collectibles</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
@@ -299,7 +299,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashShell splashShellMobile">
         <div className="onboardingPanel">
           <div className="onboardingTopBar">
-            <div className="authBrand">BUILD ALPHA</div>
+            <div className="authBrand">BRICKALPHA</div>
             <button type="button" className="ghostButton onboardingSkipButton" onClick={skipOnboarding}>
               Skip
             </button>
@@ -356,7 +356,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
     <div className="splashShell splashShellMobile">
       <div className="splashPanel splashPanelCompact splashMenuBackdrop">
         <div className="splashCompactHeader">
-          <div className="authBrand">BUILD ALPHA</div>
+          <div className="authBrand">BRICKALPHA</div>
         </div>
 
         <div className="splashCompactHero">
@@ -624,11 +624,11 @@ export function LandingShell({ initialLaunch, onContinue }) {
       <div className="splashPanel landingPanel">
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
-            <div className="authBrand">BUILD ALPHA</div>
+            <div className="authBrand">BRICKALPHA</div>
             <div className="splashEyebrow">AI-POWERED INVESTMENT INTELLIGENCE FOR COLLECTIBLES</div>
             <h1>Know what your collection is worth. Know what to buy next.</h1>
             <p className="authBlurb">
-              Build Alpha helps collectors upload, identify, value, score, forecast, and track
+              BrickAlpha helps collectors upload, identify, value, score, forecast, and track
               collectible investments in one trusted workspace.
             </p>
 
@@ -904,7 +904,7 @@ export function AuthShell({
   const title = isLogin ? "Sign in" : "Create account";
   const body = isLogin
     ? "Welcome back. Sign in to restore your portfolio, route, and partner feedback workspace."
-    : "Create a secure Build Alpha workspace for valuations, holdings, reports, and feedback.";
+    : "Create a secure BrickAlpha workspace for valuations, holdings, reports, and feedback.";
   const ctaLabel = busy
     ? isLogin
       ? "Signing in..."
@@ -916,7 +916,7 @@ export function AuthShell({
       <div className="authPanel authPanelMinimal">
         <div className="authMinimalLogo">
           <div className="brandMark">BA</div>
-          <div className="brandWordmark">BUILD ALPHA</div>
+          <div className="brandWordmark">BRICKALPHA</div>
         </div>
 
         <div className="authPanel">

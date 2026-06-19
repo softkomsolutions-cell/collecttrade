@@ -1,6 +1,6 @@
-# Build Alpha
+# BrickAlpha
 
-Build Alpha is a trading workspace for:
+BrickAlpha is a trading workspace for:
 
 - collectible purchase valuation
 - condition, provenance, and comparable-market evidence
@@ -237,7 +237,7 @@ LEGO uses connected market sources in this order:
 
 1. BrickLink sold and stock price guides through signed OAuth 1.0a requests
 2. BrickEconomy set data through its `x-apikey` header
-3. a clearly labeled Build Alpha benchmark for the Jane Austen beta example only
+3. a clearly labeled BrickAlpha benchmark for the Jane Austen beta example only
 
 The backend caches LEGO source responses and preserves a reserve portion of each configured daily
 budget. Use `/api/lego/status` to review LEGO source readiness and quota state.
@@ -259,7 +259,7 @@ valuation flow without importing unreviewed private portfolio content into the r
 
 ## Partner Testing Flow
 
-Build Alpha now includes a built-in partner feedback loop.
+BrickAlpha now includes a built-in partner feedback loop.
 
 Suggested test route:
 

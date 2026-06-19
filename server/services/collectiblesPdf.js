@@ -92,14 +92,14 @@ function drawFooter(doc) {
       .fillColor(COLORS.muted)
       .font("Helvetica")
       .fontSize(7)
-      .text("BUILD ALPHA | Private LEGO collection intelligence", 42, 802)
+      .text("BRICKALPHA | Private LEGO collection intelligence", 42, 802)
       .text(`Page ${index + 1} of ${range.count}`, 490, 802, { align: "right", width: 63 });
   }
 }
 
 function streamValuationPdf(res, valuation) {
   const identifier = valuation.setNum || valuation.identifier || "lego";
-  const doc = createDocument(res, `build-alpha-lego-valuation-${filenamePart(identifier)}.pdf`);
+  const doc = createDocument(res, `brickalpha-lego-valuation-${filenamePart(identifier)}.pdf`);
   drawHeader(
     doc,
     "LEGO investment valuation",
@@ -197,7 +197,7 @@ function streamValuationPdf(res, valuation) {
 }
 
 function streamInventoryPdf(res, { items, summary, ownerName }) {
-  const doc = createDocument(res, `build-alpha-lego-inventory-${filenamePart(formatDate())}.pdf`);
+  const doc = createDocument(res, `brickalpha-lego-inventory-${filenamePart(formatDate())}.pdf`);
   drawHeader(
     doc,
     "Private LEGO inventory register",

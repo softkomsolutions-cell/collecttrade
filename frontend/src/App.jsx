@@ -533,15 +533,15 @@ function createRequestHeaders(token, hasBody) {
 }
 
 const FRIENDLY_ERROR_MESSAGES = {
-  bad_response: "Build Alpha received an unexpected response. Please retry in a moment.",
+  bad_response: "BrickAlpha received an unexpected response. Please retry in a moment.",
   email_in_use: "That email already has a workspace. Sign in instead, or use the same password to resume it.",
-  invalid_credentials: "Those sign-in details do not match a Build Alpha workspace.",
+  invalid_credentials: "Those sign-in details do not match a BrickAlpha workspace.",
   invalid_email: "Enter a valid email address.",
-  invalid_json: "Build Alpha could not read that request. Please retry.",
+  invalid_json: "BrickAlpha could not read that request. Please retry.",
   name_too_short: "Enter your name so the workspace can label your account.",
   payload_too_large: "That request is too large. Try a smaller upload or shorter note.",
   password_too_short: "Use at least 8 characters for your password.",
-  not_found: "That Build Alpha endpoint is not available in this environment.",
+  not_found: "That BrickAlpha endpoint is not available in this environment.",
   target_required: "Add a research target before saving.",
 };
 
@@ -568,7 +568,7 @@ async function requestJson(path, options = {}) {
         ok: false,
         error: "bad_response",
         message: response.ok
-          ? "The server returned a response Build Alpha could not read."
+          ? "The server returned a response BrickAlpha could not read."
           : response.statusText || "The server returned an unreadable error response.",
       };
     }
@@ -589,7 +589,7 @@ function LoadingShell({ message }) {
     <div className="authShell">
       <div className="authShellInner">
         <section className="authStage">
-          <div className="authBrand">BUILD ALPHA</div>
+          <div className="authBrand">BRICKALPHA</div>
           <div className="splashEyebrow">RESTORING WORKSPACE</div>
           <h1>Opening the session cleanly.</h1>
           <p className="authBlurb">{message}</p>
@@ -2179,7 +2179,7 @@ export default function App() {
           </button>
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandWordmark">BUILD ALPHA</div>
+              <div className="brandWordmark">BRICKALPHA</div>
               <div className="brandSub">AI investment intelligence for collectibles</div>
             </button>
           </div>
@@ -2247,7 +2247,7 @@ export default function App() {
           <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
             <div className="brandMark">BA</div>
             <div className="mobileBrandCopy">
-              <strong>Build Alpha</strong>
+              <strong>BrickAlpha</strong>
               <small>{currentWorkspaceCard.label}</small>
             </div>
           </button>
@@ -2453,7 +2453,7 @@ export default function App() {
               : orderTicket?.kind === "collectible"
                 ? {
                     mode: "paper",
-                    providerLabel: "Build Alpha Paper",
+                    providerLabel: "BrickAlpha Paper",
                     pair: null,
                     ready: true,
                     detail: "Collectible purchase and sale records stay inside the investment workspace.",

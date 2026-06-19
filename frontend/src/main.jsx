@@ -15,7 +15,7 @@ class AppErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     if (import.meta.env.DEV) {
-      console.error("Build Alpha render failure", error, errorInfo);
+      console.error("BrickAlpha render failure", error, errorInfo);
     }
   }
 
@@ -24,7 +24,7 @@ class AppErrorBoundary extends Component {
       return (
         <main className="appErrorBoundary" role="alert">
           <div className="brandMark">BA</div>
-          <h1>Build Alpha needs a reload.</h1>
+          <h1>BrickAlpha needs a reload.</h1>
           <p>
             The app hit an unexpected interface error. Reloading will restore the latest workspace
             shell and keep your saved account state.

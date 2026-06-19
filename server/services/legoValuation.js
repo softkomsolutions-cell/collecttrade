@@ -243,7 +243,7 @@ async function getLegoValuation(input) {
       sourceView("brickeconomy", "BrickEconomy", brickEconomyResponse),
       {
         id: "benchmark",
-        label: "Build Alpha benchmark",
+        label: "BrickAlpha benchmark",
         status: benchmark ? "available" : "unavailable",
         detail: benchmark
           ? "Used only when configured external sources cannot return a fresh quote."

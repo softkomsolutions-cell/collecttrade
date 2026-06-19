@@ -323,7 +323,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestPayload),
         }),
-        `build-alpha-lego-valuation-${identifier || "report"}.pdf`,
+        `brickalpha-lego-valuation-${identifier || "report"}.pdf`,
       );
       setStatus("Valuation report downloaded.");
     } catch (error) {
@@ -529,7 +529,7 @@ function CollectibleValuationPanel({ authToken, onSaved }) {
       <section className="analysisPipelinePanel" aria-label="Investment analysis pipeline">
         <div className="analysisPipelineHeader">
           <span className="legoPanelEyebrow">AI analysis pipeline</span>
-          <h3>Build Alpha is preparing the investment verdict</h3>
+          <h3>BrickAlpha is preparing the investment verdict</h3>
         </div>
         <div className="analysisPipelineGrid">
           {analysisPipeline.map((item) => (
@@ -2441,7 +2441,7 @@ export function CollectiblesScreen({
           rarity: "Major Icons display set",
           thesis: ["Adult collector demand", "High display value", "Strong long-term franchise appeal"],
           projections: { oneYear: 14200, fiveYears: 21500, tenYears: 34500 },
-          sources: [{ id: "demo", label: "Build Alpha demo benchmark", status: "available" }],
+          sources: [{ id: "demo", label: "BrickAlpha demo benchmark", status: "available" }],
         },
         {
           id: "detail-40766",
@@ -2455,7 +2455,7 @@ export function CollectiblesScreen({
           rarity: "Gift With Purchase",
           thesis: ["Limited production run", "Exclusive Jane Austen minifigure", "Literary crossover demand"],
           projections: { oneYear: 1115, fiveYears: 1516, tenYears: 2228 },
-          sources: [{ id: "benchmark", label: "Build Alpha benchmark", status: "available" }],
+          sources: [{ id: "benchmark", label: "BrickAlpha benchmark", status: "available" }],
         },
         {
           id: "detail-30725",
@@ -2469,7 +2469,7 @@ export function CollectiblesScreen({
           rarity: "Retail paperbag with exclusive minifigure",
           thesis: ["Low entry price", "Exclusive Anti-Venom minifigure", "Packaging condition matters"],
           projections: { oneYear: 103, fiveYears: 140, tenYears: 205 },
-          sources: [{ id: "benchmark", label: "Build Alpha benchmark", status: "available" }],
+          sources: [{ id: "benchmark", label: "BrickAlpha benchmark", status: "available" }],
         },
       ];
   const selectedAssetDetail =
@@ -2683,7 +2683,7 @@ export function CollectiblesScreen({
         await fetch("/api/collectibles/portfolio/pdf", {
           headers: { Authorization: `Bearer ${authToken}` },
         }),
-        "build-alpha-lego-inventory.pdf",
+        "brickalpha-lego-inventory.pdf",
       );
       setPortfolioStatus("Inventory register PDF downloaded.");
     } catch {
@@ -2760,7 +2760,7 @@ export function CollectiblesScreen({
       id: "inventory",
       label: "Tradable Inventory",
       meta: `${filteredCollectibles.length}`,
-      detail: "Stay inside Build Alpha and scan the items you can actually act on.",
+      detail: "Stay inside BrickAlpha and scan the items you can actually act on.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
     },
     {
@@ -3778,7 +3778,7 @@ export function CollectiblesScreen({
         <div className="betaReportHero">
           <div>
             <span className="legoPanelEyebrow">What to test</span>
-            <h3>Can Build Alpha answer: is this a good collectible investment?</h3>
+            <h3>Can BrickAlpha answer: is this a good collectible investment?</h3>
             <p>
               The partner test should take less than 30 seconds for the first pass, then another
               minute to inspect the saved asset and PDF output.
@@ -4092,7 +4092,7 @@ export function CollectiblesScreen({
             onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
           >
             <span>Research Inventory</span>
-            <strong>Review opportunities inside Build Alpha</strong>
+            <strong>Review opportunities inside BrickAlpha</strong>
             <small>
               Scan inventory ideas, compare thesis, open purchase or sale tickets, and keep the
               investment workflow inside the app.
@@ -4188,7 +4188,7 @@ export function CollectiblesScreen({
           <div>
             <h2>Research Inventory</h2>
             <p>
-              These are the items you act on inside Build Alpha. Search, filter, compare, then
+              These are the items you act on inside BrickAlpha. Search, filter, compare, then
               move into the collectible purchase or sale flow.
             </p>
           </div>
@@ -4218,7 +4218,7 @@ export function CollectiblesScreen({
           </div>
           <div className="deskBriefCard">
             <span>Inventory source</span>
-            <strong>Build Alpha tracked</strong>
+            <strong>BrickAlpha tracked</strong>
             <small>
               Pricing and thesis here are part of your tradable inventory layer, separate from
               official retail references.
@@ -4344,7 +4344,7 @@ export function CollectiblesScreen({
 
           <div className="panelActions">
             <div className="collectibleSourceHint">
-              Build Alpha stays the main workspace. Official LEGO ZA links are here for source verification, not as the primary route.
+              BrickAlpha stays the main workspace. Official LEGO ZA links are here for source verification, not as the primary route.
             </div>
             {legoReferenceShelf.aboutUrl ? (
               <button
@@ -5086,7 +5086,7 @@ export function ConnectionsScreen({
                         ? `Live routing enabled through ${providerLabel(profile.providerId)} on ${
                             cryptoConnector?.config?.preferredPair || profile.pair
                           }.`
-                        : "Paper mode keeps crypto orders inside Build Alpha until you deliberately switch."
+                        : "Paper mode keeps crypto orders inside BrickAlpha until you deliberately switch."
                       : "This desk is still paper-first until its provider OAuth or gateway flow is completed."}
                   </small>
                 </div>
@@ -5294,7 +5294,7 @@ export function SettingsScreen({
     });
   }, [feedbackAreaFilter, feedbackItems, feedbackStatusFilter]);
   const partnerInviteMessage = [
-    "Build Alpha partner test pass",
+    "BrickAlpha partner test pass",
     "",
     `Access: ${shareIsLive ? shareStatus.publicUrl : shareStatus?.localUrl || "http://127.0.0.1:5000"}`,
     "",
@@ -5802,7 +5802,7 @@ export function SettingsScreen({
                 <p>{item.notes}</p>
 
                 <div className="feedbackMetaRow">
-                  <span>{item.authorName || item.authorEmail || "Build Alpha partner"}</span>
+                  <span>{item.authorName || item.authorEmail || "BrickAlpha partner"}</span>
                   <span>{formatDateTime(item.updatedAt || item.createdAt, appSettings.timezone)}</span>
                 </div>
 

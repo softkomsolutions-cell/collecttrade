@@ -1,6 +1,6 @@
 {
-  "name": "Build Alpha",
-  "short_name": "Build Alpha",
+  "name": "BrickAlpha",
+  "short_name": "BrickAlpha",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#05070c",

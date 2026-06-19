@@ -394,7 +394,7 @@ export function providerLabel(providerId) {
     ibkr: "Interactive Brokers",
     saxo: "Saxo",
     easyequities: "EasyEquities",
-    collecttrade: "Build Alpha",
+    collecttrade: "BrickAlpha",
   };
 
   return labels[normalized] || humanizeStatus(normalized);
@@ -454,7 +454,7 @@ export function executionPlanForSignal(signal, settings, connectors) {
     return {
       mode: "paper",
       providerId: profile.providerId,
-      providerLabel: "Build Alpha Paper",
+      providerLabel: "BrickAlpha Paper",
       pair: null,
       ready: true,
       detail: "This ticket stays inside the app and will not send a broker order.",
@@ -479,7 +479,7 @@ export function executionPlanForSignal(signal, settings, connectors) {
   return {
     mode: "paper",
     providerId: profile.providerId,
-    providerLabel: "Build Alpha Paper",
+    providerLabel: "BrickAlpha Paper",
     pair: null,
     ready: true,
     detail: "Live routing is not wired for this desk yet, so it stays in paper mode.",
