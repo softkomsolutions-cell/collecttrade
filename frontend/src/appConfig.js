@@ -1,6 +1,11 @@
 export const TOKEN_KEY = "collecttrade_token";
 export const DESK_KEY = "collecttrade_active_desk";
 export const LAUNCH_PREF_KEY = "collecttrade_launch_preference";
+
+export const APP_NAME = "Brick Alpha";
+export const APP_WORDMARK = "BRICK ALPHA";
+export const APP_MARK = "BA";
+export const APP_TAGLINE = "AI Investment Intelligence for LEGO Collectors";
 export const DEFAULT_EXECUTION_PROFILES = {
   forex: {
     mode: "paper",

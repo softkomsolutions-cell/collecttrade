@@ -1,5 +1,9 @@
 import { useState } from "react";
 import {
+  APP_MARK,
+  APP_NAME,
+  APP_TAGLINE,
+  APP_WORDMARK,
   PARTNER_TEST_FLOW,
   TRADE_PATHS,
 } from "../appConfig";
@@ -152,11 +156,11 @@ export function WorkspaceCommandBar({
 
 export function BootSplash() {
   return (
-    <div className="bootSplashShell" aria-label="Brick Alpha is opening">
+    <div className="bootSplashShell" aria-label={`${APP_NAME} is opening`}>
       <div className="bootSplashPanel">
-        <div className="bootSplashMark">CT</div>
-        <div className="bootSplashWordmark">BRICK ALPHA</div>
-        <div className="bootSplashTag">Signals | News | LEGO Alpha</div>
+        <div className="bootSplashMark">{APP_MARK}</div>
+        <div className="bootSplashWordmark">{APP_WORDMARK}</div>
+        <div className="bootSplashTag">{APP_TAGLINE}</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
           <span />
@@ -197,7 +201,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashShell splashShellMobile">
         <div className="onboardingPanel">
           <div className="onboardingTopBar">
-            <div className="authBrand">BRICK ALPHA</div>
+            <div className="authBrand">{APP_WORDMARK}</div>
             <button type="button" className="ghostButton onboardingSkipButton" onClick={skipOnboarding}>
               Skip
             </button>
@@ -255,9 +259,9 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashPanel splashPanelCompact splashMenuBackdrop splashPanelServicesOnly">
         <div className="splashCompactHeader">
           <div className="authBrandLockup splashServiceBrandLockup">
-            <div className="brandMark authBrandMark">CT</div>
+            <div className="brandMark authBrandMark">{APP_MARK}</div>
             <div className="authBrandMeta">
-              <div className="authBrand">BRICK ALPHA</div>
+              <div className="authBrand">{APP_WORDMARK}</div>
               <small>Services</small>
             </div>
           </div>
@@ -525,7 +529,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
       <div className="splashPanel landingPanel">
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
-            <div className="authBrand">BRICK ALPHA</div>
+            <div className="authBrand">{APP_WORDMARK}</div>
             <div className="splashEyebrow">TRADING WORKSPACE</div>
             <h1>Start your trading workspace.</h1>
             <p className="authBlurb">
@@ -862,7 +866,7 @@ export function AuthShell({
     <div className="authShell">
       <div className="authShellInner">
         <section className="authStage authStageCompact">
-          <div className="authBrand">BRICK ALPHA</div>
+          <div className="authBrand">{APP_WORDMARK}</div>
           <div className="splashEyebrow">MARKET ACCESS</div>
           <h1>{isResetFlow ? "Reset your password." : "Create an account or sign in."}</h1>
           <p className="authBlurb">
@@ -876,10 +880,10 @@ export function AuthShell({
           <div className="authPanelHeader">
             <div>
               <div className="authBrandLockup">
-                <div className="brandMark authBrandMark">CT</div>
+                <div className="brandMark authBrandMark">{APP_MARK}</div>
                 <div className="authBrandMeta">
-                  <div className="authBrand">BRICK ALPHA</div>
-                  <small>Mobile market workspace</small>
+                  <div className="authBrand">{APP_WORDMARK}</div>
+                  <small>{APP_TAGLINE}</small>
                 </div>
               </div>
               <h2>
@@ -1065,7 +1069,7 @@ export function AuthShell({
               </form>
 
               <div className="authValueCard">
-                <span>Why Brick Alpha</span>
+                <span>Why {APP_NAME}</span>
                 <strong>Make your money work with a smarter market workspace.</strong>
                 <ul className="authValueList">
                   <li>AI-driven market coverage designed to watch the desk around the clock.</li>

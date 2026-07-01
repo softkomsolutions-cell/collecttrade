@@ -1,6 +1,10 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import {
+  APP_MARK,
+  APP_NAME,
+  APP_TAGLINE,
+  APP_WORDMARK,
   DEFAULT_DESK,
   DEFAULT_EXECUTION_PROFILES,
   DEFAULT_PAGE,
@@ -666,7 +670,7 @@ function LoadingShell({ message }) {
     <div className="authShell">
       <div className="authShellInner">
         <section className="authStage">
-          <div className="authBrand">BRICK ALPHA</div>
+          <div className="authBrand">{APP_WORDMARK}</div>
           <div className="splashEyebrow">RESTORING WORKSPACE</div>
           <h1>Opening the session cleanly.</h1>
           <p className="authBlurb">{message}</p>
@@ -1005,7 +1009,7 @@ export default function App() {
 
   const installHint = useMemo(() => {
     if (isAppInstalled) {
-      return "Brick Alpha is already installed on this device.";
+      return `${APP_NAME} is already installed on this device.`;
     }
 
     const userAgent = window.navigator.userAgent || "";
@@ -1015,7 +1019,7 @@ export default function App() {
     }
 
     if (installPromptEvent) {
-      return "This device can install Brick Alpha directly from the browser.";
+      return `This device can install ${APP_NAME} directly from the browser.`;
     }
 
     return "Use the browser menu and choose Install App or Add to Home Screen.";
@@ -1037,7 +1041,7 @@ export default function App() {
 
   const installApp = useCallback(async () => {
     if (isAppInstalled) {
-      setInstallStatus("Brick Alpha is already installed on this device.");
+      setInstallStatus(`${APP_NAME} is already installed on this device.`);
       return;
     }
 
@@ -1046,7 +1050,7 @@ export default function App() {
         installPromptEvent.prompt();
         const choice = await installPromptEvent.userChoice;
         if (choice?.outcome === "accepted") {
-          setInstallStatus("Install prompt accepted. Finish the device install to pin Brick Alpha.");
+          setInstallStatus(`Install prompt accepted. Finish the device install to pin ${APP_NAME}.`);
           setInstallPromptEvent(null);
           return;
         }
@@ -1061,11 +1065,11 @@ export default function App() {
     const userAgent = window.navigator.userAgent || "";
     const isIOS = /iphone|ipad|ipod/i.test(userAgent);
     if (isIOS) {
-      setInstallStatus("On iPhone or iPad, tap Share and then Add to Home Screen to install Brick Alpha.");
+      setInstallStatus(`On iPhone or iPad, tap Share and then Add to Home Screen to install ${APP_NAME}.`);
       return;
     }
 
-    setInstallStatus("Use the browser menu and choose Install App or Add to Home Screen to pin Brick Alpha.");
+    setInstallStatus(`Use the browser menu and choose Install App or Add to Home Screen to pin ${APP_NAME}.`);
   }, [installPromptEvent, isAppInstalled]);
 
   const refreshCore = useCallback(async () => {
@@ -1205,6 +1209,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    document.title = APP_NAME;
+  }, []);
+
+  useEffect(() => {
     const syncInstalledState = () => {
       setIsAppInstalled(
         Boolean(
@@ -1223,7 +1231,7 @@ export default function App() {
 
     const onAppInstalled = () => {
       setInstallPromptEvent(null);
-      setInstallStatus("Brick Alpha is now installed on this device.");
+      setInstallStatus(`${APP_NAME} is now installed on this device.`);
       syncInstalledState();
     };
 
@@ -3116,12 +3124,12 @@ export default function App() {
       <aside className="sidebar">
         <div className="brandLockup">
           <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">CT</div>
+            <div className="brandMark">{APP_MARK}</div>
           </button>
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandWordmark">BRICK ALPHA</div>
-              <div className="brandSub">Workspace build for partner testing</div>
+              <div className="brandWordmark">{APP_WORDMARK}</div>
+              <div className="brandSub">{APP_TAGLINE}</div>
             </button>
           </div>
         </div>
@@ -3204,9 +3212,9 @@ export default function App() {
               </button>
             ) : null}
             <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandMark">CT</div>
+              <div className="brandMark">{APP_MARK}</div>
               <div className="mobileBrandCopy">
-                <strong>Brick Alpha</strong>
+                <strong>{APP_NAME}</strong>
                 <small>{currentWorkspaceCard.label}</small>
               </div>
             </button>

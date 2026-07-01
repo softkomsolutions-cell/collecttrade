@@ -1,6 +1,7 @@
 {
-  "name": "Brick Alpha Pro",
+  "name": "Brick Alpha",
   "short_name": "Brick Alpha",
+  "description": "AI Investment Intelligence for LEGO Collectors",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#05070c",
