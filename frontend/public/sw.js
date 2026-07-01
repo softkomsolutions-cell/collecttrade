@@ -1,5 +1,5 @@
 const CACHE_NAME = "brick-alpha-pro-v2";
-const APP_SHELL = ["/", "/manifest.json", "/favicon.svg"];
+const APP_SHELL = ["/", "/manifest.json", "/favicon.svg", "/brick-alpha-icon.svg", "/brick-alpha-logo.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

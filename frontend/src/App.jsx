@@ -2,7 +2,6 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react
 import "./App.css";
 import "./saasTheme.css";
 import {
-  APP_MARK,
   APP_NAME,
   APP_TAGLINE,
   APP_WORDMARK,
@@ -50,6 +49,7 @@ import {
   SaasTopNav,
   SplashScreen,
 } from "./components/appShell";
+import { BrandLogo } from "./components/brandLogo";
 import {
   enrichBrickAlphaCollectible,
   enrichBrickAlphaTrade,
@@ -673,14 +673,17 @@ async function requestJson(path, options = {}) {
 
 function LoadingShell({ message }) {
   return (
-    <div className="authShell">
-      <div className="authShellInner">
-        <section className="authStage">
-          <div className="authBrand">{APP_WORDMARK}</div>
-          <div className="splashEyebrow">RESTORING WORKSPACE</div>
-          <h1>Opening the session cleanly.</h1>
-          <p className="authBlurb">{message}</p>
-        </section>
+    <div className="authShell premiumAuthShell loadingShell">
+      <div className="authShellInner loadingShellInner">
+        <BrandLogo variant="full" size="xl" className="loadingShellLogo" />
+        <div className="splashEyebrow">RESTORING SESSION</div>
+        <h1 className="loadingShellTitle">Opening your investment dashboard</h1>
+        <p className="authBlurb">{message}</p>
+        <div className="bootSplashPulse" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
       </div>
     </div>
   );
@@ -3216,7 +3219,7 @@ export default function App() {
       <aside className="sidebar premiumSidebar">
         <div className="brandLockup">
           <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
-            <div className="brandMark">{APP_MARK}</div>
+            <BrandLogo size="md" />
           </button>
           <div>
             <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
@@ -3290,7 +3293,7 @@ export default function App() {
               </button>
             ) : null}
             <button type="button" className="mobileBrandButton" onClick={() => setSplashVisible(true)}>
-              <div className="brandMark">{APP_MARK}</div>
+              <BrandLogo size="sm" />
               <div className="mobileBrandCopy">
                 <strong>{APP_NAME}</strong>
                 <small>{currentWorkspaceCard.label}</small>

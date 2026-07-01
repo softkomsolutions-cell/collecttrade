@@ -4,9 +4,15 @@
   "description": "AI Investment Intelligence for LEGO Collectors",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#05070c",
-  "theme_color": "#05070c",
+  "background_color": "#08090d",
+  "theme_color": "#08090d",
   "icons": [
+    {
+      "src": "/brick-alpha-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/favicon.svg",
       "sizes": "any",

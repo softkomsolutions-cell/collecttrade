@@ -6,6 +6,9 @@ export const APP_NAME = "Brick Alpha";
 export const APP_WORDMARK = "BRICK ALPHA";
 export const APP_MARK = "BA";
 export const APP_TAGLINE = "AI Investment Intelligence for LEGO Collectors";
+export const APP_SUBTAGLINE = "Build Value. Grow Wealth.";
+export const LOGO_ICON = "/brick-alpha-icon.svg";
+export const LOGO_FULL = "/brick-alpha-logo.svg";
 export const DEFAULT_EXECUTION_PROFILES = {
   forex: {
     mode: "paper",
@@ -148,7 +151,7 @@ export const NAV_ITEMS = [
 ];
 
 export const NAV_GROUPS = [
-  { id: "market", label: "Market Workspaces" },
+  { id: "market", label: "Investment Platform" },
   { id: "platform", label: "Support & Admin" },
 ];
 

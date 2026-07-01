@@ -45,17 +45,15 @@
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: rgba(74, 139, 255, 0.14);
-  color: #4a8bff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .brandWordmark {
   font-size: 18px;
   font-weight: 700;
-  color: #4a8bff;
+  color: #f4f5f7;
+  letter-spacing: 0.06em;
 }
 
 .brandSub {
@@ -4811,9 +4809,9 @@
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(74, 139, 255, 0.14), transparent 32%),
-    radial-gradient(circle at top right, rgba(0, 181, 90, 0.1), transparent 26%),
-    #05070c;
+    radial-gradient(circle at top left, rgba(201, 169, 98, 0.08), transparent 32%),
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.06), transparent 26%),
+    #08090d;
 }
 
 .bootSplashShell {
@@ -4822,9 +4820,9 @@
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(74, 139, 255, 0.22), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(0, 181, 90, 0.12), transparent 24%),
-    #05070c;
+    radial-gradient(circle at top left, rgba(201, 169, 98, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(91, 108, 255, 0.08), transparent 24%),
+    #08090d;
 }
 
 .bootSplashPanel {
@@ -4906,9 +4904,9 @@
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(74, 139, 255, 0.18), transparent 30%),
-    radial-gradient(circle at top right, rgba(0, 181, 90, 0.1), transparent 24%),
-    #05070c;
+    radial-gradient(circle at top left, rgba(201, 169, 98, 0.1), transparent 30%),
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.08), transparent 24%),
+    #08090d;
 }
 
 .splashPanel {
@@ -7127,6 +7125,7 @@
 }
 
 @media (max-width: 980px) {
+  .authBrandStage,
   .authStage {
     display: none;
   }

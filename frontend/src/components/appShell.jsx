@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  APP_MARK,
   APP_NAME,
+  APP_SUBTAGLINE,
   APP_TAGLINE,
   APP_WORDMARK,
   PARTNER_TEST_FLOW,
   TRADE_PATHS,
 } from "../appConfig";
+import {
+  AUTH_FEATURE_CARDS,
+  AuthDashboardPreview,
+  BrandLogo,
+} from "./brandLogo";
 import {
   buildHomeEntrySelection,
   buildPrimaryServiceRows,
@@ -165,6 +170,7 @@ export function SaasTopNav({
   return (
     <header className="saasTopNav">
       <div className="saasTopNavBreadcrumb">
+        <BrandLogo size="xs" className="saasTopNavLogo" />
         <span>{APP_NAME}</span>
         <span className="saasTopNavDivider">/</span>
         <strong>{workspaceLabel}</strong>
@@ -362,8 +368,7 @@ export function BootSplash() {
   return (
     <div className="bootSplashShell" aria-label={`${APP_NAME} is opening`}>
       <div className="bootSplashPanel">
-        <div className="bootSplashMark">{APP_MARK}</div>
-        <div className="bootSplashWordmark">{APP_WORDMARK}</div>
+        <BrandLogo variant="full" size="xl" className="bootSplashLogo" />
         <div className="bootSplashTag">{APP_TAGLINE}</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
@@ -405,7 +410,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashShell splashShellMobile">
         <div className="onboardingPanel">
           <div className="onboardingTopBar">
-            <div className="authBrand">{APP_WORDMARK}</div>
+            <BrandLogo variant="full" size="sm" />
             <button type="button" className="ghostButton onboardingSkipButton" onClick={skipOnboarding}>
               Skip
             </button>
@@ -463,10 +468,10 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashPanel splashPanelCompact splashMenuBackdrop splashPanelServicesOnly">
         <div className="splashCompactHeader">
           <div className="authBrandLockup splashServiceBrandLockup">
-            <div className="brandMark authBrandMark">{APP_MARK}</div>
+            <BrandLogo size="md" />
             <div className="authBrandMeta">
               <div className="authBrand">{APP_WORDMARK}</div>
-              <small>Services</small>
+              <small>Investment Platform</small>
             </div>
           </div>
         </div>
@@ -733,12 +738,12 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
       <div className="splashPanel landingPanel">
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
-            <div className="authBrand">{APP_WORDMARK}</div>
-            <div className="splashEyebrow">TRADING WORKSPACE</div>
-            <h1>Start your trading workspace.</h1>
+            <BrandLogo variant="full" size="lg" className="landingHeroLogo" />
+            <div className="splashEyebrow">INVESTMENT PLATFORM</div>
+            <h1>Your LEGO investment command center.</h1>
             <p className="authBlurb">
-              Open news, signals, trade execution, and LEGO investments in one mobile-first product.
-              Create an account first, or try the live demo before signing up.
+              Portfolio intelligence, AI investment scores, and collection analytics in one premium
+              platform. Create an account or explore the live demo.
             </p>
 
             <div className="landingHeroActions">
@@ -1067,24 +1072,35 @@ export function AuthShell({
   const isResetFlow = isResetRequest || isResetConfirm;
 
   return (
-    <div className="authShell">
-      <div className="authShellInner">
-        <section className="authStage authStageCompact">
-          <div className="authBrand">{APP_WORDMARK}</div>
-          <div className="splashEyebrow">MARKET ACCESS</div>
-          <h1>{isResetFlow ? "Reset your password." : "Create an account or sign in."}</h1>
-          <p className="authBlurb">
-            {isResetFlow
-              ? "Request a reset code, choose a new password, and return straight to sign in."
-              : "A dedicated login screen first. Once you are in, the app will show services and then open the Dashboard."}
-          </p>
+    <div className="authShell premiumAuthShell">
+      <div className="authShellInner premiumAuthLayout">
+        <section className="authBrandStage">
+          <BrandLogo variant="full" size="hero" className="authBrandStageLogo" />
+          <h1 className="authBrandStageHeadline">
+            AI Investment Intelligence
+            <span>for LEGO Collectors</span>
+          </h1>
+          <p className="authBrandStageSubheadline">{APP_SUBTAGLINE}</p>
+
+          <div className="authFeatureGrid">
+            {AUTH_FEATURE_CARDS.map((feature) => (
+              <div className="authFeatureCard" key={feature.id}>
+                <span className="authFeatureCheck" aria-hidden="true">
+                  ✓
+                </span>
+                <strong>{feature.label}</strong>
+              </div>
+            ))}
+          </div>
+
+          <AuthDashboardPreview />
         </section>
 
-        <div className="authPanel authPanelStandalone">
+        <div className="authPanel authPanelPremium authPanelStandalone">
           <div className="authPanelHeader">
             <div>
-              <div className="authBrandLockup">
-                <div className="brandMark authBrandMark">{APP_MARK}</div>
+              <div className="authBrandLockup authBrandLockupCompact">
+                <BrandLogo size="sm" />
                 <div className="authBrandMeta">
                   <div className="authBrand">{APP_WORDMARK}</div>
                   <small>{APP_TAGLINE}</small>
@@ -1097,16 +1113,16 @@ export function AuthShell({
                     ? "Set a new password"
                     : authMode === "login"
                       ? "Welcome back"
-                      : "Create your trading workspace"}
+                      : "Create your account"}
               </h2>
               <p>
                 {isResetRequest
-                  ? "Enter your email and we will prepare a reset code for this build."
+                  ? "Enter your email and we will send you a reset code."
                   : isResetConfirm
-                    ? "Use the reset code, choose a new password, and then sign in again."
+                    ? "Enter your reset code and choose a new password."
                     : authMode === "login"
-                      ? "Sign in and return to your workspace."
-                      : "Create an account to save your desks, settings, and app flow."}
+                      ? "Sign in to your investment dashboard."
+                      : "Start building portfolio intelligence for your collection."}
               </p>
             </div>
             {onBack ? (
@@ -1144,9 +1160,9 @@ export function AuthShell({
 
                   {resetHintCode ? (
                     <div className="statusBanner subtleBanner">
-                      <strong>Partner-stage reset code</strong>
+                      <strong>Your reset code</strong>
                       <small>
-                        Use <strong>{resetHintCode}</strong> for this build. Email delivery can be added later.
+                        Enter <strong>{resetHintCode}</strong> to continue.
                       </small>
                     </div>
                   ) : null}
@@ -1177,7 +1193,7 @@ export function AuthShell({
 
               {resetStatus ? <div className="statusBanner">{resetStatus}</div> : null}
 
-              <button className="primaryButton" type="submit">
+              <button className="primaryButton authPrimaryButton" type="submit">
                 {isResetRequest ? "Send reset code" : "Reset password"}
               </button>
 
@@ -1200,18 +1216,18 @@ export function AuthShell({
                   className={authMode === "login" ? "active" : ""}
                   onClick={() => onModeChange("login")}
                 >
-                  Sign in
+                  Sign In
                 </button>
                 <button
                   type="button"
                   className={authMode === "register" ? "active" : ""}
                   onClick={() => onModeChange("register")}
                 >
-                  Create account
+                  Create Account
                 </button>
               </div>
 
-              <form className="authForm" onSubmit={onSubmit}>
+              <form className="authForm authFormPremium" onSubmit={onSubmit}>
                 {authMode === "register" ? (
                   <label>
                     <span>Name</span>
@@ -1219,7 +1235,7 @@ export function AuthShell({
                       type="text"
                       value={authForm.name}
                       onChange={(event) => onFieldChange("name", event.target.value)}
-                      placeholder="Darren"
+                      placeholder="Your name"
                       autoComplete="name"
                     />
                   </label>
@@ -1257,31 +1273,15 @@ export function AuthShell({
 
                 {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
 
-                <button className="primaryButton" type="submit">
-                  {authMode === "login" ? "Sign in" : "Create account"}
+                <button className="primaryButton authPrimaryButton" type="submit">
+                  {authMode === "login" ? "Sign In" : "Create Account"}
                 </button>
                 {onDemo ? (
-                  <button
-                    type="button"
-                    className="secondaryButton"
-                    onClick={onDemo}
-                    disabled={demoBusy}
-                  >
-                    {demoBusy ? "Opening Demo..." : "Explore live demo"}
+                  <button type="button" className="secondaryButton" onClick={onDemo} disabled={demoBusy}>
+                    {demoBusy ? "Opening demo..." : "Explore demo"}
                   </button>
                 ) : null}
               </form>
-
-              <div className="authValueCard">
-                <span>Why {APP_NAME}</span>
-                <strong>Make your money work with a smarter market workspace.</strong>
-                <ul className="authValueList">
-                  <li>AI-driven market coverage designed to watch the desk around the clock.</li>
-                  <li>Full transparency through signals, research, alerts, and routine history.</li>
-                  <li>Built with South African banking and funding workflows in mind as connectivity expands.</li>
-                </ul>
-                <small>We're not just a platform - we're your partner at every step of the journey.</small>
-              </div>
             </>
           )}
         </div>
