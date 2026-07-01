@@ -46,6 +46,7 @@ import {
   AlphaSignalBadges,
 } from "./workspaceCards";
 import { summarizeBrickAlphaPortfolio } from "../brickAlphaModel";
+import { HomeExecutiveDashboard } from "./homeExecutiveDashboard";
 
 function numberOrZero(value) {
   const numeric = Number(value);
@@ -1024,184 +1025,109 @@ export function HomeScreen({
     ? (brickAlphaPortfolio.unrealizedGain / brickAlphaPortfolio.costBasis) * 100
     : null;
   const themeAllocationRows = brickAlphaPortfolio.themeAllocation?.breakdown || [];
+  const strongBuyOpportunities = useMemo(() => {
+    const catalog = collectiblesResponse.items || [];
+    const heldIds = new Set(
+      portfolioHoldings.map((holding) => holding.collectibleId || holding.catalogId || holding.id),
+    );
+    const fromPortfolio = portfolioHoldings
+      .filter((holding) => holding.recommendation === "Strong Buy")
+      .map((holding) => ({
+        id: `held-${holding.id}`,
+        label: holding.label || holding.name,
+        brickAlphaScore: holding.brickAlphaScore,
+        theme: holding.theme,
+        investmentGrade: holding.investmentGrade,
+        source: "portfolio",
+      }));
+    const fromCatalog = catalog
+      .filter((item) => item.recommendation === "Strong Buy" && !heldIds.has(item.id))
+      .slice(0, 4)
+      .map((item) => ({
+        id: `catalog-${item.id}`,
+        label: item.name || item.label,
+        brickAlphaScore: item.brickAlphaScore,
+        theme: item.theme,
+        investmentGrade: item.investmentGrade,
+        source: "catalog",
+      }));
+    return [...fromPortfolio, ...fromCatalog].slice(0, 5);
+  }, [collectiblesResponse.items, portfolioHoldings]);
+  const marketIntelligence = useMemo(
+    () =>
+      (newsResponse.items || []).slice(0, 3).map((item, index) => ({
+        id: item.id || `news-${index}`,
+        title: item.title,
+        sourceName: item.sourceName,
+      })),
+    [newsResponse.items],
+  );
+  const aiSummary = useMemo(() => {
+    const segments = [];
+    if (brickAlphaPortfolio.netAssetValue) {
+      segments.push(
+        `Your LEGO portfolio is valued at ${formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}`,
+      );
+    }
+    if (unrealizedGainPercent != null) {
+      segments.push(
+        `with ${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% unrealised growth`,
+      );
+    }
+    if (brickAlphaPortfolio.collectionGrade) {
+      segments.push(`Collection grade ${brickAlphaPortfolio.collectionGrade}`);
+    }
+    if (brickAlphaPortfolio.averageBrickAlphaScore) {
+      segments.push(`Brick Alpha score ${formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}`);
+    }
+    if (retirementAlerts.length) {
+      segments.push(
+        `${retirementAlerts.length} set${retirementAlerts.length === 1 ? "" : "s"} need retirement attention`,
+      );
+    }
+    if (strongBuyOpportunities.length) {
+      segments.push(
+        `${strongBuyOpportunities.length} strong buy opportunit${strongBuyOpportunities.length === 1 ? "y" : "ies"} identified`,
+      );
+    }
+    if (leadNewsItem?.title) {
+      segments.push(`Market watch: ${leadNewsItem.title}`);
+    }
+    return segments.length
+      ? `${segments.join(". ")}.`
+      : "Add LEGO investment positions to unlock personalised portfolio intelligence and buy recommendations.";
+  }, [
+    brickAlphaPortfolio,
+    leadNewsItem,
+    retirementAlerts.length,
+    strongBuyOpportunities.length,
+    unrealizedGainPercent,
+  ]);
 
   return (
     <>
-      <WorkspaceHero
-        tone="portfolio"
-        eyebrow="Executive Dashboard"
-        title="Dashboard"
-        description="Your LEGO investment portfolio command center. Net asset value, collection intelligence, and AI-driven insights at a glance."
-        statusLabel="Collection grade"
-        statusValue={brickAlphaPortfolio.collectionGrade || "Awaiting positions"}
-        metrics={[
-          {
-            label: "Net Asset Value",
-            value: formatCollectiblePrice(brickAlphaPortfolio.netAssetValue),
-            detail: `${portfolioHoldings.length} open holding${portfolioHoldings.length === 1 ? "" : "s"}`,
-          },
-          {
-            label: "Unrealised Gain",
-            value: formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain),
-            detail:
-              unrealizedGainPercent != null
-                ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% vs cost`
-                : "Cost basis pending",
-          },
-          {
-            label: "Portfolio Score",
-            value: formatScore(brickAlphaPortfolio.averageBrickAlphaScore),
-            detail: "Brick Alpha average",
-          },
-        ]}
-        primaryAction={{
-          label: "View Portfolio",
-          onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
-        }}
-        secondaryAction={{
-          label: "LEGO Investments",
-          onClick: () => jumpToPageSection("collectibles", "collectibles-focus"),
-        }}
-      />
-      <WorkspaceSectionBar
-        sections={activePageSections}
-        onSelect={(sectionId) => jumpToPageSection("home", sectionId, activeDesk)}
-      />
-      <WorkspaceCommandBar
-        tone="portfolio"
-        title="Portfolio Actions"
-        hint="Move into holdings, performance, and research without losing portfolio context."
-        actions={homeActions}
+      <HomeExecutiveDashboard
+        aiSummary={aiSummary}
+        appSettings={appSettings}
+        brickAlphaPortfolio={brickAlphaPortfolio}
+        jumpToPageSection={jumpToPageSection}
+        marketIntelligence={marketIntelligence}
+        portfolioHoldings={portfolioHoldings}
+        retirementAlerts={retirementAlerts}
+        strongBuyOpportunities={strongBuyOpportunities}
+        unrealizedGainPercent={unrealizedGainPercent}
       />
 
-      <section className="executiveDashboard" id="home-dashboard">
-        <div className="executiveDashboardHeader">
-          <div>
-            <span className="executiveDashboardEyebrow">Wealth Management</span>
-            <h2>Portfolio Command Center</h2>
-            <p>
-              Investment intelligence for your LEGO collection — NAV, gains, grade, diversification,
-              and AI-driven alerts in one premium view.
-            </p>
-          </div>
-          <div className="executiveDashboardStatus">
-            <span>As of today</span>
-            <strong>{formatDateTime(new Date().toISOString(), appSettings.timezone)}</strong>
-          </div>
-        </div>
-
-        <div className="executiveKpiMobileGrid" aria-label="Portfolio key metrics">
-          <button
-            type="button"
-            className="executiveKpiMobileCard executiveKpiMobileCard-primary"
-            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
-          >
-            <span>Net Asset Value</span>
-            <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
-            <small>{brickAlphaPortfolio.collectionGrade || "No positions yet"}</small>
-          </button>
-          <button
-            type="button"
-            className="executiveKpiMobileCard"
-            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
-          >
-            <span>Unrealised Gain</span>
-            <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
-              {formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)}
-            </strong>
-            <small>
-              {unrealizedGainPercent != null
-                ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% vs cost`
-                : "Awaiting cost basis"}
-            </small>
-          </button>
-          <button
-            type="button"
-            className="executiveKpiMobileCard"
-            onClick={() => jumpToPageSection("home", "home-dashboard", activeDesk)}
-          >
-            <span>Portfolio Score</span>
-            <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
-            <small>Brick Alpha average</small>
-          </button>
-          <button
-            type="button"
-            className="executiveKpiMobileCard"
-            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
-          >
-            <span>Collection Grade</span>
-            <strong>{brickAlphaPortfolio.collectionGrade || "--"}</strong>
-            <small>Investment quality tier</small>
-          </button>
-          <button
-            type="button"
-            className="executiveKpiMobileCard"
-            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
-          >
-            <span>Diversification</span>
-            <strong>{formatScore(brickAlphaPortfolio.diversificationScore)}</strong>
-            <small>Theme and category spread</small>
-          </button>
-        </div>
-
+      <div className="dashboardRelocatedArchive" hidden aria-hidden="true">
+      <section className="executiveDashboard" id="home-dashboard-archive">
         <div className="executiveDashboardGrid">
           <div className="executiveDashboardPrimary">
-            <section className="executiveMetricPanel executiveMetricPanel-hero">
-              <div className="executiveMetricPanelTop">
-                <span>Net Asset Value</span>
-                <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
-              </div>
-              <div className="executiveMetricPanelMeta">
-                <div>
-                  <span>Cost basis</span>
-                  <strong>{formatCollectiblePrice(brickAlphaPortfolio.costBasis)}</strong>
-                </div>
-                <div>
-                  <span>Open holdings</span>
-                  <strong>{portfolioHoldings.length}</strong>
-                </div>
-                <div>
-                  <span>Confidence</span>
-                  <strong>{formatScore(brickAlphaPortfolio.confidenceScore)}</strong>
-                </div>
-              </div>
-            </section>
-
-            <div className="executiveMetricRow">
-              <section className="executiveMetricPanel">
-                <span>Unrealised Gain</span>
-                <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
-                  {formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)}
-                </strong>
-                <small>
-                  {unrealizedGainPercent != null
-                    ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% vs cost basis`
-                    : "Add positions to track gains"}
-                </small>
-              </section>
-              <section className="executiveMetricPanel">
-                <span>Brick Alpha Portfolio Score</span>
-                <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
-                <small>Average score across your open LEGO holdings</small>
-              </section>
-              <section className="executiveMetricPanel">
-                <span>Collection Grade</span>
-                <strong>{brickAlphaPortfolio.collectionGrade || "--"}</strong>
-                <small>{brickAlphaPortfolio.riskLevel || "Balanced"} risk profile</small>
-              </section>
-              <section className="executiveMetricPanel">
-                <span>Diversification</span>
-                <strong>{formatScore(brickAlphaPortfolio.diversificationScore)}</strong>
-                <small>Theme and category allocation balance</small>
-              </section>
-            </div>
-
             {themeAllocationRows.length ? (
-              <section className="executiveThemePanel">
+              <section className="executiveThemePanel" id="home-theme-allocation">
                 <div className="executivePanelHeader">
                   <div>
                     <h3>Theme Allocation</h3>
-                    <p>NAV-weighted exposure across LEGO investment themes.</p>
+                    <p>Relocated to Portfolio — preserved for Investment Analysis migration.</p>
                   </div>
                 </div>
                 <div className="executiveThemeBars">
@@ -1226,101 +1152,43 @@ export function HomeScreen({
               </section>
             ) : null}
 
-            <section className="executiveRetirementPanel">
-              <div className="executivePanelHeader">
-                <div>
-                  <h3>Retirement Alerts</h3>
-                  <p>Sets in your portfolio approaching or past retirement windows.</p>
-                </div>
-                <div className="headerStatus">
-                  <span>Active</span>
-                  <strong>{retirementAlerts.length}</strong>
-                </div>
-              </div>
-              {retirementAlerts.length ? (
-                <div className="executiveRetirementChips">
-                  {retirementAlerts.map((holding) => (
-                    <button
-                      key={holding.id}
-                      type="button"
-                      className={`executiveRetirementChip executiveRetirementChip-${holding.retirementStatus.toLowerCase()}`}
-                      onClick={() => jumpToPageSection("portfolio", "position-detail")}
-                    >
-                      <span>{holding.retirementStatus}</span>
-                      <strong>{holding.label || holding.name}</strong>
-                      <small>
-                        {holding.sellByTargetDate || holding.expectedRetirementDate || "Review exit window"}
-                      </small>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="No retirement alerts"
-                  body="Your current holdings are not approaching imminent retirement windows."
-                />
-              )}
-            </section>
-
-            <section className="executiveRecommendationPanel">
+            <section className="executiveRecommendationPanel" id="home-holdings-recommendations">
               <div className="executivePanelHeader">
                 <div>
                   <h3>Holdings Recommendations</h3>
-                  <p>Strong Buy, Buy, and Hold counts based on your open portfolio positions.</p>
+                  <p>Relocated — detailed counts move to Portfolio and Investment Analysis.</p>
                 </div>
               </div>
               <div className="executiveRecommendationGrid">
-                <button
-                  type="button"
-                  className="executiveRecommendationCard executiveRecommendationCard-strong"
-                  onClick={() => jumpToPageSection("portfolio", "open-positions")}
-                >
+                <div className="executiveRecommendationCard executiveRecommendationCard-strong">
                   <span>Strong Buy</span>
                   <strong>{recommendationCounts.strongBuy}</strong>
-                </button>
-                <button
-                  type="button"
-                  className="executiveRecommendationCard executiveRecommendationCard-buy"
-                  onClick={() => jumpToPageSection("portfolio", "open-positions")}
-                >
+                </div>
+                <div className="executiveRecommendationCard executiveRecommendationCard-buy">
                   <span>Buy</span>
                   <strong>{recommendationCounts.buy}</strong>
-                </button>
-                <button
-                  type="button"
-                  className="executiveRecommendationCard executiveRecommendationCard-hold"
-                  onClick={() => jumpToPageSection("portfolio", "open-positions")}
-                >
+                </div>
+                <div className="executiveRecommendationCard executiveRecommendationCard-hold">
                   <span>Hold</span>
                   <strong>{recommendationCounts.hold}</strong>
-                </button>
+                </div>
               </div>
             </section>
           </div>
 
-          <aside className="executiveDashboardFeed">
+          <aside className="executiveDashboardFeed" id="home-intelligence-feed">
             <div className="executiveFeedHeader">
               <div>
-                <span className="executiveDashboardEyebrow">AI Intelligence</span>
                 <h3>Intelligence Feed</h3>
-                <p>Retirement signals, alpha tags, recommendations, and alert activity for your book.</p>
+                <p>Relocated to Investment Analysis — full per-set feed preserved below.</p>
               </div>
             </div>
             <div className="executiveFeedList">
               {intelligenceFeed.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`executiveFeedItem executiveFeedItem-${item.tone}`}
-                  onClick={item.onClick}
-                >
-                  <div className="executiveFeedItemTop">
-                    <span>{item.label}</span>
-                    <span className="signalMiniTag">{item.type}</span>
-                  </div>
+                <div key={item.id} className={`executiveFeedItem executiveFeedItem-${item.tone}`}>
                   <strong>{item.title}</strong>
                   <small>{item.detail}</small>
-                </button>
+                </div>
               ))}
             </div>
           </aside>
@@ -2354,6 +2222,7 @@ export function HomeScreen({
       </section>
         </div>
       </details>
+      </div>
     </>
   );
 }
@@ -3233,6 +3102,52 @@ export function CollectiblesScreen({
         hint="Keep trading, verification, and portfolio review in one tidy flow."
         actions={collectibleActions}
       />
+
+      <section className="panel investmentAnalysisPlaceholder" id="investment-analysis-placeholder">
+        <div className="panelHeader">
+          <div>
+            <span className="executiveDashboardEyebrow">Coming Soon</span>
+            <h2>Investment Analysis</h2>
+            <p>
+              Flagship set-level analytics — Brick Alpha Score, buy/hold/sell, investment thesis,
+              price history, retirement timeline, strengths, risks, AI commentary, and comparables.
+            </p>
+          </div>
+        </div>
+        <div className="investmentAnalysisPlaceholderGrid">
+          <article className="summaryCard">
+            <span>Theme allocation</span>
+            <strong>Portfolio</strong>
+            <small>Moved from Dashboard. Full theme bars live under Portfolio → Dashboard.</small>
+          </article>
+          <article className="summaryCard">
+            <span>Intelligence feed</span>
+            <strong>Per-set detail</strong>
+            <small>Alpha signals, retirement items, and recommendations per holding.</small>
+          </article>
+          <article className="summaryCard">
+            <span>Score grid</span>
+            <strong>16+ metrics</strong>
+            <small>Minifig quality, theme strength, liquidity — see Focus panel below.</small>
+          </article>
+        </div>
+        <div className="panelActions">
+          <button
+            type="button"
+            className="primaryButton"
+            onClick={() => jumpToPageSection("collectibles", "collectibles-focus")}
+          >
+            Open Set Focus
+          </button>
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          >
+            View Theme Allocation
+          </button>
+        </div>
+      </section>
 
       <section className="summaryGrid">
         <div className="summaryCard">

@@ -83,7 +83,7 @@ export const NAV_ITEMS = [
     label: "Dashboard",
     glyph: "HM",
     section: "Market",
-    hint: "Executive dashboard and portfolio command center",
+    hint: "Executive summary — portfolio value, growth, and AI insights",
   },
   {
     id: "news",
@@ -156,7 +156,7 @@ export const NAV_GROUPS = [
 ];
 
 export const SCREEN_PREVIEWS = {
-  home: "Executive dashboard with NAV, collection intelligence, and portfolio command center.",
+  home: "Executive summary — portfolio value, growth, AI insights, and buy opportunities at a glance.",
   news: "Desk-specific macro headlines, South African context, and the full tape in one place.",
   signals: "Live 8/21 EMA setups, chart structure, and execution tickets.",
   tools: "AI mentor, chart analyzer, simulator, and research workspace for decision support.",
@@ -171,13 +171,6 @@ export const SCREEN_PREVIEWS = {
 export const PAGE_SECTION_LINKS = {
   home: [
     { id: "home-dashboard", label: "Executive" },
-    { id: "home-overview", label: "Overview" },
-    { id: "home-brief", label: "Brief" },
-    { id: "home-workflow", label: "Workflow" },
-    { id: "home-launchpad", label: "Launchpad" },
-    { id: "home-watchlist", label: "Watchlist" },
-    { id: "home-partner", label: "Partner" },
-    { id: "home-activity", label: "Activity" },
   ],
   news: [
     { id: "news-desk-selector", label: "Desk Lens" },
@@ -208,6 +201,7 @@ export const PAGE_SECTION_LINKS = {
     { id: "source-status", label: "Market Intelligence" },
   ],
   collectibles: [
+    { id: "investment-analysis-placeholder", label: "Analysis" },
     { id: "collectibles-focus", label: "Focus" },
     { id: "collectibles-trading", label: "Holdings" },
     { id: "collectibles-reference", label: "Reference" },
@@ -434,7 +428,7 @@ export const INTRO_ACTIONS = [
     page: "home",
     sectionId: "home-dashboard",
     destination: "Executive Dashboard",
-    blurb: "Land on the executive dashboard first for NAV, collection grade, and portfolio intelligence.",
+    blurb: "Land on the executive dashboard first — portfolio value, growth, and AI summary in one view.",
   },
   {
     id: "news",

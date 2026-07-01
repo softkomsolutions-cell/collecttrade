@@ -1275,6 +1275,240 @@
   }
 }
 
+/* ─── Compact Executive Dashboard (redesign) ─── */
+
+.executiveDashboardCompact {
+  display: grid;
+  gap: 16px;
+  max-height: calc(100vh - 180px);
+  overflow: hidden;
+}
+
+.executiveDashboardCompactHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: var(--ba-radius-xl);
+  border: 1px solid rgba(212, 175, 95, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(212, 175, 95, 0.1), transparent 42%),
+    var(--ba-bg-surface);
+}
+
+.executiveDashboardCompactHeader h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ba-text-primary);
+}
+
+.executiveKpiStrip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.executiveKpiStripCard {
+  padding: 16px 18px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ba-transition), transform var(--ba-transition);
+}
+
+.executiveKpiStripCard:hover {
+  border-color: rgba(212, 175, 95, 0.28);
+  transform: translateY(-1px);
+}
+
+.executiveKpiStripCard-primary {
+  border-color: rgba(212, 175, 95, 0.24);
+  background:
+    linear-gradient(135deg, rgba(212, 175, 95, 0.08), transparent 55%),
+    var(--ba-bg-surface);
+}
+
+.executiveKpiStripCard span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveKpiStripCard strong {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ba-text-primary);
+}
+
+.executiveKpiStripCard small {
+  font-size: 11px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveDashboardCompactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+
+.executiveCompactPanel {
+  padding: 18px 20px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.executiveCompactPanel-ai {
+  border-color: rgba(91, 108, 255, 0.2);
+  background:
+    radial-gradient(circle at top left, rgba(91, 108, 255, 0.06), transparent 50%),
+    var(--ba-bg-surface);
+}
+
+.executiveCompactPanel h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ba-text-primary);
+}
+
+.executiveAiSummary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ba-text-secondary);
+}
+
+.executiveRetirementChips-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.executiveOpportunityList,
+.executiveIntelList {
+  display: grid;
+  gap: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.executiveOpportunityItem,
+.executiveIntelItem {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ba-transition);
+}
+
+.executiveOpportunityItem:hover,
+.executiveIntelItem:hover {
+  border-color: rgba(91, 108, 255, 0.3);
+}
+
+.executiveOpportunityItem strong,
+.executiveIntelItem strong {
+  font-size: 13px;
+  color: var(--ba-text-primary);
+}
+
+.executiveOpportunityItem small,
+.executiveIntelItem span {
+  font-size: 11px;
+  color: var(--ba-text-muted);
+}
+
+.executiveDashboardQuickNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.executiveDashboardQuickNav button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--ba-border-subtle);
+  background: transparent;
+  color: var(--ba-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--ba-transition), color var(--ba-transition);
+}
+
+.executiveDashboardQuickNav button:hover {
+  border-color: rgba(91, 108, 255, 0.4);
+  color: var(--ba-text-primary);
+}
+
+.investmentAnalysisPlaceholder {
+  border-color: rgba(212, 175, 95, 0.16);
+}
+
+.investmentAnalysisPlaceholderGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboardRelocatedArchive {
+  display: none !important;
+}
+
+.topbar-compactHome .topbarTools {
+  margin-left: auto;
+}
+
+@media (max-width: 1280px) {
+  .executiveKpiStrip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .executiveDashboardCompactGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .executiveDashboardCompact {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .executiveKpiStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .executiveKpiStripCard-primary {
+    grid-column: 1 / -1;
+  }
+
+  .investmentAnalysisPlaceholderGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ─── Brand logo ─── */
 
 .brandLogoLockup {

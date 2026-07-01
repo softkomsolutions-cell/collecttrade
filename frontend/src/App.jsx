@@ -3350,9 +3350,10 @@ export default function App() {
           userInitial={(currentUser.name || currentUser.email || "U").slice(0, 1).toUpperCase()}
         />
 
-        <ExecutiveSummaryStrip metrics={topMetrics} />
+        {page !== "home" ? <ExecutiveSummaryStrip metrics={topMetrics} /> : null}
 
-        <header className="topbar">
+        <header className={`topbar ${page === "home" ? "topbar-compactHome" : ""}`}>
+          {page !== "home" ? (
           <div className="metricStrip">
             {topMetrics.map((metric) => (
               <button
@@ -3367,6 +3368,7 @@ export default function App() {
               </button>
             ))}
           </div>
+          ) : null}
 
           <div className="topbarTools">
             <div className={`livePill ${statusTone(signalsResponse.marketData?.mode)}`}>
