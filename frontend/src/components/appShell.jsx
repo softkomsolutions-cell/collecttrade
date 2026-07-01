@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   APP_MARK,
   APP_NAME,
@@ -30,6 +30,210 @@ export function EmptyState({ title, body }) {
   );
 }
 
+export function GlobalSearch({ open, query, onQueryChange, results, onSelect, onClose }) {
+  const inputRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [open]);
+
+  if (!open) {
+    return null;
+  }
+
+  const safeActiveIndex = Math.min(activeIndex, Math.max(results.length - 1, 0));
+
+  const handleClose = () => {
+    setActiveIndex(0);
+    onClose();
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      handleClose();
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.min(index + 1, Math.max(results.length - 1, 0)));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.max(index - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter" && results[safeActiveIndex]) {
+      event.preventDefault();
+      onSelect(results[safeActiveIndex]);
+    }
+  };
+
+  return (
+    <div className="globalSearchBackdrop" onClick={handleClose} role="presentation">
+      <div
+        className="globalSearchPanel"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-label="Global search"
+      >
+        <div className="globalSearchInputRow">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+            <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={(event) => {
+              onQueryChange(event.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Search workspaces, sections, and tools..."
+            aria-label="Search"
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="globalSearchResults">
+          {results.length ? (
+            <>
+              <div className="globalSearchGroupLabel">Results</div>
+              {results.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`globalSearchResult ${index === safeActiveIndex ? "active" : ""}`}
+                  onClick={() => onSelect(item)}
+                  onMouseEnter={() => setActiveIndex(index)}
+                >
+                  <div className="globalSearchResultGlyph">{item.glyph}</div>
+                  <div className="globalSearchResultCopy">
+                    <strong>{item.label}</strong>
+                    <small>{item.hint}</small>
+                  </div>
+                </button>
+              ))}
+            </>
+          ) : (
+            <div className="globalSearchEmpty">
+              {query.trim() ? "No matching workspaces or sections." : "Type to search across the platform."}
+            </div>
+          )}
+        </div>
+
+        <div className="globalSearchFooter">
+          <span>
+            <kbd>↑</kbd>
+            <kbd>↓</kbd>
+            navigate
+          </span>
+          <span>
+            <kbd>↵</kbd>
+            open
+          </span>
+          <span>
+            <kbd>esc</kbd>
+            close
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SaasTopNav({
+  workspaceLabel,
+  feedMode,
+  feedModeTone,
+  notificationCount,
+  onOpenSearch,
+  onOpenNotifications,
+  onOpenFeedback,
+  onLogout,
+  userInitial,
+}) {
+  return (
+    <header className="saasTopNav">
+      <div className="saasTopNavBreadcrumb">
+        <span>{APP_NAME}</span>
+        <span className="saasTopNavDivider">/</span>
+        <strong>{workspaceLabel}</strong>
+      </div>
+
+      <button type="button" className="saasTopNavSearch" onClick={onOpenSearch}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        Search workspaces...
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div className="saasTopNavActions">
+        <div className={`saasTopNavPill live ${feedModeTone || ""}`}>{feedMode}</div>
+
+        <button
+          type="button"
+          className="saasTopNavIconButton"
+          aria-label="Alerts inbox"
+          onClick={onOpenNotifications}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 2C5.8 2 4 3.8 4 6v2.5L2.5 11h11L12 8.5V6c0-2.2-1.8-4-4-4z"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinejoin="round"
+            />
+            <path d="M6.5 11a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.3" />
+          </svg>
+          {notificationCount ? <span className="badge">{notificationCount}</span> : null}
+        </button>
+
+        <button type="button" className="ghostButton" onClick={onOpenFeedback}>
+          Feedback
+        </button>
+        <button type="button" className="ghostButton" onClick={onLogout}>
+          Log out
+        </button>
+        <div className="avatarCircle">{userInitial}</div>
+      </div>
+    </header>
+  );
+}
+
+export function ExecutiveSummaryStrip({ metrics = [] }) {
+  if (!metrics.length) {
+    return null;
+  }
+
+  return (
+    <section className="executiveSummaryStrip" aria-label="Executive summary">
+      {metrics.map((metric) => (
+        <button
+          key={metric.id}
+          type="button"
+          className="executiveKpiCard"
+          onClick={metric.action}
+        >
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+          <small>{metric.detail}</small>
+        </button>
+      ))}
+    </section>
+  );
+}
 export function WorkspaceHero({
   tone = "blue",
   eyebrow,

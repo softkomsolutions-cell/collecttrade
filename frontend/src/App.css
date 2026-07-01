@@ -263,9 +263,6 @@
     linear-gradient(180deg, rgba(7, 10, 17, 0.94), rgba(5, 7, 12, 0.98));
 }
 
-.mobileAppShell .sidebar {
-  display: none;
-}
 
 .workspaceShell::before {
   content: "";
@@ -920,22 +917,28 @@
   gap: 12px;
 }
 
-.mobileAppShell .topbarTools {
+.saasAppShell .topbarTools {
   display: none;
 }
 
-.mobileAppShell .topbar {
+@media (min-width: 1024px) {
+  .saasAppShell .topbar {
+    display: none;
+  }
+}
+
+.saasAppShell .topbar {
   padding-top: 6px;
   padding-bottom: 8px;
 }
 
-.mobileAppShell .metricBlock {
+.saasAppShell .metricBlock {
   min-width: 108px;
   border-radius: 16px;
   padding: 9px 10px;
 }
 
-.mobileAppShell .metricBlock strong {
+.saasAppShell .metricBlock strong {
   font-size: 14px;
 }
 
@@ -1472,170 +1475,170 @@
   min-width: 0;
 }
 
-.mobileAppShell .workspaceHero,
-.mobileAppShell .workspaceHeroMetricGrid,
-.mobileAppShell .workspaceCommandGrid,
-.mobileAppShell .deskBriefGrid,
-.mobileAppShell .splitGrid,
-.mobileAppShell .signalGrid,
-.mobileAppShell .collectibleGrid,
-.mobileAppShell .homeLaunchGrid,
-.mobileAppShell .homeStatusStrip,
-.mobileAppShell .homeActivityGrid,
-.mobileAppShell .feedbackLayout,
-.mobileAppShell .collectibleLaneGrid,
-.mobileAppShell .collectibleReferenceGrid,
-.mobileAppShell .partnerTestingGrid,
-.mobileAppShell .subscriptionTierGrid,
-.mobileAppShell .subscriptionValueGrid {
+.saasAppShell .workspaceHero,
+.saasAppShell .workspaceHeroMetricGrid,
+.saasAppShell .workspaceCommandGrid,
+.saasAppShell .deskBriefGrid,
+.saasAppShell .splitGrid,
+.saasAppShell .signalGrid,
+.saasAppShell .collectibleGrid,
+.saasAppShell .homeLaunchGrid,
+.saasAppShell .homeStatusStrip,
+.saasAppShell .homeActivityGrid,
+.saasAppShell .feedbackLayout,
+.saasAppShell .collectibleLaneGrid,
+.saasAppShell .collectibleReferenceGrid,
+.saasAppShell .partnerTestingGrid,
+.saasAppShell .subscriptionTierGrid,
+.saasAppShell .subscriptionValueGrid {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .summaryGrid,
-.mobileAppShell .chartPlanGrid,
-.mobileAppShell .signalCommandGrid,
-.mobileAppShell .workspaceCardMeta,
-.mobileAppShell .collectibleInventoryMeta,
-.mobileAppShell .reportMiniStats {
+.saasAppShell .summaryGrid,
+.saasAppShell .chartPlanGrid,
+.saasAppShell .signalCommandGrid,
+.saasAppShell .workspaceCardMeta,
+.saasAppShell .collectibleInventoryMeta,
+.saasAppShell .reportMiniStats {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.mobileAppShell .workspaceHero {
+.saasAppShell .workspaceHero {
   padding: 22px;
 }
 
-.mobileAppShell .workspaceCommandBar {
+.saasAppShell .workspaceCommandBar {
   display: none;
 }
 
-.mobileAppShell .homeTodayStack {
+.saasAppShell .homeTodayStack {
   display: grid;
 }
 
-.mobileAppShell .homeCommandDeck .homeLeadPanel {
+.saasAppShell .homeCommandDeck .homeLeadPanel {
   display: none;
 }
 
-.mobileAppShell .workspaceHero h1 {
+.saasAppShell .workspaceHero h1 {
   font-size: clamp(28px, 7vw, 36px);
   line-height: 1.04;
 }
 
-.mobileAppShell .workspaceHero p,
-.mobileAppShell .workspaceHeroMetric small,
-.mobileAppShell .workspaceCommandCard small,
-.mobileAppShell .deskBriefCard small {
+.saasAppShell .workspaceHero p,
+.saasAppShell .workspaceHeroMetric small,
+.saasAppShell .workspaceCommandCard small,
+.saasAppShell .deskBriefCard small {
   line-height: 1.5;
 }
 
-.mobileAppShell .workspaceHeroMetricGrid {
+.saasAppShell .workspaceHeroMetricGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.mobileAppShell .workspaceHeroMetric {
+.saasAppShell .workspaceHeroMetric {
   min-height: 0;
   padding: 14px;
 }
 
-.mobileAppShell .workspaceHeroMetric strong {
+.saasAppShell .workspaceHeroMetric strong {
   font-size: 16px;
 }
 
-.mobileAppShell .workspaceSectionChipRow,
-.mobileAppShell .segmentedControl,
-.mobileAppShell .deskFilters {
+.saasAppShell .workspaceSectionChipRow,
+.saasAppShell .segmentedControl,
+.saasAppShell .deskFilters {
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.mobileAppShell .workspaceSectionChipRow::-webkit-scrollbar,
-.mobileAppShell .segmentedControl::-webkit-scrollbar,
-.mobileAppShell .deskFilters::-webkit-scrollbar {
+.saasAppShell .workspaceSectionChipRow::-webkit-scrollbar,
+.saasAppShell .segmentedControl::-webkit-scrollbar,
+.saasAppShell .deskFilters::-webkit-scrollbar {
   display: none;
 }
 
-.mobileAppShell .workspaceSectionChip,
-.mobileAppShell .segmentedControl button {
+.saasAppShell .workspaceSectionChip,
+.saasAppShell .segmentedControl button {
   white-space: nowrap;
 }
 
-.mobileAppShell .homeLaunchCard,
-.mobileAppShell .collectibleLaneCard,
-.mobileAppShell .workspaceCommandCard {
+.saasAppShell .homeLaunchCard,
+.saasAppShell .collectibleLaneCard,
+.saasAppShell .workspaceCommandCard {
   border-radius: 20px;
 }
 
-.mobileAppShell .summaryCard {
+.saasAppShell .summaryCard {
   padding: 16px;
 }
 
-.mobileAppShell .panel,
-.mobileAppShell .summaryCard,
-.mobileAppShell .workspaceSectionBar,
-.mobileAppShell .workspaceCommandBar,
-.mobileAppShell .workspaceHero {
+.saasAppShell .panel,
+.saasAppShell .summaryCard,
+.saasAppShell .workspaceSectionBar,
+.saasAppShell .workspaceCommandBar,
+.saasAppShell .workspaceHero {
   border-radius: 22px;
 }
 
-.mobileAppShell .deskToolbar,
-.mobileAppShell .panelHeader,
-.mobileAppShell .pageHeader,
-.mobileAppShell .signalFoot,
-.mobileAppShell .panelActions,
-.mobileAppShell .topbarTools {
+.saasAppShell .deskToolbar,
+.saasAppShell .panelHeader,
+.saasAppShell .pageHeader,
+.saasAppShell .signalFoot,
+.saasAppShell .panelActions,
+.saasAppShell .topbarTools {
   flex-direction: column;
   align-items: stretch;
 }
 
-.mobileAppShell .mobileNotificationSummaryGrid {
+.saasAppShell .mobileNotificationSummaryGrid {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .mobileNotificationActions {
+.saasAppShell .mobileNotificationActions {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .signalCommandHero,
-.mobileAppShell .ticketHero,
-.mobileAppShell .ticketMetaGrid,
-.mobileAppShell .ticketPlanGrid,
-.mobileAppShell .executionModeRow,
-.mobileAppShell .connectorMetaGrid,
-.mobileAppShell .connectorSnapshotStats,
-.mobileAppShell .connectorFieldGrid {
+.saasAppShell .signalCommandHero,
+.saasAppShell .ticketHero,
+.saasAppShell .ticketMetaGrid,
+.saasAppShell .ticketPlanGrid,
+.saasAppShell .executionModeRow,
+.saasAppShell .connectorMetaGrid,
+.saasAppShell .connectorSnapshotStats,
+.saasAppShell .connectorFieldGrid {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .signalCommandSnapshot,
-.mobileAppShell .headerStatus {
+.saasAppShell .signalCommandSnapshot,
+.saasAppShell .headerStatus {
   min-width: 0;
   justify-items: start;
   text-align: left;
 }
 
-.mobileAppShell .homeWatchGrid,
-.mobileAppShell .compactSummaryGrid {
+.saasAppShell .homeWatchGrid,
+.saasAppShell .compactSummaryGrid {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .signalCommandActions,
-.mobileAppShell .watchItemActions,
-.mobileAppShell .signalFootActions {
+.saasAppShell .signalCommandActions,
+.saasAppShell .watchItemActions,
+.saasAppShell .signalFootActions {
   flex-direction: column;
   align-items: stretch;
 }
 
-.mobileAppShell .subscriptionRouteItem {
+.saasAppShell .subscriptionRouteItem {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .subscriptionPromptTop {
+.saasAppShell .subscriptionPromptTop {
   flex-direction: column;
 }
 
-.mobileAppShell .subscriptionPromptMeta {
+.saasAppShell .subscriptionPromptMeta {
   min-width: 0;
   justify-items: start;
   text-align: left;
@@ -2971,7 +2974,7 @@
     box-shadow 150ms ease;
 }
 
-.mobileAppShell .homeLaunchCard {
+.saasAppShell .homeLaunchCard {
   min-height: 116px;
   border-radius: 24px;
   padding: 16px;
@@ -2994,7 +2997,7 @@
   align-items: start;
 }
 
-.mobileAppShell .homeLaunchTop {
+.saasAppShell .homeLaunchTop {
   grid-template-columns: 46px minmax(0, 1fr);
   align-items: center;
 }
@@ -3033,14 +3036,14 @@
   border-top: 1px solid rgba(116, 132, 171, 0.12);
 }
 
-.mobileAppShell .homeLaunchMeta {
+.saasAppShell .homeLaunchMeta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 
-.mobileAppShell .homeLaunchMeta strong {
+.saasAppShell .homeLaunchMeta strong {
   text-align: right;
   font-size: 13px;
 }

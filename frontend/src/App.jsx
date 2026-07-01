@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
+import "./saasTheme.css";
 import {
   APP_MARK,
   APP_NAME,
@@ -43,6 +44,9 @@ import {
   AuthShell,
   BootSplash,
   EmptyState,
+  ExecutiveSummaryStrip,
+  GlobalSearch,
+  SaasTopNav,
   SplashScreen,
 } from "./components/appShell";
 import {
@@ -843,6 +847,8 @@ export default function App() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
   const [notificationCenterVisible, setNotificationCenterVisible] = useState(false);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [navigationStack, setNavigationStack] = useState([]);
   const [preAuthLaunch, setPreAuthLaunch] = useState({
     page: "home",
@@ -2708,6 +2714,79 @@ export default function App() {
       action: openNotificationCenter,
     },
   ];
+  const globalSearchIndex = useMemo(
+    () =>
+      NAV_ITEMS.flatMap((item) => {
+        const workspaceEntry = {
+          id: `workspace-${item.id}`,
+          label: item.label,
+          hint: item.hint,
+          glyph: item.glyph,
+          page: item.id,
+          sectionId: null,
+        };
+        const sectionEntries = (PAGE_SECTION_LINKS[item.id] || []).map((section) => ({
+          id: `section-${item.id}-${section.id}`,
+          label: section.label,
+          hint: `${item.label} · ${section.label}`,
+          glyph: item.glyph,
+          page: item.id,
+          sectionId: section.id,
+        }));
+        return [workspaceEntry, ...sectionEntries];
+      }),
+    [],
+  );
+  const globalSearchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return globalSearchIndex.slice(0, 12);
+    }
+    return globalSearchIndex
+      .filter(
+        (item) =>
+          item.label.toLowerCase().includes(query) ||
+          item.hint.toLowerCase().includes(query) ||
+          item.page.toLowerCase().includes(query),
+      )
+      .slice(0, 16);
+  }, [globalSearchIndex, searchQuery]);
+  const openGlobalSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchVisible(true);
+  }, []);
+  const closeGlobalSearch = useCallback(() => {
+    setSearchVisible(false);
+    setSearchQuery("");
+  }, []);
+  const handleGlobalSearchSelect = useCallback(
+    (item) => {
+      closeGlobalSearch();
+      if (item.sectionId) {
+        jumpToPageSection(item.page, item.sectionId, activeDesk);
+        return;
+      }
+      navigateToPage(item.page, false, activeDesk);
+    },
+    [activeDesk, closeGlobalSearch, jumpToPageSection, navigateToPage],
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        if (searchVisible) {
+          closeGlobalSearch();
+        } else if (currentUser && !splashVisible) {
+          openGlobalSearch();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [closeGlobalSearch, currentUser, openGlobalSearch, searchVisible, splashVisible]);
+
   const primaryNavItems = NAV_ITEMS.filter((item) =>
     ["home", "news", "signals", "collectibles", "portfolio"].includes(item.id),
   );
@@ -3120,8 +3199,8 @@ export default function App() {
   }
 
   return (
-    <div className="appShell mobileAppShell">
-      <aside className="sidebar">
+    <div className="appShell saasAppShell">
+      <aside className="sidebar premiumSidebar">
         <div className="brandLockup">
           <button type="button" className="brandButton" onClick={() => setSplashVisible(true)}>
             <div className="brandMark">{APP_MARK}</div>
@@ -3134,20 +3213,10 @@ export default function App() {
           </div>
         </div>
 
-        <section className="sidebarCard sidebarCardButton workspaceCard">
+        <section className="sidebarCard sidebarWorkspaceCard">
           <span>Current workspace</span>
           <strong>{currentWorkspaceCard.label}</strong>
           <small>{currentWorkspaceCard.hint}</small>
-          <div className="workspaceCardMeta">
-            <div>
-              <span>Desk</span>
-              <strong>{labelDesk(activeDesk)}</strong>
-            </div>
-            <div>
-              <span>Route</span>
-              <strong>{page === "signals" ? "Execution" : workspaceLabel(page, activeDesk)}</strong>
-            </div>
-          </div>
         </section>
 
         <nav className="sideNav">
@@ -3174,19 +3243,15 @@ export default function App() {
           ))}
         </nav>
 
-        <button
-          type="button"
-          className="sidebarCard sidebarCardButton"
-          onClick={() => jumpToPageSection("settings", "partner-testing")}
-        >
-          <span>Partner route</span>
-          <strong>{shareStatus.status === "live" ? "Share live" : "Private session"}</strong>
-          <small>
-            {shareStatus.status === "live"
-              ? shareStatus.publicUrl
-              : "Open Settings -> Partner Testing when you are ready to hand this to partners."}
-          </small>
-        </button>
+        <div className="sidebarUserCard">
+          <div className="sidebarUserAvatar">
+            {(currentUser.name || currentUser.email || "U").slice(0, 1).toUpperCase()}
+          </div>
+          <div className="sidebarUserMeta">
+            <strong>{currentUser.name || currentUser.email}</strong>
+            <small>{labelDesk(activeDesk)} desk</small>
+          </div>
+        </div>
       </aside>
 
       <div className="workspaceShell">
@@ -3256,6 +3321,20 @@ export default function App() {
             </button>
           </div>
         </div>
+
+        <SaasTopNav
+          workspaceLabel={currentWorkspaceCard.label}
+          feedMode={marketModeLabel(signalsResponse.marketData?.mode)}
+          feedModeTone={statusTone(signalsResponse.marketData?.mode)}
+          notificationCount={notificationUnreadCount}
+          onOpenSearch={openGlobalSearch}
+          onOpenNotifications={openNotificationCenter}
+          onOpenFeedback={() => jumpToPageSection("settings", "feedback-board")}
+          onLogout={clearSession}
+          userInitial={(currentUser.name || currentUser.email || "U").slice(0, 1).toUpperCase()}
+        />
+
+        <ExecutiveSummaryStrip metrics={topMetrics} />
 
         <header className="topbar">
           <div className="metricStrip">
@@ -3436,6 +3515,15 @@ export default function App() {
             </div>
           </div>
         ) : null}
+
+        <GlobalSearch
+          open={searchVisible}
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          results={globalSearchResults}
+          onSelect={handleGlobalSearchSelect}
+          onClose={closeGlobalSearch}
+        />
       </div>
 
       <Suspense fallback={null}>
