@@ -134,7 +134,7 @@ export function defaultSectionIdForIntro(page, introId) {
   }
 
   if (page === "collectibles") {
-    return "collectibles-focus";
+    return "investment-analysis";
   }
 
   if (page === "portfolio") {

@@ -540,6 +540,250 @@ export function enrichBrickAlphaTrade(trade, collectibleItems = [], allTrades = 
   };
 }
 
+export function letterGradeFor(score) {
+  const numeric = numberOrZero(score);
+  if (numeric >= 90) {
+    return "A+";
+  }
+  if (numeric >= 80) {
+    return "A";
+  }
+  if (numeric >= 70) {
+    return "B";
+  }
+  return "C";
+}
+
+export function availabilityStatusFor(item) {
+  if (item.actualRetirementDate || item.retirementStatus === "Retired") {
+    return "Retired";
+  }
+  if (
+    item.retirementStatus === "Imminent" ||
+    item.retirementStatus === "Approaching" ||
+    item.retirementStatus === "Overdue"
+  ) {
+    return "Retiring Soon";
+  }
+  return "Available";
+}
+
+export function confidenceFor(item) {
+  return Math.round(
+    numberOrZero(item.retirementConfidence) * 0.35 +
+      numberOrZero(item.brickAlphaScore) * 0.45 +
+      numberOrZero(item.liquidityScore) * 0.2,
+  );
+}
+
+export function buildBrickAlphaScoreBreakdown(item) {
+  const discountScore = clamp(50 + numberOrZero(item.discountPercentage), 0, 100);
+  const exclusivityScore = clamp(numberOrZero(item.exclusiveMinifigures) * 8, 0, 100);
+  const minifigureComposite = Math.round(
+    numberOrZero(item.minifigureQuality) * 0.62 +
+      exclusivityScore * 0.28 +
+      clamp(numberOrZero(item.numberOfMinifigures) * 4, 0, 100) * 0.1,
+  );
+  const everythingElseScore = Math.round(
+    (numberOrZero(item.demandForSet) +
+      numberOrZero(item.supplyScarcity) +
+      numberOrZero(item.displayAppeal) +
+      numberOrZero(item.partOutValue) +
+      numberOrZero(item.liquidityScore) +
+      numberOrZero(item.historicalPerformance) +
+      numberOrZero(item.portfolioFit)) /
+      7,
+  );
+
+  const displayGroups = [
+    {
+      key: "minifigure",
+      label: "Minifigure Quality",
+      weight: 30,
+      score: minifigureComposite,
+      explanation:
+        "Combines minifigure quality, exclusivity count, and total minifigure roster depth.",
+    },
+    {
+      key: "retirement",
+      label: "Retirement Timeline",
+      weight: 20,
+      score: numberOrZero(item.retirementTimeline),
+      explanation: "How close the set is to retirement and post-retirement scarcity dynamics.",
+    },
+    {
+      key: "discount",
+      label: "Discount",
+      weight: 20,
+      score: discountScore,
+      explanation: "Entry discount to retail — deeper discounts improve margin of safety.",
+    },
+    {
+      key: "theme",
+      label: "Theme Strength",
+      weight: 10,
+      score: numberOrZero(item.themeStrength),
+      explanation: "Long-term collector demand for the underlying LEGO theme.",
+    },
+    {
+      key: "exclusivity",
+      label: "Exclusivity",
+      weight: 10,
+      score: exclusivityScore,
+      explanation: "Exclusive minifigures and limited elements that cannot be replaced easily.",
+    },
+    {
+      key: "other",
+      label: "Everything Else",
+      weight: 10,
+      score: everythingElseScore,
+      explanation:
+        "Demand, supply risk, display appeal, part-out value, liquidity, history, and portfolio fit.",
+    },
+  ].map((group) => ({
+    ...group,
+    contribution: Math.round((group.weight / 100) * group.score),
+  }));
+
+  const factors = [
+    {
+      key: "retirementTimeline",
+      label: "Retirement Timeline",
+      weight: 12,
+      score: numberOrZero(item.retirementTimeline),
+      explanation: "Proximity to retirement and post-retirement supply tightening.",
+    },
+    {
+      key: "minifigureQuality",
+      label: "Minifigure Quality",
+      weight: 10,
+      score: numberOrZero(item.minifigureQuality),
+      explanation: "Collector demand for the included minifigure roster.",
+    },
+    {
+      key: "discount",
+      label: "Discount",
+      weight: 10,
+      score: discountScore,
+      explanation: "Discount to MSRP improves entry and margin of safety.",
+    },
+    {
+      key: "themeStrength",
+      label: "Theme Strength",
+      weight: 12,
+      score: numberOrZero(item.themeStrength),
+      explanation: "Theme-level collector loyalty and resale depth.",
+    },
+    {
+      key: "exclusivity",
+      label: "Exclusivity",
+      weight: 8,
+      score: exclusivityScore,
+      explanation: "Exclusive minifigures that drive aftermarket premiums.",
+    },
+    {
+      key: "supplyRisk",
+      label: "Supply Risk",
+      weight: 10,
+      score: numberOrZero(item.supplyScarcity),
+      explanation: "Scarcity and sealed supply — higher is better for investors.",
+    },
+    {
+      key: "historicalPerformance",
+      label: "Historical Performance",
+      weight: 5,
+      score: numberOrZero(item.historicalPerformance),
+      explanation: "How similar sets in this theme have performed after retirement.",
+    },
+    {
+      key: "displayAppeal",
+      label: "Display Appeal",
+      weight: 8,
+      score: numberOrZero(item.displayAppeal),
+      explanation: "Shelf presence and display-driven collector demand.",
+    },
+    {
+      key: "partOutValue",
+      label: "Part Out Value",
+      weight: 6,
+      score: numberOrZero(item.partOutValue),
+      explanation: "Floor value if the set is parted out for bricks and figures.",
+    },
+    {
+      key: "liquidity",
+      label: "Liquidity",
+      weight: 8,
+      score: numberOrZero(item.liquidityScore),
+      explanation: "Ease of buying and selling on secondary markets.",
+    },
+  ].map((factor) => ({
+    ...factor,
+    contribution: Math.round((factor.weight / 100) * factor.score),
+  }));
+
+  return { displayGroups, factors };
+}
+
+export function buildPriceForecast(item, years) {
+  const current = numberOrZero(item.currentMarketValue);
+  const projected = numberOrZero(item.projectedFutureValue);
+  const buyPrice = numberOrZero(item.buyPrice || item.retailPrice);
+  const horizonMonths = years * 12;
+  const annualGrowth =
+    current > 0 && projected > current
+      ? Math.pow(projected / current, 12 / Math.max(horizonMonths, 12)) - 1
+      : numberOrZero(item.projectedRoi) / 100 / years;
+  const cagr = annualGrowth * 100;
+  const volatility = numberOrZero(item.riskScore) / 100;
+  const expected = current * Math.pow(1 + annualGrowth, years);
+  const best = expected * (1 + 0.18 * volatility + 0.08);
+  const worst = expected * (1 - 0.22 * volatility - 0.06);
+
+  return {
+    years,
+    cagr,
+    expected,
+    best,
+    worst,
+    confidence: confidenceFor(item),
+  };
+}
+
+export function buildAiCommentary(item) {
+  const discount = numberOrZero(item.discountPercentage);
+  const supplyNote =
+    discount >= 12
+      ? "supply remains elevated due to heavy discounting"
+      : item.supplyScarcity >= 70
+        ? "supply is tightening as sealed inventory clears"
+        : "supply is balanced but not yet scarce";
+  const minifigNote =
+    item.minifigureQuality >= 80
+      ? "excellent minifigure quality"
+      : item.minifigureQuality >= 65
+        ? "solid minifigure appeal"
+        : "modest minifigure contribution";
+  const retirementNote =
+    item.retirementStatus === "Retired"
+      ? "the set is already retired, so repricing depends on liquidity events"
+      : item.retirementStatus === "Imminent" || item.retirementStatus === "Overdue"
+        ? "retirement timing is favourable with supply pressure building"
+        : "retirement is still ahead, allowing staged accumulation";
+
+  const action =
+    item.recommendation === "Strong Buy" || item.recommendation === "Buy"
+      ? discount >= 10
+        ? "accumulating gradually during discount periods"
+        : "building a position while conviction remains high"
+      : item.recommendation === "Sell"
+        ? "trimming exposure as exit targets approach"
+        : item.recommendation === "Hold"
+          ? "holding current exposure while monitoring retirement signals"
+          : "waiting for a better entry or clearer retirement catalyst";
+
+  return `Although this set has ${minifigNote} and ${retirementNote}, ${supplyNote}. Brick Alpha recommends ${action}.`;
+}
+
 export function summarizeBrickAlphaPortfolio(trades) {
   const collectibleTrades = trades.filter((trade) => trade.assetClass === "collectible");
   const costBasis = collectibleTrades.reduce(

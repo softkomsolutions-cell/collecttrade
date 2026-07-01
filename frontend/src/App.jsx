@@ -3042,6 +3042,7 @@ export default function App() {
           activeCollectible={activeCollectible}
           activePageSections={activePageSections}
           appSettings={appSettings}
+          brickAlphaPortfolio={brickAlphaSummary}
           collectibleBrand={collectibleBrand}
           collectibleCategory={collectibleCategory}
           collectibleQuery={collectibleQuery}
@@ -3051,6 +3052,7 @@ export default function App() {
           handleCollectibleSelect={handleCollectibleSelect}
           jumpToPageSection={jumpToPageSection}
           openCollectibleTicket={openCollectibleTicket}
+          openTrades={openTrades}
           setCollectibleBrand={setCollectibleBrand}
           setCollectibleCategory={setCollectibleCategory}
           setCollectibleQuery={setCollectibleQuery}

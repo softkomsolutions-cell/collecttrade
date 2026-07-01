@@ -47,6 +47,7 @@ import {
 } from "./workspaceCards";
 import { summarizeBrickAlphaPortfolio } from "../brickAlphaModel";
 import { HomeExecutiveDashboard } from "./homeExecutiveDashboard";
+import { InvestmentAnalysisWorkspace } from "./investmentAnalysisWorkspace";
 
 function numberOrZero(value) {
   const numeric = Number(value);
@@ -197,7 +198,7 @@ function buildIntelligenceFeed({
         label: "Alpha Signal",
         title: signal,
         detail: `${holding.label || holding.name} · Score ${formatScore(holding.brickAlphaScore)}`,
-        onClick: () => jumpToPageSection("collectibles", "collectibles-focus"),
+        onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
       });
     });
 
@@ -743,7 +744,7 @@ export function HomeScreen({
       label: "LEGO Investments",
       meta: `${collectiblesResponse.items?.length || 0} catalog`,
       detail: "Research holdings, scores, and the investment decision engine.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-focus"),
+      onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
     },
     {
       id: "research",
@@ -2975,6 +2976,7 @@ export function CollectiblesScreen({
   activeCollectible,
   activePageSections,
   appSettings,
+  brickAlphaPortfolio,
   collectibleBrand,
   collectibleCategory,
   collectibleQuery,
@@ -2984,6 +2986,7 @@ export function CollectiblesScreen({
   handleCollectibleSelect,
   jumpToPageSection,
   openCollectibleTicket,
+  openTrades,
   setCollectibleBrand,
   setCollectibleCategory,
   setCollectibleQuery,
@@ -3050,7 +3053,7 @@ export function CollectiblesScreen({
         tone="collectibles"
         eyebrow="LEGO Investments"
         title="LEGO Investments"
-        description="Analyze LEGO sets and investment-grade collectibles with proper buy and sell tickets."
+        description="AI-powered investment analysis for every LEGO set — buy, hold, or sell with conviction."
         statusLabel="Desk refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
@@ -3103,370 +3106,21 @@ export function CollectiblesScreen({
         actions={collectibleActions}
       />
 
-      <section className="panel investmentAnalysisPlaceholder" id="investment-analysis-placeholder">
-        <div className="panelHeader">
-          <div>
-            <span className="executiveDashboardEyebrow">Coming Soon</span>
-            <h2>Investment Analysis</h2>
-            <p>
-              Flagship set-level analytics — Brick Alpha Score, buy/hold/sell, investment thesis,
-              price history, retirement timeline, strengths, risks, AI commentary, and comparables.
-            </p>
-          </div>
-        </div>
-        <div className="investmentAnalysisPlaceholderGrid">
-          <article className="summaryCard">
-            <span>Theme allocation</span>
-            <strong>Portfolio</strong>
-            <small>Moved from Dashboard. Full theme bars live under Portfolio → Dashboard.</small>
-          </article>
-          <article className="summaryCard">
-            <span>Intelligence feed</span>
-            <strong>Per-set detail</strong>
-            <small>Alpha signals, retirement items, and recommendations per holding.</small>
-          </article>
-          <article className="summaryCard">
-            <span>Score grid</span>
-            <strong>16+ metrics</strong>
-            <small>Minifig quality, theme strength, liquidity — see Focus panel below.</small>
-          </article>
-        </div>
-        <div className="panelActions">
-          <button
-            type="button"
-            className="primaryButton"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-focus")}
-          >
-            Open Set Focus
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
-          >
-            View Theme Allocation
-          </button>
-        </div>
-      </section>
-
-      <section className="summaryGrid">
-        <div className="summaryCard">
-          <span>Tradable items</span>
-          <strong>{collectibles.length}</strong>
-        </div>
-        <div className="summaryCard">
-          <span>Brands</span>
-          <strong>{(collectiblesResponse.brands || []).length}</strong>
-        </div>
-        <div className="summaryCard">
-          <span>Categories</span>
-          <strong>{(collectiblesResponse.categories || []).length}</strong>
-        </div>
-        <div className="summaryCard">
-          <span>Avg Brick Alpha Score</span>
-          <strong>
-            {collectibles.length
-              ? formatScore(average(collectibles.map((item) => item.brickAlphaScore)))
-              : "--"}
-          </strong>
-        </div>
-        <button
-          type="button"
-          className="summaryCard summaryCardButton"
-          onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
-        >
-          <span>Decision engine</span>
-          <strong>{activeCollectible?.recommendation || "Waiting"}</strong>
-        </button>
-      </section>
-
-      <section className="panel" id="collectibles-lanes">
-        <div className="panelHeader">
-          <div>
-            <h2>LEGO Investment Workflow</h2>
-            <p>
-              Keep the trading workflow and the market-verification workflow distinct so the app
-              feels like a real desk, not a bundle of outbound links.
-            </p>
-          </div>
-        </div>
-
-        <div className="collectibleLaneGrid">
-          <button
-            type="button"
-            className="collectibleLaneCard"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
-          >
-            <span>Holdings</span>
-            <strong>Work inside Brick Alpha</strong>
-            <small>
-              Scan investment ideas, compare thesis, open buy or sell tickets, and keep the trade
-              planning flow inside the app.
-            </small>
-          </button>
-
-          <button
-            type="button"
-            className="collectibleLaneCard"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
-          >
-            <span>Market Intelligence</span>
-            <strong>Verify the product context</strong>
-            <small>
-              Use official LEGO ZA and related market intelligence pages to validate lineups, themes, and retail
-              context without making them the primary experience.
-            </small>
-          </button>
-        </div>
-      </section>
-
-      {activeCollectible ? (
-        <section className="panel" id="collectibles-focus">
-          <div className="panelHeader">
-            <div>
-              <h2>{activeCollectible.name}</h2>
-              <p>{activeCollectible.thesis || activeCollectible.description}</p>
-              <AlphaSignalBadges signals={activeCollectible.alphaSignals} />
-            </div>
-            <div className="priceCluster">
-              <span>{formatCollectiblePrice(activeCollectible.price)}</span>
-              <small>
-                {activeCollectible.brand} | {activeCollectible.category}
-              </small>
-            </div>
-          </div>
-
-          <div className="stateGrid">
-            <div>
-              <span>Retail Price</span>
-              <strong>{formatCollectiblePrice(activeCollectible.retailPrice)}</strong>
-            </div>
-            <div>
-              <span>Buy Price</span>
-              <strong>{formatCollectiblePrice(activeCollectible.buyPrice)}</strong>
-            </div>
-            <div>
-              <span>Discount</span>
-              <strong className={positiveTone(activeCollectible.discountPercentage)}>
-                {activeCollectible.discountPercentage.toFixed(1)}%
-              </strong>
-            </div>
-            <div>
-              <span>Margin of Safety</span>
-              <strong>{activeCollectible.marginOfSafety.toFixed(1)}%</strong>
-            </div>
-            <div>
-              <span>Quantity Owned</span>
-              <strong>{activeCollectible.quantityOwned}</strong>
-            </div>
-            <div>
-              <span>Current Market Value</span>
-              <strong>{formatCollectiblePrice(activeCollectible.currentMarketValue)}</strong>
-            </div>
-            <div>
-              <span>Projected Value</span>
-              <strong>{formatCollectiblePrice(activeCollectible.projectedFutureValue)}</strong>
-            </div>
-            <div>
-              <span>Estimated ROI</span>
-              <strong className={positiveTone(activeCollectible.estimatedRoi)}>
-                {activeCollectible.estimatedRoi.toFixed(1)}%
-              </strong>
-            </div>
-            <div>
-              <span>Risk Score</span>
-              <strong>{formatScore(activeCollectible.riskScore)}</strong>
-            </div>
-            <div>
-              <span>Purchase Date</span>
-              <strong>{activeCollectible.purchaseDate}</strong>
-            </div>
-            <div>
-              <span>LEGO Theme</span>
-              <strong>{activeCollectible.legoTheme}</strong>
-            </div>
-            <div>
-              <span>Theme Target</span>
-              <strong>{activeCollectible.themeAllocationTarget}%</strong>
-            </div>
-            <div>
-              <span>Retirement Status</span>
-              <strong>{activeCollectible.retirementStatus}</strong>
-            </div>
-            <div>
-              <span>Retirement Date</span>
-              <strong>{activeCollectible.actualRetirementDate || activeCollectible.expectedRetirementDate}</strong>
-            </div>
-            <div>
-              <span>Retirement Probability</span>
-              <strong>{Math.round(activeCollectible.retirementProbability)}%</strong>
-            </div>
-            <div>
-              <span>Retirement Confidence</span>
-              <strong>{Math.round(activeCollectible.retirementConfidence)}%</strong>
-            </div>
-            <div>
-              <span>Sell By</span>
-              <strong>{activeCollectible.sellByTargetDate}</strong>
-            </div>
-          </div>
-
-          <div className="brickAlphaDecisionGrid">
-            <section className="brickAlphaDecisionCard">
-              <span>Investment Grade</span>
-              <strong>{activeCollectible.investmentGrade}</strong>
-              <small>
-                Score {formatScore(activeCollectible.brickAlphaScore)} | {activeCollectible.recommendation} | Holding period{" "}
-                {activeCollectible.holdingPeriod} | Source {activeCollectible.storeSource}
-              </small>
-            </section>
-            <section className="brickAlphaDecisionCard">
-              <span>Investment Thesis</span>
-              <strong>{activeCollectible.investmentThesis.attractive}</strong>
-              <small>{activeCollectible.investmentThesis.exitStrategy}</small>
-            </section>
-          </div>
-
-          <div className="brickAlphaScoreGrid">
-            {[
-              ["Minifigure quality", activeCollectible.minifigureQuality],
-              ["Exclusive minifigures", activeCollectible.exclusiveMinifigures],
-              ["Number of minifigures", activeCollectible.numberOfMinifigures],
-              ["Theme strength", activeCollectible.themeStrength],
-              ["Theme allocation target", activeCollectible.themeAllocationTarget],
-              ["Retirement timeline", activeCollectible.retirementTimeline],
-              ["Retirement probability", activeCollectible.retirementProbability],
-              ["Retirement confidence", activeCollectible.retirementConfidence],
-              ["Discount to retail", activeCollectible.discountPercentage],
-              ["Demand", activeCollectible.demandForSet],
-              ["Supply / scarcity", activeCollectible.supplyScarcity],
-              ["Display appeal", activeCollectible.displayAppeal],
-              ["Part-out value", activeCollectible.partOutValue],
-              ["Liquidity", activeCollectible.liquidityScore],
-              ["Historical performance", activeCollectible.historicalPerformance],
-              ["Portfolio fit", activeCollectible.portfolioFit],
-            ].map(([label, value]) => (
-              <div className="brickAlphaScoreRow" key={label}>
-                <span>{label}</span>
-                <strong>
-                  {label.includes("minifigures") && !label.includes("quality")
-                    ? value
-                    : label.includes("allocation target")
-                      ? `${Math.round(value)}%`
-                    : label.includes("probability") || label.includes("confidence")
-                      ? `${Math.round(value)}%`
-                      : formatScore(value)}
-                </strong>
-              </div>
-            ))}
-            <div className="brickAlphaScoreRow">
-              <span>Retirement status</span>
-              <strong>{activeCollectible.retirementStatus}</strong>
-            </div>
-            <div className="brickAlphaScoreRow">
-              <span>Size tier</span>
-              <strong>{activeCollectible.sizeTier}</strong>
-            </div>
-          </div>
-
-          <div className="investmentThesisGrid">
-            <div className="positionNote">
-              <span>Upside Drivers</span>
-              <p>{activeCollectible.investmentThesis.upsideDrivers.join(" | ")}</p>
-            </div>
-            <div className="positionNote">
-              <span>Main Risks</span>
-              <p>{activeCollectible.investmentThesis.risks.join(" | ")}</p>
-            </div>
-            <div className="positionNote">
-              <span>Suggested Action</span>
-              <p>{activeCollectible.investmentThesis.suggestedAction}</p>
-            </div>
-          </div>
-
-          <div className="panelActions">
-            <button
-              type="button"
-              className="primaryButton"
-              onClick={() => openCollectibleTicket(activeCollectible, "BUY")}
-            >
-              Buy Ticket
-            </button>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => openCollectibleTicket(activeCollectible, "SELL")}
-            >
-              Sell Ticket
-            </button>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => jumpToPageSection("portfolio", "position-detail")}
-            >
-              Review Portfolio
-            </button>
-            {activeCollectible.brand === "LEGO" && legoReferenceShelf?.url ? (
-              <button
-                type="button"
-                className="ghostButton"
-                onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
-              >
-                View Market Notes
-              </button>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
+      <InvestmentAnalysisWorkspace
+        activeCollectible={activeCollectible}
+        brickAlphaPortfolio={brickAlphaPortfolio}
+        collectibles={collectibles}
+        handleCollectibleSelect={handleCollectibleSelect}
+        jumpToPageSection={jumpToPageSection}
+        openCollectibleTicket={openCollectibleTicket}
+        openTrades={openTrades}
+      />
 
       <section className="panel" id="collectibles-trading">
         <div className="panelHeader">
           <div>
-            <h2>Holdings</h2>
-            <p>
-              These are the items you act on inside Brick Alpha. Search, filter, compare, then
-              move into the collectible ticket flow.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Primary workflow</span>
-            <strong>Trade inside app</strong>
-          </div>
-        </div>
-
-        <div className="deskBriefGrid">
-          <div className="deskBriefCard">
-            <span>Lane</span>
-            <strong>Trade planning</strong>
-            <small>
-              Use this lane to review collectible theses, liquidity, and ticket entries without
-              leaving the workspace.
-            </small>
-          </div>
-          <div className="deskBriefCard">
-            <span>Lead category</span>
-            <strong>{activeCollectible?.category || "Select an item"}</strong>
-            <small>
-              {activeCollectible
-                ? `${activeCollectible.brand} is currently in focus for deeper review.`
-                : "Choose a collectible card below to promote it into the focus panel."}
-            </small>
-          </div>
-          <div className="deskBriefCard">
-            <span>Holdings source</span>
-            <strong>Brick Alpha tracked</strong>
-            <small>
-              Pricing and thesis here are part of your LEGO investment holdings layer, separate from
-              official retail references.
-            </small>
-          </div>
-          <div className="deskBriefCard">
-            <span>Verification lane</span>
-            <strong>{legoReferenceShelf?.sourceName || "Market intelligence"}</strong>
-            <small>
-              Use the market intelligence lane only when you want to verify an official product page or series
-              lineup.
-            </small>
+            <h2>Browse Sets</h2>
+            <p>Search and filter the LEGO investment catalog, then open full analysis above.</p>
           </div>
         </div>
 
@@ -3501,26 +3155,6 @@ export function CollectiblesScreen({
           </select>
         </div>
 
-        <div className="collectibleInventoryMeta">
-          <div className="collectibleInventoryStat">
-            <span>Filtered items</span>
-            <strong>{filteredCollectibles.length}</strong>
-          </div>
-          <div className="collectibleInventoryStat">
-            <span>Brand filter</span>
-            <strong>{collectibleBrand === "all" ? "All brands" : collectibleBrand}</strong>
-          </div>
-          <div className="collectibleInventoryStat">
-            <span>Category filter</span>
-            <strong>
-              {collectibleCategory === "all" ? "All categories" : collectibleCategory}
-            </strong>
-          </div>
-          <div className="collectibleInventoryStat">
-            <span>Grouped shelves</span>
-            <strong>{groupedCollectibles.length}</strong>
-          </div>
-        </div>
       </section>
 
       {legoReferenceShelf ? (

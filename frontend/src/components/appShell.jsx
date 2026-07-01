@@ -608,7 +608,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
       title: "LEGO Investments",
       page: "collectibles",
       introId: "collectibles",
-      sectionId: "collectibles-focus",
+      sectionId: "investment-analysis",
       destination: "LEGO Investments focus",
       bestFor: "Trade alternatives",
       blurb: "Analyze LEGO sets and investment-grade collectibles with the same disciplined ticket flow.",

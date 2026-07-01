@@ -106,7 +106,7 @@ export const PRIMARY_SERVICE_BLUEPRINTS = [
     tone: "collectibles",
     page: "collectibles",
     introId: "collectibles",
-    sectionId: "collectibles-focus",
+    sectionId: "investment-analysis",
     deskMode: "launch",
     homeHint: "Alternative-assets holdings with the same discipline.",
     summaryDetail: () => "Open LEGO, Pokemon, and the LEGO investment holdings workflow.",

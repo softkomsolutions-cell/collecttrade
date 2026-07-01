@@ -96,7 +96,7 @@ export function HomeExecutiveDashboard({
           <button
             type="button"
             className="ghostButton slimButton"
-            onClick={() => jumpToPageSection("collectibles", "investment-analysis-placeholder")}
+            onClick={() => jumpToPageSection("collectibles", "investment-analysis")}
           >
             Ask more in Investment Analysis
           </button>
@@ -152,7 +152,7 @@ export function HomeExecutiveDashboard({
                   onClick={() =>
                     jumpToPageSection(
                       item.source === "portfolio" ? "portfolio" : "collectibles",
-                      item.source === "portfolio" ? "open-positions" : "collectibles-focus",
+                      item.source === "portfolio" ? "open-positions" : "investment-analysis",
                     )
                   }
                 >
@@ -222,7 +222,7 @@ export function HomeExecutiveDashboard({
         <button type="button" onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}>
           Portfolio
         </button>
-        <button type="button" onClick={() => jumpToPageSection("collectibles", "collectibles-focus")}>
+        <button type="button" onClick={() => jumpToPageSection("collectibles", "investment-analysis")}>
           Investment Analysis
         </button>
         <button type="button" onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}>

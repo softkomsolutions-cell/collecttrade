@@ -201,11 +201,10 @@ export const PAGE_SECTION_LINKS = {
     { id: "source-status", label: "Market Intelligence" },
   ],
   collectibles: [
-    { id: "investment-analysis-placeholder", label: "Analysis" },
-    { id: "collectibles-focus", label: "Focus" },
-    { id: "collectibles-trading", label: "Holdings" },
+    { id: "investment-analysis", label: "Analysis" },
+    { id: "collectibles-trading", label: "Browse" },
     { id: "collectibles-reference", label: "Reference" },
-    { id: "collectibles-grid", label: "Holdings" },
+    { id: "collectibles-grid", label: "Catalog" },
   ],
   portfolio: [
     { id: "portfolio-dashboard", label: "Dashboard" },
@@ -459,7 +458,7 @@ export const INTRO_ACTIONS = [
     eyebrow: "Alt",
     title: "LEGO Investments",
     page: "collectibles",
-    sectionId: "collectibles-focus",
+    sectionId: "investment-analysis",
     destination: "LEGO Investment Focus",
     blurb: "Open LEGO, Pokemon, and LEGO investment holdings positions with their own ticket workflow.",
   },
