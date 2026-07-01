@@ -46,7 +46,7 @@ export function labelDesk(desk) {
 
 export function workspaceLabel(page, desk) {
   if (page === "home") {
-    return "Workspace Home";
+    return "Executive Dashboard";
   }
 
   if (page === "news") {

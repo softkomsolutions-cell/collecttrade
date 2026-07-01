@@ -501,7 +501,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
             onClick={() => onLaunch(homeLaunch)}
             disabled={!ready}
           >
-            Continue to Home
+            Continue to Dashboard
           </button>
         </div>
       </div>
@@ -512,7 +512,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
 function describeLaunchSelection(page, desk, sectionId) {
   if (page === "home") {
     return {
-      label: "Workspace Home",
+      label: "Executive Dashboard",
       hint: "You'll land on the hub with quick launch, session context, and partner-readiness cards.",
     };
   }
@@ -614,12 +614,12 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
       id: "home",
       glyph: "HM",
       eyebrow: "Hub",
-      title: "Home",
+      title: "Dashboard",
       page: "home",
       introId: "home",
-      sectionId: "home-overview",
-      destination: "Workspace hub",
-      blurb: "Open the product home first for quick launch, partner readiness, and recent session context.",
+      sectionId: "home-dashboard",
+      destination: "Executive Dashboard",
+      blurb: "Land on the executive dashboard for NAV, collection grade, and portfolio intelligence.",
     },
     {
       id: "portfolio",
@@ -1076,7 +1076,7 @@ export function AuthShell({
           <p className="authBlurb">
             {isResetFlow
               ? "Request a reset code, choose a new password, and return straight to sign in."
-              : "A dedicated login screen first. Once you are in, the app will show services and then open Home."}
+              : "A dedicated login screen first. Once you are in, the app will show services and then open the Dashboard."}
           </p>
         </section>
 

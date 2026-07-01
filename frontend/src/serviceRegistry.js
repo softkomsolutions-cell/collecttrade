@@ -47,8 +47,8 @@ export const ENTRY_FLOW_STEPS = [
   {
     id: "home",
     label: "Step 3",
-    title: "Home workspace",
-    detail: "Use Home as the hub for opening each service screen.",
+    title: "Dashboard workspace",
+    detail: "Use the Dashboard as your portfolio command center and service launch point.",
   },
 ];
 

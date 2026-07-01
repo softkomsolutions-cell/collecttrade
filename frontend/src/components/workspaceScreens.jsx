@@ -140,6 +140,136 @@ function formatScore(value) {
   return Number.isFinite(numeric) ? `${Math.round(numeric)}/100` : "--";
 }
 
+function countPortfolioRecommendations(holdings) {
+  const counts = { strongBuy: 0, buy: 0, hold: 0, sell: 0, other: 0 };
+
+  holdings.forEach((item) => {
+    const recommendation = item.recommendation || "Hold";
+    if (recommendation === "Strong Buy") {
+      counts.strongBuy += 1;
+    } else if (recommendation === "Buy") {
+      counts.buy += 1;
+    } else if (recommendation === "Hold") {
+      counts.hold += 1;
+    } else if (recommendation === "Sell") {
+      counts.sell += 1;
+    } else {
+      counts.other += 1;
+    }
+  });
+
+  return counts;
+}
+
+function buildIntelligenceFeed({
+  portfolioHoldings,
+  alertItems,
+  notificationItems,
+  watchlistItems,
+  jumpToPageSection,
+  activeDesk,
+}) {
+  const items = [];
+  const retirementStatuses = new Set(["Imminent", "Overdue", "Approaching"]);
+
+  portfolioHoldings.forEach((holding) => {
+    if (retirementStatuses.has(holding.retirementStatus)) {
+      items.push({
+        id: `retirement-${holding.id}`,
+        type: "retirement",
+        tone: holding.retirementStatus === "Overdue" ? "urgent" : "warning",
+        label: "Retirement Alert",
+        title: `${holding.label || holding.name}: ${holding.retirementStatus}`,
+        detail:
+          holding.sellByTargetDate || holding.expectedRetirementDate
+            ? `Target ${holding.sellByTargetDate || holding.expectedRetirementDate}`
+            : "Review retirement timeline and exit window.",
+        onClick: () => jumpToPageSection("portfolio", "position-detail"),
+      });
+    }
+
+    (holding.alphaSignals || []).forEach((signal) => {
+      items.push({
+        id: `alpha-${holding.id}-${signal}`,
+        type: "alpha",
+        tone: "accent",
+        label: "Alpha Signal",
+        title: signal,
+        detail: `${holding.label || holding.name} · Score ${formatScore(holding.brickAlphaScore)}`,
+        onClick: () => jumpToPageSection("collectibles", "collectibles-focus"),
+      });
+    });
+
+    if (holding.recommendation === "Strong Buy" || holding.recommendation === "Buy") {
+      items.push({
+        id: `recommendation-${holding.id}`,
+        type: "recommendation",
+        tone: holding.recommendation === "Strong Buy" ? "success" : "accent",
+        label: holding.recommendation,
+        title: holding.label || holding.name,
+        detail: `Brick Alpha ${formatScore(holding.brickAlphaScore)} · ${holding.investmentGrade || "Portfolio holding"}`,
+        onClick: () => jumpToPageSection("portfolio", "open-positions"),
+      });
+    }
+  });
+
+  alertItems
+    .filter((item) => item.triggered)
+    .slice(0, 4)
+    .forEach((item) => {
+      items.push({
+        id: `alert-${item.id}`,
+        type: "alert",
+        tone: "warning",
+        label: "Alert Triggered",
+        title: item.label,
+        detail: `${labelDesk(item.desk)} · ${alertKindLabel(item.kind)} threshold crossed`,
+        onClick: () => jumpToPageSection("signals", "chart-panel", item.desk || activeDesk),
+      });
+    });
+
+  watchlistItems.slice(0, 3).forEach((item) => {
+    items.push({
+      id: `watchlist-${item.id}`,
+      type: "watchlist",
+      tone: "neutral",
+      label: "Watchlist",
+      title: item.label,
+      detail: `${labelDesk(item.desk)} · ${item.action || "Monitoring"} setup saved`,
+      onClick: () => jumpToPageSection("signals", "chart-panel", item.desk || activeDesk),
+    });
+  });
+
+  notificationItems
+    .filter((item) => item.status === "unread")
+    .slice(0, 3)
+    .forEach((item) => {
+      items.push({
+        id: `notification-${item.id}`,
+        type: "notification",
+        tone: "neutral",
+        label: "Inbox",
+        title: item.title,
+        detail: item.message,
+        onClick: () => jumpToPageSection("home", "home-watchlist", activeDesk),
+      });
+    });
+
+  if (!items.length) {
+    items.push({
+      id: "empty-feed",
+      type: "empty",
+      tone: "neutral",
+      label: "Intelligence",
+      title: "Portfolio intelligence is warming up",
+      detail: "Add LEGO investment positions to unlock retirement alerts, alpha signals, and recommendation insights.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
+    });
+  }
+
+  return items.slice(0, 12);
+}
+
 function buildPerformancePoints(trades) {
   let cumulative = 0;
 
@@ -350,6 +480,7 @@ export function HomeScreen({
   activePageSections,
   alertsResponse,
   appSettings,
+  closedTrades,
   collectiblesResponse,
   connectedProviderCount,
   feedbackResponse,
@@ -591,55 +722,43 @@ export function HomeScreen({
   const supportLaunchCards = supportLaunchDefinitions.map(buildLaunchCard);
   const homeActions = [
     {
-      id: "brief",
-      label: "Daily Brief",
-      meta: `${notificationSummary.unread || 0} unread`,
-      detail: "Open the premium daily brief with market posture, macro pressure, and desk attention points.",
-      onClick: () => jumpToPageSection("home", "home-brief", activeDesk),
-    },
-    {
-      id: "workflow",
-      label: "Workflow",
-      meta: `${watchlistItems.length + (alertSummary.enabled || 0)}`,
-      detail: "Review the guided session flow so the next action is always obvious.",
-      onClick: () => jumpToPageSection("home", "home-workflow", activeDesk),
-    },
-    {
-      id: "trade",
-      label: "Today's Signal",
-      meta: strongestSignal?.label || "Waiting",
-      detail: "Jump straight into the chart, plan, and ticket for the strongest live setup.",
-      onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
-    },
-    {
-      id: "news",
-      label: "Macro Tape",
-      meta: leadNewsItem?.sourceName || "Tape",
-      detail: "Read the lead headlines before you route the next decision.",
-      onClick: () => jumpToPageSection("news", "macro-feed", activeDesk),
-    },
-    {
-      id: "portfolio",
-      label: "Portfolio Pulse",
-      meta: `${openTrades.length} open`,
-      detail: "Review the live book, current PnL, and the most recent position changes.",
+      id: "holdings",
+      label: "View Holdings",
+      meta: `${openTrades.filter((trade) => trade.assetClass === "collectible").length} open`,
+      detail: "Review live LEGO investment positions and current book exposure.",
       onClick: () => jumpToPageSection("portfolio", "open-positions"),
     },
     {
-      id: "reports",
+      id: "performance",
+      label: "Portfolio Performance",
+      meta: formatCollectiblePrice(
+        summarizeBrickAlphaPortfolio([...openTrades, ...(closedTrades || [])]).netAssetValue,
+      ),
+      detail: "Open NAV, gains, theme allocation, and collection grade rollups.",
+      onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
+    },
+    {
+      id: "investments",
+      label: "LEGO Investments",
+      meta: `${collectiblesResponse.items?.length || 0} catalog`,
+      detail: "Research holdings, scores, and the investment decision engine.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-focus"),
+    },
+    {
+      id: "research",
       label: "Research Center",
       meta: `${sessionReadinessScore}%`,
-        detail: "Open the chart-rich research center and review the book visually.",
-        onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
-      },
-      {
-        id: "subscriptions",
-        label: "Subscriptions",
-        meta: subscriptionTierLabel(appSettings.subscriptionTier),
-        detail: "Review tiers, premium value, and the alert plan story clients will actually pay for.",
-        onClick: () => jumpToPageSection("subscriptions", "subscriptions-overview", activeDesk),
-      },
-    ];
+      detail: "Open performance graphs, desk exposure, and visual portfolio review.",
+      onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+    },
+    {
+      id: "subscriptions",
+      label: "Subscriptions",
+      meta: subscriptionTierLabel(appSettings.subscriptionTier),
+      detail: "Review tiers, premium value, and the alert plan story clients will pay for.",
+      onClick: () => jumpToPageSection("subscriptions", "subscriptions-overview", activeDesk),
+    },
+  ];
     const routineModeMeta = {
       morning: {
         label: "Morning brief",
@@ -870,41 +989,78 @@ export function HomeScreen({
       }
     };
 
+  const brickAlphaPortfolio = useMemo(
+    () => summarizeBrickAlphaPortfolio([...openTrades, ...(closedTrades || [])]),
+    [closedTrades, openTrades],
+  );
+  const portfolioHoldings = useMemo(
+    () => openTrades.filter((trade) => trade.assetClass === "collectible"),
+    [openTrades],
+  );
+  const recommendationCounts = useMemo(
+    () => countPortfolioRecommendations(portfolioHoldings),
+    [portfolioHoldings],
+  );
+  const retirementAlerts = useMemo(
+    () =>
+      portfolioHoldings.filter((holding) =>
+        ["Imminent", "Overdue", "Approaching"].includes(holding.retirementStatus),
+      ),
+    [portfolioHoldings],
+  );
+  const intelligenceFeed = useMemo(
+    () =>
+      buildIntelligenceFeed({
+        portfolioHoldings,
+        alertItems,
+        notificationItems,
+        watchlistItems,
+        jumpToPageSection,
+        activeDesk,
+      }),
+    [activeDesk, alertItems, jumpToPageSection, notificationItems, portfolioHoldings, watchlistItems],
+  );
+  const unrealizedGainPercent = brickAlphaPortfolio.costBasis
+    ? (brickAlphaPortfolio.unrealizedGain / brickAlphaPortfolio.costBasis) * 100
+    : null;
+  const themeAllocationRows = brickAlphaPortfolio.themeAllocation?.breakdown || [];
+
   return (
     <>
       <WorkspaceHero
-        tone="home"
-        eyebrow="App Home"
-        title="Home"
-        description="Open a service, check the lead setup, and move through the app from one clean mobile hub."
-        statusLabel="Session readiness"
-        statusValue={`${sessionReadinessScore}% ready`}
+        tone="portfolio"
+        eyebrow="Executive Dashboard"
+        title="Dashboard"
+        description="Your LEGO investment portfolio command center. Net asset value, collection intelligence, and AI-driven insights at a glance."
+        statusLabel="Collection grade"
+        statusValue={brickAlphaPortfolio.collectionGrade || "Awaiting positions"}
         metrics={[
           {
-            label: "Best signal",
-            value: strongestSignal?.label || "Waiting",
-            detail: strongestSignal?.setup || "Monitoring the desk",
+            label: "Net Asset Value",
+            value: formatCollectiblePrice(brickAlphaPortfolio.netAssetValue),
+            detail: `${portfolioHoldings.length} open holding${portfolioHoldings.length === 1 ? "" : "s"}`,
           },
           {
-            label: "Macro lead",
-            value: leadNewsItem?.sourceName || "Waiting",
-            detail: labelDesk(activeDesk),
+            label: "Unrealised Gain",
+            value: formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain),
+            detail:
+              unrealizedGainPercent != null
+                ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% vs cost`
+                : "Cost basis pending",
           },
           {
-            label: "Open book",
-            value: openTrades.length,
-            detail: Number.isFinite(totalOpenPnl)
-              ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL`
-              : "No live PnL yet",
+            label: "Portfolio Score",
+            value: formatScore(brickAlphaPortfolio.averageBrickAlphaScore),
+            detail: "Brick Alpha average",
           },
         ]}
         primaryAction={{
-          label: "Open Trade Desk",
-          onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+          label: "View Portfolio",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
         }}
         secondaryAction={{
-          label: "Open Services",
-          onClick: () => jumpToPageSection("home", "home-launchpad", activeDesk),
+          label: "LEGO Investments",
+          onClick: () => jumpToPageSection("collectibles", "collectibles-focus"),
         }}
       />
       <WorkspaceSectionBar
@@ -912,12 +1068,271 @@ export function HomeScreen({
         onSelect={(sectionId) => jumpToPageSection("home", sectionId, activeDesk)}
       />
       <WorkspaceCommandBar
-        tone="home"
-        title="Quick Actions"
-        hint="Move into the next part of the app without losing context."
+        tone="portfolio"
+        title="Portfolio Actions"
+        hint="Move into holdings, performance, and research without losing portfolio context."
         actions={homeActions}
       />
 
+      <section className="executiveDashboard" id="home-dashboard">
+        <div className="executiveDashboardHeader">
+          <div>
+            <span className="executiveDashboardEyebrow">Wealth Management</span>
+            <h2>Portfolio Command Center</h2>
+            <p>
+              Investment intelligence for your LEGO collection — NAV, gains, grade, diversification,
+              and AI-driven alerts in one premium view.
+            </p>
+          </div>
+          <div className="executiveDashboardStatus">
+            <span>As of today</span>
+            <strong>{formatDateTime(new Date().toISOString(), appSettings.timezone)}</strong>
+          </div>
+        </div>
+
+        <div className="executiveKpiMobileGrid" aria-label="Portfolio key metrics">
+          <button
+            type="button"
+            className="executiveKpiMobileCard executiveKpiMobileCard-primary"
+            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          >
+            <span>Net Asset Value</span>
+            <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
+            <small>{brickAlphaPortfolio.collectionGrade || "No positions yet"}</small>
+          </button>
+          <button
+            type="button"
+            className="executiveKpiMobileCard"
+            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          >
+            <span>Unrealised Gain</span>
+            <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
+              {formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)}
+            </strong>
+            <small>
+              {unrealizedGainPercent != null
+                ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% vs cost`
+                : "Awaiting cost basis"}
+            </small>
+          </button>
+          <button
+            type="button"
+            className="executiveKpiMobileCard"
+            onClick={() => jumpToPageSection("home", "home-dashboard", activeDesk)}
+          >
+            <span>Portfolio Score</span>
+            <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
+            <small>Brick Alpha average</small>
+          </button>
+          <button
+            type="button"
+            className="executiveKpiMobileCard"
+            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          >
+            <span>Collection Grade</span>
+            <strong>{brickAlphaPortfolio.collectionGrade || "--"}</strong>
+            <small>Investment quality tier</small>
+          </button>
+          <button
+            type="button"
+            className="executiveKpiMobileCard"
+            onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          >
+            <span>Diversification</span>
+            <strong>{formatScore(brickAlphaPortfolio.diversificationScore)}</strong>
+            <small>Theme and category spread</small>
+          </button>
+        </div>
+
+        <div className="executiveDashboardGrid">
+          <div className="executiveDashboardPrimary">
+            <section className="executiveMetricPanel executiveMetricPanel-hero">
+              <div className="executiveMetricPanelTop">
+                <span>Net Asset Value</span>
+                <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
+              </div>
+              <div className="executiveMetricPanelMeta">
+                <div>
+                  <span>Cost basis</span>
+                  <strong>{formatCollectiblePrice(brickAlphaPortfolio.costBasis)}</strong>
+                </div>
+                <div>
+                  <span>Open holdings</span>
+                  <strong>{portfolioHoldings.length}</strong>
+                </div>
+                <div>
+                  <span>Confidence</span>
+                  <strong>{formatScore(brickAlphaPortfolio.confidenceScore)}</strong>
+                </div>
+              </div>
+            </section>
+
+            <div className="executiveMetricRow">
+              <section className="executiveMetricPanel">
+                <span>Unrealised Gain</span>
+                <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
+                  {formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)}
+                </strong>
+                <small>
+                  {unrealizedGainPercent != null
+                    ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% vs cost basis`
+                    : "Add positions to track gains"}
+                </small>
+              </section>
+              <section className="executiveMetricPanel">
+                <span>Brick Alpha Portfolio Score</span>
+                <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
+                <small>Average score across your open LEGO holdings</small>
+              </section>
+              <section className="executiveMetricPanel">
+                <span>Collection Grade</span>
+                <strong>{brickAlphaPortfolio.collectionGrade || "--"}</strong>
+                <small>{brickAlphaPortfolio.riskLevel || "Balanced"} risk profile</small>
+              </section>
+              <section className="executiveMetricPanel">
+                <span>Diversification</span>
+                <strong>{formatScore(brickAlphaPortfolio.diversificationScore)}</strong>
+                <small>Theme and category allocation balance</small>
+              </section>
+            </div>
+
+            {themeAllocationRows.length ? (
+              <section className="executiveThemePanel">
+                <div className="executivePanelHeader">
+                  <div>
+                    <h3>Theme Allocation</h3>
+                    <p>NAV-weighted exposure across LEGO investment themes.</p>
+                  </div>
+                </div>
+                <div className="executiveThemeBars">
+                  {themeAllocationRows.map((row) => (
+                    <div className="executiveThemeBar" key={row.theme}>
+                      <div className="executiveThemeBarTop">
+                        <span>{row.theme}</span>
+                        <strong>{row.actual.toFixed(1)}%</strong>
+                      </div>
+                      <div className="executiveThemeTrack" aria-hidden="true">
+                        <div
+                          className="executiveThemeFill"
+                          style={{ width: `${Math.min(row.actual, 100)}%` }}
+                        />
+                      </div>
+                      <small>
+                        Target {row.target}% · {formatCollectiblePrice(row.value)}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="executiveRetirementPanel">
+              <div className="executivePanelHeader">
+                <div>
+                  <h3>Retirement Alerts</h3>
+                  <p>Sets in your portfolio approaching or past retirement windows.</p>
+                </div>
+                <div className="headerStatus">
+                  <span>Active</span>
+                  <strong>{retirementAlerts.length}</strong>
+                </div>
+              </div>
+              {retirementAlerts.length ? (
+                <div className="executiveRetirementChips">
+                  {retirementAlerts.map((holding) => (
+                    <button
+                      key={holding.id}
+                      type="button"
+                      className={`executiveRetirementChip executiveRetirementChip-${holding.retirementStatus.toLowerCase()}`}
+                      onClick={() => jumpToPageSection("portfolio", "position-detail")}
+                    >
+                      <span>{holding.retirementStatus}</span>
+                      <strong>{holding.label || holding.name}</strong>
+                      <small>
+                        {holding.sellByTargetDate || holding.expectedRetirementDate || "Review exit window"}
+                      </small>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No retirement alerts"
+                  body="Your current holdings are not approaching imminent retirement windows."
+                />
+              )}
+            </section>
+
+            <section className="executiveRecommendationPanel">
+              <div className="executivePanelHeader">
+                <div>
+                  <h3>Holdings Recommendations</h3>
+                  <p>Strong Buy, Buy, and Hold counts based on your open portfolio positions.</p>
+                </div>
+              </div>
+              <div className="executiveRecommendationGrid">
+                <button
+                  type="button"
+                  className="executiveRecommendationCard executiveRecommendationCard-strong"
+                  onClick={() => jumpToPageSection("portfolio", "open-positions")}
+                >
+                  <span>Strong Buy</span>
+                  <strong>{recommendationCounts.strongBuy}</strong>
+                </button>
+                <button
+                  type="button"
+                  className="executiveRecommendationCard executiveRecommendationCard-buy"
+                  onClick={() => jumpToPageSection("portfolio", "open-positions")}
+                >
+                  <span>Buy</span>
+                  <strong>{recommendationCounts.buy}</strong>
+                </button>
+                <button
+                  type="button"
+                  className="executiveRecommendationCard executiveRecommendationCard-hold"
+                  onClick={() => jumpToPageSection("portfolio", "open-positions")}
+                >
+                  <span>Hold</span>
+                  <strong>{recommendationCounts.hold}</strong>
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <aside className="executiveDashboardFeed">
+            <div className="executiveFeedHeader">
+              <div>
+                <span className="executiveDashboardEyebrow">AI Intelligence</span>
+                <h3>Intelligence Feed</h3>
+                <p>Retirement signals, alpha tags, recommendations, and alert activity for your book.</p>
+              </div>
+            </div>
+            <div className="executiveFeedList">
+              {intelligenceFeed.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`executiveFeedItem executiveFeedItem-${item.tone}`}
+                  onClick={item.onClick}
+                >
+                  <div className="executiveFeedItemTop">
+                    <span>{item.label}</span>
+                    <span className="signalMiniTag">{item.type}</span>
+                  </div>
+                  <strong>{item.title}</strong>
+                  <small>{item.detail}</small>
+                </button>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <details className="tradingToolsCollapse" id="home-trading-tools">
+        <summary className="tradingToolsSummary">
+          <span className="tradingToolsSummaryLabel">Trading Tools</span>
+          <small>Signals, macro tape, workflow, launchpad, and session tools</small>
+        </summary>
+        <div className="tradingToolsBody">
       <section className="homeTodayStack" id="home-overview">
         <div className="homeTodayHeader">
           <div>
@@ -1116,7 +1531,7 @@ export function HomeScreen({
           <div className="panelHeader">
             <div>
               <h2>Services</h2>
-              <p>Open the exact service screen you want from Home.</p>
+              <p>Open the exact service screen you want from the Dashboard.</p>
             </div>
             <div className="headerStatus">
               <span>Current desk</span>
@@ -1937,6 +2352,8 @@ export function HomeScreen({
           </div>
         </div>
       </section>
+        </div>
+      </details>
     </>
   );
 }
@@ -3976,7 +4393,7 @@ export function SubscriptionsScreen({
       id: "daily-brief",
       label: "Daily Brief",
       meta: `${notificationSummary.unread || 0} unread`,
-      detail: "Open the premium-style daily brief and see how the subscription story already lands on Home.",
+      detail: "Open the premium-style daily brief and see how the subscription story already lands on the Dashboard.",
       onClick: () => jumpToPageSection("home", "home-brief", activeDesk),
     },
     {
@@ -4879,7 +5296,7 @@ export function SettingsScreen({
       id: "routine",
       label: "Routine",
       meta: appSettings.routinePreferences?.remindersEnabled === false ? "Muted" : "Live",
-      detail: "Tune daily nudges, workflow tone, and the completion moment on Home.",
+      detail: "Tune daily nudges, workflow tone, and the completion moment on the Dashboard.",
       onClick: () => jumpToPageSection("settings", "routine-preferences"),
     },
     {
@@ -5299,7 +5716,7 @@ export function SettingsScreen({
         <div className="panelHeader">
           <div>
             <h2>Routine Preferences</h2>
-            <p>Shape how Home nudges the user through the day so the product feels supportive instead of noisy.</p>
+            <p>Shape how the Dashboard nudges the user through the day so the product feels supportive instead of noisy.</p>
           </div>
           <div className="headerStatus">
             <span>Routine tone</span>
@@ -5341,7 +5758,7 @@ export function SettingsScreen({
             <div className="panelHeader">
               <div>
                 <h3>Reminder behavior</h3>
-                <p>Decide how readily the app should surface unfinished workflow steps on Home.</p>
+                <p>Decide how readily the app should surface unfinished workflow steps on the Dashboard.</p>
               </div>
             </div>
 
@@ -5446,7 +5863,7 @@ export function SettingsScreen({
                       ? "Only stronger nudges"
                       : "Every open step stays visible"}
                 </strong>
-                <small>Home now adapts how quickly it shows the workflow reminder and completion state.</small>
+                <small>The Dashboard now adapts how quickly it shows the workflow reminder and completion state.</small>
               </div>
             </div>
           </section>

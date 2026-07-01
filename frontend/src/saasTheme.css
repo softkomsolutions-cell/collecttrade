@@ -718,3 +718,559 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ─── Executive Dashboard (home) ─── */
+
+.executiveDashboard {
+  display: grid;
+  gap: 20px;
+  padding: 4px 0 8px;
+}
+
+.executiveDashboardHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-radius: var(--ba-radius-xl);
+  border: 1px solid rgba(212, 175, 95, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(212, 175, 95, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
+    var(--ba-bg-surface);
+}
+
+.executiveDashboardEyebrow {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ba-gold);
+}
+
+.executiveDashboardHeader h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ba-text-primary);
+}
+
+.executiveDashboardHeader p {
+  margin: 8px 0 0;
+  max-width: 58ch;
+  color: var(--ba-text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.executiveDashboardStatus {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.executiveDashboardStatus span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveDashboardStatus strong {
+  font-size: 13px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveKpiMobileGrid {
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.executiveKpiMobileCard {
+  padding: 14px 16px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--ba-transition),
+    transform var(--ba-transition);
+}
+
+.executiveKpiMobileCard:hover {
+  border-color: rgba(212, 175, 95, 0.28);
+  transform: translateY(-1px);
+}
+
+.executiveKpiMobileCard-primary {
+  grid-column: 1 / -1;
+  border-color: rgba(212, 175, 95, 0.24);
+  background:
+    linear-gradient(135deg, rgba(212, 175, 95, 0.08), transparent 55%),
+    var(--ba-bg-surface);
+}
+
+.executiveKpiMobileCard span {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveKpiMobileCard strong {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ba-text-primary);
+}
+
+.executiveKpiMobileCard small {
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveDashboardGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.executiveDashboardPrimary {
+  display: grid;
+  gap: 16px;
+}
+
+.executiveMetricPanel {
+  padding: 18px 20px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+  display: grid;
+  gap: 8px;
+}
+
+.executiveMetricPanel-hero {
+  padding: 24px;
+  border-color: rgba(212, 175, 95, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(91, 108, 255, 0.08), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(212, 175, 95, 0.1), transparent 42%),
+    var(--ba-bg-surface);
+}
+
+.executiveMetricPanelTop span,
+.executiveMetricPanel > span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveMetricPanelTop strong,
+.executiveMetricPanel > strong {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--ba-text-primary);
+}
+
+.executiveMetricPanel small {
+  font-size: 13px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveMetricPanelMeta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ba-border-subtle);
+}
+
+.executiveMetricPanelMeta div {
+  display: grid;
+  gap: 4px;
+}
+
+.executiveMetricPanelMeta span {
+  font-size: 11px;
+  color: var(--ba-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.executiveMetricPanelMeta strong {
+  font-size: 16px;
+  color: var(--ba-text-primary);
+}
+
+.executiveMetricRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.executiveMetricRow .executiveMetricPanel > strong {
+  font-size: 22px;
+}
+
+.executivePanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.executivePanelHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ba-text-primary);
+}
+
+.executivePanelHeader p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveThemePanel,
+.executiveRetirementPanel,
+.executiveRecommendationPanel {
+  padding: 20px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+}
+
+.executiveThemeBars {
+  display: grid;
+  gap: 12px;
+}
+
+.executiveThemeBar {
+  display: grid;
+  gap: 6px;
+}
+
+.executiveThemeBarTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.executiveThemeBarTop span {
+  font-size: 13px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveThemeBarTop strong {
+  font-size: 13px;
+  color: var(--ba-text-primary);
+}
+
+.executiveThemeTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.executiveThemeFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(212, 175, 95, 0.85), rgba(91, 108, 255, 0.85));
+}
+
+.executiveThemeBar small {
+  font-size: 12px;
+  color: var(--ba-text-muted);
+}
+
+.executiveRetirementChips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.executiveRetirementChip {
+  padding: 14px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-elevated);
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.executiveRetirementChip-imminent,
+.executiveRetirementChip-approaching {
+  border-color: rgba(245, 166, 35, 0.28);
+  background: rgba(245, 166, 35, 0.06);
+}
+
+.executiveRetirementChip-overdue {
+  border-color: rgba(255, 92, 92, 0.28);
+  background: rgba(255, 92, 92, 0.06);
+}
+
+.executiveRetirementChip span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveRetirementChip strong {
+  font-size: 14px;
+  color: var(--ba-text-primary);
+}
+
+.executiveRetirementChip small {
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveRecommendationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.executiveRecommendationCard {
+  padding: 18px 16px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-elevated);
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.executiveRecommendationCard-strong {
+  border-color: rgba(62, 207, 142, 0.28);
+  background: rgba(62, 207, 142, 0.06);
+}
+
+.executiveRecommendationCard-buy {
+  border-color: rgba(91, 108, 255, 0.28);
+  background: rgba(91, 108, 255, 0.06);
+}
+
+.executiveRecommendationCard-hold {
+  border-color: rgba(245, 166, 35, 0.24);
+  background: rgba(245, 166, 35, 0.05);
+}
+
+.executiveRecommendationCard span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveRecommendationCard strong {
+  font-size: 28px;
+  color: var(--ba-text-primary);
+}
+
+.executiveDashboardFeed {
+  position: sticky;
+  top: calc(var(--ba-topnav-height) + 12px);
+  padding: 20px;
+  border-radius: var(--ba-radius-xl);
+  border: 1px solid var(--ba-border-subtle);
+  background:
+    linear-gradient(180deg, rgba(91, 108, 255, 0.06), transparent 28%),
+    var(--ba-bg-surface);
+  display: grid;
+  gap: 14px;
+  max-height: calc(100vh - var(--ba-topnav-height) - 48px);
+  overflow: auto;
+}
+
+.executiveFeedHeader h3 {
+  margin: 6px 0 0;
+  font-size: 18px;
+  color: var(--ba-text-primary);
+}
+
+.executiveFeedHeader p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveFeedList {
+  display: grid;
+  gap: 10px;
+}
+
+.executiveFeedItem {
+  padding: 14px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-elevated);
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--ba-transition),
+    transform var(--ba-transition);
+}
+
+.executiveFeedItem:hover {
+  border-color: rgba(91, 108, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.executiveFeedItemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.executiveFeedItemTop span:first-child {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveFeedItem strong {
+  font-size: 14px;
+  color: var(--ba-text-primary);
+}
+
+.executiveFeedItem small {
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+  line-height: 1.45;
+}
+
+.executiveFeedItem-urgent {
+  border-color: rgba(255, 92, 92, 0.28);
+}
+
+.executiveFeedItem-warning {
+  border-color: rgba(245, 166, 35, 0.28);
+}
+
+.executiveFeedItem-success {
+  border-color: rgba(62, 207, 142, 0.28);
+}
+
+.executiveFeedItem-accent {
+  border-color: rgba(91, 108, 255, 0.24);
+}
+
+/* ─── Trading Tools collapse ─── */
+
+.tradingToolsCollapse {
+  margin-top: 8px;
+  border-radius: var(--ba-radius-xl);
+  border: 1px solid var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+  overflow: hidden;
+}
+
+.tradingToolsSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.tradingToolsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.tradingToolsSummaryLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ba-text-primary);
+}
+
+.tradingToolsSummary small {
+  font-size: 13px;
+  color: var(--ba-text-secondary);
+}
+
+.tradingToolsBody {
+  display: grid;
+  gap: 18px;
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--ba-border-subtle);
+}
+
+.tradingToolsCollapse[open] .tradingToolsSummary {
+  border-bottom: 1px solid var(--ba-border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 1100px) {
+  .executiveDashboardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .executiveDashboardFeed {
+    position: static;
+    max-height: none;
+  }
+
+  .executiveMetricRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .saasAppShell .executiveKpiMobileGrid {
+    display: grid;
+  }
+
+  .executiveDashboardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .executiveDashboardStatus {
+    text-align: left;
+  }
+
+  .executiveMetricPanelMeta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .executiveMetricRow,
+  .executiveRecommendationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .executiveDashboardHeader h2 {
+    font-size: 24px;
+  }
+
+  .executiveMetricPanelTop strong {
+    font-size: 28px;
+  }
+}

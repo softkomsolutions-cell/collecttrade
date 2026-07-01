@@ -24,6 +24,7 @@ import {
   defaultIntroIdForPage,
   executionPlanForSignal,
   formatDateTime,
+  formatCollectiblePrice,
   formatTicketPlanInput,
   labelDesk,
   marketModeLabel,
@@ -52,6 +53,7 @@ import {
 import {
   enrichBrickAlphaCollectible,
   enrichBrickAlphaTrade,
+  summarizeBrickAlphaPortfolio,
 } from "./brickAlphaModel";
 
 function lazyNamedExport(factory, exportName) {
@@ -761,7 +763,7 @@ function NotificationCenter({
             Mark all read
           </button>
           <button type="button" className="ghostButton" onClick={onOpenHomeFeed}>
-            Open Home feed
+            Open Dashboard feed
           </button>
         </div>
 
@@ -1549,7 +1551,7 @@ export default function App() {
         page: nextPage,
         desk: nextDesk,
         introId: "home",
-        sectionId: "home-overview",
+        sectionId: "home-dashboard",
         landingId: "home",
       });
       setPage(nextPage);
@@ -2677,41 +2679,51 @@ export default function App() {
     [appSettings, connectors],
   );
 
+  const brickAlphaSummary = useMemo(
+    () => summarizeBrickAlphaPortfolio(enrichedPortfolio),
+    [enrichedPortfolio],
+  );
   const topMetrics = [
     {
-      id: "workspace",
-      label: "Workspace",
-      value: currentWorkspaceCard.label,
-      detail: activeDesk === "all" ? "Cross-market view" : labelDesk(activeDesk),
-      action: () => navigateToPage("home", false, activeDesk),
+      id: "nav",
+      label: "Net Asset Value",
+      value: formatCollectiblePrice(brickAlphaSummary.netAssetValue),
+      detail: brickAlphaSummary.collectionGrade || "No positions yet",
+      action: () => jumpToPageSection("home", "home-dashboard", activeDesk),
     },
     {
-      id: "feed",
-      label: "Market feed",
-      value: marketModeLabel(signalsResponse.marketData?.mode),
-      detail: signalsResponse.marketData?.provider || "Simulator",
-      action: () => jumpToPageSection("connections", "market-feed-status", activeDesk),
+      id: "unrealized",
+      label: "Unrealised Gain",
+      value: formatCollectiblePrice(brickAlphaSummary.unrealizedGain),
+      detail: brickAlphaSummary.costBasis
+        ? `${((brickAlphaSummary.unrealizedGain / brickAlphaSummary.costBasis) * 100).toFixed(1)}% vs cost`
+        : "Awaiting cost basis",
+      action: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
     },
     {
-      id: "book",
-      label: "Open book",
-      value: openTrades.length,
-      detail: Number.isFinite(totalOpenPnl) ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}%` : "--",
-      action: () => jumpToPageSection("portfolio", "open-positions"),
+      id: "score",
+      label: "Portfolio Score",
+      value: brickAlphaSummary.averageBrickAlphaScore
+        ? `${Math.round(brickAlphaSummary.averageBrickAlphaScore)}/100`
+        : "--",
+      detail: "Brick Alpha average",
+      action: () => jumpToPageSection("home", "home-dashboard", activeDesk),
     },
     {
-      id: "feedback",
-      label: "Feedback",
-      value: feedbackResponse.summary?.open || 0,
-      detail: "Open partner items",
-      action: () => jumpToPageSection("settings", "feedback-board"),
+      id: "grade",
+      label: "Collection Grade",
+      value: brickAlphaSummary.collectionGrade || "--",
+      detail: "Investment quality tier",
+      action: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
     },
     {
-      id: "notifications",
-      label: "Inbox",
-      value: notificationUnreadCount,
-      detail: "Unread notifications",
-      action: openNotificationCenter,
+      id: "diversification",
+      label: "Diversification",
+      value: brickAlphaSummary.diversificationScore
+        ? `${Math.round(brickAlphaSummary.diversificationScore)}/100`
+        : "--",
+      detail: "Theme and category spread",
+      action: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
     },
   ];
   const globalSearchIndex = useMemo(
@@ -2841,8 +2853,8 @@ export default function App() {
   const menuSupportItems = [
     {
       id: "menu-home",
-      label: "Home",
-      detail: "Workspace hub",
+      label: "Dashboard",
+      detail: "Executive dashboard",
       action: () => handleMenuNavigate("home", activeDesk),
     },
     {
@@ -2916,6 +2928,7 @@ export default function App() {
           activePageSections={activePageSections}
           alertsResponse={alertsResponse}
           appSettings={appSettings}
+          closedTrades={closedTrades}
           collectiblesResponse={collectiblesResponse}
           connectedProviderCount={connectedProviderCount}
           feedbackResponse={feedbackResponse}

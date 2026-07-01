@@ -73,7 +73,7 @@ export default function TradeScreen({
             onClick: () => jumpToPageSection("news", "macro-feed", activeDesk),
           }}
           secondaryAction={{
-            label: "Open Home",
+            label: "Open Dashboard",
             onClick: () => jumpToPageSection("home", "home-overview", activeDesk),
           }}
         />

@@ -77,10 +77,10 @@ export const VALR_PAIR_OPTIONS = [
 export const NAV_ITEMS = [
   {
     id: "home",
-    label: "Home",
+    label: "Dashboard",
     glyph: "HM",
     section: "Market",
-    hint: "Workspace hub and quick launch",
+    hint: "Executive dashboard and portfolio command center",
   },
   {
     id: "news",
@@ -153,7 +153,7 @@ export const NAV_GROUPS = [
 ];
 
 export const SCREEN_PREVIEWS = {
-  home: "Workspace hub, quick launch, partner readiness, and recent session context.",
+  home: "Executive dashboard with NAV, collection intelligence, and portfolio command center.",
   news: "Desk-specific macro headlines, South African context, and the full tape in one place.",
   signals: "Live 8/21 EMA setups, chart structure, and execution tickets.",
   tools: "AI mentor, chart analyzer, simulator, and research workspace for decision support.",
@@ -167,6 +167,7 @@ export const SCREEN_PREVIEWS = {
 
 export const PAGE_SECTION_LINKS = {
   home: [
+    { id: "home-dashboard", label: "Executive" },
     { id: "home-overview", label: "Overview" },
     { id: "home-brief", label: "Brief" },
     { id: "home-workflow", label: "Workflow" },
@@ -426,11 +427,11 @@ export const INTRO_ACTIONS = [
     ordinal: "00",
     glyph: "HM",
     eyebrow: "Hub",
-    title: "Home",
+    title: "Dashboard",
     page: "home",
-    sectionId: "home-overview",
-    destination: "Workspace Hub",
-    blurb: "Open the app home first for quick launch, partner readiness, and session context.",
+    sectionId: "home-dashboard",
+    destination: "Executive Dashboard",
+    blurb: "Land on the executive dashboard first for NAV, collection grade, and portfolio intelligence.",
   },
   {
     id: "news",
