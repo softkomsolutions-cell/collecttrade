@@ -69,6 +69,10 @@ export function workspaceLabel(page, desk) {
     return "LEGO Investments";
   }
 
+  if (page === "scan-evaluate") {
+    return "Scan & Evaluate";
+  }
+
   if (page === "reports") {
     return "Research Center";
   }
@@ -135,6 +139,10 @@ export function defaultSectionIdForIntro(page, introId) {
 
   if (page === "collectibles") {
     return "investment-analysis";
+  }
+
+  if (page === "scan-evaluate") {
+    return "scan-evaluate";
   }
 
   if (page === "portfolio") {

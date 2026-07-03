@@ -72,6 +72,10 @@ const CollectiblesScreen = lazyNamedExport(
   () => import("./components/workspaceScreens"),
   "CollectiblesScreen",
 );
+const ScanEvaluateScreen = lazyNamedExport(
+  () => import("./components/workspaceScreens"),
+  "ScanEvaluateScreen",
+);
 const PortfolioScreen = lazyNamedExport(
   () => import("./components/workspaceScreens"),
   "PortfolioScreen",
@@ -2803,7 +2807,7 @@ export default function App() {
   }, [closeGlobalSearch, currentUser, openGlobalSearch, searchVisible, splashVisible]);
 
   const primaryNavItems = NAV_ITEMS.filter((item) =>
-    ["home", "news", "signals", "collectibles", "portfolio"].includes(item.id),
+    ["home", "news", "signals", "collectibles", "scan-evaluate", "portfolio"].includes(item.id),
   );
   const utilityNavItems = NAV_ITEMS.filter((item) =>
     ["subscriptions", "tools", "reports", "connections", "settings"].includes(item.id),
@@ -3059,6 +3063,19 @@ export default function App() {
         />
       ) : null}
 
+      {page === "scan-evaluate" ? (
+        <ScanEvaluateScreen
+          activePageSections={activePageSections}
+          appSettings={appSettings}
+          collectibles={collectibles}
+          collectiblesResponse={enrichedCollectiblesResponse}
+          handleCollectibleSelect={handleCollectibleSelect}
+          jumpToPageSection={jumpToPageSection}
+          onAddToWatchlist={addSignalToWatchlist}
+          openCollectibleTicket={openCollectibleTicket}
+        />
+      ) : null}
+
       {page === "portfolio" ? (
         <PortfolioScreen
           activeDesk={activeDesk}
@@ -3066,13 +3083,16 @@ export default function App() {
           activePortfolioTrade={activePortfolioTrade}
           appSettings={appSettings}
           closedTrades={closedTrades}
+          collectibles={collectibles}
           handleCloseTrade={handleCloseTrade}
           handlePortfolioTradeNavigate={handlePortfolioTradeNavigate}
           handlePortfolioTradeSelect={handlePortfolioTradeSelect}
           health={health}
           jumpToPageSection={jumpToPageSection}
+          onAddToWatchlist={addSignalToWatchlist}
           openTrades={openTrades}
           totalOpenPnl={totalOpenPnl}
+          watchlistItems={watchlistResponse.items || []}
         />
       ) : null}
 

@@ -48,6 +48,9 @@ import {
 import { summarizeBrickAlphaPortfolio } from "../brickAlphaModel";
 import { HomeExecutiveDashboard } from "./homeExecutiveDashboard";
 import { InvestmentAnalysisWorkspace } from "./investmentAnalysisWorkspace";
+import { RetirementIntelligenceWorkspace } from "./retirementIntelligenceWorkspace";
+import { PortfolioIntelligenceWorkspace } from "./portfolioIntelligenceWorkspace";
+import { ScanEvaluateWorkspace } from "./scanEvaluateWorkspace";
 
 function numberOrZero(value) {
   const numeric = Number(value);
@@ -186,7 +189,7 @@ function buildIntelligenceFeed({
           holding.sellByTargetDate || holding.expectedRetirementDate
             ? `Target ${holding.sellByTargetDate || holding.expectedRetirementDate}`
             : "Review retirement timeline and exit window.",
-        onClick: () => jumpToPageSection("portfolio", "position-detail"),
+        onClick: () => jumpToPageSection("collectibles", "retirement-intelligence"),
       });
     }
 
@@ -3116,6 +3119,15 @@ export function CollectiblesScreen({
         openTrades={openTrades}
       />
 
+      <RetirementIntelligenceWorkspace
+        brickAlphaPortfolio={brickAlphaPortfolio}
+        collectibles={collectibles}
+        handleCollectibleSelect={handleCollectibleSelect}
+        jumpToPageSection={jumpToPageSection}
+        openCollectibleTicket={openCollectibleTicket}
+        openTrades={openTrades}
+      />
+
       <section className="panel" id="collectibles-trading">
         <div className="panelHeader">
           <div>
@@ -3282,30 +3294,115 @@ export function CollectiblesScreen({
   );
 }
 
+export function ScanEvaluateScreen({
+  activePageSections,
+  appSettings,
+  collectibles,
+  collectiblesResponse,
+  handleCollectibleSelect,
+  jumpToPageSection,
+  onAddToWatchlist,
+  openCollectibleTicket,
+}) {
+  const legoCount = collectibles.filter((item) => item.brand === "LEGO").length;
+
+  return (
+    <>
+      <WorkspaceHero
+        tone="collectibles"
+        eyebrow="Scan & Evaluate"
+        title="Scan & Evaluate"
+        description="Upload a photo of any LEGO set, box, or receipt — identify the set and get an instant Brick Alpha investment score."
+        statusLabel="Catalog"
+        statusValue={`${legoCount} LEGO sets`}
+        metrics={[
+          {
+            label: "Recognition",
+            value: "Demo mode",
+            detail: "Catalog matching — no live OCR",
+          },
+          {
+            label: "Analysis engine",
+            value: "Brick Alpha",
+            detail: "Same model as Investment Analysis",
+          },
+          {
+            label: "Catalog refresh",
+            value: formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone),
+            detail: "Live collectible desk data",
+          },
+          {
+            label: "Flow",
+            value: "4 steps",
+            detail: "Upload → Identify → Evaluate → Portfolio",
+          },
+        ]}
+        primaryAction={{
+          label: "Open Investment Analysis",
+          onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
+        }}
+        secondaryAction={{
+          label: "Browse Catalog",
+          onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
+        }}
+      />
+      <WorkspaceSectionBar
+        sections={activePageSections}
+        onSelect={(sectionId) => jumpToPageSection("scan-evaluate", sectionId)}
+      />
+      <ScanEvaluateWorkspace
+        collectibles={collectibles}
+        handleCollectibleSelect={handleCollectibleSelect}
+        jumpToPageSection={jumpToPageSection}
+        onAddToWatchlist={onAddToWatchlist}
+        openCollectibleTicket={openCollectibleTicket}
+      />
+    </>
+  );
+}
+
 export function PortfolioScreen({
   activeDesk,
   activePageSections,
   activePortfolioTrade,
   appSettings,
   closedTrades,
+  collectibles = [],
   handleCloseTrade,
   handlePortfolioTradeNavigate,
   handlePortfolioTradeSelect,
   health,
   jumpToPageSection,
+  onAddToWatchlist,
   openTrades,
   totalOpenPnl,
+  watchlistItems = [],
 }) {
   const brickAlphaPortfolio = useMemo(
     () => summarizeBrickAlphaPortfolio([...openTrades, ...closedTrades]),
     [closedTrades, openTrades],
   );
+  const collectibleHoldings = openTrades.filter((trade) => trade.assetClass === "collectible");
   const portfolioActions = [
+    {
+      id: "intelligence",
+      label: "Collection Intelligence",
+      meta: `${collectibleHoldings.length || "Demo"}`,
+      detail: "NAV, theme allocation, growth chart, and Brick Alpha scores.",
+      onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
+    },
+    {
+      id: "holdings",
+      label: "My Sets",
+      meta: `${collectibleHoldings.length || 6}`,
+      detail: "Premium holdings cards with investment intelligence.",
+      onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
+    },
     {
       id: "positions",
       label: "Open Positions",
       meta: `${openTrades.length}`,
-      detail: "Focus on what is still live and carrying risk.",
+      detail: "All live market and collectible positions.",
       onClick: () => jumpToPageSection("portfolio", "open-positions"),
     },
     {
@@ -3335,9 +3432,9 @@ export function PortfolioScreen({
     <>
       <WorkspaceHero
         tone="portfolio"
-        eyebrow="Portfolio Book"
-        title="My Portfolio"
-        description="User-scoped order tracking, EMA-managed exits, and saved execution history."
+        eyebrow="Collection Intelligence"
+        title="Portfolio Intelligence"
+        description="Your LEGO collection as an investment portfolio — NAV, growth, theme allocation, and Brick Alpha recommendations."
         statusLabel="Last engine tick"
         statusValue={formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}
         metrics={[
@@ -3363,12 +3460,12 @@ export function PortfolioScreen({
           },
         ]}
         primaryAction={{
-          label: "Open Trade Desk",
-          onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+          label: "View Holdings",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
         }}
         secondaryAction={{
-          label: "Review History",
-          onClick: () => jumpToPageSection("portfolio", "order-history"),
+          label: "Export Portfolio",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
         }}
       />
       <WorkspaceSectionBar
@@ -3377,9 +3474,18 @@ export function PortfolioScreen({
       />
       <WorkspaceCommandBar
         tone="portfolio"
-        title="Book Shortcuts"
-        hint="Move between the live book, history, and the next execution step."
+        title="Portfolio Shortcuts"
+        hint="Collection intelligence, holdings, open book, and execution history."
         actions={portfolioActions}
+      />
+
+      <PortfolioIntelligenceWorkspace
+        collectibles={collectibles}
+        handlePortfolioTradeSelect={handlePortfolioTradeSelect}
+        jumpToPageSection={jumpToPageSection}
+        onAddToWatchlist={onAddToWatchlist}
+        openTrades={openTrades}
+        watchlistItems={watchlistItems}
       />
 
       <PositionDetailCard
@@ -3422,114 +3528,6 @@ export function PortfolioScreen({
           <span>Avg Brick Alpha Score</span>
           <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
         </button>
-      </section>
-
-      <section className="panel" id="portfolio-dashboard">
-        <div className="panelHeader">
-          <div>
-            <h2>Portfolio Dashboard</h2>
-            <p>
-              LEGO investment positions roll up into NAV, cost basis, gains, risk, diversification,
-              and confidence before the recommendation engine adjusts the next decision.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Collection grade</span>
-            <strong>{brickAlphaPortfolio.collectionGrade}</strong>
-          </div>
-        </div>
-
-        <div className="stateGrid">
-          <div>
-            <span>Net Asset Value</span>
-            <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
-          </div>
-          <div>
-            <span>Cost Basis</span>
-            <strong>{formatCollectiblePrice(brickAlphaPortfolio.costBasis)}</strong>
-          </div>
-          <div>
-            <span>Unrealized Gain</span>
-            <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
-              {formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)}
-            </strong>
-          </div>
-          <div>
-            <span>Realized Gain</span>
-            <strong className={positiveTone(brickAlphaPortfolio.realizedGain)}>
-              {formatCollectiblePrice(brickAlphaPortfolio.realizedGain)}
-            </strong>
-          </div>
-          <div>
-            <span>Risk Level</span>
-            <strong>{brickAlphaPortfolio.riskLevel}</strong>
-          </div>
-          <div>
-            <span>Diversification</span>
-            <strong>{formatScore(brickAlphaPortfolio.diversificationScore)}</strong>
-          </div>
-          <div>
-            <span>Confidence</span>
-            <strong>{formatScore(brickAlphaPortfolio.confidenceScore)}</strong>
-          </div>
-          <div>
-            <span>Avg Brick Alpha Score</span>
-            <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
-          </div>
-        </div>
-
-        <div className="themeAllocationPanel">
-          <div className="panelHeader">
-            <div>
-              <h3>Theme Allocation</h3>
-              <p>Target LEGO theme mix versus current NAV-weighted book exposure.</p>
-            </div>
-          </div>
-          <div className="themeAllocationGrid">
-            {(brickAlphaPortfolio.themeAllocation?.breakdown || []).map((row) => (
-              <div className="themeAllocationRow" key={row.theme}>
-                <div className="themeAllocationLabel">
-                  <span>{row.theme}</span>
-                  <strong>
-                    {Math.round(row.actual)}% / {row.target}%
-                  </strong>
-                </div>
-                <div className="themeAllocationBar" aria-hidden="true">
-                  <span
-                    className="themeAllocationBarActual"
-                    style={{ width: `${Math.min(100, Math.max(0, row.actual))}%` }}
-                  />
-                  <span
-                    className="themeAllocationBarTarget"
-                    style={{ left: `${Math.min(100, Math.max(0, row.target))}%` }}
-                  />
-                </div>
-                <small className={positiveTone(-row.drift)}>
-                  {row.drift === 0
-                    ? "On target"
-                    : row.drift > 0
-                      ? `${Math.round(row.drift)}% overweight`
-                      : `${Math.round(Math.abs(row.drift))}% underweight`}
-                </small>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="portfolioFlywheel">
-          {[
-            "Purchase data",
-            "Valuation",
-            "Performance tracking",
-            "Recommendation adjustment",
-            "Improved future buying decisions",
-          ].map((step, index) => (
-            <div className="portfolioFlywheelStep" key={step}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <strong>{step}</strong>
-            </div>
-          ))}
-        </div>
       </section>
 
       <div className="splitGrid">
