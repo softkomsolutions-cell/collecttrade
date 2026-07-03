@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react
 import "./App.css";
 import "./saasTheme.css";
 import {
+  API_BASE_URL,
   APP_NAME,
   APP_TAGLINE,
   APP_WORDMARK,
@@ -657,7 +658,7 @@ function createRequestHeaders(token, hasBody) {
 
 async function requestJson(path, options = {}) {
   const { method = "GET", body, token } = options;
-  const response = await fetch(path, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: createRequestHeaders(token, body !== undefined),
     body: body !== undefined ? JSON.stringify(body) : undefined,
