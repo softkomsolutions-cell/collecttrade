@@ -13,6 +13,7 @@ import { formatCollectiblePrice, openExternal, positiveTone } from "../appUtils"
 import { EmptyState } from "./appShell";
 import { AlphaSignalBadges } from "./workspaceCards";
 import { InvestmentAnalysisChart } from "./investmentAnalysisChart";
+import { ScoreBar, ScoreRing } from "./brickAlphaScoreDisplay";
 import { ScoreExplanationPanel } from "./scoreExplanationPanel";
 
 const HORIZON_OPTIONS = [1, 3, 5, 10];
@@ -106,20 +107,6 @@ function formatScore(value) {
   return Number.isFinite(numeric) ? `${Math.round(numeric)}/100` : "--";
 }
 
-function scoreTone(score) {
-  const numeric = Number(score);
-  if (numeric >= 80) {
-    return "excellent";
-  }
-  if (numeric >= 65) {
-    return "good";
-  }
-  if (numeric >= 50) {
-    return "fair";
-  }
-  return "weak";
-}
-
 function recommendationTone(recommendation) {
   if (recommendation === "Strong Buy" || recommendation === "Buy") {
     return "buy";
@@ -208,53 +195,6 @@ function buildComparables(item, collectibles) {
       growth: candidate.estimatedRoi,
       yearsSinceRetirement: candidate.actualRetirementDate ? 2 : 0.5,
     }));
-}
-
-function ScoreRing({ score }) {
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (Math.min(100, Math.max(0, Number(score) || 0)) / 100) * circumference;
-
-  return (
-    <div className={`iaScoreRing iaScoreRing-${scoreTone(score)}`}>
-      <svg viewBox="0 0 128 128" aria-hidden="true">
-        <circle className="iaScoreRingTrack" cx="64" cy="64" r={radius} />
-        <circle
-          className="iaScoreRingProgress"
-          cx="64"
-          cy="64"
-          r={radius}
-          strokeDasharray={`${progress} ${circumference}`}
-          transform="rotate(-90 64 64)"
-        />
-      </svg>
-      <div className="iaScoreRingLabel">
-        <strong>{Math.round(Number(score) || 0)}</strong>
-        <span>Score</span>
-      </div>
-    </div>
-  );
-}
-
-function ScoreBar({ factor }) {
-  return (
-    <div className="iaScoreBar" title={factor.explanation}>
-      <div className="iaScoreBarHeader">
-        <span>{factor.label}</span>
-        <div className="iaScoreBarMeta">
-          <small>{factor.weight}%</small>
-          <strong>{Math.round(factor.score)}</strong>
-          <em>+{factor.contribution}</em>
-        </div>
-      </div>
-      <div className="iaScoreBarTrack">
-        <div
-          className={`iaScoreBarFill iaScoreBarFill-${scoreTone(factor.score)}`}
-          style={{ width: `${Math.min(100, Math.max(0, factor.score))}%` }}
-        />
-      </div>
-    </div>
-  );
 }
 
 export function InvestmentAnalysisWorkspace({
@@ -779,7 +719,7 @@ export function InvestmentAnalysisWorkspace({
         <button type="button" className="ghostButton" onClick={() => jumpToPageSection("subscriptions", "subscriptions-overview")}>
           Add Alert
         </button>
-        <button type="button" className="ghostButton" onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}>
+        <button type="button" className="ghostButton" onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}>
           Track Retirement
         </button>
         <button type="button" className="ghostButton" onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}>

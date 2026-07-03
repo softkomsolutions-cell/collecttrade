@@ -3303,6 +3303,7 @@ export function ScanEvaluateScreen({
   jumpToPageSection,
   onAddToWatchlist,
   openCollectibleTicket,
+  openTrades,
 }) {
   const legoCount = collectibles.filter((item) => item.brand === "LEGO").length;
 
@@ -3311,39 +3312,39 @@ export function ScanEvaluateScreen({
       <WorkspaceHero
         tone="collectibles"
         eyebrow="Scan & Evaluate"
-        title="Scan & Evaluate"
-        description="Upload a photo of any LEGO set, box, or receipt — identify the set and get an instant Brick Alpha investment score."
-        statusLabel="Catalog"
-        statusValue={`${legoCount} LEGO sets`}
+        title="AI Investment Advisor for LEGO"
+        description="Photograph a set, upload an image, or enter a set number — Brick Alpha delivers a complete investment analysis with score, forecast, and portfolio actions in seconds."
+        statusLabel="Engine"
+        statusValue="Brick Alpha AI"
         metrics={[
           {
             label: "Recognition",
-            value: "Demo mode",
-            detail: "Catalog matching — no live OCR",
+            value: "AI Vision",
+            detail: "Intelligent set identification",
           },
           {
-            label: "Analysis engine",
-            value: "Brick Alpha",
-            detail: "Same model as Investment Analysis",
+            label: "Analysis",
+            value: "Full verdict",
+            detail: "Score · grade · ROI · retirement",
           },
           {
-            label: "Catalog refresh",
-            value: formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone),
-            detail: "Live collectible desk data",
+            label: "Catalog",
+            value: `${legoCount} sets`,
+            detail: "Live LEGO investment desk",
           },
           {
-            label: "Flow",
-            value: "4 steps",
-            detail: "Upload → Identify → Evaluate → Portfolio",
+            label: "Pipeline",
+            value: "~5 seconds",
+            detail: "Photo → score → recommendation",
           },
         ]}
         primaryAction={{
-          label: "Open Investment Analysis",
+          label: "Investment Analysis",
           onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
         }}
         secondaryAction={{
-          label: "Browse Catalog",
-          onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
+          label: "Portfolio Intelligence",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
         }}
       />
       <WorkspaceSectionBar
@@ -3352,6 +3353,7 @@ export function ScanEvaluateScreen({
       />
       <ScanEvaluateWorkspace
         collectibles={collectibles}
+        openTrades={openTrades}
         handleCollectibleSelect={handleCollectibleSelect}
         jumpToPageSection={jumpToPageSection}
         onAddToWatchlist={onAddToWatchlist}

@@ -2807,7 +2807,7 @@ export default function App() {
   }, [closeGlobalSearch, currentUser, openGlobalSearch, searchVisible, splashVisible]);
 
   const primaryNavItems = NAV_ITEMS.filter((item) =>
-    ["home", "news", "signals", "collectibles", "scan-evaluate", "portfolio"].includes(item.id),
+    ["home", "scan-evaluate", "collectibles", "portfolio", "news", "signals"].includes(item.id),
   );
   const utilityNavItems = NAV_ITEMS.filter((item) =>
     ["subscriptions", "tools", "reports", "connections", "settings"].includes(item.id),
@@ -3073,6 +3073,7 @@ export default function App() {
           jumpToPageSection={jumpToPageSection}
           onAddToWatchlist={addSignalToWatchlist}
           openCollectibleTicket={openCollectibleTicket}
+          openTrades={openTrades}
         />
       ) : null}
 
@@ -3269,7 +3270,7 @@ export default function App() {
                   onClick={() => navigateToPage(item.id, false, activeDesk)}
                 >
                   <div className="navButtonMain">
-                    <div className="navGlyph">{item.glyph}</div>
+                    <div className={`navGlyph${item.icon === "camera" ? " navGlyph-camera" : ""}`}>{item.glyph}</div>
                     <div className="navButtonCopy">
                       <span>{item.label}</span>
                       <small>{item.hint}</small>

@@ -1,31 +1,50 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { enrichBrickAlphaCollectible } from "../brickAlphaModel";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  buildBrickAlphaScoreBreakdown,
+  confidenceFor,
+  enrichBrickAlphaCollectible,
+  letterGradeFor,
+} from "../brickAlphaModel";
 import { formatCollectiblePrice } from "../appUtils";
+import {
+  buildAiInvestmentSummary,
+  buildForecastCards,
+  buildMarketPricing,
+  buildRetirementSnapshot,
+  demoSeedFromFile,
+  findCatalogMatch,
+  getCopilotResponse,
+  getDemoSetProfile,
+  identifySetNumberFromFilename,
+  PREMIUM_COMPARABLES,
+  PROCESSING_STEPS,
+  riskLabel,
+  runProcessingPipeline,
+  searchDemoSets,
+} from "../scanEvaluationData";
+import { monthsUntilRetirement, portfolioStatusFor } from "../retirementIntelligenceData";
+import { ScoreBar, ScoreRing } from "./brickAlphaScoreDisplay";
+import { ScoreExplanationPanel } from "./scoreExplanationPanel";
 import { AlphaSignalBadges } from "./workspaceCards";
 
-const FLOW_STEPS = [
-  { id: "upload", label: "Upload Evidence" },
-  { id: "identify", label: "Identify Set" },
-  { id: "evaluate", label: "Evaluate Investment" },
-  { id: "portfolio", label: "Add to Portfolio" },
+const ACQUISITION_METHODS = [
+  { id: "camera", icon: "📷", label: "Take Photo", detail: "Use your device camera" },
+  { id: "upload", icon: "🖼", label: "Upload Image", detail: "Box, barcode, or receipt" },
+  { id: "manual", icon: "⌨", label: "Enter Set Number", detail: "Search by number or name" },
 ];
 
-const CONDITION_OPTIONS = [
-  { value: "sealed", label: "Sealed — mint box" },
-  { value: "open-box", label: "Open box — complete" },
-  { value: "used", label: "Used / built" },
-];
+function extractSetNumber(item) {
+  if (item?.sku) {
+    return item.sku;
+  }
+  const match = String(item?.id || "").match(/(\d{4,6})/);
+  return match ? match[1] : "--";
+}
 
-const DEMO_SET_HINTS = {
-  "75252": "lego-star-wars-75252",
-  "10305": "lego-icons-10305",
-  "76178": "lego-star-wars-75252",
-  "10294": "lego-icons-10305",
-};
-
-function formatScore(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? `${Math.round(numeric)}/100` : "--";
+function normalizeSetNumber(value) {
+  return String(value || "")
+    .replace(/[^0-9]/g, "")
+    .slice(0, 6);
 }
 
 function recommendationTone(recommendation) {
@@ -45,248 +64,402 @@ function displayRecommendation(recommendation) {
   if (recommendation === "Avoid") {
     return "Reduce";
   }
-  return recommendation;
+  return recommendation || "Hold";
 }
 
-function extractSetNumber(item) {
-  if (item?.sku) {
-    return item.sku;
-  }
-  const match = String(item?.id || "").match(/(\d{4,6})/);
-  return match ? match[1] : "--";
-}
-
-function normalizeSetNumber(value) {
-  return String(value || "")
-    .replace(/[^0-9]/g, "")
-    .slice(0, 6);
-}
-
-function findCatalogMatch(collectibles, setNumber, demoSeed = 0) {
-  const legoItems = collectibles.filter((item) => item.brand === "LEGO");
-  const pool = legoItems.length ? legoItems : collectibles;
-
-  if (setNumber) {
-    const hintId = DEMO_SET_HINTS[setNumber];
-    if (hintId) {
-      const hinted = pool.find((item) => item.id === hintId);
-      if (hinted) {
-        return hinted;
-      }
-    }
-    const bySku = pool.find((item) => normalizeSetNumber(item.sku) === setNumber);
-    if (bySku) {
-      return bySku;
-    }
-    const byId = pool.find((item) => String(item.id || "").includes(setNumber));
-    if (byId) {
-      return byId;
-    }
-  }
-
-  return pool[demoSeed % pool.length] || null;
-}
-
-function demoSeedFromFile(file) {
-  if (!file?.name) {
-    return 0;
-  }
-  return file.name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-}
-
-function buildEvaluation(item, form) {
-  const purchasePrice = Number(form.purchasePrice) || Number(item.price) || 0;
-  const quantity = Math.max(1, Number(form.quantity) || 1);
-  const conditionRisk =
-    form.condition === "used" ? 8 : form.condition === "open-box" ? 4 : 0;
-
+function buildEvaluation(item) {
   return enrichBrickAlphaCollectible({
     ...item,
-    buyPrice: purchasePrice,
-    price: item.price || purchasePrice,
-    currentMarketValue: item.price || purchasePrice,
-    quantityOwned: quantity,
-    storeSource: form.store || item.venue || "Scan evaluation",
-    riskScore: Math.min(100, (item.riskScore || 50) + conditionRisk),
-    vatReclaim: form.vatReclaim,
-    scanCondition: form.condition,
+    buyPrice: item.buyPrice || item.price || item.retailPrice,
+    price: item.currentMarketValue || item.price || item.retailPrice,
+    currentMarketValue: item.currentMarketValue || item.price || item.retailPrice,
+    quantityOwned: 1,
+    storeSource: item.venue || "Scan evaluation",
   });
 }
 
-function exportEvaluationJson(evaluation, form, imageName) {
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    mode: "demo",
-    image: imageName || null,
-    inputs: form,
-    result: {
-      setName: evaluation.name,
-      setNumber: extractSetNumber(evaluation),
-      theme: evaluation.legoTheme,
-      retailPrice: evaluation.retailPrice,
-      purchasePrice: evaluation.buyPrice,
-      discountPercent: evaluation.discountPercentage,
-      brickAlphaScore: evaluation.brickAlphaScore,
-      investmentGrade: evaluation.investmentGrade,
-      recommendation: evaluation.recommendation,
-      retirementStatus: evaluation.retirementStatus,
-      retirementProbability: evaluation.retirementProbability,
-      minifigureScore: evaluation.minifigureQuality,
-      riskScore: evaluation.riskScore,
-      investmentThesis: evaluation.investmentThesis,
-    },
-  };
+function CameraModal({ onCapture, onClose }) {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [error, setError] = useState("");
 
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `brick-alpha-evaluation-${extractSetNumber(evaluation)}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
+  useEffect(() => {
+    let active = true;
 
-function StepIndicator({ currentStep }) {
-  const currentIndex = FLOW_STEPS.findIndex((step) => step.id === currentStep);
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false,
+        });
+        if (!active) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (cameraError) {
+        setError("Camera unavailable — use Upload Image instead.");
+      }
+    }
+
+    startCamera();
+
+    return () => {
+      active = false;
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  const handleCapture = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          return;
+        }
+        const file = new File([blob], `brick-alpha-capture-${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        });
+        onCapture(file, canvas.toDataURL("image/jpeg", 0.92));
+        onClose();
+      },
+      "image/jpeg",
+      0.92,
+    );
+  }, [onCapture, onClose]);
 
   return (
-    <ol className="seStepper" aria-label="Evaluation flow">
-      {FLOW_STEPS.map((step, index) => {
-        const state =
-          index < currentIndex ? "complete" : index === currentIndex ? "active" : "upcoming";
-        return (
-          <li key={step.id} className={`seStep seStep-${state}`}>
-            <span className="seStepIndex">{index + 1}</span>
-            <span className="seStepLabel">{step.label}</span>
-          </li>
-        );
-      })}
-    </ol>
+    <div className="seCameraOverlay" role="dialog" aria-label="Camera capture">
+      <div className="seCameraModal">
+        <div className="seCameraHeader">
+          <h3>Capture LEGO set</h3>
+          <button type="button" className="ghostButton" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        {error ? (
+          <p className="seCameraError">{error}</p>
+        ) : (
+          <video ref={videoRef} autoPlay playsInline muted className="seCameraVideo" />
+        )}
+        <div className="seCameraActions">
+          <button type="button" className="primaryButton" onClick={handleCapture} disabled={Boolean(error)}>
+            Capture Photo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProcessingOverlay({ activeStepIndex }) {
+  return (
+    <div className="seProcessingOverlay">
+      <div className="seProcessingCard">
+        <div className="seProcessingPulse" aria-hidden="true" />
+        <h2>Brick Alpha AI</h2>
+        <ol className="seProcessingSteps">
+          {PROCESSING_STEPS.map((step, index) => {
+            const state =
+              index < activeStepIndex ? "complete" : index === activeStepIndex ? "active" : "upcoming";
+            return (
+              <li key={step.id} className={`seProcessingStep seProcessingStep-${state}`}>
+                <span className="seProcessingDot" />
+                {step.label}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+function ManualSearchPanel({ collectibles, onSelect, onCancel }) {
+  const [query, setQuery] = useState("");
+  const results = useMemo(() => searchDemoSets(query, collectibles), [collectibles, query]);
+
+  return (
+    <article className="seGlassCard seManualPanel">
+      <div className="seSectionHeader">
+        <span className="executiveDashboardEyebrow">Manual identification</span>
+        <h2>AI could not identify automatically</h2>
+        <p>Search by set number, name, or theme — autocomplete against the Brick Alpha catalog.</p>
+      </div>
+      <label className="seField">
+        <span>Search catalog</span>
+        <input
+          type="search"
+          placeholder="e.g. 75252, Rivendell, Star Wars"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          autoFocus
+        />
+      </label>
+      {results.length ? (
+        <ul className="seSearchResults">
+          {results.map((result) => (
+            <li key={result.id || result.setNumber}>
+              <button type="button" className="seSearchResult" onClick={() => onSelect(result)}>
+                <strong>{result.name}</strong>
+                <span>
+                  #{result.setNumber} · {result.theme}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : query ? (
+        <p className="seSearchEmpty">No matches — try a set number like 75252 or 10316.</p>
+      ) : null}
+      <button type="button" className="ghostButton" onClick={onCancel}>
+        Back to scan
+      </button>
+    </article>
+  );
+}
+
+function CopilotCard({ evaluation }) {
+  const [question, setQuestion] = useState("Should I buy three of these?");
+  const [response, setResponse] = useState(() => getCopilotResponse("Should I buy three of these?"));
+
+  const handleAsk = useCallback(() => {
+    setResponse(getCopilotResponse(question));
+  }, [question]);
+
+  return (
+    <article className="seGlassCard seCopilotCard">
+      <div className="seSectionHeader">
+        <span className="executiveDashboardEyebrow">AI Copilot</span>
+        <h2>Investment advisor</h2>
+      </div>
+      <div className="seCopilotThread">
+        <div className="seCopilotMessage seCopilotMessage-user">
+          <span>You</span>
+          <p>{question}</p>
+        </div>
+        <div className="seCopilotMessage seCopilotMessage-ai">
+          <span>Brick Alpha</span>
+          <p>{response}</p>
+        </div>
+      </div>
+      <div className="seCopilotInput">
+        <input
+          type="text"
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleAsk();
+            }
+          }}
+          placeholder={`Ask about ${evaluation?.name || "this set"}…`}
+        />
+        <button type="button" className="primaryButton" onClick={handleAsk}>
+          Ask
+        </button>
+      </div>
+    </article>
   );
 }
 
 export function ScanEvaluateWorkspace({
   collectibles = [],
+  openTrades = [],
   handleCollectibleSelect,
   jumpToPageSection,
   onAddToWatchlist,
   openCollectibleTicket,
 }) {
   const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
+  const hasWebcam = typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
 
-  const [currentStep, setCurrentStep] = useState("upload");
+  const [phase, setPhase] = useState("landing");
   const [imagePreview, setImagePreview] = useState(null);
   const [imageName, setImageName] = useState("");
-  const [scanning, setScanning] = useState(false);
-  const [scanMessage, setScanMessage] = useState("");
-  const [matchedItem, setMatchedItem] = useState(null);
+  const [processingIndex, setProcessingIndex] = useState(0);
+  const [showCamera, setShowCamera] = useState(false);
+  const [manualQuery, setManualQuery] = useState("");
   const [evaluation, setEvaluation] = useState(null);
   const [actionStatus, setActionStatus] = useState("");
+  const [identifiedSetNumber, setIdentifiedSetNumber] = useState("");
 
-  const [form, setForm] = useState({
-    setNumber: "",
-    purchasePrice: "",
-    quantity: "1",
-    condition: "sealed",
-    vatReclaim: false,
-    store: "",
-  });
+  const demoProfile = useMemo(
+    () => getDemoSetProfile(identifiedSetNumber || extractSetNumber(evaluation)),
+    [evaluation, identifiedSetNumber],
+  );
 
-  const updateForm = useCallback((field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
-  }, []);
+  const breakdown = useMemo(
+    () => (evaluation ? buildBrickAlphaScoreBreakdown(evaluation) : null),
+    [evaluation],
+  );
 
-  const runDemoScan = useCallback(
-    async (file, setNumberOverride = "") => {
-      setScanning(true);
-      setScanMessage("Demo mode — matching against Brick Alpha catalog…");
-      await new Promise((resolve) => window.setTimeout(resolve, 1400));
+  const marketPricing = useMemo(
+    () => (evaluation ? buildMarketPricing(evaluation, demoProfile) : null),
+    [demoProfile, evaluation],
+  );
 
-      const setNumber = normalizeSetNumber(setNumberOverride || form.setNumber);
-      const match = findCatalogMatch(collectibles, setNumber, demoSeedFromFile(file));
+  const forecasts = useMemo(() => (evaluation ? buildForecastCards(evaluation) : []), [evaluation]);
+  const aiSummary = useMemo(
+    () => (evaluation ? buildAiInvestmentSummary(evaluation, demoProfile) : null),
+    [demoProfile, evaluation],
+  );
+  const retirementSnapshot = useMemo(
+    () => (evaluation ? buildRetirementSnapshot(evaluation) : null),
+    [evaluation],
+  );
 
-      if (!match) {
-        setScanMessage("No LEGO catalog match found. Enter a set number manually.");
-        setScanning(false);
-        setCurrentStep("identify");
+  const portfolioStatus = useMemo(
+    () => (evaluation ? portfolioStatusFor(evaluation, openTrades) : "Not Owned"),
+    [evaluation, openTrades],
+  );
+
+  const confidence = evaluation ? confidenceFor(evaluation) : 0;
+  const displayImage = imagePreview || demoProfile?.imageUrl || null;
+
+  const runAnalysis = useCallback(
+    async (setNumber, file, previewUrl, fileName) => {
+      setPhase("processing");
+      setProcessingIndex(0);
+      setActionStatus("");
+
+      await runProcessingPipeline((_stepId, index) => {
+        setProcessingIndex(index);
+      });
+
+      const normalized = normalizeSetNumber(setNumber);
+      if (!normalized) {
+        setPhase("manual");
+        setActionStatus("AI could not identify automatically — search the catalog below.");
         return;
       }
 
-      setMatchedItem(match);
-      updateForm("setNumber", extractSetNumber(match));
-      if (!form.purchasePrice && match.price) {
-        updateForm("purchasePrice", String(Math.round(match.price * 0.88)));
+      const profile = getDemoSetProfile(normalized);
+      let match = findCatalogMatch(collectibles, normalized, 0);
+
+      if (!match && profile) {
+        match = {
+          id: `lego-demo-${normalized}`,
+          sku: normalized,
+          name: profile.name,
+          brand: "LEGO",
+          category: profile.theme,
+          legoTheme: profile.theme,
+          retailPrice: profile.retailPrice,
+          price: Math.round(profile.retailPrice * 0.88),
+          currentMarketValue: Math.round(profile.retailPrice * 0.88),
+          numberOfPieces: profile.pieces,
+          numberOfMinifigures: profile.minifigures,
+        };
       }
-      setScanMessage(
-        `Demo recognition matched ${match.name} (${extractSetNumber(match)}) from catalog data.`,
-      );
-      setScanning(false);
-      setCurrentStep("identify");
+
+      if (!match) {
+        setPhase("manual");
+        setActionStatus("Set not found in catalog — search manually below.");
+        return;
+      }
+
+      const enriched = buildEvaluation({
+        ...match,
+        ...(profile
+          ? {
+              name: profile.name,
+              legoTheme: profile.theme,
+              category: profile.theme,
+              retailPrice: profile.retailPrice,
+              numberOfPieces: profile.pieces,
+              numberOfMinifigures: profile.minifigures,
+            }
+          : {}),
+      });
+
+      setIdentifiedSetNumber(normalized);
+      setEvaluation(enriched);
+      if (previewUrl) {
+        setImagePreview(previewUrl);
+      }
+      if (fileName) {
+        setImageName(fileName);
+      }
+      setPhase("results");
+      handleCollectibleSelect(enriched);
     },
-    [collectibles, form.purchasePrice, form.setNumber, updateForm],
+    [collectibles, handleCollectibleSelect],
+  );
+
+  const handleImageFile = useCallback(
+    (file, previewOverride) => {
+      if (!file) {
+        return;
+      }
+
+      const applyPreview = (preview) => {
+        setImagePreview(preview);
+        setImageName(file.name);
+        const setNumber = identifySetNumberFromFilename(file.name);
+        runAnalysis(setNumber, file, preview, file.name);
+      };
+
+      if (previewOverride) {
+        applyPreview(previewOverride);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => applyPreview(reader.result);
+      reader.readAsDataURL(file);
+    },
+    [runAnalysis],
   );
 
   const handleFileSelect = useCallback(
     (event) => {
       const file = event.target.files?.[0];
-      if (!file) {
-        return;
+      if (file) {
+        handleImageFile(file);
       }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result);
-        setImageName(file.name);
-        setEvaluation(null);
-        setActionStatus("");
-        setCurrentStep("upload");
-        runDemoScan(file);
-      };
-      reader.readAsDataURL(file);
       event.target.value = "";
     },
-    [runDemoScan],
+    [handleImageFile],
   );
 
-  const handleRunEvaluation = useCallback(() => {
-    if (!matchedItem) {
-      const setNumber = normalizeSetNumber(form.setNumber);
-      const match = findCatalogMatch(collectibles, setNumber, 0);
-      if (!match) {
-        setActionStatus("Enter a valid set number or upload evidence to identify a set.");
-        return;
-      }
-      setMatchedItem(match);
-    }
+  const handleManualSelect = useCallback(
+    (result) => {
+      setManualQuery("");
+      runAnalysis(result.setNumber, null, null, "");
+    },
+    [runAnalysis],
+  );
 
-    const item = matchedItem || findCatalogMatch(collectibles, normalizeSetNumber(form.setNumber), 0);
-    const result = buildEvaluation(item, form);
-    setEvaluation(result);
-    setCurrentStep("evaluate");
-    setActionStatus("Brick Alpha investment analysis complete.");
-  }, [collectibles, form, matchedItem]);
-
-  const handleIdentifySet = useCallback(() => {
-    const setNumber = normalizeSetNumber(form.setNumber);
-    const match = findCatalogMatch(collectibles, setNumber, 0);
-    if (!match) {
-      setActionStatus("Set number not found in demo catalog. Try 75252 or 10305.");
+  const handleSetNumberSubmit = useCallback(() => {
+    const setNumber = normalizeSetNumber(manualQuery);
+    if (!setNumber) {
+      setActionStatus("Enter a valid LEGO set number.");
       return;
     }
-    setMatchedItem(match);
-    setActionStatus(`Identified ${match.name} from catalog.`);
-    handleRunEvaluation();
-  }, [collectibles, form.setNumber, handleRunEvaluation]);
+    runAnalysis(setNumber, null, null, `set-${setNumber}.jpg`);
+  }, [manualQuery, runAnalysis]);
 
   const handleAddToPortfolio = useCallback(() => {
     if (!evaluation) {
       return;
     }
     openCollectibleTicket(evaluation, "BUY");
-    setCurrentStep("portfolio");
-    setActionStatus("Portfolio ticket opened — confirm quantity and entry in the ticket.");
-  }, [evaluation, openCollectibleTicket]);
+    handleCollectibleSelect(evaluation);
+    jumpToPageSection("portfolio", "portfolio-intelligence");
+    setActionStatus("Opening Portfolio Intelligence — confirm your entry in the ticket.");
+  }, [evaluation, handleCollectibleSelect, jumpToPageSection, openCollectibleTicket]);
 
   const handleAddToWatchlist = useCallback(() => {
     if (!evaluation) {
@@ -304,7 +477,7 @@ export function ScanEvaluateWorkspace({
     setActionStatus("Sign in to sync watchlist items.");
   }, [evaluation, onAddToWatchlist]);
 
-  const handleOpenFullAnalysis = useCallback(() => {
+  const handleOpenInvestmentAnalysis = useCallback(() => {
     if (!evaluation) {
       return;
     }
@@ -312,18 +485,23 @@ export function ScanEvaluateWorkspace({
     jumpToPageSection("collectibles", "investment-analysis");
   }, [evaluation, handleCollectibleSelect, jumpToPageSection]);
 
-  const handleExport = useCallback(() => {
+  const handleTrackRetirement = useCallback(() => {
     if (!evaluation) {
       return;
     }
-    exportEvaluationJson(evaluation, form, imageName);
-    setActionStatus("Evaluation exported as JSON.");
-  }, [evaluation, form, imageName]);
+    handleCollectibleSelect(evaluation);
+    jumpToPageSection("collectibles", "retirement-intelligence");
+  }, [evaluation, handleCollectibleSelect, jumpToPageSection]);
 
-  const thesis = evaluation?.investmentThesis;
-  const discountDisplay = evaluation
-    ? `${evaluation.discountPercentage >= 0 ? "" : "+"}${Math.abs(evaluation.discountPercentage).toFixed(1)}%`
-    : "--";
+  const handleReset = useCallback(() => {
+    setPhase("landing");
+    setImagePreview(null);
+    setImageName("");
+    setEvaluation(null);
+    setIdentifiedSetNumber("");
+    setManualQuery("");
+    setActionStatus("");
+  }, []);
 
   const legoCatalogCount = useMemo(
     () => collectibles.filter((item) => item.brand === "LEGO").length,
@@ -332,28 +510,78 @@ export function ScanEvaluateWorkspace({
 
   return (
     <section className="seWorkspace" id="scan-evaluate">
-      <div className="seDemoBanner" role="status">
-        <span className="seDemoBadge">Demo mode</span>
-        <p>
-          Image recognition uses demo catalog matching — no live OCR yet. Upload any photo and Brick
-          Alpha will match against {legoCatalogCount} LEGO sets in the catalog.
-        </p>
-      </div>
-
-      <StepIndicator currentStep={currentStep} />
+      {phase === "processing" ? <ProcessingOverlay activeStepIndex={processingIndex} /> : null}
+      {showCamera ? (
+        <CameraModal
+          onCapture={(file, preview) => handleImageFile(file, preview)}
+          onClose={() => setShowCamera(false)}
+        />
+      ) : null}
 
       {actionStatus ? <div className="statusBanner subtleBanner">{actionStatus}</div> : null}
 
-      {(currentStep === "upload" || !imagePreview) && (
-        <article className="seGlassCard seUploadPanel">
-          <div className="seSectionHeader">
-            <span className="executiveDashboardEyebrow">Step 1</span>
-            <h2>Upload or capture evidence</h2>
-            <p>Photo of a LEGO set, box, barcode, or receipt — we will identify the set in demo mode.</p>
+      {phase === "landing" || phase === "manual" ? (
+        <>
+          <article className="seHeroCard">
+            <div className="seHeroCopy">
+              <span className="executiveDashboardEyebrow">Hero Feature</span>
+              <h2>Scan a LEGO set. Get an instant investment verdict.</h2>
+              <p>
+                Photograph, upload, or enter a set number — Brick Alpha identifies the set, pulls market
+                data, and delivers a complete investment analysis in seconds.
+              </p>
+            </div>
+            <div className="seHeroStats">
+              <div>
+                <strong>{legoCatalogCount}</strong>
+                <span>Catalog sets</span>
+              </div>
+              <div>
+                <strong>AI</strong>
+                <span>Identification</span>
+              </div>
+              <div>
+                <strong>5s</strong>
+                <span>Analysis time</span>
+              </div>
+            </div>
+          </article>
+
+          <div className="seAcquisitionHeader">
+            <span className="executiveDashboardEyebrow">Acquisition methods</span>
+            <h2>Scan a LEGO set</h2>
           </div>
 
-          <div
-            className={`seUploadZone${imagePreview ? " seUploadZone-hasImage" : ""}`}
+          <div className="seAcquisitionGrid">
+            {ACQUISITION_METHODS.map((method) => (
+              <button
+                key={method.id}
+                type="button"
+                className="seAcquisitionCard"
+                onClick={() => {
+                  if (method.id === "upload") {
+                    fileInputRef.current?.click();
+                  } else if (method.id === "camera") {
+                    if (hasWebcam) {
+                      setShowCamera(true);
+                    } else {
+                      fileInputRef.current?.click();
+                      setActionStatus("Camera not supported — opening file upload instead.");
+                    }
+                  } else {
+                    setPhase("manual");
+                  }
+                }}
+              >
+                <span className="seAcquisitionIcon">{method.icon}</span>
+                <strong>{method.label}</strong>
+                <small>{method.detail}</small>
+              </button>
+            ))}
+          </div>
+
+          <article
+            className="seGlassCard seUploadDropzone"
             onClick={() => fileInputRef.current?.click()}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -363,16 +591,12 @@ export function ScanEvaluateWorkspace({
             role="button"
             tabIndex={0}
           >
-            {imagePreview ? (
-              <img src={imagePreview} alt="Uploaded evidence" className="seUploadPreview" />
-            ) : (
-              <div className="seUploadPlaceholder">
-                <span className="seUploadIcon">📷</span>
-                <strong>Drop a photo here or click to browse</strong>
-                <small>PNG, JPG, or HEIC · box, barcode, or receipt</small>
-              </div>
-            )}
-          </div>
+            <div className="seUploadDropzoneInner">
+              <span className="seUploadDropIcon">📷</span>
+              <strong>Drop an image here or click to browse</strong>
+              <small>PNG, JPG, HEIC · box photo, barcode, or receipt</small>
+            </div>
+          </article>
 
           <input
             ref={fileInputRef}
@@ -381,254 +605,267 @@ export function ScanEvaluateWorkspace({
             className="seHiddenInput"
             onChange={handleFileSelect}
           />
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="seHiddenInput"
-            onChange={handleFileSelect}
-          />
 
-          <div className="seUploadActions">
-            <button type="button" className="primaryButton" onClick={() => fileInputRef.current?.click()}>
-              Upload Photo
+          {phase === "manual" ? (
+            <div className="seManualStack">
+              <article className="seGlassCard seManualEntry">
+                <div className="seSectionHeader">
+                  <span className="executiveDashboardEyebrow">Set number</span>
+                  <h2>Enter LEGO set number</h2>
+                </div>
+                <div className="seManualRow">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="e.g. 75252"
+                    value={manualQuery}
+                    onChange={(event) => setManualQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        handleSetNumberSubmit();
+                      }
+                    }}
+                  />
+                  <button type="button" className="primaryButton" onClick={handleSetNumberSubmit}>
+                    Analyse
+                  </button>
+                </div>
+              </article>
+              <ManualSearchPanel
+                collectibles={collectibles}
+                onSelect={handleManualSelect}
+                onCancel={handleReset}
+              />
+            </div>
+          ) : null}
+        </>
+      ) : null}
+
+      {phase === "results" && evaluation ? (
+        <div className="seResultsFlow">
+          <div className="seResultsToolbar">
+            <button type="button" className="ghostButton" onClick={handleReset}>
+              ← Scan another set
             </button>
-            <button type="button" className="ghostButton" onClick={() => cameraInputRef.current?.click()}>
-              Take Photo
-            </button>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => {
-                setCurrentStep("identify");
-                setScanMessage("Skipped image — enter set number manually.");
-              }}
-            >
-              Skip to set number
-            </button>
+            {imageName ? <span className="seResultsSource">Source: {imageName}</span> : null}
           </div>
 
-          {scanning ? <p className="seScanStatus seScanStatus-busy">{scanMessage}</p> : null}
-          {!scanning && scanMessage ? <p className="seScanStatus">{scanMessage}</p> : null}
-        </article>
-      )}
-
-      {(currentStep === "identify" || currentStep === "evaluate" || currentStep === "portfolio") && (
-        <div className="seTwoColumn">
-          <article className="seGlassCard">
-            <div className="seSectionHeader">
-              <span className="executiveDashboardEyebrow">Step 2</span>
-              <h2>Identify set &amp; purchase details</h2>
-              <p>Confirm the matched set and optional purchase metadata.</p>
-            </div>
-
-            {imagePreview ? (
-              <div className="seEvidenceThumb">
-                <img src={imagePreview} alt="Evidence thumbnail" />
-                <span>{imageName || "Uploaded evidence"}</span>
+          <article className="seGlassCard seIdentificationCard">
+            <div className="seIdentificationLayout">
+              <div className="seIdentificationVisual">
+                {displayImage ? (
+                  <img src={displayImage} alt={evaluation.name} className="seIdentificationImage" />
+                ) : (
+                  <div className="seIdentificationPlaceholder">
+                    <span>{extractSetNumber(evaluation)}</span>
+                  </div>
+                )}
               </div>
-            ) : null}
-
-            {matchedItem ? (
-              <div className="seMatchBanner">
-                <span>Catalog match</span>
-                <strong>{matchedItem.name}</strong>
-                <small>Set {extractSetNumber(matchedItem)} · {matchedItem.category}</small>
+              <div className="seIdentificationMeta">
+                <span className="executiveDashboardEyebrow">AI identification result</span>
+                <h2>{evaluation.name}</h2>
+                <div className="seIdentificationGrid">
+                  <div><span>Set number</span><strong>#{extractSetNumber(evaluation)}</strong></div>
+                  <div><span>Theme</span><strong>{evaluation.legoTheme || demoProfile?.theme}</strong></div>
+                  <div><span>Pieces</span><strong>{demoProfile?.pieces || evaluation.numberOfPieces || "—"}</strong></div>
+                  <div><span>Minifigures</span><strong>{demoProfile?.minifigures || evaluation.numberOfMinifigures || "—"}</strong></div>
+                  <div><span>Retail price</span><strong>{formatCollectiblePrice(evaluation.retailPrice)}</strong></div>
+                  <div><span>Current market value</span><strong>{formatCollectiblePrice(evaluation.currentMarketValue)}</strong></div>
+                  <div><span>Retirement status</span><strong>{evaluation.retirementStatus}</strong></div>
+                  <div><span>Expected retirement</span><strong>{retirementSnapshot?.expectedRetirement}</strong></div>
+                  <div><span>BrickEconomy status</span><strong>{demoProfile?.brickEconomyStatus || "Tracked"}</strong></div>
+                  <div><span>Portfolio status</span><strong>{portfolioStatus}</strong></div>
+                </div>
+                <AlphaSignalBadges signals={evaluation.alphaSignals || []} />
               </div>
-            ) : null}
-
-            <div className="seFormGrid">
-              <label className="seField">
-                <span>Set number</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="e.g. 75252"
-                  value={form.setNumber}
-                  onChange={(event) => updateForm("setNumber", event.target.value)}
-                />
-              </label>
-              <label className="seField">
-                <span>Purchase price (ZAR)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  placeholder="Optional"
-                  value={form.purchasePrice}
-                  onChange={(event) => updateForm("purchasePrice", event.target.value)}
-                />
-              </label>
-              <label className="seField">
-                <span>Quantity</span>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={form.quantity}
-                  onChange={(event) => updateForm("quantity", event.target.value)}
-                />
-              </label>
-              <label className="seField">
-                <span>Condition</span>
-                <select
-                  value={form.condition}
-                  onChange={(event) => updateForm("condition", event.target.value)}
-                >
-                  {CONDITION_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="seField">
-                <span>Store / source</span>
-                <input
-                  type="text"
-                  placeholder="e.g. LEGO.com, Takealot"
-                  value={form.store}
-                  onChange={(event) => updateForm("store", event.target.value)}
-                />
-              </label>
-              <label className="seField seField-checkbox">
-                <input
-                  type="checkbox"
-                  checked={form.vatReclaim}
-                  onChange={(event) => updateForm("vatReclaim", event.target.checked)}
-                />
-                <span>VAT reclaim eligible (tourism / B2B)</span>
-              </label>
-            </div>
-
-            <div className="seFormActions">
-              <button type="button" className="primaryButton" onClick={handleIdentifySet}>
-                Run Brick Alpha Evaluation
-              </button>
-              <button
-                type="button"
-                className="ghostButton"
-                onClick={() => runDemoScan({ name: imageName }, form.setNumber)}
-                disabled={scanning}
-              >
-                Re-scan evidence
-              </button>
             </div>
           </article>
 
-          {evaluation ? (
-            <article className="seGlassCard seResultsCard">
-              <div className="seSectionHeader">
-                <span className="executiveDashboardEyebrow">Step 3</span>
-                <h2>Investment evaluation</h2>
-                <p>Brick Alpha score powered by the same model as Investment Analysis.</p>
+          <article className="seGlassCard seVerdictCard">
+            <div className="seVerdictLayout">
+              <div className="seVerdictScore">
+                <span className="executiveDashboardEyebrow">Investment verdict</span>
+                <ScoreRing score={evaluation.brickAlphaScore} label="Brick Alpha Score" size="large" />
               </div>
-
-              <header className="seResultHero">
-                <div>
-                  <h3>{evaluation.name}</h3>
-                  <div className="seResultMeta">
-                    <span>Set {extractSetNumber(evaluation)}</span>
-                    <span>{evaluation.legoTheme}</span>
-                    <span className={`iaStatusBadge iaStatusBadge-${evaluation.retirementStatus === "Retired" ? "retired" : evaluation.retirementStatus === "Imminent" || evaluation.retirementStatus === "Overdue" ? "retiring-soon" : "available"}`}>
-                      {evaluation.retirementStatus}
-                    </span>
-                  </div>
-                  <AlphaSignalBadges signals={evaluation.alphaSignals || []} />
-                </div>
-                <div className="seScoreOrb">
-                  <strong>{evaluation.brickAlphaScore}</strong>
-                  <small>Brick Alpha Score</small>
-                </div>
-              </header>
-
-              <div className="seMetricsGrid">
-                <div className="seMetric">
-                  <span>Retail price</span>
-                  <strong>{formatCollectiblePrice(evaluation.retailPrice)}</strong>
-                </div>
-                <div className="seMetric">
-                  <span>Purchase price</span>
-                  <strong>{formatCollectiblePrice(evaluation.buyPrice)}</strong>
-                </div>
-                <div className="seMetric">
-                  <span>Discount</span>
-                  <strong className={evaluation.discountPercentage >= 8 ? "seMetric-positive" : ""}>
-                    {discountDisplay}
+              <div className="seVerdictMetrics">
+                <div className="seVerdictMetric">
+                  <span>Grade</span>
+                  <strong className={`iaGrade iaGrade-${letterGradeFor(evaluation.brickAlphaScore).replace("+", "plus")}`}>
+                    {letterGradeFor(evaluation.brickAlphaScore)}
                   </strong>
+                  <small>{evaluation.investmentGrade}</small>
                 </div>
-                <div className="seMetric">
-                  <span>Investment grade</span>
-                  <strong>{evaluation.investmentGrade}</strong>
-                </div>
-                <div className="seMetric">
+                <div className="seVerdictMetric">
                   <span>Recommendation</span>
                   <strong className={`seRecommendation seRecommendation-${recommendationTone(evaluation.recommendation)}`}>
-                    {displayRecommendation(evaluation.recommendation)}
+                    {displayRecommendation(evaluation.recommendation).toUpperCase()}
                   </strong>
                 </div>
-                <div className="seMetric">
-                  <span>Retirement status</span>
-                  <strong>{evaluation.retirementStatus}</strong>
+                <div className="seVerdictMetric">
+                  <span>Confidence</span>
+                  <strong>{confidence}%</strong>
                 </div>
-                <div className="seMetric">
-                  <span>Retirement probability</span>
-                  <strong>{Math.round(evaluation.retirementProbability)}%</strong>
+                <div className="seVerdictMetric">
+                  <span>Expected ROI</span>
+                  <strong className="seMetric-positive">
+                    +{Math.round(demoProfile?.expectedRoi || evaluation.projectedRoi || 0)}%
+                  </strong>
                 </div>
-                <div className="seMetric">
-                  <span>Minifigure score</span>
-                  <strong>{formatScore(evaluation.minifigureQuality)}</strong>
+                <div className="seVerdictMetric">
+                  <span>Investment horizon</span>
+                  <strong>{demoProfile?.investmentHorizon || evaluation.holdingPeriod || "3–5 years"}</strong>
                 </div>
-                <div className="seMetric">
-                  <span>Risk score</span>
-                  <strong>{formatScore(evaluation.riskScore)}</strong>
+                <div className="seVerdictMetric">
+                  <span>Risk</span>
+                  <strong>{riskLabel(evaluation.riskScore)}</strong>
                 </div>
               </div>
+            </div>
+          </article>
 
-              {thesis ? (
-                <div className="seThesisBlock">
-                  <span>Investment thesis</span>
-                  <p>{thesis.attractive}</p>
-                  <ul>
-                    {thesis.upsideDrivers.slice(0, 3).map((driver) => (
-                      <li key={driver}>{driver}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
+          {aiSummary ? (
+            <article className="seGlassCard seAiSummaryCard">
               <div className="seSectionHeader">
-                <span className="executiveDashboardEyebrow">Step 4</span>
-                <h2>Next actions</h2>
+                <span className="executiveDashboardEyebrow">AI investment summary</span>
+                <h2>Brick Alpha recommendation</h2>
               </div>
+              <p className="seAiSummaryLead">{aiSummary.lead}</p>
+              <ul className="seAiSummaryList">
+                {aiSummary.bullets.map((bullet) => (
+                  <li key={bullet}>{bullet}</li>
+                ))}
+              </ul>
+              <p className="seAiSummaryAction">{aiSummary.action}</p>
+            </article>
+          ) : null}
 
-              <div className="seActionRow">
-                <button type="button" className="primaryButton" onClick={handleAddToPortfolio}>
-                  Add to Portfolio
-                </button>
-                <button type="button" className="ghostButton" onClick={handleAddToWatchlist}>
-                  Add to Watchlist
-                </button>
-                <button type="button" className="ghostButton" onClick={handleOpenFullAnalysis}>
-                  Open Full Investment Analysis
-                </button>
-                <button type="button" className="ghostButton" onClick={handleExport}>
-                  Export Evaluation
-                </button>
+          <ScoreExplanationPanel item={evaluation} />
+
+          <div className="seTwoColumn">
+            <article className="seGlassCard">
+              <div className="seSectionHeader">
+                <span className="executiveDashboardEyebrow">Market pricing</span>
+                <h2>Secondary market</h2>
+              </div>
+              <div className="sePricingGrid">
+                <div className="seMetric"><span>Retail</span><strong>{formatCollectiblePrice(marketPricing?.retail)}</strong></div>
+                <div className="seMetric"><span>Current value</span><strong>{formatCollectiblePrice(marketPricing?.currentValue)}</strong></div>
+                <div className="seMetric"><span>Lowest price</span><strong>{formatCollectiblePrice(marketPricing?.lowestPrice)}</strong></div>
+                <div className="seMetric"><span>Highest price</span><strong>{formatCollectiblePrice(marketPricing?.highestPrice)}</strong></div>
+                <div className="seMetric"><span>Average market price</span><strong>{formatCollectiblePrice(marketPricing?.averageMarketPrice)}</strong></div>
+                <div className="seMetric"><span>Expected retirement pop</span><strong>{formatCollectiblePrice(marketPricing?.expectedRetirementPop)}</strong></div>
               </div>
             </article>
-          ) : (
-            <article className="seGlassCard seResultsPlaceholder">
+
+            <article className="seGlassCard">
               <div className="seSectionHeader">
-                <span className="executiveDashboardEyebrow">Step 3</span>
-                <h2>Evaluation results</h2>
+                <span className="executiveDashboardEyebrow">Forecasts</span>
+                <h2>Price outlook</h2>
               </div>
-              <p>Confirm set details and run the evaluation to see Brick Alpha investment analysis.</p>
+              <div className="seForecastGrid">
+                {forecasts.map((forecast) => (
+                  <div key={forecast.years} className="seForecastCard">
+                    <span>{forecast.label}</span>
+                    <strong>{formatCollectiblePrice(forecast.value)}</strong>
+                    <em className="seMetric-positive">+{forecast.roi.toFixed(1)}%</em>
+                  </div>
+                ))}
+              </div>
             </article>
-          )}
+          </div>
+
+          {breakdown ? (
+            <article className="seGlassCard">
+              <div className="seSectionHeader">
+                <span className="executiveDashboardEyebrow">Brick Alpha score</span>
+                <h2>Weighted breakdown</h2>
+              </div>
+              <div className="iaWeightLegend">
+                {breakdown.displayGroups.map((group) => (
+                  <span key={group.key}>
+                    {group.label} {group.weight}%
+                  </span>
+                ))}
+              </div>
+              <div className="iaScoreBars">
+                {breakdown.factors.map((factor) => (
+                  <ScoreBar key={factor.key} factor={factor} />
+                ))}
+              </div>
+            </article>
+          ) : null}
+
+          <article className="seGlassCard">
+            <div className="seSectionHeader">
+              <span className="executiveDashboardEyebrow">Comparable sets</span>
+              <h2>Historical performance peers</h2>
+            </div>
+            <div className="seComparableGrid">
+              {PREMIUM_COMPARABLES.map((comp) => (
+                <div key={comp.setNumber} className="seComparableCard">
+                  <span className="seComparableTheme">{comp.theme}</span>
+                  <strong>{comp.name}</strong>
+                  <small>#{comp.setNumber}</small>
+                  <div className="seComparableStats">
+                    <div><span>Score</span><strong>{comp.score}</strong></div>
+                    <div><span>ROI</span><strong>+{comp.roi}%</strong></div>
+                    <div><span>Growth</span><strong>{comp.growth}</strong></div>
+                  </div>
+                  <em className={`seRecommendation seRecommendation-${recommendationTone(comp.recommendation)}`}>
+                    {comp.recommendation}
+                  </em>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="seGlassCard seRetirementCard">
+            <div className="seSectionHeader">
+              <span className="executiveDashboardEyebrow">Retirement intelligence</span>
+              <h2>Production lifecycle</h2>
+            </div>
+            <div className="seRetirementGrid">
+              <div className="seMetric"><span>Expected retirement</span><strong>{retirementSnapshot?.expectedRetirement}</strong></div>
+              <div className="seMetric"><span>Retirement probability</span><strong>{retirementSnapshot?.retirementProbability}%</strong></div>
+              <div className="seMetric"><span>Retirement confidence</span><strong>{retirementSnapshot?.retirementConfidence}%</strong></div>
+              <div className="seMetric"><span>Months remaining</span><strong>{monthsUntilRetirement(evaluation) ?? retirementSnapshot?.monthsRemaining}</strong></div>
+              <div className="seMetric"><span>Expected retirement pop</span><strong>{formatCollectiblePrice(retirementSnapshot?.expectedRetirementPop)}</strong></div>
+            </div>
+          </article>
+
+          <CopilotCard evaluation={evaluation} />
+
+          <article className="seGlassCard seActionsCard">
+            <div className="seSectionHeader">
+              <span className="executiveDashboardEyebrow">Portfolio actions</span>
+              <h2>Next steps</h2>
+            </div>
+            <div className="seActionRow">
+              <button type="button" className="primaryButton" onClick={handleAddToPortfolio}>
+                Add to Portfolio
+              </button>
+              <button type="button" className="ghostButton" onClick={handleAddToWatchlist}>
+                Add to Watchlist
+              </button>
+              <button type="button" className="ghostButton" onClick={() => setActionStatus("PDF report queued for demo export.")}>
+                Generate PDF Report
+              </button>
+              <button type="button" className="ghostButton" onClick={() => setActionStatus("Analysis link copied to clipboard (demo).")}>
+                Share Analysis
+              </button>
+              <button type="button" className="ghostButton" onClick={handleOpenInvestmentAnalysis}>
+                Compare Sets
+              </button>
+              <button type="button" className="ghostButton" onClick={handleTrackRetirement}>
+                Track Retirement
+              </button>
+              <button type="button" className="ghostButton" onClick={handleOpenInvestmentAnalysis}>
+                Investment Analysis
+              </button>
+            </div>
+          </article>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

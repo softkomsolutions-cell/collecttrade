@@ -112,6 +112,13 @@ export function HomeExecutiveDashboard({
               <span>Active</span>
               <strong>{retirementAlerts.length}</strong>
             </div>
+            <button
+              type="button"
+              className="ghostButton slimButton"
+              onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}
+            >
+              View all
+            </button>
           </div>
           {retirementAlerts.length ? (
             <div className="executiveRetirementChips executiveRetirementChips-compact">
@@ -120,7 +127,7 @@ export function HomeExecutiveDashboard({
                   key={holding.id}
                   type="button"
                   className={`executiveRetirementChip executiveRetirementChip-${holding.retirementStatus.toLowerCase()}`}
-                  onClick={() => jumpToPageSection("portfolio", "position-detail")}
+                  onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}
                 >
                   <span>{holding.retirementStatus}</span>
                   <strong>{holding.label || holding.name}</strong>
@@ -221,6 +228,9 @@ export function HomeExecutiveDashboard({
       <nav className="executiveDashboardQuickNav" aria-label="Workspace shortcuts">
         <button type="button" onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}>
           Portfolio
+        </button>
+        <button type="button" onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}>
+          Retirement Intelligence
         </button>
         <button type="button" onClick={() => jumpToPageSection("collectibles", "investment-analysis")}>
           Investment Analysis
