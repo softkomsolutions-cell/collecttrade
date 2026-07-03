@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <rect width="48" height="48" rx="12" fill="#08090d"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Brick Alpha">
+  <rect width="48" height="48" rx="12" fill="#12141a"/>
   <rect x="7" y="19" width="34" height="23" rx="4" fill="#1a1d26" stroke="#c9a962" stroke-width="1.5"/>
   <rect x="11" y="9" width="11" height="11" rx="2.5" fill="#c9a962"/>
   <rect x="26" y="9" width="11" height="11" rx="2.5" fill="#c9a962"/>

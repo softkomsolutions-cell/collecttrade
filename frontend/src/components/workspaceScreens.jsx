@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  ALERT_SUBSCRIPTION_OPTIONS,
   DEFAULT_EXECUTION_PROFILES,
   DESK_FILTERS,
   MARKET_DESKS,
@@ -8,7 +9,10 @@ import {
 } from "../appConfig";
 import {
   actionTone,
+  alertDigestWindowLabel,
+  alertKindLabel,
   findDeskMeta,
+  formatAlertThreshold,
   formatCollectiblePrice,
   formatDateTime,
   formatTickerPrice,
@@ -22,6 +26,7 @@ import {
   positiveTone,
   providerLabel,
   statusTone,
+  subscriptionTierLabel,
   venueDetailLabel,
 } from "../appUtils";
 import {
@@ -31,10 +36,21 @@ import {
   WorkspaceSectionBar,
 } from "./appShell";
 import {
+  buildPrimaryLaunchDefinitions,
+  buildSecondaryLaunchDefinitions,
+} from "../serviceRegistry";
+import {
   ConnectorCard,
   PositionDetailCard,
   TradeCollectibleCard,
+  AlphaSignalBadges,
 } from "./workspaceCards";
+import { summarizeBrickAlphaPortfolio } from "../brickAlphaModel";
+import { HomeExecutiveDashboard } from "./homeExecutiveDashboard";
+import { InvestmentAnalysisWorkspace } from "./investmentAnalysisWorkspace";
+import { RetirementIntelligenceWorkspace } from "./retirementIntelligenceWorkspace";
+import { PortfolioIntelligenceWorkspace } from "./portfolioIntelligenceWorkspace";
+import { ScanEvaluateWorkspace } from "./scanEvaluateWorkspace";
 
 function numberOrZero(value) {
   const numeric = Number(value);
@@ -47,6 +63,43 @@ function average(values) {
     return 0;
   }
   return safeValues.reduce((sum, value) => sum + value, 0) / safeValues.length;
+}
+
+function previousUtcDateKey(dateKey) {
+  const utcMs = Date.parse(`${dateKey}T00:00:00Z`);
+  if (!Number.isFinite(utcMs)) {
+    return null;
+  }
+  return new Date(utcMs - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function buildBestWeekActivityCount(activeDates) {
+  const ordered = Array.from(new Set(activeDates || []))
+    .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value)))
+    .sort();
+
+  if (!ordered.length) {
+    return 0;
+  }
+
+  const activeSet = new Set(ordered);
+  let best = 0;
+
+  ordered.forEach((dateKey) => {
+    let cursor = dateKey;
+    let count = 0;
+
+    for (let index = 0; index < 7 && cursor; index += 1) {
+      if (activeSet.has(cursor)) {
+        count += 1;
+      }
+      cursor = previousUtcDateKey(cursor);
+    }
+
+    best = Math.max(best, count);
+  });
+
+  return best;
 }
 
 function reportDeskKeyForTrade(trade) {
@@ -72,7 +125,7 @@ function reportDeskKeyForTrade(trade) {
 
 function reportDeskLabel(deskKey) {
   if (deskKey === "collectibles") {
-    return "Collectibles";
+    return "LEGO Investments";
   }
 
   return labelDesk(deskKey);
@@ -85,6 +138,141 @@ function formatSignedPercent(value) {
   }
 
   return `${numeric >= 0 ? "+" : ""}${numeric.toFixed(2)}%`;
+}
+
+function formatScore(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? `${Math.round(numeric)}/100` : "--";
+}
+
+function countPortfolioRecommendations(holdings) {
+  const counts = { strongBuy: 0, buy: 0, hold: 0, sell: 0, other: 0 };
+
+  holdings.forEach((item) => {
+    const recommendation = item.recommendation || "Hold";
+    if (recommendation === "Strong Buy") {
+      counts.strongBuy += 1;
+    } else if (recommendation === "Buy") {
+      counts.buy += 1;
+    } else if (recommendation === "Hold") {
+      counts.hold += 1;
+    } else if (recommendation === "Sell") {
+      counts.sell += 1;
+    } else {
+      counts.other += 1;
+    }
+  });
+
+  return counts;
+}
+
+function buildIntelligenceFeed({
+  portfolioHoldings,
+  alertItems,
+  notificationItems,
+  watchlistItems,
+  jumpToPageSection,
+  activeDesk,
+}) {
+  const items = [];
+  const retirementStatuses = new Set(["Imminent", "Overdue", "Approaching"]);
+
+  portfolioHoldings.forEach((holding) => {
+    if (retirementStatuses.has(holding.retirementStatus)) {
+      items.push({
+        id: `retirement-${holding.id}`,
+        type: "retirement",
+        tone: holding.retirementStatus === "Overdue" ? "urgent" : "warning",
+        label: "Retirement Alert",
+        title: `${holding.label || holding.name}: ${holding.retirementStatus}`,
+        detail:
+          holding.sellByTargetDate || holding.expectedRetirementDate
+            ? `Target ${holding.sellByTargetDate || holding.expectedRetirementDate}`
+            : "Review retirement timeline and exit window.",
+        onClick: () => jumpToPageSection("collectibles", "retirement-intelligence"),
+      });
+    }
+
+    (holding.alphaSignals || []).forEach((signal) => {
+      items.push({
+        id: `alpha-${holding.id}-${signal}`,
+        type: "alpha",
+        tone: "accent",
+        label: "Alpha Signal",
+        title: signal,
+        detail: `${holding.label || holding.name} · Score ${formatScore(holding.brickAlphaScore)}`,
+        onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
+      });
+    });
+
+    if (holding.recommendation === "Strong Buy" || holding.recommendation === "Buy") {
+      items.push({
+        id: `recommendation-${holding.id}`,
+        type: "recommendation",
+        tone: holding.recommendation === "Strong Buy" ? "success" : "accent",
+        label: holding.recommendation,
+        title: holding.label || holding.name,
+        detail: `Brick Alpha ${formatScore(holding.brickAlphaScore)} · ${holding.investmentGrade || "Portfolio holding"}`,
+        onClick: () => jumpToPageSection("portfolio", "open-positions"),
+      });
+    }
+  });
+
+  alertItems
+    .filter((item) => item.triggered)
+    .slice(0, 4)
+    .forEach((item) => {
+      items.push({
+        id: `alert-${item.id}`,
+        type: "alert",
+        tone: "warning",
+        label: "Alert Triggered",
+        title: item.label,
+        detail: `${labelDesk(item.desk)} · ${alertKindLabel(item.kind)} threshold crossed`,
+        onClick: () => jumpToPageSection("signals", "chart-panel", item.desk || activeDesk),
+      });
+    });
+
+  watchlistItems.slice(0, 3).forEach((item) => {
+    items.push({
+      id: `watchlist-${item.id}`,
+      type: "watchlist",
+      tone: "neutral",
+      label: "Watchlist",
+      title: item.label,
+      detail: `${labelDesk(item.desk)} · ${item.action || "Monitoring"} setup saved`,
+      onClick: () => jumpToPageSection("signals", "chart-panel", item.desk || activeDesk),
+    });
+  });
+
+  notificationItems
+    .filter((item) => item.status === "unread")
+    .slice(0, 3)
+    .forEach((item) => {
+      items.push({
+        id: `notification-${item.id}`,
+        type: "notification",
+        tone: "neutral",
+        label: "Inbox",
+        title: item.title,
+        detail: item.message,
+        onClick: () => jumpToPageSection("home", "home-watchlist", activeDesk),
+      });
+    });
+
+  if (!items.length) {
+    items.push({
+      id: "empty-feed",
+      type: "empty",
+      tone: "neutral",
+      label: "Intelligence",
+      title: "Portfolio intelligence is warming up",
+      detail: "Add LEGO investment positions to unlock retirement alerts, alpha signals, and recommendation insights.",
+      onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
+    });
+  }
+
+  return items.slice(0, 12);
 }
 
 function buildPerformancePoints(trades) {
@@ -109,840 +297,6 @@ function buildPerformancePoints(trades) {
         raw: numberOrZero(trade.pnl),
       };
     });
-}
-
-function formatZar(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric)
-    ? `R${numeric.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`
-    : "--";
-}
-
-function formatInvestmentScore(item) {
-  const brickAlphaScore = Number(item?.brickAlphaScore);
-  if (Number.isFinite(brickAlphaScore) && brickAlphaScore > 0) {
-    return `${Number.isInteger(brickAlphaScore) ? brickAlphaScore : brickAlphaScore.toFixed(1)}/100`;
-  }
-
-  const score = Number(item?.score);
-  if (!Number.isFinite(score) || score <= 0) {
-    return "--";
-  }
-
-  return score > 10
-    ? `${Number.isInteger(score) ? score : score.toFixed(1)}/100`
-    : `${score.toFixed(1)}/10`;
-}
-
-const LEGO_ASSET_VISUALS = {
-  "10316": {
-    theme: "valley",
-    line: "Icons",
-    title: "Rivendell",
-    initials: "RV",
-  },
-  "40766": {
-    theme: "library",
-    line: "GWP",
-    title: "Jane Austen",
-    initials: "JA",
-  },
-  "30725": {
-    theme: "marvel",
-    line: "Marvel",
-    title: "Spider-Man",
-    initials: "SM",
-  },
-};
-
-function assetVisualFor(reference, name = "LEGO") {
-  const cleanReference = String(reference || "").split("-")[0];
-  return (
-    LEGO_ASSET_VISUALS[cleanReference] || {
-      theme: "classic",
-      line: "LEGO",
-      title: name,
-      initials: String(name || "LEGO")
-        .split(/\s+/)
-        .map((part) => part.slice(0, 1))
-        .join("")
-        .slice(0, 2)
-        .toUpperCase(),
-    }
-  );
-}
-
-function LegoAssetVisual({ reference, name, size = "card" }) {
-  const visual = assetVisualFor(reference, name);
-  return (
-    <div className={`legoAssetVisual legoAssetVisual-${visual.theme} legoAssetVisual-${size}`}>
-      <div className="legoAssetBrand">LEGO</div>
-      <div className="legoAssetScene" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className="legoAssetCopy">
-        <small>{visual.line}</small>
-        <strong>{visual.title}</strong>
-        <span>{reference}</span>
-      </div>
-      <div className="legoAssetInitials">{visual.initials}</div>
-    </div>
-  );
-}
-
-async function downloadPdf(response, fallbackFilename) {
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload?.error || "pdf_download_failed");
-  }
-  const disposition = response.headers.get("Content-Disposition") || "";
-  const filenameMatch = disposition.match(/filename="([^"]+)"/i);
-  const url = window.URL.createObjectURL(await response.blob());
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filenameMatch?.[1] || fallbackFilename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-}
-
-const COLLECTIBLE_VALUATION_CATEGORIES = [
-  {
-    id: "lego",
-    label: "LEGO",
-    mode: "automatic",
-    identifierLabel: "LEGO set number",
-    identifierPlaceholder: "30725",
-    itemNamePlaceholder: "Resolved from the set number",
-    evidenceHint: "Automatic lookup uses configured BrickLink and BrickEconomy sources.",
-  },
-];
-
-function collectibleErrorMessage(error) {
-  const messages = {
-    lego_market_data_unavailable:
-      "No live source or saved reference benchmark is available for that set yet.",
-    lego_set_number_required: "Enter a valid LEGO set number.",
-    purchase_price_required: "Enter the price you paid in rand.",
-    collectible_category_required: "Choose a collectible category.",
-    collectible_name_required: "Enter a clear name for the collectible.",
-    collectible_reference_required: "Enter a catalog, edition, or product reference.",
-    market_comparable_value_required:
-      "Enter an evidence-led current market estimate from comparable sales.",
-  };
-  return messages[error] || "The collectible valuation could not be completed. Please try again.";
-}
-
-function CollectibleValuationPanel({ authToken, collectiblePortfolio, onSaved }) {
-  const [category] = useState("lego");
-  const [identifier, setIdentifier] = useState("30725");
-  const [itemName, setItemName] = useState("");
-  const [purchasePriceZAR, setPurchasePriceZAR] = useState("65");
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().slice(0, 10));
-  const [currentMarketValueZAR, setCurrentMarketValueZAR] = useState("");
-  const [condition, setCondition] = useState("excellent");
-  const [rarity, setRarity] = useState("");
-  const [provenance, setProvenance] = useState("");
-  const [evidenceNotes, setEvidenceNotes] = useState("");
-  const [certificationNotes, setCertificationNotes] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [valuation, setValuation] = useState(null);
-  const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [reportBusy, setReportBusy] = useState(false);
-  const [scanImage, setScanImage] = useState(null);
-  const [scanPreview, setScanPreview] = useState("");
-  const [scanStage, setScanStage] = useState("capture");
-  const activeProfile =
-    COLLECTIBLE_VALUATION_CATEGORIES.find((profile) => profile.id === category) ||
-    COLLECTIBLE_VALUATION_CATEGORIES[0];
-  const appraisalMode = activeProfile.mode === "appraisal";
-  const requestPayload = {
-    category,
-    identifier,
-    itemName,
-    purchasePriceZAR: Number(purchasePriceZAR),
-    purchaseDate,
-    currentMarketValueZAR: Number(currentMarketValueZAR),
-    condition,
-    rarity,
-    provenance,
-    evidenceNotes,
-    certificationNotes,
-    quantity: Number(quantity),
-    portfolioHoldings: collectiblePortfolio?.items || [],
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setBusy(true);
-    setStatus("");
-    setScanStage("evaluate");
-
-    try {
-      const response = await fetch("/api/collectibles/valuation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestPayload),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "lego_valuation_failed");
-      }
-      setValuation(payload);
-      setScanStage("review");
-    } catch (error) {
-      setValuation(null);
-      setStatus(collectibleErrorMessage(error.message));
-      setScanStage(scanImage ? "confirm" : "capture");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setBusy(true);
-    setStatus("");
-
-    try {
-      const response = await fetch("/api/collectibles/portfolio", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(requestPayload),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "collectible_save_failed");
-      }
-      setStatus("Saved to your collectibles portfolio.");
-      setScanStage("inventory");
-      await onSaved();
-    } catch (error) {
-      setStatus(collectibleErrorMessage(error.message));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleDownloadReport = async () => {
-    setReportBusy(true);
-    setStatus("");
-    try {
-      await downloadPdf(
-        await fetch("/api/collectibles/valuation/pdf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestPayload),
-        }),
-        `brickalpha-lego-valuation-${identifier || "report"}.pdf`,
-      );
-      setStatus("Valuation report downloaded.");
-    } catch (error) {
-      setStatus(collectibleErrorMessage(error.message));
-    } finally {
-      setReportBusy(false);
-    }
-  };
-  const handleScanImage = (event) => {
-    const [file] = Array.from(event.target.files || []);
-    if (!file) return;
-    if (scanPreview) {
-      window.URL.revokeObjectURL(scanPreview);
-    }
-    setScanImage(file);
-    setScanPreview(window.URL.createObjectURL(file));
-    setValuation(null);
-    setScanStage("confirm");
-    setStatus("Photo attached. Confirm the LEGO set number and purchase details before valuation.");
-  };
-  const clearScanImage = () => {
-    if (scanPreview) {
-      window.URL.revokeObjectURL(scanPreview);
-    }
-    setScanImage(null);
-    setScanPreview("");
-    setValuation(null);
-    setScanStage("capture");
-    setStatus("");
-  };
-  const workflowSteps = [
-    { id: "capture", label: "Upload evidence", detail: "Photo, receipt, or barcode" },
-    { id: "confirm", label: "Identify asset", detail: "Confirm set number and cost" },
-    { id: "review", label: "Market data", detail: "Score, value, and scenarios" },
-    { id: "inventory", label: "Portfolio record", detail: "Save the asset and report" },
-  ];
-  const workflowStageIndex = Math.max(
-    0,
-    workflowSteps.findIndex((step) => step.id === scanStage),
-  );
-  const analysisPipeline = [
-    {
-      id: "evidence",
-      label: "Evidence",
-      status: scanImage ? "Purchase evidence attached" : "Awaiting upload",
-      active: scanStage === "capture",
-      complete: Boolean(scanImage),
-    },
-    {
-      id: "asset",
-      label: "Asset identified",
-      status: identifier ? `LEGO ${identifier}` : "Set reference required",
-      active: scanStage === "confirm",
-      complete: Boolean(identifier),
-    },
-    {
-      id: "market",
-      label: "Market data",
-      status: valuation ? `${valuation.sources?.length || 1} sources verified` : busy ? "Retrieving source data" : "Ready to retrieve",
-      active: scanStage === "evaluate" || busy,
-      complete: Boolean(valuation),
-    },
-    {
-      id: "score",
-      label: "Investment score",
-      status: valuation
-        ? `${valuation.brickAlphaScore || valuation.score * 10}/100 ${valuation.recommendation}`
-        : "Pending verdict",
-      active: scanStage === "review",
-      complete: Boolean(valuation),
-    },
-  ];
-
-  return (
-    <section className="panel legoValuationPanel" id="collectibles-valuation">
-      <div className="panelHeader">
-        <div>
-          <span className="legoPanelEyebrow">Collectible Investment Intelligence</span>
-          <h2>Investment Analysis</h2>
-          <p>
-            Upload evidence, confirm the LEGO asset, retrieve the market context, and get a clear
-            investment verdict.
-          </p>
-        </div>
-        <div className="headerStatus">
-          <span>Valuation mode</span>
-          <strong>{appraisalMode ? "Evidence-led appraisal" : "Connected market lookup"}</strong>
-        </div>
-      </div>
-
-      <section className="investmentHeroCard" aria-label="Investment analysis overview">
-        <div>
-          <span className="legoPanelEyebrow">Private investment verdict</span>
-          <h3>Rate a purchase in under 30 seconds.</h3>
-          <p>
-            Upload evidence, confirm the set, and get the score, gain, risk, and future value
-            forecast in one clean verdict.
-          </p>
-        </div>
-        <div className="investmentHeroStats" aria-label="Analysis checkpoints">
-          {[
-            ["01", "Evidence"],
-            ["02", "Market"],
-            ["03", "Verdict"],
-          ].map(([number, label]) => (
-            <div key={number}>
-              <span>{number}</span>
-              <strong>{label}</strong>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="legoWorkflowRail" aria-label="LEGO collection workflow">
-        {workflowSteps.map((step, index) => (
-          <div
-            className={`legoWorkflowStep ${
-              index < workflowStageIndex ? "completed" : index === workflowStageIndex ? "active" : ""
-            }`}
-            key={step.id}
-          >
-            <strong>{index + 1}</strong>
-            <div>
-              <span>{step.label}</span>
-              <small>{step.detail}</small>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <section className="partnerBetaPrompt" aria-label="Partner beta test guidance">
-        <div className="partnerBetaCopy">
-          <span className="legoPanelEyebrow">Partner beta test pass</span>
-          <h3>Test the 30-second investment workflow</h3>
-          <p>
-            Use LEGO 30725 at R65, run the analysis, save it to holdings, then open the asset
-            detail view. The most useful feedback is whether the verdict feels trustworthy and
-            what evidence would make the score easier to act on.
-          </p>
-        </div>
-        <div className="partnerBetaChecklist">
-          {[
-            ["01", "Evidence", "Scan or upload the purchase image"],
-            ["02", "Verdict", "Review score, value, gain, and forecasts"],
-            ["03", "Save", "Add the item to holdings"],
-            ["04", "Trust", "Check source trail and missing evidence"],
-          ].map(([step, label, detail]) => (
-            <div className="partnerBetaStep" key={step}>
-              <strong>{step}</strong>
-              <span>{label}</span>
-              <small>{detail}</small>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="legoScanWorkspace">
-        <div className={`legoScanPreview ${scanPreview ? "hasImage" : ""}`}>
-          {scanPreview ? (
-            <img src={scanPreview} alt="Attached LEGO purchase evidence" />
-          ) : (
-            <div className="legoScanPlaceholder">
-              <span className="legoCameraMark">CAM</span>
-              <strong>Upload Evidence</strong>
-              <span>Drag the image here or open the camera to attach purchase evidence.</span>
-              <div className="legoScanMethods" aria-label="Available scan methods">
-                <span>Open Camera</span>
-                <span>Upload Image</span>
-                <span>Scan Barcode</span>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="legoScanCopy">
-          <span className="legoPanelEyebrow">Step 1 | Investment evidence</span>
-          <h3>{scanImage ? "Evidence attached" : "Upload Evidence"}</h3>
-          <p>
-            {scanImage
-              ? `${scanImage.name} is attached. Confirm the LEGO reference and your price, then run the verdict.`
-              : "Start with the purchase photo, packaging, or receipt. The beta keeps the image as evidence while you confirm the asset before pricing."}
-          </p>
-          <div className="panelActions">
-            <label className="primaryButton legoUploadButton">
-              <input type="file" accept="image/*" capture="environment" onChange={handleScanImage} />
-              {scanImage ? "Replace Image" : "Open Camera / Upload"}
-            </label>
-            <button
-              className="ghostButton"
-              type="button"
-              onClick={() =>
-                setStatus("Barcode scanning is staged for beta. Use the LEGO set number field for now.")
-              }
-            >
-              Scan Barcode
-            </button>
-            {scanImage ? (
-              <button className="ghostButton" type="button" onClick={clearScanImage}>
-                Remove Photo
-              </button>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      <section className="analysisPipelinePanel" aria-label="Investment analysis pipeline">
-        <div className="analysisPipelineHeader">
-          <span className="legoPanelEyebrow">AI analysis pipeline</span>
-          <h3>BrickAlpha is preparing the investment verdict</h3>
-        </div>
-        <div className="analysisPipelineGrid">
-          {analysisPipeline.map((item) => (
-            <div
-              className={`analysisPipelineStep ${
-                item.complete ? "complete" : item.active ? "active" : ""
-              }`}
-              key={item.id}
-            >
-              <span>{item.complete ? "OK" : item.active ? "RUN" : "WAIT"}</span>
-              <strong>{item.label}</strong>
-              <small>{item.status}</small>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="legoFormIntro">
-        <span className="legoPanelEyebrow">Step 2 | Identify asset</span>
-        <h3>Confirm the investment record</h3>
-        <p>Use the LEGO set number printed on the packaging, then run the investment analysis.</p>
-      </div>
-
-      <form className="legoValuationForm" onSubmit={handleSubmit}>
-        {appraisalMode ? (
-          <label>
-            <span>Collectible name</span>
-            <input
-              type="text"
-              value={itemName}
-              onChange={(event) => setItemName(event.target.value)}
-              placeholder={activeProfile.itemNamePlaceholder}
-            />
-          </label>
-        ) : null}
-        <label>
-          <span>{activeProfile.identifierLabel}</span>
-          <input
-            type="text"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            placeholder={activeProfile.identifierPlaceholder}
-          />
-        </label>
-        <label>
-          <span>Purchase price (ZAR)</span>
-          <input
-            type="number"
-            min="1"
-            step="0.01"
-            value={purchasePriceZAR}
-            onChange={(event) => setPurchasePriceZAR(event.target.value)}
-            placeholder="65"
-          />
-        </label>
-        <label>
-          <span>Purchase date</span>
-          <input
-            type="date"
-            value={purchaseDate}
-            onChange={(event) => setPurchaseDate(event.target.value)}
-          />
-        </label>
-        <label>
-          <span>Quantity</span>
-          <input
-            type="number"
-            min="1"
-            step="1"
-            value={quantity}
-            onChange={(event) => setQuantity(event.target.value)}
-          />
-        </label>
-        <label className="legoValuationWideField">
-          <span>Certification / evidence</span>
-          <textarea
-            value={certificationNotes}
-            onChange={(event) => setCertificationNotes(event.target.value)}
-            placeholder="Grading, authenticity, minifigure evidence, receipt, sealed condition, or photo notes"
-          />
-        </label>
-        {appraisalMode ? (
-          <>
-            <label>
-              <span>Current market estimate (ZAR)</span>
-              <input
-                type="number"
-                min="1"
-                step="0.01"
-                value={currentMarketValueZAR}
-                onChange={(event) => setCurrentMarketValueZAR(event.target.value)}
-                placeholder="Comparable-sale estimate"
-              />
-            </label>
-            <label>
-              <span>Condition</span>
-              <select value={condition} onChange={(event) => setCondition(event.target.value)}>
-                <option value="excellent">Excellent</option>
-                <option value="good">Good</option>
-                <option value="fair">Fair</option>
-                <option value="poor">Poor</option>
-              </select>
-            </label>
-            <label>
-              <span>Rarity or edition</span>
-              <input
-                type="text"
-                value={rarity}
-                onChange={(event) => setRarity(event.target.value)}
-                placeholder="Limited release, catalog grade, edition size"
-              />
-            </label>
-            <label className="legoValuationWideField">
-              <span>Provenance</span>
-              <textarea
-                value={provenance}
-                onChange={(event) => setProvenance(event.target.value)}
-                placeholder="Where it came from, authenticity evidence, storage, certification"
-              />
-            </label>
-            <label className="legoValuationWideField">
-              <span>Comparable-sale evidence</span>
-              <textarea
-                value={evidenceNotes}
-                onChange={(event) => setEvidenceNotes(event.target.value)}
-                placeholder={activeProfile.evidenceHint}
-              />
-            </label>
-          </>
-        ) : null}
-        <button className="primaryButton" type="submit" disabled={busy}>
-          {busy ? "Retrieving Market Data..." : "Run Analysis"}
-        </button>
-      </form>
-
-      {status ? <div className="statusBanner">{status}</div> : null}
-
-      {valuation ? (
-        <div className="legoValuationResult">
-          <div className="legoVerdictCard">
-            <div className={`legoVerdictImage ${scanPreview ? "hasImage" : ""}`}>
-              {scanPreview ? (
-                <img src={scanPreview} alt={`${valuation.name} purchase evidence`} />
-              ) : (
-                <LegoAssetVisual
-                  reference={valuation.setNum || valuation.identifier}
-                  name={valuation.name}
-                  size="hero"
-                />
-              )}
-            </div>
-            <div className="legoVerdictCopy">
-              <span className="legoPanelEyebrow">Investment verdict</span>
-              <h3>{valuation.name}</h3>
-              <div className="legoVerdictScore">
-                <strong>{valuation.brickAlphaScore || Math.round(valuation.score * 10)}/100</strong>
-                <span>{valuation.recommendation}</span>
-              </div>
-              <div className="legoVerdictMetrics">
-                <div>
-                  <span>Current market value</span>
-                  <strong>{formatZar(valuation.currentValueZAR)}</strong>
-                </div>
-                <div>
-                  <span>You paid</span>
-                  <strong>{formatZar(valuation.purchasePriceZAR)}</strong>
-                </div>
-                <div>
-                  <span>Current gain</span>
-                  <strong>{formatZar(valuation.profitZAR)}</strong>
-                </div>
-                <div>
-                  <span>5 year estimate</span>
-                  <strong>{formatZar(valuation.projections.fiveYears)}</strong>
-                </div>
-                <div>
-                  <span>Risk</span>
-                  <strong>{valuation.riskRating || "Review"}</strong>
-                </div>
-                <div>
-                  <span>Confidence</span>
-                  <strong>{valuation.confidenceLabel || valuation.confidence || "Review"}</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="legoValuationHeadline">
-            <div>
-              <span>
-                {valuation.categoryLabel || "Collectible"} {valuation.setNum || valuation.identifier}
-              </span>
-              <h3>{valuation.name}</h3>
-              <p>
-                {valuation.rarity} |{" "}
-                {valuation.confidence === "live"
-                  ? "Live market data"
-                  : valuation.valuationMode === "automatic"
-                    ? "Saved benchmark"
-                    : "Appraisal input"}
-              </p>
-            </div>
-            <div className="legoScore">
-              <strong>{valuation.brickAlphaScore || Math.round(valuation.score * 10)}</strong>
-              <span>/ 100</span>
-              <small>{valuation.recommendation}</small>
-            </div>
-          </div>
-
-          <div className="legoMetricGrid">
-            <div>
-              <span>You paid</span>
-              <strong>{formatZar(valuation.purchasePriceZAR)}</strong>
-            </div>
-            <div>
-              <span>Current estimate</span>
-              <strong>{formatZar(valuation.currentValueZAR)}</strong>
-            </div>
-            <div>
-              <span>Current gain</span>
-              <strong>{formatZar(valuation.profitZAR)}</strong>
-            </div>
-            <div>
-              <span>Cost multiple</span>
-              <strong>{valuation.multiplier}x</strong>
-            </div>
-            <div>
-              <span>Gain ratio</span>
-              <strong>{valuation.roiPercent ?? 0}%</strong>
-            </div>
-            <div>
-              <span>Discount to market</span>
-              <strong>{valuation.discountPercent ?? 0}%</strong>
-            </div>
-          </div>
-
-          <div className="legoProjectionGrid">
-            <div>
-              <span>1 year</span>
-              <strong>{formatZar(valuation.projections.oneYear)}</strong>
-            </div>
-            <div>
-              <span>5 years</span>
-              <strong>{formatZar(valuation.projections.fiveYears)}</strong>
-            </div>
-            <div>
-              <span>10 years</span>
-              <strong>{formatZar(valuation.projections.tenYears)}</strong>
-            </div>
-          </div>
-
-          {valuation.scoreBreakdown?.metrics?.length ? (
-            <section className="brickAlphaScorecard" aria-label="BrickAlpha investment scorecard">
-              <div className="brickAlphaScorecardHeader">
-                <div>
-                  <span className="legoPanelEyebrow">BrickAlpha Investment Score</span>
-                  <h3>{valuation.scoreBreakdown.total}/100 weighted score</h3>
-                  <p>
-                    Ten LEGO investment metrics weighted by appreciation drivers, margin of safety,
-                    collector demand, and portfolio exposure.
-                  </p>
-                </div>
-                <div className="brickAlphaScorecardBadge">
-                  <strong>{valuation.scoreBreakdown.label}</strong>
-                  <span>{valuation.scoreBreakdown.methodology}</span>
-                </div>
-              </div>
-
-              <div className="brickAlphaMetricGrid">
-                {valuation.scoreBreakdown.metrics.map((metric) => (
-                  <article className="brickAlphaMetricCard" key={metric.id}>
-                    <div className="brickAlphaMetricTop">
-                      <span>{metric.label}</span>
-                      <strong>{metric.weight}%</strong>
-                    </div>
-                    <div className="brickAlphaMetricScore">
-                      <strong>{metric.score}</strong>
-                      <span>/100</span>
-                    </div>
-                    <div className="brickAlphaMetricTrack" aria-hidden="true">
-                      <span style={{ width: `${metric.score}%` }} />
-                    </div>
-                    <small>{metric.detail}</small>
-                  </article>
-                ))}
-              </div>
-
-              {valuation.scoreBreakdown.portfolioContext ? (
-                <div className="brickAlphaPortfolioContext">
-                  <span>Collection / Portfolio holdings</span>
-                  <strong>{valuation.scoreBreakdown.portfolioContext.status}</strong>
-                  <small>{valuation.scoreBreakdown.portfolioContext.note}</small>
-                </div>
-              ) : null}
-            </section>
-          ) : null}
-
-          <div className="legoValuationDetailGrid">
-            <div>
-              <span>Investor Snapshot</span>
-              <p>
-                <strong>Risk: {valuation.riskRating || "Review"}</strong>
-              </p>
-              <p>Confidence: {valuation.confidenceLabel || valuation.confidence || "Review required"}</p>
-              <p>Purchase date: {valuation.purchaseDate || purchaseDate || "Not supplied"}</p>
-            </div>
-            <div>
-              <span>Investment Notes</span>
-              {(valuation.notes || []).map((note) => (
-                <p key={note}>{note}</p>
-              ))}
-            </div>
-            <div>
-              <span>Investment Grade</span>
-              <p>
-                <strong>{valuation.investmentGrade || valuation.recommendation}</strong>
-              </p>
-              <p>{valuation.investmentGradeDetail}</p>
-            </div>
-            <div>
-              <span>Pricing Sources</span>
-              {(valuation.sources || []).map((source) => (
-                <p key={source.id}>
-                  <strong>{source.label}</strong>
-                  <small>{source.status}</small>
-                </p>
-              ))}
-            </div>
-            {valuation.minifigures?.length ? (
-              <div>
-                <span>Minifigure Values</span>
-                {valuation.minifigures.map((minifigure) => (
-                  <p key={minifigure.id}>
-                    <strong>
-                      {minifigure.name}
-                      {minifigure.exclusive ? " | Exclusive" : ""}
-                    </strong>
-                    <small>{formatZar(minifigure.estimatedValueZAR)}</small>
-                  </p>
-                ))}
-              </div>
-            ) : null}
-            {valuation.certificationNotes ? (
-              <div>
-                <span>Certification / Evidence</span>
-                <p>{valuation.certificationNotes}</p>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="legoProjectionNote">
-            Projections use a {valuation.projections.annualGrowthPercent}% annual scenario and are
-            estimates, not guaranteed returns.
-            {valuation.usdZarRate ? ` USD/ZAR reference: ${valuation.usdZarRate}.` : ""}
-          </div>
-          <section className="verdictNextStepCard" aria-label="Recommended next step">
-            <div>
-              <span className="legoPanelEyebrow">Recommended next step</span>
-              <h3>Save this verdict to your holdings.</h3>
-              <p>
-                The purchase becomes a managed investment record with evidence, valuation, forecast,
-                and a downloadable PDF trail.
-              </p>
-            </div>
-            <div className="verdictNextStepRail">
-              {[
-                ["01", "Save holding"],
-                ["02", "Export PDF"],
-                ["03", "Review report"],
-              ].map(([step, label]) => (
-                <div key={step}>
-                  <span>{step}</span>
-                  <strong>{label}</strong>
-                </div>
-              ))}
-            </div>
-          </section>
-          <div className="panelActions">
-            <button className="primaryButton" type="button" disabled={busy} onClick={handleSave}>
-              {busy ? "Saving..." : "Add to Holdings"}
-            </button>
-            <button
-              className="ghostButton"
-              type="button"
-              disabled={reportBusy}
-              onClick={handleDownloadReport}
-            >
-              {reportBusy ? "Preparing PDF..." : "Download Valuation PDF"}
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </section>
-  );
 }
 
 function buildDeskExposureItems(trades) {
@@ -1129,19 +483,38 @@ function ReportBarList({ items, valueFormatter = (value) => value }) {
 export function HomeScreen({
   activeDesk,
   activePageSections,
+  alertsResponse,
   appSettings,
+  closedTrades,
   collectiblesResponse,
   connectedProviderCount,
   feedbackResponse,
   health,
   jumpToPageSection,
   liveReadyDeskCount,
+  markAllNotificationsRead,
+  markNotificationRead,
   navigateToPage,
   newsResponse,
+  notificationsResponse,
+  onOpenWatchlistSignal,
+  onRemoveAlertRule,
+  onRemoveWatchlistItem,
+  onToggleAlertRule,
   openTrades,
+  routineResponse,
+  routineStatus,
+  dismissRoutineReminder,
+  acknowledgeRoutineCompletion,
+  setRoutineMode,
+  resetRoutine,
+  setRoutineStep,
   shareStatus,
   signalsResponse,
   totalOpenPnl,
+  watchlistBusyKey,
+  watchlistResponse,
+  watchlistStatus,
 }) {
   const feedbackSummary = feedbackResponse.summary || {};
   const allSignals = signalsResponse.signals || [];
@@ -1150,6 +523,114 @@ export function HomeScreen({
   const latestFeedbackItem = feedbackResponse.items?.[0] || null;
   const latestOpenTrade = openTrades?.[0] || null;
   const shareIsLive = shareStatus?.status === "live" && shareStatus?.publicUrl;
+  const watchlistItems = watchlistResponse.items || [];
+  const alertItems = alertsResponse.items || [];
+  const alertSummary = alertsResponse.summary || {};
+  const currentAlertPlan =
+    ALERT_SUBSCRIPTION_OPTIONS.find(
+      (option) => option.id === (alertSummary.subscriptionTier || appSettings.subscriptionTier || "starter"),
+    ) || ALERT_SUBSCRIPTION_OPTIONS[0];
+  const nextAlertPlan =
+    currentAlertPlan.id === "starter"
+      ? ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === "pro")
+      : currentAlertPlan.id === "pro"
+        ? ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === "elite")
+        : null;
+  const notificationItems = notificationsResponse.items || [];
+  const notificationSummary = notificationsResponse.summary || {};
+  const routineCompletedIds = routineResponse.completedStepIds || [];
+  const routineStreakCount = Number(routineResponse.streakCount || 0);
+  const routineBestStreakCount = Number(routineResponse.bestStreakCount || 0);
+  const routineWeekActiveCount = Number(routineResponse.weekActiveCount || 0);
+  const routineSessionMode = String(routineResponse.sessionMode || "morning");
+  const routineCompletedAt = routineResponse.completedAt || null;
+  const routineIsComplete = Boolean(routineResponse.isComplete);
+  const routineCurrentDate = routineResponse.currentDate || null;
+  const routineReminderDismissedDate = routineResponse.reminderDismissedDate || null;
+  const routineCompletionAcknowledgedDate = routineResponse.completionAcknowledgedDate || null;
+  const routinePreferences = appSettings.routinePreferences || {};
+  const routineActivityDates = useMemo(
+    () =>
+      (routineResponse.activeDates || []).slice(0, 6).map((dateKey) => {
+        const formatted = new Intl.DateTimeFormat("en-ZA", {
+          month: "short",
+          day: "numeric",
+          timeZone: appSettings.timezone,
+        }).format(new Date(`${dateKey}T12:00:00Z`));
+        return {
+          id: dateKey,
+          dateKey,
+          formatted,
+          isToday: dateKey === routineCurrentDate,
+        };
+      }),
+    [appSettings.timezone, routineCurrentDate, routineResponse.activeDates],
+  );
+  const routineBestWeekCount = useMemo(
+    () => buildBestWeekActivityCount(routineResponse.activeDates || []),
+    [routineResponse.activeDates],
+  );
+  const routineWeekEntries = useMemo(() => {
+    if (!routineCurrentDate) {
+      return [];
+    }
+
+    const activeSet = new Set(routineResponse.activeDates || []);
+    const entries = [];
+    let cursor = routineCurrentDate;
+
+    for (let index = 0; index < 7 && cursor; index += 1) {
+      const date = new Date(`${cursor}T12:00:00Z`);
+      entries.push({
+        id: cursor,
+        dateKey: cursor,
+        shortLabel: new Intl.DateTimeFormat("en-ZA", {
+          weekday: "short",
+          timeZone: appSettings.timezone,
+        })
+          .format(date)
+          .slice(0, 3)
+          .toUpperCase(),
+        dayLabel: new Intl.DateTimeFormat("en-ZA", {
+          day: "numeric",
+          month: "short",
+          timeZone: appSettings.timezone,
+        }).format(date),
+        active: activeSet.has(cursor),
+        isToday: cursor === routineCurrentDate,
+      });
+      cursor = previousUtcDateKey(cursor);
+    }
+
+    return entries.reverse();
+  }, [appSettings.timezone, routineCurrentDate, routineResponse.activeDates]);
+  const routineCadenceReview = useMemo(() => {
+    if (!routineActivityDates.length) {
+      return {
+        label: "Starting out",
+        detail: "The routine layer is ready. A few completed sessions will start turning this into a real usage rhythm.",
+      };
+    }
+
+    if (routineWeekActiveCount >= 5 || routineBestStreakCount >= 5) {
+      return {
+        label: "Strong rhythm",
+        detail: "Usage is starting to look sticky. The user is returning often enough for the product to become part of a real workflow.",
+      };
+    }
+
+    if (routineWeekActiveCount >= 3 || routineStreakCount >= 3) {
+      return {
+        label: "Building well",
+        detail: "There is repeat behaviour here. The next job is to keep the daily brief, alerts, and research worth opening every session.",
+      };
+    }
+
+    return {
+      label: "Early pattern",
+      detail: "The habit loop is forming, but it still needs a little more pull from alerts, review, and subscriber value.",
+    };
+  }, [routineActivityDates.length, routineBestStreakCount, routineStreakCount, routineWeekActiveCount]);
   const strongestSignal =
     allSignals
       .slice()
@@ -1184,151 +665,600 @@ export function HomeScreen({
       ),
     ),
   );
-  const launchCards = [
-    {
-      id: "news",
-      label: "News",
-      glyph: "NW",
-      hint: "Read the tape before you act.",
-      action: () => jumpToPageSection("news", "macro-feed", activeDesk),
+  const serviceLaunchDefinitions = buildPrimaryLaunchDefinitions(activeDesk);
+  const supportLaunchDefinitions = buildSecondaryLaunchDefinitions(activeDesk);
+  const launchMetaById = {
+    news: {
       metaLabel: "Lead source",
       metaValue: leadNewsItem?.sourceName || "Waiting",
     },
-    {
-      id: "signals",
-      label: "Trade Desk",
-      glyph: "TR",
-      hint: "Open the chart, structure plan, and ticket.",
-      action: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+    trading: {
       metaLabel: "Lead setup",
       metaValue: leadSignal ? `${leadSignal.action} ${leadSignal.label}` : "No setup yet",
     },
-    {
-      id: "collectibles",
-      label: "Collectibles",
-      glyph: "CL",
-      hint: "Alternative-assets inventory with the same discipline.",
-      action: () => jumpToPageSection("collectibles", "collectibles-grid"),
-      metaLabel: "Inventory",
+    crypto: {
+      metaLabel: "Lead setup",
+      metaValue: leadSignal?.desk === "crypto" ? `${leadSignal.action} ${leadSignal.label}` : "Crypto lane ready",
+    },
+    collectibles: {
+      metaLabel: "Holdings",
       metaValue: `${collectiblesResponse.items?.length || 0} items`,
     },
-    {
-      id: "portfolio",
-      label: "Portfolio",
-      glyph: "PF",
-      hint: "Review open positions and your latest close decisions.",
-      action: () => jumpToPageSection("portfolio", "open-positions"),
+    portfolio: {
       metaLabel: "Open positions",
       metaValue: `${openTrades.length}`,
     },
-    {
-      id: "reports",
-      label: "Reports",
-      glyph: "RP",
-      hint: "Open performance graphs, desk exposure, and signal analytics.",
-      action: () => jumpToPageSection("reports", "reports-performance"),
+    reports: {
       metaLabel: "Report mode",
       metaValue: "Graphs ready",
     },
-    {
-      id: "tools",
-      label: "Tools",
-      glyph: "TL",
-      hint: "Mentor, analyzer, simulator, and research stack.",
-      action: () => jumpToPageSection("tools", "tools-workbench", activeDesk),
-      metaLabel: "Research reports",
+    subscriptions: {
+      metaLabel: "Current plan",
+      metaValue: subscriptionTierLabel(appSettings.subscriptionTier),
+    },
+    tools: {
+      metaLabel: "Research notes",
       metaValue: "Desk-linked",
     },
-    {
-      id: "connections",
-      label: "Connections",
-      glyph: "CN",
-      hint: "Feeds, brokers, and live-routing readiness.",
-      action: () => jumpToPageSection("connections", "connections-overview", activeDesk),
+    connections: {
       metaLabel: "Configured",
       metaValue: `${connectedProviderCount} providers`,
     },
-  ];
+    settings: {
+      metaLabel: "Region",
+      metaValue: appSettings.preferredRegion || "South Africa",
+    },
+  };
+  const buildLaunchCard = (definition) => ({
+    id: definition.id,
+    label: definition.title,
+    glyph: definition.glyph,
+    hint: definition.homeHint,
+    action: () =>
+      jumpToPageSection(
+        definition.selection.page,
+        definition.selection.sectionId,
+        definition.selection.desk || activeDesk,
+      ),
+    metaLabel: launchMetaById[definition.id]?.metaLabel || "Ready",
+    metaValue: launchMetaById[definition.id]?.metaValue || "Open",
+  });
+  const launchCards = serviceLaunchDefinitions.map(buildLaunchCard);
+  const supportLaunchCards = supportLaunchDefinitions.map(buildLaunchCard);
   const homeActions = [
     {
-      id: "trade",
-      label: "Today's Signal",
-      meta: strongestSignal?.label || "Waiting",
-      detail: "Jump straight into the chart, plan, and ticket for the strongest live setup.",
-      onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
-    },
-    {
-      id: "news",
-      label: "Macro Tape",
-      meta: leadNewsItem?.sourceName || "Tape",
-      detail: "Read the lead headlines before you route the next decision.",
-      onClick: () => jumpToPageSection("news", "macro-feed", activeDesk),
-    },
-    {
-      id: "portfolio",
-      label: "Portfolio Pulse",
-      meta: `${openTrades.length} open`,
-      detail: "Review the live book, current PnL, and the most recent position changes.",
+      id: "holdings",
+      label: "View Holdings",
+      meta: `${openTrades.filter((trade) => trade.assetClass === "collectible").length} open`,
+      detail: "Review live LEGO investment positions and current book exposure.",
       onClick: () => jumpToPageSection("portfolio", "open-positions"),
     },
     {
-      id: "reports",
-      label: "Reports",
+      id: "performance",
+      label: "Portfolio Performance",
+      meta: formatCollectiblePrice(
+        summarizeBrickAlphaPortfolio([...openTrades, ...(closedTrades || [])]).netAssetValue,
+      ),
+      detail: "Open NAV, gains, theme allocation, and collection grade rollups.",
+      onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
+    },
+    {
+      id: "investments",
+      label: "LEGO Investments",
+      meta: `${collectiblesResponse.items?.length || 0} catalog`,
+      detail: "Research holdings, scores, and the investment decision engine.",
+      onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
+    },
+    {
+      id: "research",
+      label: "Research Center",
       meta: `${sessionReadinessScore}%`,
-      detail: "Open the chart-rich reporting workspace and review the book visually.",
+      detail: "Open performance graphs, desk exposure, and visual portfolio review.",
       onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
     },
+    {
+      id: "subscriptions",
+      label: "Subscriptions",
+      meta: subscriptionTierLabel(appSettings.subscriptionTier),
+      detail: "Review tiers, premium value, and the alert plan story clients will pay for.",
+      onClick: () => jumpToPageSection("subscriptions", "subscriptions-overview", activeDesk),
+    },
   ];
+    const routineModeMeta = {
+      morning: {
+        label: "Morning brief",
+        shortLabel: "Morning",
+        detail: "Start with macro context, the lead signal, and the first return path for the day.",
+        primaryCta: "Open News",
+        primaryAction: () => jumpToPageSection("news", "macro-feed", activeDesk),
+      },
+      live: {
+        label: "Live desk",
+        shortLabel: "Live",
+        detail: "Stay close to alerts, structure, and the next clean execution window while the desk is active.",
+        primaryCta: "Open Trade",
+        primaryAction: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+      },
+      review: {
+        label: "Close review",
+        shortLabel: "Review",
+        detail: "Wrap the session with research, portfolio attention, and a calmer end-of-day check.",
+        primaryCta: "Open Research Center",
+        primaryAction: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+      },
+    };
+    const routineModeOrder = {
+      morning: ["macro", "signal", "watchlist", "alerts", "reports", "subscriptions"],
+      live: ["signal", "alerts", "watchlist", "macro", "reports", "subscriptions"],
+      review: ["reports", "alerts", "signal", "macro", "watchlist", "subscriptions"],
+    };
+    const workflowSteps = [
+      {
+        id: "macro",
+        ordinal: "01",
+        title: "Read the macro tape",
+        detail: leadNewsItem?.title || "Open the macro feed and anchor the next decision in current context.",
+        complete: Boolean(leadNewsItem),
+        cta: "Open News",
+        onClick: () => jumpToPageSection("news", "macro-feed", activeDesk),
+      },
+      {
+        id: "signal",
+        ordinal: "02",
+        title: "Review the lead signal",
+        detail: strongestSignal
+          ? `${strongestSignal.label} is leading at ${strongestSignal.confidence}% confidence.`
+          : "Open the trade desk when the engine promotes the next clean setup.",
+        complete: Boolean(strongestSignal),
+        cta: "Open Trade",
+        onClick: () => jumpToPageSection("signals", "chart-panel", strongestSignal?.desk || activeDesk),
+      },
+      {
+        id: "watchlist",
+        ordinal: "03",
+        title: "Build the return path",
+        detail: watchlistItems.length
+          ? `${watchlistItems.length} watchlist items are already saving useful return points.`
+          : "Save at least one instrument so the app starts behaving like a daily service, not just a screen you visit once.",
+        complete: watchlistItems.length > 0,
+        cta: "Review Watchlist",
+        onClick: () => jumpToPageSection("home", "home-watchlist", activeDesk),
+      },
+      {
+        id: "alerts",
+        ordinal: "04",
+        title: "Arm alert coverage",
+        detail:
+          alertSummary.enabled > 0
+            ? `${alertSummary.enabled} live alerts are active across the desk.`
+            : "Set breakout or RSI alerts so Brick Alpha can pull the user back in at the right moment.",
+        complete: (alertSummary.enabled || 0) > 0,
+        cta: "Open Alerts",
+        onClick: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+      },
+      {
+        id: "reports",
+        ordinal: "05",
+        title: "Review research and performance",
+        detail:
+          openTrades.length > 0
+            ? `${openTrades.length} open positions are already feeding the research layer.`
+            : "Open the research center and keep the analytics story visible even before the book gets deeper.",
+        complete: openTrades.length > 0,
+        cta: "Open Research Center",
+        onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+      },
+      {
+        id: "subscriptions",
+        ordinal: "06",
+        title: "Check premium value",
+        detail:
+          currentAlertPlan.id !== "starter"
+            ? `${subscriptionTierLabel(currentAlertPlan.id)} is already active, so the premium path is visible in the app.`
+            : "Open subscriptions and see how plans, alerts, research, and the daily brief connect into a paid product story.",
+        complete: currentAlertPlan.id !== "starter",
+        cta: "Open Plans",
+        onClick: () => navigateToPage("subscriptions", false, activeDesk),
+      },
+    ].map((step) => ({
+      ...step,
+      completed: routineCompletedIds.includes(step.id),
+    }));
+    const workflowCompleted = workflowSteps.filter((step) => step.completed).length;
+    const workflowProgress = Math.round((workflowCompleted / workflowSteps.length) * 100);
+    const weeklyRoutineScore = useMemo(() => {
+      const weeklyCoverage = (routineWeekActiveCount / 7) * 100;
+      const bestWeekCoverage = (routineBestWeekCount / 7) * 100;
+      const currentRunValue = Math.min(routineStreakCount * 18, 100);
+      const bestRunValue = Math.min(routineBestStreakCount * 14, 100);
+      const completionValue = routineIsComplete ? 100 : workflowProgress;
+
+      return Math.max(
+        18,
+        Math.min(
+          99,
+          Math.round(
+            average([weeklyCoverage, bestWeekCoverage, currentRunValue, bestRunValue, completionValue]),
+          ),
+        ),
+      );
+    }, [
+      routineBestStreakCount,
+      routineBestWeekCount,
+      routineIsComplete,
+      routineStreakCount,
+      routineWeekActiveCount,
+      workflowProgress,
+    ]);
+    const weeklyRoutineScoreLabel =
+      weeklyRoutineScore >= 85
+        ? "Elite rhythm"
+        : weeklyRoutineScore >= 65
+          ? "Consistent"
+          : weeklyRoutineScore >= 45
+            ? "Developing"
+            : "Starting";
+    const weeklyRoutineInsight =
+      weeklyRoutineScore >= 85
+        ? "This is the kind of repeat engagement that turns Brick Alpha into a daily service people rely on, not just a tool they remember occasionally."
+        : weeklyRoutineScore >= 65
+          ? "The habit loop is working. Alerts, the daily brief, and workflow memory are doing enough to keep the user coming back with purpose."
+          : weeklyRoutineScore >= 45
+            ? "There is a real usage pattern forming here. The next job is to keep the premium touchpoints strong enough that routine becomes expectation."
+            : "The workflow is still early. The app needs a little more pull from alerts, research, and visible value to become part of the user's weekly rhythm.";
+    const preferredWorkflowOrder = routineModeOrder[routineSessionMode] || routineModeOrder.morning;
+    const nextWorkflowStep =
+      preferredWorkflowOrder
+        .map((stepId) => workflowSteps.find((step) => step.id === stepId))
+        .find((step) => step && !step.completed) ||
+      workflowSteps[workflowSteps.length - 1];
+    const activeRoutineMode = routineModeMeta[routineSessionMode] || routineModeMeta.morning;
+    const completedAtLabel = routineCompletedAt
+      ? formatDateTime(routineCompletedAt, appSettings.timezone)
+      : null;
+    const nudgeWindow = routinePreferences.nudgeWindow || "active";
+    const incompleteStepCount = workflowSteps.length - workflowCompleted;
+    const reminderShouldSurface =
+      nudgeWindow === "quiet"
+        ? incompleteStepCount >= 3
+        : nudgeWindow === "focused"
+          ? incompleteStepCount >= 2
+          : incompleteStepCount >= 1;
+    const showRoutineReminder =
+      routinePreferences.remindersEnabled !== false &&
+      !routineIsComplete &&
+      routineReminderDismissedDate !== routineCurrentDate &&
+      reminderShouldSurface;
+    const showRoutineCelebration =
+      routinePreferences.celebrationEnabled !== false &&
+      routineIsComplete &&
+      routineCompletionAcknowledgedDate !== routineCurrentDate;
+    const briefCards = [
+      {
+        id: "market-posture",
+        label: "Market posture",
+        value: strongestSignal ? `${strongestSignal.action} ${strongestSignal.label}` : "Stand by",
+        detail: strongestSignal
+          ? `${strongestSignal.confidence}% confidence | ${strongestSignal.setup}`
+          : "The next clean setup will surface here once the desk settles.",
+      },
+      {
+        id: "macro-watch",
+        label: "Macro watch",
+        value: leadNewsItem?.sourceName || "Tape warming up",
+        detail:
+          leadNewsItem?.title ||
+          "The lead macro line will sit here once the news feed refreshes.",
+      },
+      {
+        id: "alerts",
+        label: "Alert pressure",
+        value: `${alertSummary.triggered || 0} live | ${notificationSummary.unread || 0} unread`,
+        detail:
+          alertSummary.triggered || notificationSummary.unread
+            ? "There is fresh alert activity worth checking before you route the next move."
+            : "No urgent alert pressure right now. The book is calm.",
+      },
+      {
+        id: "portfolio",
+        label: "Portfolio attention",
+        value: latestOpenTrade?.marketLabel || latestOpenTrade?.label || "No open positions",
+        detail: latestOpenTrade
+          ? `${latestOpenTrade.side} | ${latestOpenTrade.executionLabel || "Paper"} | ${formatDateTime(
+              latestOpenTrade.updatedAt || latestOpenTrade.createdAt,
+              appSettings.timezone,
+            )}`
+          : "No active position needs attention yet.",
+      },
+    ];
+    const dailyBriefText = [
+      `Brick Alpha daily brief | ${formatDateTime(new Date().toISOString(), appSettings.timezone)}`,
+      "",
+      `Desk focus: ${labelDesk(activeDesk)}`,
+      `Routine mode: ${activeRoutineMode.label}`,
+      `Market posture: ${strongestSignal ? `${strongestSignal.action} ${strongestSignal.label} at ${strongestSignal.confidence}% confidence` : "Waiting for the next clean setup"}`,
+      `Macro watch: ${leadNewsItem?.sourceName || "Waiting"}${leadNewsItem?.title ? ` | ${leadNewsItem.title}` : ""}`,
+      `Alerts: ${alertSummary.triggered || 0} triggered, ${notificationSummary.unread || 0} unread, ${alertSummary.enabled || 0} active`,
+      `Portfolio: ${openTrades.length} open positions${Number.isFinite(totalOpenPnl) ? ` | ${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL` : ""}`,
+      `Readiness: ${sessionReadinessScore}%`,
+    ].join("\n");
+    const copyDailyBrief = async () => {
+      if (!navigator.clipboard?.writeText) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(dailyBriefText);
+      } catch {
+        // Ignore clipboard errors; the brief is still visible on screen.
+      }
+    };
+
+  const brickAlphaPortfolio = useMemo(
+    () => summarizeBrickAlphaPortfolio([...openTrades, ...(closedTrades || [])]),
+    [closedTrades, openTrades],
+  );
+  const portfolioHoldings = useMemo(
+    () => openTrades.filter((trade) => trade.assetClass === "collectible"),
+    [openTrades],
+  );
+  const recommendationCounts = useMemo(
+    () => countPortfolioRecommendations(portfolioHoldings),
+    [portfolioHoldings],
+  );
+  const retirementAlerts = useMemo(
+    () =>
+      portfolioHoldings.filter((holding) =>
+        ["Imminent", "Overdue", "Approaching"].includes(holding.retirementStatus),
+      ),
+    [portfolioHoldings],
+  );
+  const intelligenceFeed = useMemo(
+    () =>
+      buildIntelligenceFeed({
+        portfolioHoldings,
+        alertItems,
+        notificationItems,
+        watchlistItems,
+        jumpToPageSection,
+        activeDesk,
+      }),
+    [activeDesk, alertItems, jumpToPageSection, notificationItems, portfolioHoldings, watchlistItems],
+  );
+  const unrealizedGainPercent = brickAlphaPortfolio.costBasis
+    ? (brickAlphaPortfolio.unrealizedGain / brickAlphaPortfolio.costBasis) * 100
+    : null;
+  const themeAllocationRows = brickAlphaPortfolio.themeAllocation?.breakdown || [];
+  const strongBuyOpportunities = useMemo(() => {
+    const catalog = collectiblesResponse.items || [];
+    const heldIds = new Set(
+      portfolioHoldings.map((holding) => holding.collectibleId || holding.catalogId || holding.id),
+    );
+    const fromPortfolio = portfolioHoldings
+      .filter((holding) => holding.recommendation === "Strong Buy")
+      .map((holding) => ({
+        id: `held-${holding.id}`,
+        label: holding.label || holding.name,
+        brickAlphaScore: holding.brickAlphaScore,
+        theme: holding.theme,
+        investmentGrade: holding.investmentGrade,
+        source: "portfolio",
+      }));
+    const fromCatalog = catalog
+      .filter((item) => item.recommendation === "Strong Buy" && !heldIds.has(item.id))
+      .slice(0, 4)
+      .map((item) => ({
+        id: `catalog-${item.id}`,
+        label: item.name || item.label,
+        brickAlphaScore: item.brickAlphaScore,
+        theme: item.theme,
+        investmentGrade: item.investmentGrade,
+        source: "catalog",
+      }));
+    return [...fromPortfolio, ...fromCatalog].slice(0, 5);
+  }, [collectiblesResponse.items, portfolioHoldings]);
+  const marketIntelligence = useMemo(
+    () =>
+      (newsResponse.items || []).slice(0, 3).map((item, index) => ({
+        id: item.id || `news-${index}`,
+        title: item.title,
+        sourceName: item.sourceName,
+      })),
+    [newsResponse.items],
+  );
+  const aiSummary = useMemo(() => {
+    const segments = [];
+    if (brickAlphaPortfolio.netAssetValue) {
+      segments.push(
+        `Your LEGO portfolio is valued at ${formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}`,
+      );
+    }
+    if (unrealizedGainPercent != null) {
+      segments.push(
+        `with ${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}% unrealised growth`,
+      );
+    }
+    if (brickAlphaPortfolio.collectionGrade) {
+      segments.push(`Collection grade ${brickAlphaPortfolio.collectionGrade}`);
+    }
+    if (brickAlphaPortfolio.averageBrickAlphaScore) {
+      segments.push(`Brick Alpha score ${formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}`);
+    }
+    if (retirementAlerts.length) {
+      segments.push(
+        `${retirementAlerts.length} set${retirementAlerts.length === 1 ? "" : "s"} need retirement attention`,
+      );
+    }
+    if (strongBuyOpportunities.length) {
+      segments.push(
+        `${strongBuyOpportunities.length} strong buy opportunit${strongBuyOpportunities.length === 1 ? "y" : "ies"} identified`,
+      );
+    }
+    if (leadNewsItem?.title) {
+      segments.push(`Market watch: ${leadNewsItem.title}`);
+    }
+    return segments.length
+      ? `${segments.join(". ")}.`
+      : "Add LEGO investment positions to unlock personalised portfolio intelligence and buy recommendations.";
+  }, [
+    brickAlphaPortfolio,
+    leadNewsItem,
+    retirementAlerts.length,
+    strongBuyOpportunities.length,
+    unrealizedGainPercent,
+  ]);
 
   return (
     <>
-      <WorkspaceHero
-        tone="home"
-        eyebrow="Daily Command Center"
-        title="Home"
-        description="A premium session hub for subscribers: today's best setup, macro context, portfolio pulse, and launch paths into every workspace."
-        statusLabel="Session readiness"
-        statusValue={`${sessionReadinessScore}% ready`}
-        metrics={[
-          {
-            label: "Best signal",
-            value: strongestSignal?.label || "Waiting",
-            detail: strongestSignal?.setup || "Monitoring the desk",
-          },
-          {
-            label: "Macro lead",
-            value: leadNewsItem?.sourceName || "Waiting",
-            detail: labelDesk(activeDesk),
-          },
-          {
-            label: "Open book",
-            value: openTrades.length,
-            detail: Number.isFinite(totalOpenPnl)
-              ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL`
-              : "No live PnL yet",
-          },
-        ]}
-        primaryAction={{
-          label: "Open Today's Signal",
-          onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
-        }}
-        secondaryAction={{
-          label: "Open Reports",
-          onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
-        }}
-      />
-      <WorkspaceSectionBar
-        sections={activePageSections}
-        onSelect={(sectionId) => jumpToPageSection("home", sectionId, activeDesk)}
-      />
-      <WorkspaceCommandBar
-        tone="home"
-        title="Subscriber Shortcuts"
-        hint="Move straight into the next high-value workflow without hunting around the app."
-        actions={homeActions}
+      <HomeExecutiveDashboard
+        aiSummary={aiSummary}
+        appSettings={appSettings}
+        brickAlphaPortfolio={brickAlphaPortfolio}
+        jumpToPageSection={jumpToPageSection}
+        marketIntelligence={marketIntelligence}
+        portfolioHoldings={portfolioHoldings}
+        retirementAlerts={retirementAlerts}
+        strongBuyOpportunities={strongBuyOpportunities}
+        unrealizedGainPercent={unrealizedGainPercent}
       />
 
-      <section className="homeCommandDeck" id="home-overview">
+      <div className="dashboardRelocatedArchive" hidden aria-hidden="true">
+      <section className="executiveDashboard" id="home-dashboard-archive">
+        <div className="executiveDashboardGrid">
+          <div className="executiveDashboardPrimary">
+            {themeAllocationRows.length ? (
+              <section className="executiveThemePanel" id="home-theme-allocation">
+                <div className="executivePanelHeader">
+                  <div>
+                    <h3>Theme Allocation</h3>
+                    <p>Relocated to Portfolio — preserved for Investment Analysis migration.</p>
+                  </div>
+                </div>
+                <div className="executiveThemeBars">
+                  {themeAllocationRows.map((row) => (
+                    <div className="executiveThemeBar" key={row.theme}>
+                      <div className="executiveThemeBarTop">
+                        <span>{row.theme}</span>
+                        <strong>{row.actual.toFixed(1)}%</strong>
+                      </div>
+                      <div className="executiveThemeTrack" aria-hidden="true">
+                        <div
+                          className="executiveThemeFill"
+                          style={{ width: `${Math.min(row.actual, 100)}%` }}
+                        />
+                      </div>
+                      <small>
+                        Target {row.target}% · {formatCollectiblePrice(row.value)}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="executiveRecommendationPanel" id="home-holdings-recommendations">
+              <div className="executivePanelHeader">
+                <div>
+                  <h3>Holdings Recommendations</h3>
+                  <p>Relocated — detailed counts move to Portfolio and Investment Analysis.</p>
+                </div>
+              </div>
+              <div className="executiveRecommendationGrid">
+                <div className="executiveRecommendationCard executiveRecommendationCard-strong">
+                  <span>Strong Buy</span>
+                  <strong>{recommendationCounts.strongBuy}</strong>
+                </div>
+                <div className="executiveRecommendationCard executiveRecommendationCard-buy">
+                  <span>Buy</span>
+                  <strong>{recommendationCounts.buy}</strong>
+                </div>
+                <div className="executiveRecommendationCard executiveRecommendationCard-hold">
+                  <span>Hold</span>
+                  <strong>{recommendationCounts.hold}</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside className="executiveDashboardFeed" id="home-intelligence-feed">
+            <div className="executiveFeedHeader">
+              <div>
+                <h3>Intelligence Feed</h3>
+                <p>Relocated to Investment Analysis — full per-set feed preserved below.</p>
+              </div>
+            </div>
+            <div className="executiveFeedList">
+              {intelligenceFeed.map((item) => (
+                <div key={item.id} className={`executiveFeedItem executiveFeedItem-${item.tone}`}>
+                  <strong>{item.title}</strong>
+                  <small>{item.detail}</small>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <details className="tradingToolsCollapse" id="home-trading-tools">
+        <summary className="tradingToolsSummary">
+          <span className="tradingToolsSummaryLabel">Trading Tools</span>
+          <small>Signals, macro tape, workflow, launchpad, and session tools</small>
+        </summary>
+        <div className="tradingToolsBody">
+      <section className="homeTodayStack" id="home-overview">
+        <div className="homeTodayHeader">
+          <div>
+            <span>Today</span>
+            <strong>{activeRoutineMode.label}</strong>
+          </div>
+          <div className="homeTodayScore">
+            <span>Ready</span>
+            <strong>{sessionReadinessScore}%</strong>
+          </div>
+        </div>
+
+        <div className="homeTodayPrimary">
+          <span>{strongestSignal ? `${strongestSignal.action} setup` : "Market watch"}</span>
+          <strong>{strongestSignal?.headline || strongestSignal?.label || "Waiting for a clean setup"}</strong>
+          <small>
+            {strongestSignal
+              ? `${labelDesk(strongestSignal.desk)} | RSI ${strongestSignal.rsi || "--"} | ${strongestSignal.confidence}% confidence`
+              : "The app is monitoring the desk and will surface the next clean signal here."}
+          </small>
+        </div>
+
+        <div className="homeTodayActionGrid">
+          <button
+            type="button"
+            className="homeTodayAction"
+            onClick={() => jumpToPageSection("news", "macro-feed", activeDesk)}
+          >
+            <span>01</span>
+            <strong>News</strong>
+            <small>{leadNewsItem?.sourceName || "Macro tape"}</small>
+          </button>
+          <button
+            type="button"
+            className="homeTodayAction"
+            onClick={() => jumpToPageSection("signals", "chart-panel", strongestSignal?.desk || activeDesk)}
+          >
+            <span>02</span>
+            <strong>Trade</strong>
+            <small>{strongestSignal?.label || "Signal desk"}</small>
+          </button>
+          <button
+            type="button"
+            className="homeTodayAction"
+            onClick={() => jumpToPageSection("portfolio", "open-positions")}
+          >
+            <span>03</span>
+            <strong>Book</strong>
+            <small>{openTrades.length} open</small>
+          </button>
+        </div>
+      </section>
+
+      <section className="homeCommandDeck">
         <article className="homeLeadPanel">
           <div className="homeLeadTop">
             <div>
@@ -1389,7 +1319,7 @@ export function HomeScreen({
               Read Macro Context
             </button>
           </div>
-        </article>
+          </article>
 
         <div className="homePulseGrid">
           <button
@@ -1419,7 +1349,7 @@ export function HomeScreen({
             className="homePulseCard"
             onClick={() => jumpToPageSection("reports", "reports-performance", activeDesk)}
           >
-            <span>Reports pulse</span>
+            <span>Research pulse</span>
             <strong>{openTrades.length ? "Live curve" : "Analytics ready"}</strong>
             <small>Performance graphs, desk exposure, and signal pressure are live.</small>
           </button>
@@ -1472,8 +1402,8 @@ export function HomeScreen({
         <section className="panel" id="home-launchpad">
           <div className="panelHeader">
             <div>
-              <h2>Open a workspace</h2>
-              <p>Move from the command center into the exact lane you want without losing context.</p>
+              <h2>Services</h2>
+              <p>Open the exact service screen you want from the Dashboard.</p>
             </div>
             <div className="headerStatus">
               <span>Current desk</span>
@@ -1502,6 +1432,403 @@ export function HomeScreen({
                 </div>
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="panel" id="home-brief">
+          <div className="panelHeader">
+            <div>
+              <h2>Daily Brief</h2>
+              <p>A premium subscriber-style summary of what matters now, what changed, and where to act next.</p>
+            </div>
+            <div className="headerStatus">
+              <span>Desk focus</span>
+              <strong>{labelDesk(activeDesk)}</strong>
+            </div>
+          </div>
+
+          <div className="summaryGrid compactSummaryGrid">
+            {briefCards.map((card) => (
+              <article className="summaryCard" key={card.id}>
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
+                <small>{card.detail}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="splitGrid">
+            <section className="subPanel">
+              <div className="panelHeader">
+                <div>
+                  <h3>Subscriber morning note</h3>
+                  <p>This is the kind of short briefing a premium client should be able to skim in under a minute.</p>
+                </div>
+              </div>
+
+              <div className="briefNoteCard">
+                <strong>{strongestSignal?.headline || strongestSignal?.label || "The desk is waiting for the next clean setup."}</strong>
+                <p>
+                  {strongestSignal?.thesis ||
+                    "No clean lead setup has broken away from the pack yet, so the brief stays in monitoring mode."}
+                </p>
+                <ul className="briefBulletList">
+                  <li>
+                    <strong>Macro:</strong> {leadNewsItem?.sourceName || "Waiting"}{leadNewsItem?.summary ? ` - ${leadNewsItem.summary}` : " - The tape is still warming up."}
+                  </li>
+                  <li>
+                    <strong>Signals:</strong> {allSignals.length} visible setups, with {alertSummary.triggered || 0} currently lighting up active rules.
+                  </li>
+                  <li>
+                    <strong>Book:</strong> {openTrades.length} open positions{Number.isFinite(totalOpenPnl) ? ` and ${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL.` : "."}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="panelActions">
+                <button type="button" className="primaryButton" onClick={copyDailyBrief}>
+                  Copy Daily Brief
+                </button>
+                <button
+                  type="button"
+                  className="ghostButton"
+                  onClick={() => jumpToPageSection("signals", "chart-panel", strongestSignal?.desk || activeDesk)}
+                >
+                  Open Lead Signal
+                </button>
+              </div>
+            </section>
+
+            <section className="subPanel">
+              <div className="panelHeader">
+                <div>
+                  <h3>Immediate next actions</h3>
+                  <p>Keep the service side crisp: what the user should do next should never be a mystery.</p>
+                </div>
+              </div>
+
+              <div className="watchlistStack">
+                <article className="watchItemCard">
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">01</span>
+                      <span className={`signalBadge ${actionTone(strongestSignal?.action || "HOLD")}`}>{strongestSignal?.action || "WAIT"}</span>
+                    </div>
+                    <strong>Open the highest-conviction setup</strong>
+                    <small>
+                      {strongestSignal
+                        ? `${strongestSignal.label} is leading the desk at ${strongestSignal.confidence}% confidence.`
+                        : "Wait for the next promoted lead signal before routing a trade."}
+                    </small>
+                  </div>
+                </article>
+                <article className="watchItemCard">
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">02</span>
+                      <span className="signalMiniTag">MACRO</span>
+                    </div>
+                    <strong>Check the tape before execution</strong>
+                    <small>
+                      {leadNewsItem?.title || "Read the lead story so the next decision stays anchored in real context."}
+                    </small>
+                  </div>
+                </article>
+                <article className="watchItemCard">
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">03</span>
+                      <span className="signalMiniTag">ALERTS</span>
+                    </div>
+                    <strong>Clear triggered alerts and unread events</strong>
+                    <small>
+                      {notificationSummary.unread || alertSummary.triggered
+                        ? `${notificationSummary.unread || 0} unread notifications and ${alertSummary.triggered || 0} triggered alerts are waiting.`
+                        : "No fresh alert pressure is waiting on you right now."}
+                    </small>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section className="panel" id="home-workflow">
+          <div className="panelHeader">
+            <div>
+              <h2>Guided workflow</h2>
+              <p>Keep the product journey tight: context first, setup second, return loop third, premium value always visible.</p>
+            </div>
+            <div className="headerStatus">
+              <span>Progress</span>
+              <strong>{workflowProgress}%</strong>
+            </div>
+          </div>
+
+          {routineStatus ? <div className="statusBanner subtleBanner">{routineStatus}</div> : null}
+
+          <div className="splitGrid">
+            <section className="subPanel">
+              {showRoutineReminder ? (
+                <div className="workflowReminderCard">
+                  <div className="workflowReminderTop">
+                    <span className="signalMiniTag">ROUTINE NUDGE</span>
+                    <span className="signalBadge hold">{activeRoutineMode.shortLabel}</span>
+                  </div>
+                  <strong>{nextWorkflowStep.title} is still open.</strong>
+                  <p>
+                    {activeRoutineMode.detail} Next best move: {nextWorkflowStep.detail}
+                  </p>
+                  <div className="watchItemActions">
+                    <button type="button" className="primaryButton slimButton" onClick={nextWorkflowStep.onClick}>
+                      {nextWorkflowStep.cta}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={watchlistBusyKey === "routine:reminder"}
+                      onClick={dismissRoutineReminder}
+                    >
+                      Dismiss today
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="workflowModeRow">
+                {Object.entries(routineModeMeta).map(([modeId, mode]) => (
+                  <button
+                    key={modeId}
+                    type="button"
+                    className={`workflowModeButton ${routineSessionMode === modeId ? "active" : ""}`.trim()}
+                    disabled={watchlistBusyKey === `routine-mode:${modeId}`}
+                    onClick={() => setRoutineMode(modeId)}
+                  >
+                    <span>{mode.shortLabel}</span>
+                    <strong>{mode.label}</strong>
+                    <small>{mode.detail}</small>
+                  </button>
+                ))}
+              </div>
+
+              <div className="summaryGrid compactSummaryGrid">
+                <div className="summaryCard summaryCardAccent">
+                  <span>Completed steps</span>
+                  <strong>
+                    {workflowCompleted}/{workflowSteps.length}
+                  </strong>
+                  <small>The app is already coaching the next best move instead of leaving the user to guess.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Next best move</span>
+                  <strong>{nextWorkflowStep.title}</strong>
+                  <small>{nextWorkflowStep.detail}</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Current streak</span>
+                  <strong>{routineStreakCount} day{routineStreakCount === 1 ? "" : "s"}</strong>
+                  <small>Days with at least one completed workflow step saved to this account.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Best streak</span>
+                  <strong>{routineBestStreakCount} day{routineBestStreakCount === 1 ? "" : "s"}</strong>
+                  <small>Your strongest consistency run so far on this account.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>Reminder mode</span>
+                  <strong>
+                    {routinePreferences.remindersEnabled === false
+                      ? "Off"
+                      : routinePreferences.nudgeWindow === "focused"
+                        ? "Focused"
+                        : routinePreferences.nudgeWindow === "quiet"
+                          ? "Quiet"
+                          : "Active"}
+                  </strong>
+                  <small>Change this any time under Settings - Routine.</small>
+                </div>
+                <div className="summaryCard">
+                  <span>7-day cadence</span>
+                  <strong>{routineWeekActiveCount}/7 active</strong>
+                  <small>A quick read on whether the product is becoming part of the user's routine.</small>
+                </div>
+              </div>
+
+              {routineIsComplete ? (
+                <div className="workflowCompleteCard">
+                  <div className="workflowCompleteTop">
+                    <span className="signalMiniTag">{showRoutineCelebration ? "NICE WORK" : "TODAY COMPLETE"}</span>
+                    <span className="signalBadge buy">{showRoutineCelebration ? "DONE" : "READY"}</span>
+                  </div>
+                  <strong>Your core routine is done for today.</strong>
+                  <p>
+                    The app has your macro check, lead signal, watchlist return path, alerts,
+                    research, and premium review saved. {completedAtLabel ? `Finished at ${completedAtLabel}.` : ""}
+                  </p>
+                  <div className="watchItemActions">
+                    {showRoutineCelebration ? (
+                      <button
+                        type="button"
+                        className="primaryButton slimButton"
+                        disabled={watchlistBusyKey === "routine:ack"}
+                        onClick={acknowledgeRoutineCompletion}
+                      >
+                        Keep going
+                      </button>
+                    ) : null}
+                    <button type="button" className="primaryButton slimButton" onClick={activeRoutineMode.primaryAction}>
+                      {activeRoutineMode.primaryCta}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={watchlistBusyKey === "routine:reset"}
+                      onClick={resetRoutine}
+                    >
+                      Reset Today
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="workflowProgressTrack" aria-hidden="true">
+                <div className="workflowProgressFill" style={{ width: `${workflowProgress}%` }} />
+              </div>
+
+              <div className="panelActions">
+                <button
+                  type="button"
+                  className="primaryButton"
+                  onClick={routineIsComplete ? activeRoutineMode.primaryAction : nextWorkflowStep.onClick}
+                >
+                  {routineIsComplete ? activeRoutineMode.primaryCta : nextWorkflowStep.cta}
+                </button>
+                <button
+                  type="button"
+                  className="ghostButton"
+                  onClick={() => jumpToPageSection("home", "home-launchpad", activeDesk)}
+                >
+                  Open Launchpad
+                </button>
+              </div>
+
+              <div className="workflowHistoryRow">
+                {routineWeekEntries.length ? (
+                  routineWeekEntries.map((entry) => (
+                    <div
+                      className={`workflowHistoryChip ${entry.active ? "active" : "idle"} ${entry.isToday ? "today" : ""}`.trim()}
+                      key={entry.id}
+                    >
+                      <span>{entry.shortLabel}</span>
+                      <strong>{entry.active ? "Done" : "--"}</strong>
+                      <small>{entry.isToday ? "Today" : entry.dayLabel}</small>
+                    </div>
+                  ))
+                ) : (
+                  <div className="workflowHistoryEmpty">
+                    <strong>No saved rhythm yet</strong>
+                    <small>Complete a few workflow steps and the app will start showing your recent routine trail here.</small>
+                  </div>
+                )}
+              </div>
+
+              {routineActivityDates.length ? (
+                <div className="workflowHistorySummary">
+                  <strong>Recent completions</strong>
+                  <small>
+                    {routineActivityDates
+                      .map((entry) => (entry.isToday ? "Today" : entry.formatted))
+                      .join(" | ")}
+                  </small>
+                </div>
+              ) : null}
+
+              <div className="workflowReviewCard">
+                <div className="workflowReviewTop">
+                  <div>
+                    <span className="signalMiniTag">WEEKLY REVIEW</span>
+                    <strong>{routineCadenceReview.label}</strong>
+                  </div>
+                  <span className="signalBadge hold">{weeklyRoutineScore}%</span>
+                </div>
+                <p>{routineCadenceReview.detail}</p>
+
+                <div className="workflowInsightCard">
+                  <span>Why this matters</span>
+                  <strong>{weeklyRoutineScoreLabel}</strong>
+                  <small>{weeklyRoutineInsight}</small>
+                </div>
+
+                <div className="workflowReviewStats">
+                  <div className="workflowReviewStat">
+                    <span>This week</span>
+                    <strong>{routineWeekActiveCount}/7</strong>
+                  </div>
+                  <div className="workflowReviewStat">
+                    <span>Best week</span>
+                    <strong>{routineBestWeekCount}/7</strong>
+                  </div>
+                  <div className="workflowReviewStat">
+                    <span>Best streak</span>
+                    <strong>{routineBestStreakCount}d</strong>
+                  </div>
+                  <div className="workflowReviewStat">
+                    <span>Weekly score</span>
+                    <strong>{weeklyRoutineScore}%</strong>
+                  </div>
+                </div>
+
+                <div className="watchItemActions">
+                  <button
+                    type="button"
+                    className="primaryButton slimButton"
+                    onClick={() => jumpToPageSection("reports", "reports-performance", activeDesk)}
+                  >
+                    Open Weekly Research
+                  </button>
+                  <button
+                    type="button"
+                    className="ghostButton slimButton"
+                    onClick={() => jumpToPageSection("home", "home-brief", activeDesk)}
+                  >
+                    Review Daily Brief
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className="subPanel">
+              <div className="workflowStepGrid">
+                {workflowSteps.map((step) => (
+                  <article
+                    key={step.id}
+                    className={`workflowStepCard ${step.completed ? "complete" : step.complete ? "ready" : "pending"}`.trim()}
+                  >
+                    <div className="workflowStepTop">
+                      <span className="signalMiniTag">{step.ordinal}</span>
+                      <span className={`signalBadge ${step.completed ? "buy" : step.complete ? "hold" : "sell"}`}>
+                        {step.completed ? "DONE" : step.complete ? "READY" : "NEXT"}
+                      </span>
+                    </div>
+                    <strong>{step.title}</strong>
+                    <p>{step.detail}</p>
+                    <div className="watchItemActions">
+                      <button type="button" className="ghostButton slimButton" onClick={step.onClick}>
+                        {step.cta}
+                      </button>
+                      <button
+                        type="button"
+                        className={step.completed ? "ghostButton slimButton" : "primaryButton slimButton"}
+                        disabled={watchlistBusyKey === `routine:${step.id}`}
+                        onClick={() => setRoutineStep(step.id, !step.completed)}
+                      >
+                        {step.completed ? "Mark undone" : "Mark done"}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           </div>
         </section>
 
@@ -1569,6 +1896,288 @@ export function HomeScreen({
         </section>
       </div>
 
+      <section className="panel" id="home-support-menu">
+        <div className="panelHeader">
+          <div>
+            <h2>Support &amp; Admin</h2>
+            <p>Keep research, subscriptions, tools, connections, and settings in their own menu lane.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Separate lane</span>
+            <strong>Non-service</strong>
+          </div>
+        </div>
+
+        <div className="homeLaunchGrid">
+          {supportLaunchCards.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              className="homeLaunchCard"
+              onClick={card.action}
+            >
+              <div className="homeLaunchTop">
+                <span className="navGlyph">{card.glyph}</span>
+                <div className="homeLaunchCopy">
+                  <strong>{card.label}</strong>
+                  <small>{card.hint}</small>
+                </div>
+              </div>
+              <div className="homeLaunchMeta">
+                <span>{card.metaLabel}</span>
+                <strong>{card.metaValue}</strong>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel" id="home-watchlist">
+        <div className="panelHeader">
+          <div>
+            <h2>Watchlist and alerts</h2>
+            <p>Give subscribers a reason to return daily: saved instruments, live trigger checks, and one-tap paths back into the desk.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Triggered now</span>
+            <strong>{alertSummary.triggered || 0}</strong>
+          </div>
+        </div>
+
+        {watchlistStatus ? <div className="statusBanner subtleBanner">{watchlistStatus}</div> : null}
+
+        {currentAlertPlan.id !== "elite" || Number(alertSummary.remaining ?? currentAlertPlan.maxAlerts) <= 1 ? (
+          <div className="subscriptionPromptCard subscriptionPromptInline">
+            <div className="subscriptionPromptTop">
+              <div>
+                <span className="homePanelEyebrow">Upgrade path</span>
+                <h3>Turn alerts into a stronger subscriber habit loop</h3>
+                <p>
+                  {subscriptionTierLabel(currentAlertPlan.id)} is live now with{" "}
+                  {alertSummary.total || 0}/{alertSummary.maxAllowed || currentAlertPlan.maxAlerts} slots in use.
+                  {nextAlertPlan
+                    ? ` ${nextAlertPlan.label} unlocks more alert coverage${
+                        nextAlertPlan.emailEnabled ? ", queued delivery," : ""
+                      } and a more obviously premium daily workflow.`
+                    : " You are already on the highest-capacity plan."}
+                </p>
+              </div>
+              <div className="subscriptionPromptMeta">
+                <span>Next step</span>
+                <strong>{nextAlertPlan ? nextAlertPlan.label : "Elite active"}</strong>
+                <small>{alertSummary.remaining ?? 0} slots left</small>
+              </div>
+            </div>
+
+            <div className="panelActions">
+              <button
+                type="button"
+                className="primaryButton"
+                onClick={() => navigateToPage("subscriptions", false, activeDesk)}
+              >
+                Open Subscription Plans
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={() => jumpToPageSection("settings", "alerts-plan", activeDesk)}
+              >
+                Manage Alert Plan
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+          <div className="summaryGrid compactSummaryGrid">
+            <div className="summaryCard">
+              <span>Watchlist</span>
+              <strong>{watchlistItems.length}</strong>
+            </div>
+          <div className="summaryCard">
+            <span>Alerts live</span>
+            <strong>{alertSummary.enabled || 0}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Triggered</span>
+            <strong>{alertSummary.triggered || 0}</strong>
+          </div>
+            <div className="summaryCard">
+              <span>RSI rules</span>
+              <strong>{alertSummary.rsiAlerts || 0}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Plan</span>
+              <strong>{subscriptionTierLabel(alertSummary.subscriptionTier)}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Slots left</span>
+              <strong>{alertSummary.remaining ?? 0}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Email queue</span>
+              <strong>{alertSummary.emailQueued || 0}</strong>
+            </div>
+          </div>
+
+        <div className="splitGrid homeWatchGrid">
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Saved instruments</h3>
+                <p>Fast jump points back into the desks that matter most.</p>
+              </div>
+            </div>
+
+            <div className="watchlistStack">
+              {watchlistItems.length ? (
+                watchlistItems.slice(0, 8).map((item) => (
+                  <article className="watchItemCard" key={item.id}>
+                    <button type="button" className="watchItemMain" onClick={() => onOpenWatchlistSignal(item)}>
+                      <div className="watchItemTop">
+                        <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                        <span className={`signalBadge ${actionTone(item.action || "HOLD")}`}>{item.action || "WAIT"}</span>
+                      </div>
+                      <strong>{item.label}</strong>
+                      <small>
+                        {item.currentPrice != null
+                          ? `${formatTickerPrice(item.ticker, item.currentPrice)} | RSI ${item.currentRsi ?? "--"}`
+                          : "Waiting for live desk data"}
+                      </small>
+                    </button>
+                    <button
+                      type="button"
+                      className="ghostButton slimButton"
+                      disabled={watchlistBusyKey === `watch:remove:${item.id}`}
+                      onClick={() => onRemoveWatchlistItem(item.id)}
+                    >
+                      Remove
+                    </button>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="No watchlist yet"
+                  body="Save signals from the trade desk and they will appear here as daily return points."
+                />
+              )}
+            </div>
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Active alerts</h3>
+                <p>Simple, honest trigger tracking for price and RSI conditions.</p>
+              </div>
+            </div>
+
+            <div className="watchlistStack">
+              {alertItems.length ? (
+                alertItems.slice(0, 8).map((item) => (
+                  <article className={`watchItemCard alertItemCard ${item.triggered ? "triggered" : ""}`} key={item.id}>
+                    <div className="watchItemMain">
+                      <div className="watchItemTop">
+                        <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                        <span className={`signalBadge ${item.triggered ? "buy" : item.enabled ? "hold" : "sell"}`}>
+                          {item.triggered ? "LIVE" : item.enabled ? "ON" : "OFF"}
+                        </span>
+                      </div>
+                      <strong>{item.label}</strong>
+                      <small>
+                        {alertKindLabel(item.kind)} {formatAlertThreshold(item.ticker, item.kind, item.threshold)}
+                        {item.metricValue != null ? ` | Now ${formatAlertThreshold(item.ticker, item.kind, item.metricValue)}` : ""}
+                      </small>
+                    </div>
+                    <div className="watchItemActions">
+                      <button
+                        type="button"
+                        className="ghostButton slimButton"
+                        disabled={watchlistBusyKey === `alert:toggle:${item.id}`}
+                        onClick={() => onToggleAlertRule(item.id, !item.enabled)}
+                      >
+                        {item.enabled ? "Pause" : "Resume"}
+                      </button>
+                      <button
+                        type="button"
+                        className="ghostButton slimButton"
+                        disabled={watchlistBusyKey === `alert:remove:${item.id}`}
+                        onClick={() => onRemoveAlertRule(item.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="No alerts yet"
+                  body="Create breakout or RSI alerts from the trade desk and the live trigger state will show here."
+                />
+              )}
+            </div>
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Notification feed</h3>
+                <p>Unread alert events and recent trigger activity, kept short and actionable.</p>
+              </div>
+              <div className="headerStatus">
+                <span>Unread</span>
+                <strong>{notificationSummary.unread || 0}</strong>
+              </div>
+            </div>
+
+            <div className="panelActions">
+              <button
+                type="button"
+                className="ghostButton"
+                disabled={!notificationSummary.unread || watchlistBusyKey === "notification:all"}
+                onClick={markAllNotificationsRead}
+              >
+                Mark all read
+              </button>
+            </div>
+
+            <div className="watchlistStack">
+              {notificationItems.length ? (
+                notificationItems.slice(0, 8).map((item) => (
+                  <article className={`watchItemCard notificationCard ${item.status === "unread" ? "unread" : ""}`} key={item.id}>
+                    <div className="watchItemMain">
+                      <div className="watchItemTop">
+                        <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                        <span className={`signalBadge ${item.status === "unread" ? "buy" : "hold"}`}>
+                          {item.status === "unread" ? "NEW" : "READ"}
+                        </span>
+                      </div>
+                      <strong>{item.title}</strong>
+                      <small>{item.message}</small>
+                      <small>{formatDateTime(item.createdAt, appSettings.timezone)}</small>
+                    </div>
+                    <div className="watchItemActions">
+                      <button
+                        type="button"
+                        className="ghostButton slimButton"
+                        disabled={item.status !== "unread" || watchlistBusyKey === `notification:${item.id}`}
+                        onClick={() => markNotificationRead(item.id)}
+                      >
+                        Mark read
+                      </button>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="No alert activity yet"
+                  body="As watchlist rules start triggering, the most recent events will show up here."
+                />
+              )}
+            </div>
+          </section>
+        </div>
+      </section>
+
       <section className="panel" id="home-activity">
         <div className="panelHeader">
           <div>
@@ -1615,6 +2224,9 @@ export function HomeScreen({
           </div>
         </div>
       </section>
+        </div>
+      </details>
+      </div>
     </>
   );
 }
@@ -1746,7 +2358,7 @@ export function NewsScreen({
               <strong>{activeDeskNewsLabel}</strong>
             </div>
             <div className="deskStat">
-              <span>Sources</span>
+              <span>Market Intelligence</span>
               <strong>{newsResponse.sources.length}</strong>
             </div>
           </div>
@@ -1807,7 +2419,7 @@ export function NewsScreen({
             <>
               <div className="signalCommandGrid">
                 <div className="signalCommandMetric">
-                  <span>Source</span>
+                  <span>Market Intelligence</span>
                   <strong>{leadNewsItem.sourceName}</strong>
                 </div>
                 <div className="signalCommandMetric">
@@ -1842,14 +2454,14 @@ export function NewsScreen({
                   className="ghostButton"
                   onClick={() => openExternal(leadNewsItem.link || newsSourceMap[leadNewsItem.sourceId])}
                 >
-                  Read Source
+                  Read Market Intelligence
                 </button>
               </div>
             </>
           ) : (
             <EmptyState
               title="News is refreshing"
-              body="The feed is warming up and the lead headline will appear once the sources respond."
+              body="The feed is warming up and the lead headline will appear once the market intelligence responds."
             />
           )}
         </section>
@@ -1949,7 +2561,7 @@ export function NewsScreen({
           {!newsResponse.items.length ? (
             <EmptyState
               title="News is refreshing"
-              body="The feed is warming up and will fill in as sources respond."
+              body="The feed is warming up and will fill in as market intelligence responds."
             />
           ) : null}
         </div>
@@ -2101,7 +2713,7 @@ export function ToolsScreen({
           {
             label: "Research",
             value: activeResearchReports.length,
-            detail: "Desk-linked reports",
+            detail: "Desk-linked research",
           },
         ]}
         primaryAction={{
@@ -2327,7 +2939,7 @@ export function ToolsScreen({
           <div className="panelHeader">
             <div>
               <h2>Research Library</h2>
-              <p>Keep the desk anchored to the reports and playbooks already informing the workflow.</p>
+              <p>Keep the desk anchored to the research and playbooks already informing the workflow.</p>
             </div>
           </div>
 
@@ -2353,7 +2965,7 @@ export function ToolsScreen({
             {!activeResearchReports.length ? (
               <EmptyState
                 title="No research pinned to this desk"
-                body="Switch desks or add more desk-linked reports to expand the tool shelf."
+                body="Switch desks or add more desk-linked research to expand the tool shelf."
               />
             ) : null}
           </div>
@@ -2365,400 +2977,26 @@ export function ToolsScreen({
 
 export function CollectiblesScreen({
   activeCollectible,
-  activeService = "valuation",
   activePageSections,
   appSettings,
-  authToken,
+  brickAlphaPortfolio,
   collectibleBrand,
   collectibleCategory,
-  collectibleImports,
-  collectiblePortfolio,
   collectibleQuery,
   collectibles,
   collectiblesResponse,
   filteredCollectibles,
   handleCollectibleSelect,
   jumpToPageSection,
-  onBackToServices,
   openCollectibleTicket,
-  refreshContext,
+  openTrades,
   setCollectibleBrand,
   setCollectibleCategory,
   setCollectibleQuery,
 }) {
-  const [importBusyId, setImportBusyId] = useState("");
-  const [importStatus, setImportStatus] = useState("");
-  const [revalueBusyId, setRevalueBusyId] = useState("");
-  const [portfolioStatus, setPortfolioStatus] = useState("");
-  const [saleBusyId, setSaleBusyId] = useState("");
-  const [inventoryQuery, setInventoryQuery] = useState("");
-  const [inventoryCategory, setInventoryCategory] = useState("all");
-  const [portfolioImportBusyId, setPortfolioImportBusyId] = useState("");
-  const [inventoryReportBusy, setInventoryReportBusy] = useState(false);
-  const [selectedAssetDetailId, setSelectedAssetDetailId] = useState("");
   const officialShelves = collectiblesResponse.referenceShelves || [];
-  const partnerSources = (collectiblesResponse.partnerSources || []).filter(
-    (source) => source.category === "LEGO",
-  );
-  const reviewedPortfolios = (collectiblesResponse.reviewedPortfolios || []).filter(
-    (portfolio) => portfolio.category === "LEGO" || portfolio.categoryId === "lego",
-  );
   const legoReferenceShelf =
     officialShelves.find((shelf) => shelf.brand === "LEGO") || officialShelves[0] || null;
-  const collectibleHoldings = (collectiblePortfolio.items || []).filter(
-    (holding) => holding.category === "lego" || holding.categoryLabel === "LEGO",
-  );
-  const collectibleTransactions = (collectiblePortfolio.transactions || []).filter(
-    (transaction) => transaction.category === "lego" || transaction.categoryLabel === "LEGO",
-  );
-  const collectibleSummary = collectiblePortfolio.summary || {};
-  const inventoryCategories = collectibleSummary.categoryBreakdown || [];
-  const filteredOwnedInventory = collectibleHoldings.filter((holding) => {
-    const matchesCategory = inventoryCategory === "all" || holding.category === inventoryCategory;
-    const query = inventoryQuery.trim().toLowerCase();
-    const matchesQuery =
-      !query ||
-      [holding.name, holding.identifier, holding.categoryLabel, holding.rarity, holding.condition]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query));
-    return matchesCategory && matchesQuery;
-  });
-  const hasSavedPortfolio = Boolean(collectibleHoldings.length);
-  const dashboardCost = hasSavedPortfolio
-    ? numberOrZero(collectibleSummary.purchaseValueZAR)
-    : 592887;
-  const dashboardValue = hasSavedPortfolio
-    ? numberOrZero(collectibleSummary.currentValueZAR)
-    : 873415;
-  const dashboardProfit = hasSavedPortfolio
-    ? numberOrZero(collectibleSummary.unrealizedPnlZAR)
-    : dashboardValue - dashboardCost;
-  const dashboardRoi = dashboardCost ? (dashboardProfit / dashboardCost) * 100 : 0;
-  const dashboardTopAssets = hasSavedPortfolio
-    ? [...collectibleHoldings]
-        .sort(
-          (left, right) =>
-            numberOrZero(right.currentValueZAR) * numberOrZero(right.quantity || 1) -
-            numberOrZero(left.currentValueZAR) * numberOrZero(left.quantity || 1),
-        )
-        .slice(0, 3)
-        .map((holding) => ({
-          id: holding.id,
-          name: holding.name,
-          reference: holding.identifier,
-          value: numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1),
-          score: holding.score,
-          brickAlphaScore: holding.brickAlphaScore,
-          tone: holding.recommendation || "Hold",
-        }))
-    : [
-        {
-          id: "demo-rivendell",
-          name: "LEGO Icons Rivendell",
-          reference: "10316",
-          value: 12300,
-          score: 9.1,
-          tone: "Strong Hold",
-        },
-        {
-          id: "demo-jane-austen",
-          name: "Tribute to Jane Austen's Books",
-          reference: "40766",
-          value: 1032,
-          score: 9.5,
-          tone: "Exceptional Buy",
-        },
-        {
-          id: "demo-spider-man",
-          name: "Spider-Man vs. Anti-Venom Heist",
-          reference: "30725",
-          value: 95,
-          score: 7.5,
-          tone: "Hold",
-        },
-      ];
-  const assetDetailCandidates = hasSavedPortfolio
-    ? collectibleHoldings.map((holding) => ({
-        id: holding.id,
-        reference: holding.identifier,
-        name: holding.name,
-        value: numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1),
-        purchasePriceZAR: numberOrZero(holding.purchasePriceZAR) * numberOrZero(holding.quantity || 1),
-        score: holding.score,
-        brickAlphaScore: holding.brickAlphaScore,
-        tone: holding.recommendation || "Hold",
-        risk: numberOrZero(holding.brickAlphaScore || holding.score * 10) >= 85 ? "Low" : "Medium",
-        rarity: holding.rarity || "Review required",
-        thesis: holding.notes?.length
-          ? holding.notes.slice(0, 3)
-          : ["Source-backed valuation recorded in the portfolio.", "Review condition and comparable sales before increasing exposure."],
-        projections: holding.projections || {},
-        sources: holding.sources || [],
-      }))
-    : [
-        {
-          id: "detail-10316",
-          reference: "10316",
-          name: "LEGO Icons Rivendell",
-          value: 12300,
-          purchasePriceZAR: 8000,
-          score: 9.1,
-          tone: "Strong Hold",
-          risk: "Low",
-          rarity: "Major Icons display set",
-          thesis: ["Adult collector demand", "High display value", "Strong long-term franchise appeal"],
-          projections: { oneYear: 14200, fiveYears: 21500, tenYears: 34500 },
-          sources: [{ id: "demo", label: "BrickAlpha demo benchmark", status: "available" }],
-        },
-        {
-          id: "detail-40766",
-          reference: "40766",
-          name: "Tribute to Jane Austen's Books",
-          value: 1032,
-          purchasePriceZAR: 65,
-          score: 9.5,
-          tone: "Exceptional Buy",
-          risk: "Low",
-          rarity: "Gift With Purchase",
-          thesis: ["Limited production run", "Exclusive Jane Austen minifigure", "Literary crossover demand"],
-          projections: { oneYear: 1115, fiveYears: 1516, tenYears: 2228 },
-          sources: [{ id: "benchmark", label: "BrickAlpha benchmark", status: "available" }],
-        },
-        {
-          id: "detail-30725",
-          reference: "30725",
-          name: "Spider-Man vs. Anti-Venom Heist",
-          value: 95,
-          purchasePriceZAR: 65,
-          score: 7.5,
-          tone: "Hold",
-          risk: "Medium",
-          rarity: "Retail paperbag with exclusive minifigure",
-          thesis: ["Low entry price", "Exclusive Anti-Venom minifigure", "Packaging condition matters"],
-          projections: { oneYear: 103, fiveYears: 140, tenYears: 205 },
-          sources: [{ id: "benchmark", label: "BrickAlpha benchmark", status: "available" }],
-        },
-      ];
-  const selectedAssetDetail =
-    assetDetailCandidates.find((asset) => asset.id === selectedAssetDetailId) ||
-    assetDetailCandidates[0];
-  const openAssetDetail = (assetIdOrReference) => {
-    const asset = assetDetailCandidates.find(
-      (candidate) =>
-        candidate.id === assetIdOrReference || candidate.reference === assetIdOrReference,
-    );
-    setSelectedAssetDetailId(asset?.id || assetIdOrReference);
-    window.requestAnimationFrame(() => {
-      document.getElementById("collectibles-asset-detail")?.scrollIntoView({ block: "start" });
-    });
-  };
-  const portfolioTrend = hasSavedPortfolio
-    ? [
-        dashboardCost * 0.86,
-        dashboardCost * 0.91,
-        dashboardCost * 0.98,
-        dashboardValue * 0.88,
-        dashboardValue * 0.93,
-        dashboardValue * 0.97,
-        dashboardValue,
-      ].map((value) => Math.round(value))
-    : [592887, 625400, 648900, 701200, 752600, 813900, 873415];
-  const portfolioTrendMax = Math.max(...portfolioTrend, 1);
-  const portfolioTrendPoints = portfolioTrend
-    .map((value, index) => {
-      const x = 8 + (index / Math.max(portfolioTrend.length - 1, 1)) * 84;
-      const y = 88 - (value / portfolioTrendMax) * 72;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const portfolioAllocation = hasSavedPortfolio
-    ? Object.values(
-        collectibleHoldings.reduce((groups, holding) => {
-          const label = holding.rarity?.includes("Gift") ? "GWP" : holding.categoryLabel || "LEGO";
-          const current = groups[label] || { label, value: 0 };
-          current.value += numberOrZero(holding.currentValueZAR) * numberOrZero(holding.quantity || 1);
-          groups[label] = current;
-          return groups;
-        }, {}),
-      )
-        .sort((left, right) => right.value - left.value)
-        .slice(0, 5)
-    : [
-        { label: "Icons", value: 42 },
-        { label: "Marvel", value: 18 },
-        { label: "GWP", value: 16 },
-        { label: "Star Wars", value: 14 },
-        { label: "Pokemon", value: 10 },
-      ];
-  const allocationTotal = portfolioAllocation.reduce((sum, item) => sum + numberOrZero(item.value), 0) || 1;
-  const opportunityCards = [
-    {
-      id: "opp-40766",
-      reference: "40766",
-      name: "Tribute to Jane Austen's Books",
-      currentValueZAR: 1032,
-      score: 9.5,
-      upsidePercent: 82,
-      recommendation: "Exceptional Buy",
-      reasons: [
-        "Limited GWP production run",
-        "Exclusive minifigure appeal",
-        "Strong literary collector crossover",
-      ],
-    },
-    {
-      id: "opp-10316",
-      reference: "10316",
-      name: "LEGO Icons Rivendell",
-      currentValueZAR: 12300,
-      score: 9.1,
-      upsidePercent: 75,
-      recommendation: "Strong Hold",
-      reasons: ["Major Icons display set", "Adult collector demand", "High long-term shelf appeal"],
-    },
-    {
-      id: "opp-30725",
-      reference: "30725",
-      name: "Spider-Man vs. Anti-Venom Heist",
-      currentValueZAR: 95,
-      score: 7.5,
-      upsidePercent: 34,
-      recommendation: "Hold",
-      reasons: ["Low entry price", "Exclusive Anti-Venom minifigure", "Sealed paperbag optionality"],
-    },
-  ];
-  const queuedSourceIds = new Set((collectibleImports || []).map((item) => item.sourceId));
-  const importedBatchIds = new Set(
-    collectibleHoldings.map((holding) => holding.importBatchId).filter(Boolean),
-  );
-  const queueImport = async (sourceId) => {
-    setImportBusyId(sourceId);
-    setImportStatus("");
-
-    try {
-      const response = await fetch("/api/collectibles/imports", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ sourceId }),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "collectible_source_import_failed");
-      }
-      setImportStatus(
-        payload.duplicate
-          ? "That source is already queued for import review."
-          : "Source queued. Review is required before holdings are imported.",
-      );
-      await refreshContext();
-    } catch {
-      setImportStatus("The source could not be queued. Please try again.");
-    } finally {
-      setImportBusyId("");
-    }
-  };
-  const revalueHolding = async (holdingId) => {
-    setRevalueBusyId(holdingId);
-    setPortfolioStatus("");
-
-    try {
-      const response = await fetch(`/api/collectibles/portfolio/${holdingId}/revalue`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "collectible_revalue_failed");
-      }
-      setPortfolioStatus("Holding refreshed with the latest available evidence.");
-      await refreshContext();
-    } catch {
-      setPortfolioStatus("The holding could not be refreshed. Please try again.");
-    } finally {
-      setRevalueBusyId("");
-    }
-  };
-  const importReviewedPortfolio = async (portfolioId) => {
-    setPortfolioImportBusyId(portfolioId);
-    setPortfolioStatus("");
-
-    try {
-      const response = await fetch(`/api/collectibles/partner-portfolios/${portfolioId}/import`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "partner_portfolio_import_failed");
-      }
-      setPortfolioStatus(
-        payload.duplicate
-          ? "That reviewed portfolio is already in your inventory."
-          : `${payload.importedCount} reviewed positions imported into inventory.`,
-      );
-      await refreshContext();
-    } catch {
-      setPortfolioStatus("The reviewed portfolio could not be imported.");
-    } finally {
-      setPortfolioImportBusyId("");
-    }
-  };
-  const recordSale = async (holding) => {
-    const quantity = window.prompt(`How many ${holding.name} items were sold?`, "1");
-    if (!quantity) return;
-    const unitPriceZAR = window.prompt("Sale price per item in ZAR?");
-    if (!unitPriceZAR) return;
-
-    setSaleBusyId(holding.id);
-    setPortfolioStatus("");
-    try {
-      const response = await fetch(`/api/collectibles/portfolio/${holding.id}/sell`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          quantity: Number(quantity),
-          unitPriceZAR: Number(unitPriceZAR),
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error || "collectible_sale_failed");
-      }
-      setPortfolioStatus("Sale recorded. Portfolio performance has been updated.");
-      await refreshContext();
-    } catch {
-      setPortfolioStatus("The sale could not be recorded. Check the quantity and price.");
-    } finally {
-      setSaleBusyId("");
-    }
-  };
-  const downloadInventoryReport = async () => {
-    setInventoryReportBusy(true);
-    setPortfolioStatus("");
-    try {
-      await downloadPdf(
-        await fetch("/api/collectibles/portfolio/pdf", {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }),
-        "brickalpha-lego-inventory.pdf",
-      );
-      setPortfolioStatus("Inventory register PDF downloaded.");
-    } catch {
-      setPortfolioStatus("The inventory report could not be generated. Please try again.");
-    } finally {
-      setInventoryReportBusy(false);
-    }
-  };
   const groupedCollectibles = [
     ...(collectiblesResponse.brands || [])
       .map((brand) => ({
@@ -2782,64 +3020,22 @@ export function CollectiblesScreen({
   ];
   const collectibleActions = [
     {
-      id: "valuation",
-      label: "Investment Analysis",
-      meta: "Start here",
-      detail: "Open the LEGO valuation workflow for market value, rarity, and projections.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
-    },
-    {
-      id: "collection",
-      label: "Portfolio",
-      meta: `${collectibleSummary.itemCount || 0}`,
-      detail: "Review saved purchases, current estimates, and long-range projection scenarios.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
-    },
-    {
-      id: "owned-inventory",
-      label: "Holdings",
-      meta: `${collectibleSummary.itemCount || 0}`,
-      detail: "Search the owned collection register with cost, value, condition, and rarity.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-owned-inventory"),
-    },
-    {
-      id: "reviewed-portfolios",
-      label: "AI Watchlist",
-      meta: `${reviewedPortfolios.length}`,
-      detail: "Review opportunity cards, upside scenarios, and source-backed reasons to act.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios"),
-    },
-    {
-      id: "partner-sources",
-      label: "Source Library",
-      meta: `${partnerSources.length}`,
-      detail: "Open portfolio documents, shared folders, and market references.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-partner-sources"),
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      meta: "PDF",
-      detail: "Open the partner beta test script and downloadable inventory report.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-reports"),
-    },
-    {
       id: "inventory",
-      label: "Tradable Inventory",
+      label: "Holdings",
       meta: `${filteredCollectibles.length}`,
-      detail: "Stay inside BrickAlpha and scan the items you can actually act on.",
+      detail: "Stay inside Brick Alpha and scan the items you can actually act on.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-grid"),
     },
     {
       id: "source",
-      label: "Official Sources",
+      label: "Market Intelligence",
       meta: legoReferenceShelf?.sourceName || "Reference",
       detail: "Verify lineups and product context without leaving the core workflow too early.",
       onClick: () => jumpToPageSection("collectibles", "collectibles-reference"),
     },
     {
       id: "buy",
-      label: "Inventory Ticket",
+      label: "Buy Ticket",
       meta: activeCollectible?.brand || "Select item",
       detail: "Open the collectible ticket flow on the current focus item.",
       onClick: () => activeCollectible && openCollectibleTicket(activeCollectible, "BUY"),
@@ -2848,33 +3044,26 @@ export function CollectiblesScreen({
     {
       id: "portfolio",
       label: "Portfolio",
-      meta: "Review holdings",
-      detail: "Review saved purchases, estimates, and projection scenarios.",
-      onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
+      meta: "Review book",
+      detail: "Check how LEGO investment positions sit inside the wider portfolio.",
+      onClick: () => jumpToPageSection("portfolio", "open-positions"),
     },
   ];
 
   return (
-    <div className={`collectiblesServicePage collectiblesService-${activeService}`}>
-      <div className="collectiblesServiceNav">
-        <button className="collectiblesServiceBack" type="button" onClick={onBackToServices}>
-          <span aria-hidden="true">&lt;-</span>
-          <strong>Back to services</strong>
-        </button>
-        <small>LEGO collection register</small>
-      </div>
+    <>
       <WorkspaceHero
         tone="collectibles"
-        eyebrow="Trusted Collectible Investment Intelligence"
-        title="Is this collectible a good investment?"
-        description="Upload a photo, confirm the LEGO set, get a valuation, review the investment score, forecast future value, and save the asset to your portfolio."
-        statusLabel="Inventory refresh"
+        eyebrow="LEGO Investments"
+        title="LEGO Investments"
+        description="AI-powered investment analysis for every LEGO set — buy, hold, or sell with conviction."
+        statusLabel="Desk refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
           {
             label: "Tradable items",
             value: collectibles.length,
-            detail: "Research inventory",
+            detail: "Live LEGO holdings",
           },
           {
             label: "Brands",
@@ -2882,23 +3071,31 @@ export function CollectiblesScreen({
             detail: "Across tracked categories",
           },
           {
-            label: "Lead item",
-            value: activeCollectible?.brand || "Waiting",
-            detail: activeCollectible?.name || "Select an item",
+            label: "Lead score",
+            value: activeCollectible ? formatScore(activeCollectible.brickAlphaScore) : "Waiting",
+            detail: activeCollectible?.investmentGrade || "Select an item",
           },
           {
-            label: "Official shelf",
-            value: legoReferenceShelf?.sourceName || "Waiting",
-            detail: legoReferenceShelf?.title || "Reference layer",
+            label: "Portfolio value",
+            value: activeCollectible
+              ? formatCollectiblePrice(
+                  activeCollectible.currentMarketValue * activeCollectible.quantityOwned,
+                )
+              : "Waiting",
+            detail: activeCollectible?.sellByTargetDate || "Exit target",
           },
         ]}
         primaryAction={{
-          label: "Run Investment Analysis",
-          onClick: () => jumpToPageSection("collectibles", "collectibles-valuation"),
+          label: "Open Buy Ticket",
+          onClick: () => {
+            if (activeCollectible) {
+              openCollectibleTicket(activeCollectible, "BUY");
+            }
+          },
         }}
         secondaryAction={{
-          label: "Open Portfolio",
-          onClick: () => jumpToPageSection("collectibles", "collectibles-portfolio"),
+          label: "Review Portfolio",
+          onClick: () => jumpToPageSection("portfolio", "open-positions"),
         }}
       />
       <WorkspaceSectionBar
@@ -2907,1401 +3104,35 @@ export function CollectiblesScreen({
       />
       <WorkspaceCommandBar
         tone="collectibles"
-        title="Private Portfolio Console"
-        hint="Keep investment analysis, holdings, verification, and portfolio review in one premium flow."
+        title="LEGO Investment Shortcuts"
+        hint="Keep trading, verification, and portfolio review in one tidy flow."
         actions={collectibleActions}
       />
 
-      <CollectibleValuationPanel
-        authToken={authToken}
-        collectiblePortfolio={collectiblePortfolio}
-        onSaved={refreshContext}
+      <InvestmentAnalysisWorkspace
+        activeCollectible={activeCollectible}
+        brickAlphaPortfolio={brickAlphaPortfolio}
+        collectibles={collectibles}
+        handleCollectibleSelect={handleCollectibleSelect}
+        jumpToPageSection={jumpToPageSection}
+        openCollectibleTicket={openCollectibleTicket}
+        openTrades={openTrades}
       />
 
-      <section className="panel" id="collectibles-portfolio">
-        <div className="panelHeader">
-          <div>
-            <h2>Collectibles Portfolio</h2>
-            <p>
-              Track net asset value, cost basis, confidence, risk, and future value scenarios
-              across the LEGO portfolio.
-            </p>
-          </div>
-          <div className="headerStatus">
-              <span>Tracked assets</span>
-              <strong>{collectibleSummary.itemCount || 0}</strong>
-          </div>
-        </div>
-
-        <section className="collectiblePortfolioDashboard">
-          <section className="portfolioAppHero" aria-label="Collectible portfolio overview">
-            <div className="portfolioAppHeroCopy">
-              <span className="legoPanelEyebrow">Collection value</span>
-              <strong>{formatZar(dashboardValue)}</strong>
-              <small>
-                {dashboardProfit >= 0 ? "+" : ""}
-                {formatZar(dashboardProfit)} unrealized | {dashboardRoi.toFixed(1)}% ROI
-              </small>
-            </div>
-            <div className="portfolioAppHeroActions">
-              <button
-                className="primaryButton"
-                type="button"
-                onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
-              >
-                Rate Purchase
-              </button>
-              <button
-                className="ghostButton"
-                type="button"
-                onClick={() => jumpToPageSection("collectibles", "collectibles-owned-inventory")}
-              >
-                View Holdings
-              </button>
-            </div>
-            <button
-              className="portfolioSearchButton"
-              type="button"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
-            >
-              <span>Search or scan a collectible</span>
-              <strong>Analyze</strong>
-            </button>
-          </section>
-
-          <div className="portfolioHeroMetrics">
-            <div>
-              <span>Net Asset Value</span>
-              <strong>{formatZar(dashboardValue)}</strong>
-              <small>+14.2% vs last quarter</small>
-            </div>
-            <div>
-              <span>Cost Basis</span>
-              <strong>{formatZar(dashboardCost)}</strong>
-              <small>Purchase basis</small>
-            </div>
-            <div>
-              <span>Unrealized Profit</span>
-              <strong>{formatZar(dashboardProfit)}</strong>
-              <small>Current gain</small>
-            </div>
-            <div>
-              <span>ROI</span>
-              <strong>{dashboardRoi.toFixed(1)}%</strong>
-              <small>Wealth performance</small>
-            </div>
-          </div>
-
-          <div className="portfolioHealthGrid">
-            {[
-              ["Collection Grade", "A-", "Quality of current LEGO exposure"],
-              ["Risk", "Low", "Concentration and liquidity profile"],
-              ["Diversification", "82%", "Theme and asset spread"],
-              ["Confidence", "91%", "Source and evidence coverage"],
-            ].map(([label, value, detail]) => (
-              <div className="portfolioHealthCard" key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-                <small>{detail}</small>
-              </div>
-            ))}
-          </div>
-
-          <div className="portfolioIntelligenceGrid">
-            {[
-              {
-                label: "AI Insight",
-                title: "Marvel paperbag exposure is small but asymmetric",
-                body: "Low entry prices give the LEGO 30725 position useful optionality while the exclusive minifigure keeps collector interest alive.",
-                tone: "gold",
-              },
-              {
-                label: "Market Signal",
-                title: "Adult collector demand remains strongest in Icons",
-                body: "Rivendell and literary GWP assets carry better long-term demand than broad retail polybags.",
-                tone: "blue",
-              },
-              {
-                label: "Risk Alert",
-                title: "Condition evidence drives confidence",
-                body: "Keep sealed-box photos and purchase records attached so future valuation updates can stay evidence-led.",
-                tone: "green",
-              },
-            ].map((card) => (
-              <article className={`portfolioIntelligenceCard ${card.tone}`} key={card.label}>
-                <span>{card.label}</span>
-                <strong>{card.title}</strong>
-                <p>{card.body}</p>
-              </article>
-            ))}
-          </div>
-
-          <div className="portfolioGrowthPanel">
-            <div className="portfolioGrowthHeader">
-              <div>
-                <span className="legoPanelEyebrow">Portfolio growth</span>
-                <h3>Portfolio value over time</h3>
-              </div>
-              <strong>{dashboardRoi.toFixed(1)}% ROI</strong>
-            </div>
-            <div className="portfolioLineChart" aria-label="Portfolio value over time">
-              <svg viewBox="0 0 100 100" role="img" aria-label="Portfolio value trend">
-                <defs>
-                  <linearGradient id="portfolioTrendFill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(242, 214, 156, 0.35)" />
-                    <stop offset="100%" stopColor="rgba(242, 214, 156, 0)" />
-                  </linearGradient>
-                </defs>
-                <polyline className="portfolioLineFill" points={`8,94 ${portfolioTrendPoints} 92,94`} />
-                <polyline className="portfolioLinePath" points={portfolioTrendPoints} />
-              </svg>
-              <div className="portfolioLineLabels">
-                <span>Jan</span>
-                <span>Mar</span>
-                <span>May</span>
-                <span>Jul</span>
-                <span>Sep</span>
-                <span>Nov</span>
-                <span>Now</span>
-              </div>
-              <div className="portfolioLineStats">
-                <div>
-                  <span>Start</span>
-                  <strong>{formatZar(portfolioTrend[0])}</strong>
-                </div>
-                <div>
-                  <span>Current</span>
-                  <strong>{formatZar(portfolioTrend[portfolioTrend.length - 1])}</strong>
-                </div>
-                <div>
-                  <span>Monthly trend</span>
-                  <strong>Positive</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="portfolioAllocationPanel">
-            <div className="portfolioGrowthHeader">
-              <div>
-                <span className="legoPanelEyebrow">Portfolio allocation</span>
-                <h3>Where the collection is weighted</h3>
-              </div>
-            </div>
-            <div className="portfolioAllocationList">
-              {portfolioAllocation.map((item) => {
-                const percent = Math.round((numberOrZero(item.value) / allocationTotal) * 100);
-                return (
-                  <div className="portfolioAllocationRow" key={item.label}>
-                    <div>
-                      <span>{item.label}</span>
-                      <strong>{percent}%</strong>
-                    </div>
-                    <div className="portfolioAllocationTrack">
-                      <span style={{ "--allocation-width": `${percent}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="portfolioTopAssets">
-            <div className="portfolioGrowthHeader">
-              <div>
-                <span className="legoPanelEyebrow">Top performing assets</span>
-                <h3>What deserves attention</h3>
-              </div>
-            </div>
-            <div className="portfolioAssetList">
-              {dashboardTopAssets.map((asset) => (
-                <article className="portfolioAssetCard" key={asset.id}>
-                  <LegoAssetVisual reference={asset.reference} name={asset.name} size="thumb" />
-                  <div>
-                    <strong>{asset.name}</strong>
-                    <small>{asset.tone}</small>
-                  </div>
-                  <div>
-                    <span>{formatInvestmentScore(asset)}</span>
-                    <strong>{formatZar(asset.value)}</strong>
-                    <button className="ghostButton portfolioAssetDetailButton" type="button" onClick={() => openAssetDetail(asset.reference)}>
-                      Detail
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {selectedAssetDetail ? (
-          <section className="assetDetailPanel" id="collectibles-asset-detail">
-            <div className="assetDetailHero">
-              <LegoAssetVisual
-                reference={selectedAssetDetail.reference}
-                name={selectedAssetDetail.name}
-                size="detail"
-              />
-              <div className="assetDetailCopy">
-                <span className="legoPanelEyebrow">Investment Report</span>
-                <h3>{selectedAssetDetail.name}</h3>
-                <p>
-                  LEGO {selectedAssetDetail.reference} | {selectedAssetDetail.rarity}
-                </p>
-                <div className="assetDetailVerdict">
-                  <strong>{formatInvestmentScore(selectedAssetDetail)}</strong>
-                  <span>{selectedAssetDetail.tone}</span>
-                  <small>Risk: {selectedAssetDetail.risk}</small>
-                </div>
-              </div>
-            </div>
-
-            <div className="assetDetailMetrics">
-              <div>
-                <span>Current Value</span>
-                <strong>{formatZar(selectedAssetDetail.value)}</strong>
-              </div>
-              <div>
-                <span>You Paid</span>
-                <strong>{formatZar(selectedAssetDetail.purchasePriceZAR)}</strong>
-              </div>
-              <div>
-                <span>Gain</span>
-                <strong>{formatZar(selectedAssetDetail.value - selectedAssetDetail.purchasePriceZAR)}</strong>
-              </div>
-              <div>
-                <span>5-Year Projection</span>
-                <strong>{formatZar(selectedAssetDetail.projections?.fiveYears)}</strong>
-              </div>
-            </div>
-
-            <div className="assetDetailGrid">
-              <div className="assetDetailChart">
-                <div className="portfolioGrowthHeader">
-                  <div>
-                    <span className="legoPanelEyebrow">Forecast</span>
-                    <h3>Value scenario</h3>
-                  </div>
-                </div>
-                <div className="assetForecastBars">
-                  {[
-                    ["Now", selectedAssetDetail.value],
-                    ["1Y", selectedAssetDetail.projections?.oneYear],
-                    ["5Y", selectedAssetDetail.projections?.fiveYears],
-                    ["10Y", selectedAssetDetail.projections?.tenYears],
-                  ].map(([label, value]) => {
-                    const maxValue = Math.max(
-                      selectedAssetDetail.value,
-                      numberOrZero(selectedAssetDetail.projections?.oneYear),
-                      numberOrZero(selectedAssetDetail.projections?.fiveYears),
-                      numberOrZero(selectedAssetDetail.projections?.tenYears),
-                      1,
-                    );
-                    const height = Math.max(18, (numberOrZero(value) / maxValue) * 100);
-                    return (
-                      <div className="assetForecastBar" key={label}>
-                        <span style={{ "--forecast-height": `${height}%` }} />
-                        <strong>{formatZar(value)}</strong>
-                        <small>{label}</small>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="assetDetailThesis">
-                <span className="legoPanelEyebrow">AI Investment Thesis</span>
-                {selectedAssetDetail.thesis.map((item) => (
-                  <p key={item}>{item}</p>
-                ))}
-                <div className="assetSignalStack">
-                  {[
-                    ["Outperformance", "91%", "Compared with similar collectible scenarios"],
-                    ["Supply Risk", selectedAssetDetail.risk, "Watch BrickLink availability and local listings"],
-                    ["Evidence", "Strong", "Photo, source trail, and valuation record attached"],
-                  ].map(([label, value, detail]) => (
-                    <div key={label}>
-                      <span>{label}</span>
-                      <strong>{value}</strong>
-                      <small>{detail}</small>
-                    </div>
-                  ))}
-                </div>
-                <div className="assetDetailSources">
-                  <span>Source trail</span>
-                  {(selectedAssetDetail.sources || []).slice(0, 3).map((source) => (
-                    <small key={source.id || source.label}>
-                      {source.label}: {source.status}
-                    </small>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="summaryGrid">
-          <div className="summaryCard">
-            <span>Cost basis</span>
-            <strong>{formatZar(collectibleSummary.purchaseValueZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Current estimate</span>
-            <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Unrealized gain</span>
-            <strong>{formatZar(collectibleSummary.unrealizedPnlZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Realized gain</span>
-            <strong>{formatZar(collectibleSummary.realizedPnlZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>5 year scenario</span>
-            <strong>{formatZar(collectibleSummary.projectedFiveYearsZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>10 year scenario</span>
-            <strong>{formatZar(collectibleSummary.projectedTenYearsZAR)}</strong>
-          </div>
-        </section>
-
-        {collectibleHoldings.length ? (
-          <div className="collectibleReferenceGrid">
-            {collectibleHoldings.map((holding) => (
-              <article className="collectibleReferenceCard" key={holding.id}>
-                <div className="collectibleReferenceTop">
-                  <span>{holding.categoryLabel}</span>
-                  <strong>{formatInvestmentScore(holding)}</strong>
-                </div>
-                <h3>{holding.name}</h3>
-                <p>
-                  {holding.identifier} | Quantity {holding.quantity}
-                </p>
-                <div className="collectibleReferenceMeta">
-                  <div>
-                    <span>You paid</span>
-                    <strong>{formatZar(holding.purchasePriceZAR)}</strong>
-                  </div>
-                  <div>
-                    <span>Current</span>
-                    <strong>{formatZar(holding.currentValueZAR)}</strong>
-                  </div>
-                </div>
-                <div className="panelActions">
-                  <button
-                    className="ghostButton"
-                    type="button"
-                    onClick={() => openAssetDetail(holding.id)}
-                  >
-                    Investment Report
-                  </button>
-                  <button
-                    className="ghostButton"
-                    type="button"
-                    disabled={revalueBusyId === holding.id}
-                    onClick={() => revalueHolding(holding.id)}
-                  >
-                    {revalueBusyId === holding.id ? "Refreshing..." : "Refresh Valuation"}
-                  </button>
-                  <button
-                    className="ghostButton"
-                    type="button"
-                    disabled={saleBusyId === holding.id}
-                    onClick={() => recordSale(holding)}
-                  >
-                    {saleBusyId === holding.id ? "Recording..." : "Record Sale"}
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No saved collectibles yet"
-            body="Rate a purchase above and save it to start the collection register."
-          />
-        )}
-        {portfolioStatus ? <div className="statusBanner">{portfolioStatus}</div> : null}
-      </section>
-
-      <section className="panel" id="collectibles-owned-inventory">
-        <div className="panelHeader">
-          <div>
-            <h2>Holdings</h2>
-            <p>
-              Keep each owned asset beside the investment view. Search holdings and review the
-              details that affect resale value, confidence, and future optionality.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Tracked holdings</span>
-            <strong>{collectibleSummary.itemCount || 0}</strong>
-          </div>
-        </div>
-
-        <section className="workflowHeroCard workflowHeroCard-holdings" aria-label="Holdings workflow overview">
-          <div>
-            <span className="legoPanelEyebrow">Asset register</span>
-            <h3>Every rated purchase becomes a managed holding.</h3>
-            <p>
-              Keep cost, current estimate, condition, rarity, evidence, and forecast in one
-              investment record.
-            </p>
-          </div>
-          <div className="workflowHeroMetrics">
-            <div>
-              <span>Holdings</span>
-              <strong>{collectibleSummary.itemCount || 0}</strong>
-            </div>
-            <div>
-              <span>Current value</span>
-              <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
-            </div>
-          </div>
-          <div className="workflowHeroActions">
-            <button
-              className="primaryButton"
-              type="button"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
-            >
-              Rate New Purchase
-            </button>
-            <button
-              className="ghostButton"
-              type="button"
-              disabled={inventoryReportBusy}
-              onClick={downloadInventoryReport}
-            >
-              {inventoryReportBusy ? "Preparing PDF..." : "Download PDF"}
-            </button>
-          </div>
-        </section>
-
-        <section className="summaryGrid collectibleInventorySummary">
-          <div className="summaryCard">
-            <span>Cost basis</span>
-            <strong>{formatZar(collectibleSummary.purchaseValueZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Current estimate</span>
-            <strong>{formatZar(collectibleSummary.currentValueZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Unrealized gain</span>
-            <strong>{formatZar(collectibleSummary.unrealizedPnlZAR)}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>5 year scenario</span>
-            <strong>{formatZar(collectibleSummary.projectedFiveYearsZAR)}</strong>
-          </div>
-        </section>
-
-        <div className="panelActions collectibleInventoryActions">
-          <button
-            className="ghostButton"
-            type="button"
-            disabled={inventoryReportBusy}
-            onClick={downloadInventoryReport}
-          >
-            {inventoryReportBusy ? "Preparing PDF..." : "Download Holdings PDF"}
-          </button>
-        </div>
-
-        <div className="collectibleInventoryToolbar">
-          <label>
-            <span>Search holdings</span>
-            <input
-              type="search"
-              value={inventoryQuery}
-              onChange={(event) => setInventoryQuery(event.target.value)}
-              placeholder="Name, reference, rarity, condition"
-            />
-          </label>
-          <label>
-            <span>Category</span>
-            <select
-              value={inventoryCategory}
-              onChange={(event) => setInventoryCategory(event.target.value)}
-            >
-              <option value="all">All categories</option>
-              {inventoryCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {inventoryCategories.length ? (
-          <div className="collectibleInventoryCategoryGrid">
-            {inventoryCategories.map((category) => (
-              <article className="collectibleInventoryStat" key={category.id}>
-                <span>{category.label}</span>
-                <strong>{category.itemCount} items</strong>
-                <small>{formatZar(category.currentValueZAR)} estimated value</small>
-              </article>
-            ))}
-          </div>
-        ) : null}
-
-        {filteredOwnedInventory.length ? (
-          <>
-            <div className="collectibleInventoryMobileList">
-              {filteredOwnedInventory.map((holding) => (
-                <article className="collectibleInventoryMobileCard" key={holding.id}>
-                  <div>
-                    <span>{holding.categoryLabel}</span>
-                    <strong>{holding.name}</strong>
-                    <small>{holding.identifier}</small>
-                  </div>
-                  <dl>
-                    <div><dt>Qty</dt><dd>{holding.quantity}</dd></div>
-                    <div><dt>Cost</dt><dd>{formatZar(holding.purchasePriceZAR * holding.quantity)}</dd></div>
-                    <div><dt>Estimate</dt><dd>{formatZar(holding.currentValueZAR * holding.quantity)}</dd></div>
-                    <div><dt>Score</dt><dd>{formatInvestmentScore(holding)}</dd></div>
-                    <div><dt>Risk</dt><dd>{holding.riskRating || "Review"}</dd></div>
-                    <div><dt>Confidence</dt><dd>{holding.confidenceLabel || holding.confidence || "Review"}</dd></div>
-                  </dl>
-                </article>
-              ))}
-            </div>
-            <div className="collectibleInventoryTableWrap">
-              <table className="collectibleInventoryTable">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Category</th>
-                  <th>Qty</th>
-                  <th>Condition</th>
-                  <th>Rarity</th>
-                  <th>Cost basis</th>
-                  <th>Estimate</th>
-                  <th>Gain</th>
-                  <th>Score</th>
-                  <th>Risk</th>
-                  <th>Confidence</th>
-                  <th>Updated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOwnedInventory.map((holding) => (
-                  <tr key={holding.id}>
-                    <td>
-                      <strong>{holding.name}</strong>
-                      <small>{holding.identifier}</small>
-                    </td>
-                    <td>{holding.categoryLabel}</td>
-                    <td>{holding.quantity}</td>
-                    <td>{holding.condition || "Review required"}</td>
-                    <td>{holding.rarity || "Review required"}</td>
-                    <td>{formatZar(holding.purchasePriceZAR * holding.quantity)}</td>
-                    <td>{formatZar(holding.currentValueZAR * holding.quantity)}</td>
-                    <td>{formatZar(holding.profitZAR * holding.quantity)}</td>
-                    <td>{formatInvestmentScore(holding)}</td>
-                    <td>{holding.riskRating || "Review"}</td>
-                    <td>{holding.confidenceLabel || holding.confidence || "Review"}</td>
-                    <td>{formatDateTime(holding.lastValuedAt, appSettings.timezone)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <EmptyState
-            title={collectibleHoldings.length ? "No holdings match that filter" : "No holdings yet"}
-            body={
-              collectibleHoldings.length
-                ? "Adjust the search or category filter to see more of the collection."
-                : "Run an investment analysis and save the result to add the first holding."
-            }
-          />
-        )}
-      </section>
-
-      <section className="panel" id="collectibles-catalog">
-        <div className="panelHeader">
-          <div>
-            <h2>Collection Catalog</h2>
-            <p>
-              Build a structured asset record for every collectible. Keep identifiers, category,
-              condition, rarity, cost, and estimated value together so a physical collection can
-              be searched, shared, and prepared for trade.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Cataloged assets</span>
-            <strong>{collectibleHoldings.length}</strong>
-          </div>
-        </div>
-
-        <section className="summaryGrid">
-          <div className="summaryCard">
-            <span>Asset records</span>
-            <strong>{collectibleHoldings.length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Categories</span>
-            <strong>{inventoryCategories.length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Evidence sources</span>
-            <strong>{partnerSources.length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Reviewed imports</span>
-            <strong>{importedBatchIds.size}</strong>
-          </div>
-        </section>
-
-        {collectibleHoldings.length ? (
-          <div className="collectibleReferenceGrid">
-            {collectibleHoldings.slice(0, 12).map((holding) => (
-              <article className="collectibleReferenceCard" key={holding.id}>
-                <div className="collectibleReferenceTop">
-                  <span>{holding.categoryLabel}</span>
-                  <strong>{holding.identifier}</strong>
-                </div>
-                <h3>{holding.name}</h3>
-                <p>
-                  {holding.condition || "Condition review required"} |{" "}
-                  {holding.rarity || "Rarity review required"}
-                </p>
-                <div className="collectibleReferenceMeta">
-                  <div>
-                    <span>Quantity</span>
-                    <strong>{holding.quantity}</strong>
-                  </div>
-                  <div>
-                    <span>Current estimate</span>
-                    <strong>{formatZar(holding.currentValueZAR * holding.quantity)}</strong>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No catalog records yet"
-            body="Save a rated purchase or import a reviewed portfolio to start the collection catalog."
-          />
-        )}
-        <div className="panelActions">
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-owned-inventory")}
-          >
-            Open Full Inventory
-          </button>
-        </div>
-      </section>
-
-      <section className="panel" id="collectibles-documentation">
-        <div className="panelHeader">
-          <div>
-            <h2>Documentation & Provenance</h2>
-            <p>
-              Preserve the evidence behind each investment decision. A serious collectible record
-              should make its identification, condition, acquisition trail, and valuation sources
-              easy to review before resale or insurance documentation.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Evidence sources</span>
-            <strong>{partnerSources.length}</strong>
-          </div>
-        </div>
-
-        <div className="deskBriefGrid">
-          <article className="deskBriefCard">
-            <span>01</span>
-            <strong>Identification</strong>
-            <p>Record the item name, category, reference number, edition, and quantity.</p>
-          </article>
-          <article className="deskBriefCard">
-            <span>02</span>
-            <strong>Condition</strong>
-            <p>Document grading, sealed status, visible wear, and any appraisal notes.</p>
-          </article>
-          <article className="deskBriefCard">
-            <span>03</span>
-            <strong>Provenance</strong>
-            <p>Keep acquisition cost, invoice references, shared documents, and source trail.</p>
-          </article>
-          <article className="deskBriefCard">
-            <span>04</span>
-            <strong>Valuation</strong>
-            <p>Link comparable evidence and keep the latest 1, 5, and 10 year scenarios.</p>
-          </article>
-        </div>
-
-        <section className="summaryGrid">
-          <div className="summaryCard">
-            <span>Condition documented</span>
-            <strong>{collectibleHoldings.filter((holding) => holding.condition).length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Rarity documented</span>
-            <strong>{collectibleHoldings.filter((holding) => holding.rarity).length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Shared references</span>
-            <strong>{partnerSources.length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Reviewed portfolios</span>
-            <strong>{reviewedPortfolios.length}</strong>
-          </div>
-        </section>
-
-        <div className="panelActions">
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-partner-sources")}
-          >
-            Review Source Library
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-reviewed-portfolios")}
-          >
-            Review Imports
-          </button>
-        </div>
-      </section>
-
-      <section className="panel" id="collectibles-digital-registry">
-        <div className="panelHeader">
-          <div>
-            <h2>Digital Registry</h2>
-            <p>
-              Give each physical collectible a clear digital representation. The registry
-              keeps the asset reference, ownership record, evidence state, and estimated value
-              ready for future verification, sharing, and trade workflows.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Registry status</span>
-            <strong>Ready</strong>
-          </div>
-        </div>
-
-        <section className="summaryGrid">
-          <div className="summaryCard">
-            <span>Registered assets</span>
-            <strong>{collectibleHoldings.length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Import batches</span>
-            <strong>{importedBatchIds.size}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Source references</span>
-            <strong>{partnerSources.length}</strong>
-          </div>
-          <div className="summaryCard">
-            <span>Verification state</span>
-            <strong>Review ready</strong>
-          </div>
-        </section>
-
-        {collectibleHoldings.length ? (
-          <div className="collectibleReferenceGrid">
-            {collectibleHoldings.slice(0, 12).map((holding) => (
-              <article className="collectibleReferenceCard" key={holding.id}>
-                <div className="collectibleReferenceTop">
-                  <span>{holding.categoryLabel}</span>
-                  <strong>Physical asset</strong>
-                </div>
-                <h3>{holding.name}</h3>
-                <p>{holding.identifier} | Evidence linked | Review ready</p>
-                <div className="collectibleReferenceMeta">
-                  <div>
-                    <span>Registry quantity</span>
-                    <strong>{holding.quantity}</strong>
-                  </div>
-                  <div>
-                    <span>Estimated value</span>
-                    <strong>{formatZar(holding.currentValueZAR * holding.quantity)}</strong>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="The digital registry is ready"
-            body="Save a rated purchase or import a reviewed portfolio to create the first physical-asset record."
-          />
-        )}
-      </section>
-
-      <section className="panel" id="collectibles-transactions">
-        <div className="panelHeader">
-          <div>
-            <h2>Investment Activity</h2>
-            <p>
-              Purchases and exits stay together so each collectible has an investment trail from
-              acquisition through sale.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Transactions</span>
-            <strong>{collectibleTransactions.length}</strong>
-          </div>
-        </div>
-
-        {collectibleTransactions.length ? (
-          <div className="collectibleReferenceGrid">
-            {collectibleTransactions.map((transaction) => (
-              <article className="collectibleReferenceCard" key={transaction.id}>
-                <div className="collectibleReferenceTop">
-                  <span>{transaction.categoryLabel}</span>
-                  <strong>{transaction.type === "sale" ? "Sold" : "Purchased"}</strong>
-                </div>
-                <h3>{transaction.name}</h3>
-                <p>
-                  {transaction.identifier} | Quantity {transaction.quantity}
-                </p>
-                <div className="collectibleReferenceMeta">
-                  <div>
-                    <span>{transaction.type === "sale" ? "Sale value" : "Cost"}</span>
-                    <strong>{formatZar(transaction.totalValueZAR)}</strong>
-                  </div>
-                  {transaction.type === "sale" ? (
-                    <div>
-                      <span>Realized gain</span>
-                      <strong>{formatZar(transaction.realizedPnlZAR)}</strong>
-                    </div>
-                  ) : null}
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No investment activity yet"
-            body="Saved valuations become purchase records and appear here automatically."
-          />
-        )}
-      </section>
-
-      <section className="panel collectibleBetaReportPanel" id="collectibles-reports">
-        <div className="panelHeader">
-          <div>
-            <span className="legoPanelEyebrow">Partner beta packet</span>
-            <h2>Partner Test Pack</h2>
-            <p>
-              Give partners one focused path through the live beta: analyze the purchase, save it,
-              review holdings, and download the evidence-backed report.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Beta focus</span>
-            <strong>LEGO investment workflow</strong>
-          </div>
-        </div>
-
-        <section className="workflowHeroCard workflowHeroCard-report" aria-label="Partner workflow overview">
-          <div>
-            <span className="legoPanelEyebrow">Partner-ready beta flow</span>
-            <h3>One path from image to investment report.</h3>
-            <p>
-              Analyze a purchase, review the verdict, save it to holdings, then export a report
-              partners can judge quickly.
-            </p>
-          </div>
-          <div className="workflowHeroMetrics">
-            <div>
-              <span>Target</span>
-              <strong>30s</strong>
-            </div>
-            <div>
-              <span>Output</span>
-              <strong>PDF</strong>
-            </div>
-          </div>
-          <div className="workflowHeroActions">
-            <button
-              type="button"
-              className="primaryButton"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
-            >
-              Start Workflow
-            </button>
-            <button
-              type="button"
-              className="ghostButton"
-              disabled={inventoryReportBusy}
-              onClick={downloadInventoryReport}
-            >
-              {inventoryReportBusy ? "Preparing..." : "Export Report"}
-            </button>
-          </div>
-        </section>
-
-        <div className="betaReportHero">
-          <div>
-            <span className="legoPanelEyebrow">What to test</span>
-            <h3>Can BrickAlpha answer: is this a good collectible investment?</h3>
-            <p>
-              The partner test should take less than 30 seconds for the first pass, then another
-              minute to inspect the saved asset and PDF output.
-            </p>
-          </div>
-          <div className="betaReportScore">
-            <strong>30s</strong>
-            <span>target workflow</span>
-          </div>
-        </div>
-
-        <div className="betaReportGrid">
-          {[
-            ["01", "Investment Analysis", "Upload the LEGO image or use set 30725 at R65."],
-            ["02", "Investment Verdict", "Check score, current value, gain, and 1/5/10 year projections."],
-            ["03", "Add to Holdings", "Save the rated purchase into the owned asset register."],
-            ["04", "Investment Report", "Open a holding and review image, thesis, forecast, and sources."],
-            ["05", "Download PDF", "Export the inventory report for partner review."],
-            ["06", "Trust Check", "Ask what evidence would make the score more believable."],
-          ].map(([step, title, body]) => (
-            <article className="betaReportCard" key={step}>
-              <strong>{step}</strong>
-              <div>
-                <span>{title}</span>
-                <p>{body}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <div className="betaReportActions">
-          <button
-            type="button"
-            className="primaryButton"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
-          >
-            Start Test Workflow
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
-          >
-            Open Dashboard
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            disabled={inventoryReportBusy}
-            onClick={downloadInventoryReport}
-          >
-            {inventoryReportBusy ? "Preparing PDF..." : "Download Holdings PDF"}
-          </button>
-        </div>
-
-        <div className="betaFeedbackPrompt">
-          <span>Partner feedback prompt</span>
-          <p>
-            After testing, ask: Did the verdict feel trustworthy? Was the workflow clear on mobile?
-            What would make the score actionable enough to buy, hold, or pass?
-          </p>
-        </div>
-      </section>
-
-      <section className="panel" id="collectibles-reviewed-portfolios">
-        <div className="panelHeader">
-          <div>
-            <h2>AI Watchlist</h2>
-            <p>
-              Watchlist-grade LEGO opportunities with a clear verdict, upside scenario, and the
-              reasons a collector-investor should care.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Watchlist cards</span>
-            <strong>{opportunityCards.length}</strong>
-          </div>
-        </div>
-
-        <section className="workflowHeroCard workflowHeroCard-watchlist" aria-label="Investment opportunities overview">
-          <div>
-            <span className="legoPanelEyebrow">AI watchlist</span>
-            <h3>Find collectible opportunities worth reviewing.</h3>
-            <p>
-              See score, current value, upside, and why the asset may deserve attention before you
-              buy.
-            </p>
-          </div>
-          <div className="workflowHeroMetrics">
-            <div>
-              <span>Ideas</span>
-              <strong>{opportunityCards.length}</strong>
-            </div>
-            <div>
-              <span>Top score</span>
-              <strong>{Math.max(...opportunityCards.map((item) => item.score || 0), 0).toFixed(1)}</strong>
-            </div>
-          </div>
-          <div className="workflowHeroActions">
-            <button
-              className="primaryButton"
-              type="button"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-valuation")}
-            >
-              Rate Purchase
-            </button>
-            <button
-              className="ghostButton"
-              type="button"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
-            >
-              Portfolio Home
-            </button>
-          </div>
-        </section>
-
-        <div className="investmentOpportunityGrid">
-          {opportunityCards.map((opportunity) => (
-            <article className="investmentOpportunityCard" key={opportunity.id}>
-              <LegoAssetVisual
-                reference={opportunity.reference}
-                name={opportunity.name}
-                size="opportunity"
-              />
-              <div className="investmentOpportunityBody">
-                <span className="legoPanelEyebrow">LEGO {opportunity.reference}</span>
-                <h3>{opportunity.name}</h3>
-                <div className="investmentOpportunityMetrics">
-                  <div>
-                    <span>Current value</span>
-                    <strong>{formatZar(opportunity.currentValueZAR)}</strong>
-                  </div>
-                  <div>
-                    <span>Score</span>
-                    <strong>{opportunity.score}/10</strong>
-                  </div>
-                  <div>
-                    <span>Potential upside</span>
-                    <strong>+{opportunity.upsidePercent}%</strong>
-                  </div>
-                </div>
-                <div className="investmentOpportunityReasons">
-                  <span>Why it matters</span>
-                  {opportunity.reasons.map((reason) => (
-                    <p key={reason}>{reason}</p>
-                  ))}
-                </div>
-                <strong className="investmentOpportunityVerdict">{opportunity.recommendation}</strong>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <div className="panelHeader investmentImportHeader">
-          <div>
-            <h3>Reviewed Portfolio Imports</h3>
-            <p>
-              Import reconciled collections into owned inventory. Raw invoices stay private; the
-              working register keeps reviewed costs, estimates, grades, and invoice references.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Reviewed portfolios</span>
-            <strong>{reviewedPortfolios.length}</strong>
-          </div>
-        </div>
-
-        <div className="collectibleReferenceGrid">
-          {reviewedPortfolios.map((portfolio) => (
-            <article className="collectibleReferenceCard" key={portfolio.id}>
-              <div className="collectibleReferenceTop">
-                <span>{portfolio.category}</span>
-                <strong>{portfolio.reviewStatus}</strong>
-              </div>
-              <h3>{portfolio.title}</h3>
-              <p>{portfolio.notes}</p>
-              <div className="collectibleReferenceMeta">
-                <div>
-                  <span>Positions</span>
-                  <strong>{portfolio.positionCount}</strong>
-                </div>
-                <div>
-                  <span>Cost</span>
-                  <strong>{formatZar(portfolio.summary.purchaseValueZAR)}</strong>
-                </div>
-                <div>
-                  <span>Market value</span>
-                  <strong>{formatZar(portfolio.summary.currentValueZAR)}</strong>
-                </div>
-                <div>
-                  <span>ROI</span>
-                  <strong>{portfolio.summary.roiPercent}%</strong>
-                </div>
-              </div>
-              <div className="panelActions">
-                <button
-                  type="button"
-                  className="primaryButton"
-                  disabled={
-                    portfolioImportBusyId === portfolio.id || importedBatchIds.has(portfolio.id)
-                  }
-                  onClick={() => importReviewedPortfolio(portfolio.id)}
-                >
-                  {importedBatchIds.has(portfolio.id)
-                    ? "Imported"
-                    : portfolioImportBusyId === portfolio.id
-                      ? "Importing..."
-                      : "Import Reviewed Portfolio"}
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel" id="collectibles-partner-sources">
-        <div className="panelHeader">
-          <div>
-            <h2>Source Library</h2>
-            <p>
-              Keep the shared portfolio documents and market references close to the valuation
-              workflow. These links stay as source material until a reviewed import pipeline is
-              ready. Queue a source for reviewed import when it should become part of the working
-              collection.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Shared sources</span>
-            <strong>{partnerSources.length}</strong>
-          </div>
-        </div>
-
-        <div className="collectibleReferenceGrid">
-          {partnerSources.map((source) => (
-            <article className="collectibleReferenceCard" key={source.id}>
-              <div className="collectibleReferenceTop">
-                <span>{source.category}</span>
-                <strong>{source.sourceType}</strong>
-              </div>
-              <h3>{source.title}</h3>
-              <p>{source.summary}</p>
-              <div className="panelActions">
-                <button
-                  type="button"
-                  className="ghostButton"
-                  onClick={() => openExternal(source.url)}
-                >
-                  Open Source
-                </button>
-                <button
-                  type="button"
-                  className="ghostButton"
-                  disabled={importBusyId === source.id || queuedSourceIds.has(source.id)}
-                  onClick={() => queueImport(source.id)}
-                >
-                  {queuedSourceIds.has(source.id)
-                    ? "Queued for Review"
-                    : importBusyId === source.id
-                      ? "Queueing..."
-                      : "Queue Import Review"}
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-        {importStatus ? <div className="statusBanner">{importStatus}</div> : null}
-      </section>
-
-      <section className="summaryGrid">
-        <div className="summaryCard">
-          <span>Tradable items</span>
-          <strong>{collectibles.length}</strong>
-        </div>
-        <div className="summaryCard">
-          <span>Brands</span>
-          <strong>{(collectiblesResponse.brands || []).length}</strong>
-        </div>
-        <div className="summaryCard">
-          <span>Categories</span>
-          <strong>{(collectiblesResponse.categories || []).length}</strong>
-        </div>
-        <div className="summaryCard">
-          <span>Updated</span>
-          <strong>{formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}</strong>
-        </div>
-        <button
-          type="button"
-          className="summaryCard summaryCardButton"
-          onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
-        >
-          <span>Official sources</span>
-          <strong>{legoReferenceShelf?.sourceName || "Reference"}</strong>
-        </button>
-      </section>
-
-      <section className="panel" id="collectibles-lanes">
-        <div className="panelHeader">
-          <div>
-            <h2>Collectibles Workflow</h2>
-            <p>
-              Keep the purchase-review workflow and the source-verification workflow distinct so
-              the collection stays practical and evidence-led.
-            </p>
-          </div>
-        </div>
-
-        <div className="collectibleLaneGrid">
-          <button
-            type="button"
-            className="collectibleLaneCard"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
-          >
-            <span>Research Inventory</span>
-            <strong>Review opportunities inside BrickAlpha</strong>
-            <small>
-              Scan inventory ideas, compare thesis, open purchase or sale tickets, and keep the
-              investment workflow inside the app.
-            </small>
-          </button>
-
-          <button
-            type="button"
-            className="collectibleLaneCard"
-            onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
-          >
-            <span>Official Sources</span>
-            <strong>Verify the product context</strong>
-            <small>
-              Use official LEGO ZA and related source pages to validate lineups, themes, and retail
-              context without making them the primary experience.
-            </small>
-          </button>
-        </div>
-      </section>
-
-      {activeCollectible ? (
-        <section className="panel" id="collectibles-focus">
-          <div className="panelHeader">
-            <div>
-              <h2>{activeCollectible.name}</h2>
-              <p>{activeCollectible.thesis || activeCollectible.description}</p>
-            </div>
-            <div className="priceCluster">
-              <span>{formatCollectiblePrice(activeCollectible.price)}</span>
-              <small>
-                {activeCollectible.brand} | {activeCollectible.category}
-              </small>
-            </div>
-          </div>
-
-          <div className="stateGrid">
-            <div>
-              <span>Category</span>
-              <strong>{activeCollectible.category}</strong>
-            </div>
-            <div>
-              <span>Brand</span>
-              <strong>{activeCollectible.brand}</strong>
-            </div>
-            <div>
-              <span>Liquidity</span>
-              <strong>{activeCollectible.liquidity}</strong>
-            </div>
-            <div>
-              <span>Venue</span>
-              <strong>{activeCollectible.venue}</strong>
-            </div>
-          </div>
-
-          <div className="panelActions">
-            <button
-              type="button"
-              className="primaryButton"
-              onClick={() => openCollectibleTicket(activeCollectible, "BUY")}
-            >
-              Buy Ticket
-            </button>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => openCollectibleTicket(activeCollectible, "SELL")}
-            >
-              Sell Ticket
-            </button>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-portfolio")}
-            >
-              Open Portfolio
-            </button>
-            {activeCollectible.brand === "LEGO" && legoReferenceShelf?.url ? (
-              <button
-                type="button"
-                className="ghostButton"
-                onClick={() => jumpToPageSection("collectibles", "collectibles-reference")}
-              >
-                View Source Notes
-              </button>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
+      <RetirementIntelligenceWorkspace
+        brickAlphaPortfolio={brickAlphaPortfolio}
+        collectibles={collectibles}
+        handleCollectibleSelect={handleCollectibleSelect}
+        jumpToPageSection={jumpToPageSection}
+        openCollectibleTicket={openCollectibleTicket}
+        openTrades={openTrades}
+      />
 
       <section className="panel" id="collectibles-trading">
         <div className="panelHeader">
           <div>
-            <h2>Research Inventory</h2>
-            <p>
-              These are the items you act on inside BrickAlpha. Search, filter, compare, then
-              move into the collectible purchase or sale flow.
-            </p>
-          </div>
-          <div className="headerStatus">
-            <span>Primary workflow</span>
-            <strong>Review inside app</strong>
-          </div>
-        </div>
-
-        <div className="deskBriefGrid">
-          <div className="deskBriefCard">
-            <span>Lane</span>
-            <strong>Investment review</strong>
-            <small>
-              Use this lane to review collectible theses, liquidity, and ticket entries without
-              leaving the workspace.
-            </small>
-          </div>
-          <div className="deskBriefCard">
-            <span>Lead category</span>
-            <strong>{activeCollectible?.category || "Select an item"}</strong>
-            <small>
-              {activeCollectible
-                ? `${activeCollectible.brand} is currently in focus for deeper review.`
-                : "Choose a collectible card below to promote it into the focus panel."}
-            </small>
-          </div>
-          <div className="deskBriefCard">
-            <span>Inventory source</span>
-            <strong>BrickAlpha tracked</strong>
-            <small>
-              Pricing and thesis here are part of your tradable inventory layer, separate from
-              official retail references.
-            </small>
-          </div>
-          <div className="deskBriefCard">
-            <span>Verification lane</span>
-            <strong>{legoReferenceShelf?.sourceName || "Official sources"}</strong>
-            <small>
-              Use the source lane only when you want to verify an official product page or series
-              lineup.
-            </small>
+            <h2>Browse Sets</h2>
+            <p>Search and filter the LEGO investment catalog, then open full analysis above.</p>
           </div>
         </div>
 
@@ -4336,26 +3167,6 @@ export function CollectiblesScreen({
           </select>
         </div>
 
-        <div className="collectibleInventoryMeta">
-          <div className="collectibleInventoryStat">
-            <span>Filtered items</span>
-            <strong>{filteredCollectibles.length}</strong>
-          </div>
-          <div className="collectibleInventoryStat">
-            <span>Brand filter</span>
-            <strong>{collectibleBrand === "all" ? "All brands" : collectibleBrand}</strong>
-          </div>
-          <div className="collectibleInventoryStat">
-            <span>Category filter</span>
-            <strong>
-              {collectibleCategory === "all" ? "All categories" : collectibleCategory}
-            </strong>
-          </div>
-          <div className="collectibleInventoryStat">
-            <span>Grouped shelves</span>
-            <strong>{groupedCollectibles.length}</strong>
-          </div>
-        </div>
       </section>
 
       {legoReferenceShelf ? (
@@ -4406,7 +3217,7 @@ export function CollectiblesScreen({
                     className="ghostButton"
                     onClick={() => openExternal(item.url || legoReferenceShelf.url)}
                   >
-                    Verify Source
+                    Verify Market Intelligence
                   </button>
                 </div>
               </article>
@@ -4415,7 +3226,7 @@ export function CollectiblesScreen({
 
           <div className="panelActions">
             <div className="collectibleSourceHint">
-              BrickAlpha stays the main workspace. Official LEGO ZA links are here for source verification, not as the primary route.
+              Brick Alpha stays the main workspace. Official LEGO ZA links are here for market verification, not as the primary route.
             </div>
             {legoReferenceShelf.aboutUrl ? (
               <button
@@ -4446,8 +3257,11 @@ export function CollectiblesScreen({
               <div>
                 <h2>{group.brand}</h2>
                 <p>
-                  Display-led sets, minifigures, and collector inventory with the official source
-                  shelf available beside the trade flow.
+                  {group.brand === "LEGO"
+                    ? "Display-led sets, minifigures, and collector holdings with the market intelligence shelf available beside the trade flow."
+                    : group.brand === "Pokemon"
+                      ? "Sealed and graded trading-card holdings with faster collector demand read-through."
+                      : "collectibles tracked inside the same ticket and portfolio workflow."}
                 </p>
               </div>
               <div className="headerStatus">
@@ -4471,12 +3285,81 @@ export function CollectiblesScreen({
         ))}
         {!filteredCollectibles.length ? (
           <EmptyState
-            title="No collectibles match that filter"
+            title="No LEGO investments match that filter"
             body="Try another brand, category, or a broader search term."
           />
         ) : null}
       </section>
-    </div>
+    </>
+  );
+}
+
+export function ScanEvaluateScreen({
+  activePageSections,
+  appSettings,
+  collectibles,
+  collectiblesResponse,
+  handleCollectibleSelect,
+  jumpToPageSection,
+  onAddToWatchlist,
+  openCollectibleTicket,
+  openTrades,
+}) {
+  const legoCount = collectibles.filter((item) => item.brand === "LEGO").length;
+
+  return (
+    <>
+      <WorkspaceHero
+        tone="collectibles"
+        eyebrow="Scan & Evaluate"
+        title="AI Investment Advisor for LEGO"
+        description="Photograph a set, upload an image, or enter a set number — Brick Alpha delivers a complete investment analysis with score, forecast, and portfolio actions in seconds."
+        statusLabel="Engine"
+        statusValue="Brick Alpha AI"
+        metrics={[
+          {
+            label: "Recognition",
+            value: "AI Vision",
+            detail: "Intelligent set identification",
+          },
+          {
+            label: "Analysis",
+            value: "Full verdict",
+            detail: "Score · grade · ROI · retirement",
+          },
+          {
+            label: "Catalog",
+            value: `${legoCount} sets`,
+            detail: "Live LEGO investment desk",
+          },
+          {
+            label: "Pipeline",
+            value: "~5 seconds",
+            detail: "Photo → score → recommendation",
+          },
+        ]}
+        primaryAction={{
+          label: "Investment Analysis",
+          onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
+        }}
+        secondaryAction={{
+          label: "Portfolio Intelligence",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
+        }}
+      />
+      <WorkspaceSectionBar
+        sections={activePageSections}
+        onSelect={(sectionId) => jumpToPageSection("scan-evaluate", sectionId)}
+      />
+      <ScanEvaluateWorkspace
+        collectibles={collectibles}
+        openTrades={openTrades}
+        handleCollectibleSelect={handleCollectibleSelect}
+        jumpToPageSection={jumpToPageSection}
+        onAddToWatchlist={onAddToWatchlist}
+        openCollectibleTicket={openCollectibleTicket}
+      />
+    </>
   );
 }
 
@@ -4486,20 +3369,42 @@ export function PortfolioScreen({
   activePortfolioTrade,
   appSettings,
   closedTrades,
+  collectibles = [],
   handleCloseTrade,
   handlePortfolioTradeNavigate,
   handlePortfolioTradeSelect,
   health,
   jumpToPageSection,
+  onAddToWatchlist,
   openTrades,
   totalOpenPnl,
+  watchlistItems = [],
 }) {
+  const brickAlphaPortfolio = useMemo(
+    () => summarizeBrickAlphaPortfolio([...openTrades, ...closedTrades]),
+    [closedTrades, openTrades],
+  );
+  const collectibleHoldings = openTrades.filter((trade) => trade.assetClass === "collectible");
   const portfolioActions = [
+    {
+      id: "intelligence",
+      label: "Collection Intelligence",
+      meta: `${collectibleHoldings.length || "Demo"}`,
+      detail: "NAV, theme allocation, growth chart, and Brick Alpha scores.",
+      onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
+    },
+    {
+      id: "holdings",
+      label: "My Sets",
+      meta: `${collectibleHoldings.length || 6}`,
+      detail: "Premium holdings cards with investment intelligence.",
+      onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
+    },
     {
       id: "positions",
       label: "Open Positions",
       meta: `${openTrades.length}`,
-      detail: "Focus on what is still live and carrying risk.",
+      detail: "All live market and collectible positions.",
       onClick: () => jumpToPageSection("portfolio", "open-positions"),
     },
     {
@@ -4529,9 +3434,9 @@ export function PortfolioScreen({
     <>
       <WorkspaceHero
         tone="portfolio"
-        eyebrow="Portfolio Book"
-        title="My Portfolio"
-        description="User-scoped order tracking, EMA-managed exits, and saved execution history."
+        eyebrow="Collection Intelligence"
+        title="Portfolio Intelligence"
+        description="Your LEGO collection as an investment portfolio — NAV, growth, theme allocation, and Brick Alpha recommendations."
         statusLabel="Last engine tick"
         statusValue={formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}
         metrics={[
@@ -4550,14 +3455,19 @@ export function PortfolioScreen({
             value: `${totalOpenPnl.toFixed(2)}%`,
             detail: "Open-book change",
           },
+          {
+            label: "Net Asset Value",
+            value: formatCollectiblePrice(brickAlphaPortfolio.netAssetValue),
+            detail: `${brickAlphaPortfolio.collectionGrade} collection grade`,
+          },
         ]}
         primaryAction={{
-          label: "Open Trade Desk",
-          onClick: () => jumpToPageSection("signals", "chart-panel", activeDesk),
+          label: "View Holdings",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
         }}
         secondaryAction={{
-          label: "Review History",
-          onClick: () => jumpToPageSection("portfolio", "order-history"),
+          label: "Export Portfolio",
+          onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
         }}
       />
       <WorkspaceSectionBar
@@ -4566,9 +3476,18 @@ export function PortfolioScreen({
       />
       <WorkspaceCommandBar
         tone="portfolio"
-        title="Book Shortcuts"
-        hint="Move between the live book, history, and the next execution step."
+        title="Portfolio Shortcuts"
+        hint="Collection intelligence, holdings, open book, and execution history."
         actions={portfolioActions}
+      />
+
+      <PortfolioIntelligenceWorkspace
+        collectibles={collectibles}
+        handlePortfolioTradeSelect={handlePortfolioTradeSelect}
+        jumpToPageSection={jumpToPageSection}
+        onAddToWatchlist={onAddToWatchlist}
+        openTrades={openTrades}
+        watchlistItems={watchlistItems}
       />
 
       <PositionDetailCard
@@ -4608,8 +3527,8 @@ export function PortfolioScreen({
           className="summaryCard summaryCardButton"
           onClick={() => jumpToPageSection("signals", "chart-panel")}
         >
-          <span>Last update</span>
-          <strong>{formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}</strong>
+          <span>Avg Brick Alpha Score</span>
+          <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
         </button>
       </section>
 
@@ -4815,8 +3734,8 @@ export function ReportsScreen({
     <>
       <WorkspaceHero
         tone="reports"
-        eyebrow="Reporting Suite"
-        title="Reports"
+        eyebrow="Research Center"
+        title="Research Center"
         description="Performance curves, desk exposure, signal pressure, and execution analytics in one visual review workspace."
         statusLabel="Last engine tick"
         statusValue={formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}
@@ -4852,7 +3771,7 @@ export function ReportsScreen({
       />
       <WorkspaceCommandBar
         tone="reports"
-        title="Reporting Shortcuts"
+        title="Research Shortcuts"
         hint="Move between performance, exposure, signal analytics, and the live book without losing context."
         actions={reportActions}
       />
@@ -4913,7 +3832,7 @@ export function ReportsScreen({
           <div className="panelHeader">
             <div>
               <h2>Desk Exposure</h2>
-              <p>{openTrades.length ? "Open-book" : "Recent-book"} distribution across forex, ETFs, crypto, JSE, and collectibles.</p>
+              <p>{openTrades.length ? "Open-book" : "Recent-book"} distribution across forex, ETFs, crypto, JSE, and LEGO investments.</p>
             </div>
           </div>
 
@@ -4992,31 +3911,455 @@ export function ReportsScreen({
   );
 }
 
+export function SubscriptionsScreen({
+  activeDesk,
+  activePageSections,
+  alertsResponse,
+  appSettings,
+  jumpToPageSection,
+  navigateToPage,
+  notificationsResponse,
+  openTrades,
+  totalOpenPnl,
+}) {
+  const currentPlanId = appSettings.subscriptionTier || "starter";
+  const currentPlan =
+    ALERT_SUBSCRIPTION_OPTIONS.find((option) => option.id === currentPlanId) ||
+    ALERT_SUBSCRIPTION_OPTIONS[0];
+  const alertSummary = alertsResponse.summary || {};
+  const alertPlan = alertsResponse.plan || currentPlan;
+  const deliverySummary = alertsResponse.deliverySummary || {};
+  const notificationSummary = notificationsResponse.summary || {};
+  const upgradeActions = [
+    {
+      id: "manage-plan",
+      label: "Manage Plan",
+      meta: subscriptionTierLabel(currentPlanId),
+      detail: "Open alert plan controls and shape what a paying client gets from delivery and alert coverage.",
+      onClick: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+    },
+    {
+      id: "daily-brief",
+      label: "Daily Brief",
+      meta: `${notificationSummary.unread || 0} unread`,
+      detail: "Open the premium-style daily brief and see how the subscription story already lands on the Dashboard.",
+      onClick: () => jumpToPageSection("home", "home-brief", activeDesk),
+    },
+    {
+      id: "reports",
+      label: "Premium Research",
+      meta: `${openTrades.length} open`,
+      detail: "Show partners the visual research layer that helps justify recurring value.",
+      onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+    },
+    {
+      id: "trade",
+      label: "Open Trade Desk",
+      meta: `${alertSummary.enabled || 0} active`,
+      detail: "Jump back into the live signal desk where watchlists, alerts, and tickets turn into daily habit.",
+      onClick: () => navigateToPage("signals", false, activeDesk),
+    },
+  ];
+  const tierCards = ALERT_SUBSCRIPTION_OPTIONS.map((option) => {
+    const isCurrent = option.id === currentPlanId;
+    const features =
+      option.id === "starter"
+        ? [
+            "Core market desks and onboarding flow",
+            `${option.maxAlerts} active alert slots`,
+            "In-app notifications and daily brief access",
+          ]
+        : option.id === "pro"
+          ? [
+              "Deeper alert coverage across desks",
+              "Queued email delivery preview",
+              "Better fit for committed daily users",
+            ]
+          : [
+              "High-capacity alert coverage",
+              "Priority workflow for heavy desk usage",
+              "Strongest commercial offer for power users",
+            ];
+
+    return {
+      ...option,
+      isCurrent,
+      features,
+    };
+  });
+  const premiumSurfaces = [
+    {
+      id: "alerts",
+      title: "Alerts and delivery",
+      detail: "The clearest paid value layer today: more alert coverage, email-style delivery, and a stronger daily monitoring loop.",
+      actionLabel: "Open alert controls",
+      action: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+    },
+    {
+      id: "brief",
+      title: "Daily brief",
+      detail: "A subscriber-style morning note that turns the app from a tool you visit into a service you rely on.",
+      actionLabel: "Open daily brief",
+      action: () => jumpToPageSection("home", "home-brief", activeDesk),
+    },
+    {
+      id: "reports",
+      title: "Research Center",
+      detail: "Performance curves, desk exposure, and signal pressure are the kind of visuals clients expect from a serious product.",
+      actionLabel: "Open Research Center",
+      action: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+    },
+    {
+      id: "trade",
+      title: "Execution desk",
+      detail: "Signals, charts, RSI, structure plans, and ticket flow make the premium layers feel grounded in actual trading value.",
+      actionLabel: "Open trade desk",
+      action: () => navigateToPage("signals", false, activeDesk),
+    },
+  ];
+
+  return (
+    <>
+      <WorkspaceHero
+        tone="subscriptions"
+        eyebrow="Commercial Layer"
+        title="Subscriptions"
+        description="Plan tiers, premium product value, and the upgrade path that turns Brick Alpha into a credible subscription business."
+        statusLabel="Current plan"
+        statusValue={subscriptionTierLabel(currentPlanId)}
+        metrics={[
+          {
+            label: "Alert coverage",
+            value: `${alertSummary.total || 0}/${alertSummary.maxAllowed || alertPlan.maxAlerts || currentPlan.maxAlerts}`,
+            detail: `${alertSummary.remaining ?? Math.max((alertPlan.maxAlerts || currentPlan.maxAlerts) - (alertSummary.total || 0), 0)} slots left`,
+          },
+          {
+            label: "Unread notifications",
+            value: notificationSummary.unread || 0,
+            detail: `${deliverySummary.queued || 0} email-style deliveries queued`,
+          },
+          {
+            label: "Open book",
+            value: openTrades.length,
+            detail: Number.isFinite(totalOpenPnl)
+              ? `${totalOpenPnl >= 0 ? "+" : ""}${totalOpenPnl.toFixed(2)}% live PnL`
+              : "No live PnL yet",
+          },
+        ]}
+        primaryAction={{
+          label: "Manage Alert Plan",
+          onClick: () => jumpToPageSection("settings", "alerts-plan", activeDesk),
+        }}
+        secondaryAction={{
+          label: "Open Research Center",
+          onClick: () => jumpToPageSection("reports", "reports-performance", activeDesk),
+        }}
+      />
+      <WorkspaceSectionBar
+        sections={activePageSections}
+        onSelect={(sectionId) => jumpToPageSection("subscriptions", sectionId, activeDesk)}
+      />
+      <WorkspaceCommandBar
+        tone="subscriptions"
+        title="Commercial Shortcuts"
+        hint="Move between the current plan, premium surfaces, and the app areas that sell the value best."
+        actions={upgradeActions}
+      />
+
+      <section className="summaryGrid" id="subscriptions-overview">
+        <div className="summaryCard summaryCardAccent">
+          <span>Current tier</span>
+          <strong>{subscriptionTierLabel(currentPlanId)}</strong>
+          <small>{currentPlan.description}</small>
+        </div>
+        <div className="summaryCard">
+          <span>Alert slots</span>
+          <strong>{alertPlan.maxAlerts || currentPlan.maxAlerts}</strong>
+          <small>{alertSummary.enabled || 0} enabled right now</small>
+        </div>
+        <div className="summaryCard">
+          <span>Email eligibility</span>
+          <strong>{alertPlan.emailEnabled ? "Enabled" : "Planned"}</strong>
+          <small>{deliverySummary.queued || 0} queued deliveries</small>
+        </div>
+        <div className="summaryCard">
+          <span>Premium habit loop</span>
+          <strong>{notificationSummary.unread || 0} unread</strong>
+          <small>Notifications, brief, and alerts are reinforcing daily return.</small>
+        </div>
+      </section>
+
+      <div className="splitGrid">
+        <section className="panel subscriptionNarrativePanel">
+          <div className="panelHeader">
+            <div>
+              <h2>What clients should feel</h2>
+              <p>This screen is where we make the commercial story legible: trust, habit, and a clearer reason to upgrade.</p>
+            </div>
+          </div>
+
+          <div className="subscriptionPillRow">
+            <span className="signalMiniTag">Signals with context</span>
+            <span className="signalMiniTag">Daily brief</span>
+            <span className="signalMiniTag">Watchlists and alerts</span>
+            <span className="signalMiniTag">Research and analytics</span>
+            <span className="signalMiniTag">Tools and execution</span>
+          </div>
+
+          <ul className="subscriptionFeatureList">
+            <li>
+              <strong>Starter</strong>
+              <span>Enough to explore the platform, understand the signal engine, and build trust with light alerting.</span>
+            </li>
+            <li>
+              <strong>Pro</strong>
+              <span>The first serious paid plan, with meaningful alert capacity and delivery that supports daily use.</span>
+            </li>
+            <li>
+              <strong>Elite</strong>
+              <span>A higher-coverage lane for heavier desks, more notifications, and the most demanding subscribers.</span>
+            </li>
+          </ul>
+
+          <div className="panelActions">
+            <button
+              type="button"
+              className="primaryButton"
+              onClick={() => jumpToPageSection("settings", "alerts-plan", activeDesk)}
+            >
+              Open Alert Plan Controls
+            </button>
+            <button
+              type="button"
+              className="ghostButton"
+              onClick={() => jumpToPageSection("home", "home-brief", activeDesk)}
+            >
+              Review Daily Brief
+            </button>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panelHeader">
+            <div>
+              <h2>Current subscriber posture</h2>
+              <p>An honest read on where the product already feels monetization-ready and where the value is strongest today.</p>
+            </div>
+          </div>
+
+          <div className="subscriptionValueGrid">
+            <div className="briefNoteCard">
+              <strong>Daily service value</strong>
+              <p>The daily brief, live notifications, and signal desk together already feel closer to a service than a one-off dashboard.</p>
+            </div>
+            <div className="briefNoteCard">
+              <strong>Best upsell surface</strong>
+              <p>Alert capacity and delivery are the clearest premium lever because users immediately understand the difference in daily utility.</p>
+            </div>
+            <div className="briefNoteCard">
+              <strong>Trust layer</strong>
+              <p>Research, RSI visibility, and honest feed status keep the subscription story anchored in credibility instead of marketing copy.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section className="panel" id="subscriptions-tiers">
+        <div className="panelHeader">
+          <div>
+            <h2>Plan Tiers</h2>
+            <p>Three simple steps from discovery to power-user coverage, without overcomplicating the commercial story.</p>
+          </div>
+        </div>
+
+        <div className="subscriptionTierGrid">
+          {tierCards.map((card) => (
+            <article
+              key={card.id}
+              className={`subscriptionTierCard ${card.isCurrent ? "subscriptionTierCardActive" : ""}`.trim()}
+            >
+              <div className="subscriptionTierTop">
+                <div>
+                  <span className="collectibleCategory">{card.label}</span>
+                  <h3>{card.maxAlerts} alert slots</h3>
+                </div>
+                {card.isCurrent ? <span className="subscriptionTierBadge">Current</span> : null}
+              </div>
+
+              <p>{card.description}</p>
+
+              <ul className="subscriptionFeatureList">
+                {card.features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+
+              <div className="panelActions">
+                <button
+                  type="button"
+                  className={card.isCurrent ? "ghostButton" : "primaryButton"}
+                  onClick={() => jumpToPageSection("settings", "alerts-plan", activeDesk)}
+                >
+                  {card.isCurrent ? "Manage in Settings" : `View ${card.label} Setup`}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel" id="subscriptions-premium">
+        <div className="panelHeader">
+          <div>
+            <h2>Premium Surfaces Inside the App</h2>
+            <p>These are the places where the product already shows the difference between a nice tool and a paid daily service.</p>
+          </div>
+        </div>
+
+        <div className="subscriptionRouteList">
+          {premiumSurfaces.map((surface) => (
+            <div className="subscriptionRouteItem" key={surface.id}>
+              <div>
+                <strong>{surface.title}</strong>
+                <small>{surface.detail}</small>
+              </div>
+              <button type="button" className="ghostButton" onClick={surface.action}>
+                {surface.actionLabel}
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function ConnectionsScreen({
   activeDesk,
   activePageSections,
   appSettings,
   connectedProviderCount,
   connectorBusyKey,
+  connectorForms,
   connectors,
   cryptoConnector,
   degradedSourceCount,
   disconnectConnector,
-  handleValrFieldChange,
+  handleConnectorFieldChange,
   health,
   jumpToPageSection,
   liveReadyDeskCount,
   newsResponse,
   refreshContext,
   refreshCore,
-  saveValrConnector,
+  saveConnector,
   settingsStatus,
   signalsResponse,
   syncConnectorBalances,
   testConnectorConnection,
   updateExecutionProfile,
-  valrForm,
 }) {
+  const deskLeadSignal =
+    signalsResponse.signals?.find((signal) => signal.desk === activeDesk) ||
+    signalsResponse.leadSignal ||
+    null;
+  const indicativePrice = Number(deskLeadSignal?.price || 0);
+  const depthStep =
+    activeDesk === "crypto"
+      ? Math.max(indicativePrice * 0.001, 5)
+      : activeDesk === "forex"
+        ? 0.01
+        : Math.max(indicativePrice * 0.002, 0.1);
+  const marketDepthRows = indicativePrice
+    ? Array.from({ length: 5 }).map((_, index) => {
+        const level = index + 1;
+        const bid = Number((indicativePrice - depthStep * level).toFixed(4));
+        const ask = Number((indicativePrice + depthStep * level).toFixed(4));
+        return {
+          level,
+          bid,
+          ask,
+          bidSize: Math.max(1, 8 - index) * (activeDesk === "crypto" ? 0.25 : 1000),
+          askSize: Math.max(1, 7 - index) * (activeDesk === "crypto" ? 0.22 : 900),
+        };
+      })
+    : [];
+  const upcomingCalendarItems = [
+    {
+      id: "cpi-za",
+      time: "Wed 08:00",
+      market: "South Africa",
+      event: "CPI YoY",
+      impact: "High",
+      note: "Watch JSE risk tone and USD/ZAR volatility.",
+    },
+    {
+      id: "fed-minutes",
+      time: "Wed 20:00",
+      market: "United States",
+      event: "FOMC Minutes",
+      impact: "High",
+      note: "Can reset macro tone across forex, crypto, and ETFs.",
+    },
+    {
+      id: "gdp-us",
+      time: "Thu 14:30",
+      market: "United States",
+      event: "GDP Second Estimate",
+      impact: "Medium",
+      note: "Useful for ETF desk bias and broad risk sentiment.",
+    },
+    {
+      id: "pce-us",
+      time: "Fri 14:30",
+      market: "United States",
+      event: "Core PCE",
+      impact: "High",
+      note: "Key inflation release for rates, FX, and crypto reaction.",
+    },
+  ];
+  const apiCoverageCards = [
+    {
+      id: "market-data",
+      label: "Market Data API",
+      value: signalsResponse.marketData?.provider || "Simulator",
+      detail:
+        signalsResponse.marketData?.mode === "simulated"
+          ? "Live candle connection is staged, with simulator fallback active."
+          : "Live candle connection is active for the current session.",
+    },
+    {
+      id: "news-feeds",
+      label: "News Feed APIs",
+      value: `${(newsResponse.sourceStatus || []).length}`,
+      detail: "RSS and feed ingestion power the macro tape and headline routing.",
+    },
+    {
+      id: "execution",
+      label: "Execution APIs",
+      value: connectedProviderCount,
+      detail: "VALR is the active live-route candidate; other brokers stay manual until OAuth or gateway setup is complete.",
+    },
+    {
+      id: "banking",
+      label: "Banking APIs",
+      value: "Planned",
+      detail:
+        "South African bank funding and statement connectivity are mapped next for FNB, Absa, Nedbank, Standard Bank, and Capitec once provider selection is locked.",
+    },
+    {
+      id: "calendar",
+      label: "Economic Calendar API",
+      value: "Staged",
+      detail: "Calendar surface is ready in-app; provider integration is the next step.",
+    },
+    {
+      id: "depth",
+      label: "Level 2 / Depth",
+      value: activeDesk === "crypto" ? "Best candidate" : "Planned",
+      detail: "Market depth fits best where the broker or exchange exposes order book data cleanly.",
+    },
+  ];
   const connectionActions = [
     {
       id: "brokers",
@@ -5033,21 +4376,18 @@ export function ConnectionsScreen({
       onClick: () => jumpToPageSection("connections", "market-feed-status", activeDesk),
     },
     {
-      id: "refresh",
-      label: "Refresh Health",
-      meta: `${degradedSourceCount} issues`,
-      detail: "Pull source state and service health again.",
-      onClick: () => {
-        refreshCore();
-        refreshContext();
-      },
+      id: "apis",
+      label: "API Coverage",
+      meta: "Matrix",
+      detail: "Review what is live, staged, manual, or still planned.",
+      onClick: () => jumpToPageSection("connections", "api-coverage", activeDesk),
     },
     {
-      id: "partner",
-      label: "Partner Testing",
-      meta: "Share lane",
-      detail: "Jump to the share status and feedback handoff flow.",
-      onClick: () => jumpToPageSection("settings", "partner-testing"),
+      id: "calendar",
+      label: "Calendar",
+      meta: `${upcomingCalendarItems.length}`,
+      detail: "See the upcoming macro events that can move the desk.",
+      onClick: () => jumpToPageSection("connections", "economic-calendar", activeDesk),
     },
   ];
 
@@ -5074,7 +4414,7 @@ export function ConnectionsScreen({
           {
             label: "Feed issues",
             value: degradedSourceCount,
-            detail: "Sources needing attention",
+            detail: "Market intelligence needing attention",
           },
         ]}
         primaryAction={{
@@ -5121,6 +4461,25 @@ export function ConnectionsScreen({
         </div>
       </section>
 
+      <section className="panel" id="api-coverage">
+        <div className="panelHeader">
+          <div>
+            <h2>API Coverage</h2>
+            <p>Keep the integration picture honest: what is live now, what is staged, and what still needs provider work.</p>
+          </div>
+        </div>
+
+        <div className="deskBriefGrid">
+          {apiCoverageCards.map((card) => (
+            <div className="deskBriefCard" key={card.id}>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.detail}</small>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="panel" id="connections-overview">
         <div className="panelHeader">
           <div>
@@ -5157,7 +4516,7 @@ export function ConnectionsScreen({
                         ? `Live routing enabled through ${providerLabel(profile.providerId)} on ${
                             cryptoConnector?.config?.preferredPair || profile.pair
                           }.`
-                        : "Paper mode keeps crypto orders inside BrickAlpha until you deliberately switch."
+                        : "Paper mode keeps crypto orders inside Brick Alpha until you deliberately switch."
                       : "This desk is still paper-first until its provider OAuth or gateway flow is completed."}
                   </small>
                 </div>
@@ -5212,10 +4571,10 @@ export function ConnectionsScreen({
               key={provider.id}
               provider={provider}
               timeZone={appSettings.timezone}
-              valrForm={valrForm}
+              formValues={connectorForms?.[provider.id] || {}}
               busyKey={connectorBusyKey}
-              onValrFieldChange={handleValrFieldChange}
-              onSaveValr={saveValrConnector}
+              onFieldChange={handleConnectorFieldChange}
+              onSave={saveConnector}
               onTest={testConnectorConnection}
               onSync={syncConnectorBalances}
               onDisconnect={disconnectConnector}
@@ -5223,6 +4582,77 @@ export function ConnectionsScreen({
           ))}
         </div>
       </section>
+
+      <div className="splitGrid">
+        <section className="panel" id="market-depth">
+          <div className="panelHeader">
+            <div>
+              <h2>Market Depth / Level 2</h2>
+              <p>Indicative order-book style depth for the active desk until a provider-backed Level 2 feed is connected.</p>
+            </div>
+            <div className="headerStatus">
+              <span>Desk</span>
+              <strong>{labelDesk(activeDesk)}</strong>
+            </div>
+          </div>
+
+          {marketDepthRows.length ? (
+            <div className="tableShell">
+              <div className="tableHeaderRow history">
+                <span>Level</span>
+                <span>Bid</span>
+                <span>Bid Size</span>
+                <span>Ask</span>
+                <span>Ask Size</span>
+              </div>
+
+              {marketDepthRows.map((row) => (
+                <div className="tableRow history" key={row.level}>
+                  <span>L{row.level}</span>
+                  <span>{formatTickerPrice(deskLeadSignal?.ticker, row.bid)}</span>
+                  <span>{row.bidSize}</span>
+                  <span>{formatTickerPrice(deskLeadSignal?.ticker, row.ask)}</span>
+                  <span>{row.askSize}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="Depth view is waiting for an active market"
+              body="Once the desk has a live reference price, the app can show a staged Level 2 surface here."
+            />
+          )}
+        </section>
+
+        <section className="panel" id="economic-calendar">
+          <div className="panelHeader">
+            <div>
+              <h2>Economic Calendar</h2>
+              <p>Upcoming macro events and central-bank moments that can move the trading screens.</p>
+            </div>
+          </div>
+
+          <div className="tableShell">
+            <div className="tableHeaderRow history">
+              <span>Time</span>
+              <span>Market</span>
+              <span>Event</span>
+              <span>Impact</span>
+              <span>Desk Note</span>
+            </div>
+
+            {upcomingCalendarItems.map((item) => (
+              <div className="tableRow history" key={item.id}>
+                <span>{item.time}</span>
+                <span>{item.market}</span>
+                <span>{item.event}</span>
+                <span className={statusTone(item.impact === "High" ? "warning" : "watch")}>{item.impact}</span>
+                <span>{item.note}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
 
       <div className="splitGrid">
         <section className="panel">
@@ -5283,17 +4713,17 @@ export function ConnectionsScreen({
         </section>
       </div>
 
-      <section className="panel" id="strategy-state">
+      <section className="panel" id="source-status">
         <div className="panelHeader">
           <div>
-            <h2>Source Status</h2>
+            <h2>Market Intelligence Status</h2>
             <p>Feed-level visibility so you can see what is loading and what is degraded.</p>
           </div>
         </div>
 
         <div className="tableShell">
           <div className="tableHeaderRow history">
-            <span>Source</span>
+            <span>Market Intelligence</span>
             <span>Region</span>
             <span>Status</span>
             <span>Items</span>
@@ -5319,6 +4749,7 @@ export function SettingsScreen({
   activeDesk,
   activePageSections,
   addTarget,
+  alertsResponse,
   appSettings,
   connectedProviderCount,
   currentUser,
@@ -5326,9 +4757,14 @@ export function SettingsScreen({
   feedbackForm,
   feedbackResponse,
   feedbackStatus,
+  installActionLabel,
+  installHint,
+  installStatus,
+  isAppInstalled,
   jumpToPageSection,
   liveReadyDeskCount,
   navigateToPage,
+  onInstallApp,
   setFeedbackForm,
   settingsStatus,
   shareStatus,
@@ -5343,6 +4779,11 @@ export function SettingsScreen({
   const feedbackSummary = feedbackResponse.summary || {};
   const canManageFeedback = currentUser.role === "owner";
   const shareIsLive = shareStatus?.status === "live" && shareStatus?.publicUrl;
+  const alertSummary = alertsResponse.summary || {};
+  const alertPlan = alertsResponse.plan || {};
+  const deliverySummary = alertsResponse.deliverySummary || {};
+  const deliveryQueue = alertsResponse.deliveryQueue || [];
+  const planAllowsEmail = Boolean(alertPlan.emailEnabled);
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState("open");
   const [feedbackAreaFilter, setFeedbackAreaFilter] = useState("all");
   const openPartnerStep = (step) => {
@@ -5365,7 +4806,7 @@ export function SettingsScreen({
     });
   }, [feedbackAreaFilter, feedbackItems, feedbackStatusFilter]);
   const partnerInviteMessage = [
-    "BrickAlpha partner test pass",
+    "Brick Alpha partner test pass",
     "",
     `Access: ${shareIsLive ? shareStatus.publicUrl : shareStatus?.localUrl || "http://127.0.0.1:5000"}`,
     "",
@@ -5387,6 +4828,27 @@ export function SettingsScreen({
   };
   const settingsActions = [
     {
+      id: "install",
+      label: "Install App",
+      meta: isAppInstalled ? "Installed" : "Mobile-ready",
+      detail: "Pin Brick Alpha to a phone home screen for a cleaner partner demo.",
+      onClick: () => jumpToPageSection("settings", "install-app"),
+    },
+    {
+      id: "alerts",
+      label: "Alert Plan",
+      meta: `${alertSummary.total || 0}/${alertSummary.maxAllowed || alertPlan.maxAlerts || 5}`,
+      detail: "Set the subscriber tier, delivery channels, and queue behavior.",
+      onClick: () => jumpToPageSection("settings", "alerts-plan"),
+    },
+    {
+      id: "routine",
+      label: "Routine",
+      meta: appSettings.routinePreferences?.remindersEnabled === false ? "Muted" : "Live",
+      detail: "Tune daily nudges, workflow tone, and the completion moment on the Dashboard.",
+      onClick: () => jumpToPageSection("settings", "routine-preferences"),
+    },
+    {
       id: "partner",
       label: "Partner Testing",
       meta: shareIsLive ? "Live" : "Private",
@@ -5405,7 +4867,7 @@ export function SettingsScreen({
       label: "Saved Targets",
       meta: `${targets.length}`,
       detail: "Jump to the saved targets and monitoring preferences.",
-      onClick: () => jumpToPageSection("settings", "saved-targets"),
+      onClick: () => jumpToPageSection("settings", "web-targets"),
     },
     {
       id: "connections",
@@ -5413,6 +4875,13 @@ export function SettingsScreen({
       meta: `${connectedProviderCount} linked`,
       detail: "Move into feeds and brokers when account setup needs attention.",
       onClick: () => navigateToPage("connections", false, activeDesk),
+    },
+    {
+      id: "subscriptions",
+      label: "Subscriptions",
+      meta: subscriptionTierLabel(appSettings.subscriptionTier),
+      detail: "Open the commercial layer and review the plan story partners and clients will see.",
+      onClick: () => navigateToPage("subscriptions", false, activeDesk),
     },
   ];
 
@@ -5432,9 +4901,9 @@ export function SettingsScreen({
             detail: appSettings.timezone,
           },
           {
-            label: "Risk mode",
-            value: appSettings.riskMode,
-            detail: "Desk-wide default",
+            label: "Alert plan",
+            value: subscriptionTierLabel(appSettings.subscriptionTier),
+            detail: `${alertSummary.total || 0}/${alertSummary.maxAllowed || alertPlan.maxAlerts || 5} slots used`,
           },
           {
             label: "Partner board",
@@ -5493,6 +4962,49 @@ export function SettingsScreen({
           </div>
         </section>
 
+        <section className="panel" id="install-app">
+          <div className="panelHeader">
+            <div>
+              <h2>Install App</h2>
+              <p>Use the live web system like an app on a phone home screen for the cleanest Tuesday demo.</p>
+            </div>
+          </div>
+
+          <div className="summaryGrid compactSummaryGrid">
+            <div className="summaryCard">
+              <span>Status</span>
+              <strong>{isAppInstalled ? "Installed" : "Ready to install"}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Access</span>
+              <strong>{shareIsLive ? "Public link live" : "Local or staging"}</strong>
+            </div>
+            <div className="summaryCard">
+              <span>Best use</span>
+              <strong>Phone demo</strong>
+            </div>
+          </div>
+
+          <div className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Install path</h3>
+                <p>{installHint}</p>
+              </div>
+            </div>
+
+            <div className="toolCardList">
+              <button type="button" className="toolCard toolCardButton" onClick={onInstallApp}>
+                <span>Install Brick Alpha</span>
+                <strong>{installActionLabel}</strong>
+                <small>{shareIsLive ? `Best on the public demo link: ${shareStatus.publicUrl}` : "Works on a public demo or production-style staging link."}</small>
+              </button>
+            </div>
+
+            {installStatus ? <div className="statusBanner subtleBanner">{installStatus}</div> : null}
+          </div>
+        </section>
+
         <section className="panel" id="news-region">
           <div className="panelHeader">
             <div>
@@ -5515,6 +5027,397 @@ export function SettingsScreen({
           </div>
         </section>
       </div>
+
+      <section className="panel" id="alerts-plan">
+        <div className="panelHeader">
+          <div>
+            <h2>Alert Plan and Delivery</h2>
+            <p>Shape the subscriber experience: plan tier, alert slot budget, and how triggered setups should reach you.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Slots used</span>
+            <strong>
+              {alertSummary.total || 0}/{alertSummary.maxAllowed || alertPlan.maxAlerts || 5}
+            </strong>
+          </div>
+        </div>
+
+        <div className="summaryGrid compactSummaryGrid">
+          <div className="summaryCard">
+            <span>Current plan</span>
+            <strong>{subscriptionTierLabel(appSettings.subscriptionTier)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Remaining slots</span>
+            <strong>{alertSummary.remaining ?? Math.max((alertPlan.maxAlerts || 5) - (alertSummary.total || 0), 0)}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Delivery</span>
+            <strong>{appSettings.alertPreferences?.inAppEnabled === false ? "Paused" : "In-app live"}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Email queue</span>
+            <strong>{deliverySummary.queued || 0}</strong>
+          </div>
+        </div>
+
+        {alertSummary.overLimit ? (
+          <div className="statusBanner subtleBanner">
+            This plan is carrying {alertSummary.overLimit} more alert slots than it allows. Remove older rules or move back up a tier before adding new ones.
+          </div>
+        ) : null}
+
+        <div className="subPanel">
+          <div className="panelHeader">
+            <div>
+              <h3>Subscriber tier</h3>
+              <p>Use these tiers to shape what a future paying client gets from alerting.</p>
+            </div>
+          </div>
+
+          <div className="segmentedControl">
+            {ALERT_SUBSCRIPTION_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={appSettings.subscriptionTier === option.id ? "active" : ""}
+                onClick={() => updateSettings({ subscriptionTier: option.id })}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="summaryGrid compactSummaryGrid">
+            {ALERT_SUBSCRIPTION_OPTIONS.map((option) => (
+              <div
+                key={option.id}
+                className={`summaryCard ${appSettings.subscriptionTier === option.id ? "summaryCardAccent" : ""}`}
+              >
+                <span>{option.label}</span>
+                <strong>{option.maxAlerts} alert slots</strong>
+                <small>{option.description}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="splitGrid">
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Delivery channels</h3>
+                <p>In-app alerts are live now. Email stays honest as a launch-stage delivery queue until the sender is connected.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.alertPreferences?.inAppEnabled !== false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      inAppEnabled: true,
+                    },
+                  })
+                }
+              >
+                In-app On
+              </button>
+              <button
+                type="button"
+                className={appSettings.alertPreferences?.inAppEnabled === false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      inAppEnabled: false,
+                    },
+                  })
+                }
+              >
+                In-app Off
+              </button>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.alertPreferences?.emailEnabled ? "active" : ""}
+                disabled={!planAllowsEmail}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      emailEnabled: true,
+                    },
+                  })
+                }
+              >
+                Email Queue On
+              </button>
+              <button
+                type="button"
+                className={!appSettings.alertPreferences?.emailEnabled ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    alertPreferences: {
+                      ...appSettings.alertPreferences,
+                      emailEnabled: false,
+                    },
+                  })
+                }
+              >
+                Email Queue Off
+              </button>
+            </div>
+
+            {!planAllowsEmail ? (
+              <div className="statusBanner subtleBanner">
+                Starter keeps alerting in-app only. Move to Pro or Elite to stage queued email delivery.
+              </div>
+            ) : null}
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Digest timing</h3>
+                <p>Choose how queued email alerts should be grouped once outbound delivery is connected.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              {["instant", "hourly", "daily"].map((windowKey) => (
+                <button
+                  key={windowKey}
+                  type="button"
+                  className={appSettings.alertPreferences?.digestWindow === windowKey ? "active" : ""}
+                  onClick={() =>
+                    updateSettings({
+                      alertPreferences: {
+                        ...appSettings.alertPreferences,
+                        digestWindow: windowKey,
+                      },
+                    })
+                  }
+                >
+                  {alertDigestWindowLabel(windowKey)}
+                </button>
+              ))}
+            </div>
+
+            <div className="summaryGrid compactSummaryGrid">
+              <div className="summaryCard">
+                <span>Current mode</span>
+                <strong>{alertDigestWindowLabel(appSettings.alertPreferences?.digestWindow)}</strong>
+              </div>
+              <div className="summaryCard">
+                <span>Email eligible</span>
+                <strong>{planAllowsEmail ? "Yes" : "No"}</strong>
+              </div>
+              <div className="summaryCard">
+                <span>Queue state</span>
+                <strong>{deliverySummary.queued || 0} pending</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="subPanel">
+          <div className="panelHeader">
+            <div>
+              <h3>Queued delivery preview</h3>
+              <p>This is the honest launch-stage view of what will be handed to outbound email once we wire the sender.</p>
+            </div>
+          </div>
+
+          <div className="watchlistStack">
+            {deliveryQueue.length ? (
+              deliveryQueue.map((item) => (
+                <article className="watchItemCard notificationCard" key={item.id}>
+                  <div className="watchItemMain">
+                    <div className="watchItemTop">
+                      <span className="signalMiniTag">{labelDesk(item.desk)}</span>
+                      <span className="signalMiniTag">{alertDigestWindowLabel(item.digestWindow)}</span>
+                    </div>
+                    <strong>{item.title}</strong>
+                    <small>{item.message}</small>
+                    <small>
+                      {item.recipientEmail} | {formatDateTime(item.createdAt, appSettings.timezone)}
+                    </small>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <EmptyState
+                title="No queued delivery yet"
+                body="Once alerts trigger with email queue enabled, the launch-stage delivery preview will show here."
+              />
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel" id="routine-preferences">
+        <div className="panelHeader">
+          <div>
+            <h2>Routine Preferences</h2>
+            <p>Shape how the Dashboard nudges the user through the day so the product feels supportive instead of noisy.</p>
+          </div>
+          <div className="headerStatus">
+            <span>Routine tone</span>
+            <strong>
+              {appSettings.routinePreferences?.remindersEnabled === false
+                ? "Muted"
+                : appSettings.routinePreferences?.nudgeWindow === "focused"
+                  ? "Focused"
+                  : appSettings.routinePreferences?.nudgeWindow === "quiet"
+                    ? "Quiet"
+                    : "Active"}
+            </strong>
+          </div>
+        </div>
+
+        <div className="summaryGrid compactSummaryGrid">
+          <div className="summaryCard">
+            <span>Daily nudges</span>
+            <strong>{appSettings.routinePreferences?.remindersEnabled === false ? "Off" : "On"}</strong>
+          </div>
+          <div className="summaryCard">
+            <span>Nudge style</span>
+            <strong>
+              {appSettings.routinePreferences?.nudgeWindow === "focused"
+                ? "Focused"
+                : appSettings.routinePreferences?.nudgeWindow === "quiet"
+                  ? "Quiet"
+                  : "Active"}
+            </strong>
+          </div>
+          <div className="summaryCard">
+            <span>Completion card</span>
+            <strong>{appSettings.routinePreferences?.celebrationEnabled === false ? "Minimal" : "Visible"}</strong>
+          </div>
+        </div>
+
+        <div className="splitGrid">
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Reminder behavior</h3>
+                <p>Decide how readily the app should surface unfinished workflow steps on the Dashboard.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.remindersEnabled !== false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      remindersEnabled: true,
+                    },
+                  })
+                }
+              >
+                Nudges On
+              </button>
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.remindersEnabled === false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      remindersEnabled: false,
+                    },
+                  })
+                }
+              >
+                Nudges Off
+              </button>
+            </div>
+
+            <div className="segmentedControl">
+              {["active", "focused", "quiet"].map((modeKey) => (
+                <button
+                  key={modeKey}
+                  type="button"
+                  className={appSettings.routinePreferences?.nudgeWindow === modeKey ? "active" : ""}
+                  onClick={() =>
+                    updateSettings({
+                      routinePreferences: {
+                        ...appSettings.routinePreferences,
+                        nudgeWindow: modeKey,
+                      },
+                    })
+                  }
+                >
+                  {modeKey === "active" ? "Active" : modeKey === "focused" ? "Focused" : "Quiet"}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="subPanel">
+            <div className="panelHeader">
+              <div>
+                <h3>Completion feel</h3>
+                <p>Keep the end-of-routine moment visible, or switch to a more minimal finish.</p>
+              </div>
+            </div>
+
+            <div className="segmentedControl">
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.celebrationEnabled !== false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      celebrationEnabled: true,
+                    },
+                  })
+                }
+              >
+                Celebration On
+              </button>
+              <button
+                type="button"
+                className={appSettings.routinePreferences?.celebrationEnabled === false ? "active" : ""}
+                onClick={() =>
+                  updateSettings({
+                    routinePreferences: {
+                      ...appSettings.routinePreferences,
+                      celebrationEnabled: false,
+                    },
+                  })
+                }
+              >
+                Minimal
+              </button>
+            </div>
+
+            <div className="summaryGrid compactSummaryGrid">
+              <div className="summaryCard">
+                <span>What changes</span>
+                <strong>
+                  {appSettings.routinePreferences?.nudgeWindow === "quiet"
+                    ? "Lower prompt frequency"
+                    : appSettings.routinePreferences?.nudgeWindow === "focused"
+                      ? "Only stronger nudges"
+                      : "Every open step stays visible"}
+                </strong>
+                <small>The Dashboard now adapts how quickly it shows the workflow reminder and completion state.</small>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
 
       <section className="panel" id="source-status">
         <div className="panelHeader">
@@ -5628,7 +5531,7 @@ export function SettingsScreen({
           </div>
           <div className="partnerTestingCard">
             <span>Suggested partner pass</span>
-            <strong>Landing - News - Trade - Collectibles - Feedback</strong>
+            <strong>Landing - News - Trade - LEGO Investments - Feedback</strong>
             <small>
               That route covers the front door, tape, execution flow, alternative-assets lane, and the
               final feedback handoff.
@@ -5788,7 +5691,7 @@ export function SettingsScreen({
                 <option value="landing">Landing / Login</option>
                 <option value="news">News</option>
                 <option value="trade">Trade</option>
-                <option value="collectibles">Collectibles</option>
+                <option value="collectibles">LEGO Investments</option>
                 <option value="portfolio">Portfolio</option>
                 <option value="tools">Tools</option>
                 <option value="connections">Connections</option>
@@ -5873,7 +5776,7 @@ export function SettingsScreen({
                 <p>{item.notes}</p>
 
                 <div className="feedbackMetaRow">
-                  <span>{item.authorName || item.authorEmail || "BrickAlpha partner"}</span>
+                  <span>{item.authorName || item.authorEmail || "Brick Alpha partner"}</span>
                   <span>{formatDateTime(item.updatedAt || item.createdAt, appSettings.timezone)}</span>
                 </div>
 

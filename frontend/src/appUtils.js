@@ -1,4 +1,5 @@
 import {
+  APP_NAME,
   DEFAULT_DESK,
   DEFAULT_EXECUTION_PROFILES,
   DEFAULT_PAGE,
@@ -8,23 +9,8 @@ import {
   MARKET_DESKS,
   NAV_ITEMS,
   ORDER_TICKET_PRESETS,
-  PAGE_SECTION_LINKS,
   VALR_PAIR_OPTIONS,
 } from "./appConfig";
-
-const COLLECTIBLE_SERVICES = [
-  "valuation",
-  "collection",
-  "inventory",
-  "catalog",
-  "documentation",
-  "digital-registry",
-  "activity",
-  "reports",
-  "imports",
-  "sources",
-  "research",
-];
 
 export function normalizePage(page) {
   const candidate = String(page || "").trim().toLowerCase();
@@ -36,20 +22,6 @@ export function normalizeDesk(desk) {
   return DESK_FILTERS.some((item) => item.id === candidate) ? candidate : DEFAULT_DESK;
 }
 
-export function normalizeCollectibleService(service) {
-  const candidate = String(service || "").trim().toLowerCase();
-  return COLLECTIBLE_SERVICES.includes(candidate) ? candidate : "collection";
-}
-
-function normalizeSectionId(page, introId, sectionId) {
-  const candidate = typeof sectionId === "string" ? sectionId.trim() : "";
-  const normalizedPage = normalizePage(page);
-  const pageSections = PAGE_SECTION_LINKS[normalizedPage] || [];
-  return pageSections.some((section) => section.id === candidate)
-    ? candidate
-    : defaultSectionIdForIntro(normalizedPage, introId);
-}
-
 export function parseHashState(hashValue) {
   const normalized = String(hashValue || "").replace(/^#\/?/, "");
   const [pathValue, queryString = ""] = normalized.split("?");
@@ -57,12 +29,11 @@ export function parseHashState(hashValue) {
   return {
     page: normalizePage(pathValue.split("/")[0]),
     desk: normalizeDesk(params.get("desk")),
-    service: normalizeCollectibleService(params.get("service")),
   };
 }
 
-export function buildHash(page, desk, service = "collection") {
-  return `#/${normalizePage(page)}?desk=${encodeURIComponent(normalizeDesk(desk))}&service=${encodeURIComponent(normalizeCollectibleService(service))}`;
+export function buildHash(page, desk) {
+  return `#/${normalizePage(page)}?desk=${encodeURIComponent(normalizeDesk(desk))}`;
 }
 
 export function findDeskMeta(desk) {
@@ -75,7 +46,7 @@ export function labelDesk(desk) {
 
 export function workspaceLabel(page, desk) {
   if (page === "home") {
-    return "Workspace Home";
+    return "Executive Dashboard";
   }
 
   if (page === "news") {
@@ -95,11 +66,19 @@ export function workspaceLabel(page, desk) {
   }
 
   if (page === "collectibles") {
-    return "Collectibles";
+    return "LEGO Investments";
+  }
+
+  if (page === "scan-evaluate") {
+    return "Scan & Evaluate";
   }
 
   if (page === "reports") {
-    return "Reports";
+    return "Research Center";
+  }
+
+  if (page === "subscriptions") {
+    return "Subscriptions";
   }
 
   return NAV_ITEMS.find((item) => item.id === page)?.label || "Workspace";
@@ -124,6 +103,10 @@ export function defaultIntroIdForPage(page) {
 
   if (page === "reports") {
     return "reports";
+  }
+
+  if (page === "subscriptions") {
+    return "subscriptions";
   }
 
   if (page === "settings") {
@@ -154,8 +137,12 @@ export function defaultSectionIdForIntro(page, introId) {
     return introId === "news" ? "macro-feed" : "signals-grid";
   }
 
-    if (page === "collectibles") {
-      return "collectibles-valuation";
+  if (page === "collectibles") {
+    return "investment-analysis";
+  }
+
+  if (page === "scan-evaluate") {
+    return "scan-evaluate";
   }
 
   if (page === "portfolio") {
@@ -164,6 +151,10 @@ export function defaultSectionIdForIntro(page, introId) {
 
   if (page === "reports") {
     return "reports-performance";
+  }
+
+  if (page === "subscriptions") {
+    return "subscriptions-overview";
   }
 
   if (page === "settings") {
@@ -194,11 +185,12 @@ export function readLaunchPreference() {
     const introId = INTRO_ACTIONS.some((action) => action.id === parsed?.introId)
       ? parsed.introId
       : defaultIntroIdForPage(page);
-    const sectionId = normalizeSectionId(page, introId, parsed?.sectionId);
-    const landingId =
-      typeof parsed?.landingId === "string" && parsed.landingId ? parsed.landingId : introId;
+    const sectionId =
+      typeof parsed?.sectionId === "string" && parsed.sectionId
+        ? parsed.sectionId
+        : defaultSectionIdForIntro(page, introId);
 
-    return { page, desk, introId, sectionId, landingId };
+    return { page, desk, introId, sectionId };
   } catch {
     return null;
   }
@@ -214,11 +206,10 @@ export function writeLaunchPreference(preference) {
         introId:
           INTRO_ACTIONS.find((action) => action.id === preference?.introId)?.id ||
           defaultIntroIdForPage(preference?.page),
-        sectionId: normalizeSectionId(preference?.page, preference?.introId, preference?.sectionId),
-        landingId:
-          typeof preference?.landingId === "string" && preference.landingId
-            ? preference.landingId
-            : preference?.introId || defaultIntroIdForPage(preference?.page),
+        sectionId:
+          typeof preference?.sectionId === "string" && preference.sectionId
+            ? preference.sectionId
+            : defaultSectionIdForIntro(preference?.page, preference?.introId),
       }),
     );
   } catch {
@@ -259,18 +250,42 @@ export function normalizeExecutionProfiles(input) {
 }
 
 export function normalizeAppSettings(input) {
+  const subscriptionTier =
+    input?.subscriptionTier === "pro" || input?.subscriptionTier === "elite"
+      ? input.subscriptionTier
+      : "starter";
   return {
-    preferredRegion:
-      input?.preferredRegion === "global" || input?.preferredRegion === "all"
-        ? input.preferredRegion
-        : "south-africa",
-    timezone: input?.timezone || "Africa/Johannesburg",
-    riskMode:
-      input?.riskMode === "defensive" || input?.riskMode === "aggressive"
-        ? input.riskMode
-        : "balanced",
-    executionProfiles: normalizeExecutionProfiles(input?.executionProfiles),
-  };
+      preferredRegion:
+        input?.preferredRegion === "global" || input?.preferredRegion === "all"
+          ? input.preferredRegion
+          : "south-africa",
+      timezone: input?.timezone || "Africa/Johannesburg",
+      riskMode:
+        input?.riskMode === "defensive" || input?.riskMode === "aggressive"
+          ? input.riskMode
+          : "balanced",
+      subscriptionTier,
+      alertPreferences: {
+        inAppEnabled: input?.alertPreferences?.inAppEnabled !== false,
+        emailEnabled:
+          subscriptionTier !== "starter" && input?.alertPreferences?.emailEnabled === true,
+        digestWindow:
+          input?.alertPreferences?.digestWindow === "hourly" ||
+          input?.alertPreferences?.digestWindow === "daily"
+            ? input.alertPreferences.digestWindow
+            : "instant",
+      },
+      routinePreferences: {
+        remindersEnabled: input?.routinePreferences?.remindersEnabled !== false,
+        nudgeWindow:
+          input?.routinePreferences?.nudgeWindow === "quiet" ||
+          input?.routinePreferences?.nudgeWindow === "focused"
+            ? input.routinePreferences.nudgeWindow
+            : "active",
+        celebrationEnabled: input?.routinePreferences?.celebrationEnabled !== false,
+      },
+      executionProfiles: normalizeExecutionProfiles(input?.executionProfiles),
+    };
 }
 
 export function formatDateTime(value, timeZone) {
@@ -341,6 +356,57 @@ export function labelRegion(region) {
   return "All Regions";
 }
 
+export function subscriptionTierLabel(tier) {
+  if (tier === "elite") {
+    return "Elite";
+  }
+
+  if (tier === "pro") {
+    return "Pro";
+  }
+
+  return "Starter";
+}
+
+export function alertDigestWindowLabel(value) {
+  if (value === "hourly") {
+    return "Hourly digest";
+  }
+
+  if (value === "daily") {
+    return "Daily digest";
+  }
+
+  return "Instant";
+}
+
+export function alertKindLabel(kind) {
+  switch (kind) {
+    case "price_below":
+      return "Price below";
+    case "rsi_above":
+      return "RSI above";
+    case "rsi_below":
+      return "RSI below";
+    case "price_above":
+    default:
+      return "Price above";
+  }
+}
+
+export function formatAlertThreshold(ticker, kind, threshold) {
+  const numeric = Number(threshold);
+  if (!Number.isFinite(numeric)) {
+    return "--";
+  }
+
+  if (String(kind || "").startsWith("rsi_")) {
+    return numeric.toFixed(1);
+  }
+
+  return formatTickerPrice(ticker, numeric);
+}
+
 export function actionTone(action) {
   if (action === "BUY") {
     return "buy";
@@ -394,7 +460,7 @@ export function providerLabel(providerId) {
     ibkr: "Interactive Brokers",
     saxo: "Saxo",
     easyequities: "EasyEquities",
-    collecttrade: "BrickAlpha",
+    collecttrade: APP_NAME,
   };
 
   return labels[normalized] || humanizeStatus(normalized);
@@ -454,7 +520,7 @@ export function executionPlanForSignal(signal, settings, connectors) {
     return {
       mode: "paper",
       providerId: profile.providerId,
-      providerLabel: "BrickAlpha Paper",
+      providerLabel: `${APP_NAME} Paper`,
       pair: null,
       ready: true,
       detail: "This ticket stays inside the app and will not send a broker order.",
@@ -479,7 +545,7 @@ export function executionPlanForSignal(signal, settings, connectors) {
   return {
     mode: "paper",
     providerId: profile.providerId,
-    providerLabel: "BrickAlpha Paper",
+    providerLabel: `${APP_NAME} Paper`,
     pair: null,
     ready: true,
     detail: "Live routing is not wired for this desk yet, so it stays in paper mode.",

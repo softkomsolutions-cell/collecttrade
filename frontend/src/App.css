@@ -45,17 +45,15 @@
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: rgba(74, 139, 255, 0.14);
-  color: #4a8bff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .brandWordmark {
   font-size: 18px;
   font-weight: 700;
-  color: #4a8bff;
+  color: #f4f5f7;
+  letter-spacing: 0.06em;
 }
 
 .brandSub {
@@ -263,9 +261,6 @@
     linear-gradient(180deg, rgba(7, 10, 17, 0.94), rgba(5, 7, 12, 0.98));
 }
 
-.mobileAppShell .sidebar {
-  display: none;
-}
 
 .workspaceShell::before {
   content: "";
@@ -330,6 +325,42 @@
     rgba(5, 7, 12, 0.88);
 }
 
+.mobileTitleLead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mobileBackButton {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(116, 132, 171, 0.16);
+  color: #f5f7fb;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.mobileBackButton span {
+  font-size: 18px;
+  line-height: 1;
+  transform: translateX(-1px);
+}
+
+.mobileBackButton:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(74, 139, 255, 0.28);
+}
+
 .mobileBrandButton {
   display: flex;
   align-items: center;
@@ -380,20 +411,56 @@
   gap: 12px;
 }
 
+.mobileInboxButton,
 .mobileMenuButton {
-  width: 44px;
   height: 44px;
   border-radius: 14px;
   border: 1px solid rgba(116, 132, 171, 0.16);
   background: rgba(255, 255, 255, 0.04);
-  display: grid;
-  place-items: center;
-  gap: 4px;
   cursor: pointer;
   transition:
     transform 150ms ease,
     border-color 150ms ease,
     background 150ms ease;
+}
+
+.mobileInboxButton {
+  min-width: 82px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #f5f7fb;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.mobileInboxButton em {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #4a8bff;
+  color: #ffffff;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.mobileInboxButton.hasUnread {
+  border-color: rgba(74, 139, 255, 0.3);
+  background: rgba(74, 139, 255, 0.1);
+}
+
+.mobileMenuButton {
+  width: 44px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
 }
 
 .mobileMenuButton span {
@@ -404,6 +471,7 @@
   background: #f5f7fb;
 }
 
+.mobileInboxButton:hover,
 .mobileMenuButton:hover {
   transform: translateY(-1px);
   border-color: rgba(74, 139, 255, 0.28);
@@ -587,150 +655,6 @@
   font-size: 16px;
 }
 
-.collectibleInventoryStat small {
-  color: #8da2c8;
-  line-height: 1.45;
-}
-
-.collectibleInventoryToolbar,
-.collectibleInventoryCategoryGrid {
-  display: grid;
-  gap: 12px;
-}
-
-.collectibleInventoryToolbar {
-  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
-}
-
-.collectibleInventoryToolbar label {
-  display: grid;
-  gap: 8px;
-}
-
-.collectibleInventoryToolbar span {
-  color: #8da2c8;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.collectibleInventoryCategoryGrid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.collectibleInventoryTableWrap {
-  overflow-x: auto;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 14px;
-}
-
-.collectibleInventorySummary {
-  margin-bottom: 14px;
-}
-
-.collectibleInventoryActions {
-  margin: 0 0 14px;
-}
-
-.collectibleInventoryMobileList {
-  display: none;
-  gap: 10px;
-}
-
-.collectibleInventoryMobileCard {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid var(--ct-line-soft);
-  border-radius: 8px;
-  background: rgba(214, 179, 110, 0.035);
-}
-
-.collectibleInventoryMobileCard > div {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.collectibleInventoryMobileCard span,
-.collectibleInventoryMobileCard dt {
-  color: var(--ct-muted);
-  font-size: 10px;
-  text-transform: uppercase;
-}
-
-.collectibleInventoryMobileCard strong,
-.collectibleInventoryMobileCard dd {
-  color: var(--ct-ivory);
-}
-
-.collectibleInventoryMobileCard small {
-  color: var(--ct-brass-bright);
-  overflow-wrap: anywhere;
-}
-
-.collectibleInventoryMobileCard dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.collectibleInventoryMobileCard dl div {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.collectibleInventoryMobileCard dd {
-  margin: 0;
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-
-.collectibleInventoryTable {
-  width: 100%;
-  min-width: 1040px;
-  border-collapse: collapse;
-}
-
-.collectibleInventoryTable th,
-.collectibleInventoryTable td {
-  padding: 13px 14px;
-  border-bottom: 1px solid rgba(116, 132, 171, 0.12);
-  color: #c7d3ea;
-  font-size: 13px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.collectibleInventoryTable th {
-  color: #8da2c8;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.collectibleInventoryTable td strong,
-.collectibleInventoryTable td small {
-  display: block;
-}
-
-.collectibleInventoryTable td strong {
-  color: #f5f7fb;
-}
-
-.collectibleInventoryTable td small {
-  margin-top: 4px;
-  color: #8da2c8;
-}
-
-.collectibleInventoryTable tbody tr:last-child td {
-  border-bottom: 0;
-}
-
 .collectibleShelfPanel {
   display: grid;
   gap: 18px;
@@ -784,83 +708,6 @@
   line-height: 1.6;
 }
 
-.collectiblesServicePage {
-  display: grid;
-  gap: 18px;
-}
-
-.collectiblesServiceNav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-  padding: 2px 2px 0;
-}
-
-.collectiblesServiceBack {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  min-height: 38px;
-  padding: 0 11px;
-  border: 1px solid var(--ct-line-soft);
-  border-radius: 6px;
-  background: rgba(214, 179, 110, 0.04);
-  color: var(--ct-ivory);
-  cursor: pointer;
-}
-
-.collectiblesServiceBack span {
-  color: var(--ct-brass-bright);
-  font-size: 15px;
-}
-
-.collectiblesServiceBack strong {
-  font-size: 12px;
-}
-
-.collectiblesServiceBack:hover {
-  border-color: rgba(214, 179, 110, 0.42);
-  background: rgba(214, 179, 110, 0.1);
-}
-
-.collectiblesServiceNav small {
-  color: var(--ct-muted);
-  font-size: 11px;
-  text-align: right;
-  text-transform: uppercase;
-}
-
-.collectiblesServicePage > .workspaceHero,
-.collectiblesServicePage > .workspaceSectionBar,
-.collectiblesServicePage > .workspaceCommandBar,
-.collectiblesServicePage > .panel,
-.collectiblesServicePage > .summaryGrid,
-.collectiblesServicePage > .collectibleShelfStack {
-  display: none;
-}
-
-.collectiblesService-valuation > #collectibles-valuation,
-.collectiblesService-collection > #collectibles-portfolio,
-.collectiblesService-inventory > #collectibles-owned-inventory,
-.collectiblesService-catalog > #collectibles-catalog,
-.collectiblesService-documentation > #collectibles-documentation,
-.collectiblesService-digital-registry > #collectibles-digital-registry,
-.collectiblesService-activity > #collectibles-transactions,
-.collectiblesService-reports > #collectibles-reports,
-.collectiblesService-imports > #collectibles-reviewed-portfolios,
-.collectiblesService-sources > #collectibles-partner-sources,
-.collectiblesService-research > .summaryGrid,
-.collectiblesService-research > #collectibles-lanes,
-.collectiblesService-research > #collectibles-focus,
-.collectiblesService-research > #collectibles-trading,
-.collectiblesService-research > #collectibles-reference,
-.collectiblesService-research > #collectibles-grid {
-  display: grid;
-}
-
 .collectibleReferenceMeta {
   padding-top: 4px;
 }
@@ -868,6 +715,83 @@
 .collectibleReferenceMeta div {
   display: grid;
   gap: 4px;
+}
+
+.brickAlphaDecisionGrid,
+.investmentThesisGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.brickAlphaDecisionCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.brickAlphaDecisionCard span,
+.brickAlphaScoreRow span,
+.portfolioFlywheelStep span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brickAlphaDecisionCard strong {
+  color: #f5f7fb;
+  line-height: 1.35;
+}
+
+.brickAlphaDecisionCard small {
+  color: #b3c1de;
+  line-height: 1.5;
+}
+
+.brickAlphaScoreGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.brickAlphaScoreRow {
+  min-height: 68px;
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(116, 132, 171, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.brickAlphaScoreRow strong,
+.portfolioFlywheelStep strong {
+  color: #f5f7fb;
+}
+
+.portfolioFlywheel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.portfolioFlywheelStep {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 92px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(74, 139, 255, 0.16);
+  background: rgba(74, 139, 255, 0.055);
 }
 
 .collectibleSourceHint {
@@ -878,2099 +802,6 @@
   background: rgba(255, 255, 255, 0.025);
   color: #8da2c8;
   line-height: 1.6;
-}
-
-.legoValuationPanel {
-  display: grid;
-  gap: 18px;
-  border-color: rgba(255, 191, 114, 0.24);
-  background:
-    linear-gradient(135deg, rgba(255, 191, 114, 0.07), transparent 46%),
-    rgba(255, 255, 255, 0.03);
-}
-
-.legoWorkflowRail {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.legoWorkflowStep {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.legoWorkflowStep > strong {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
-  place-items: center;
-  border-radius: 50%;
-  border: 1px solid rgba(116, 132, 171, 0.22);
-  color: #8da2c8;
-  font-size: 12px;
-}
-
-.legoWorkflowStep div {
-  display: grid;
-  min-width: 0;
-  gap: 3px;
-}
-
-.legoWorkflowStep span,
-.legoWorkflowStep small {
-  overflow-wrap: anywhere;
-}
-
-.legoWorkflowStep span {
-  color: #dce7ff;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.legoWorkflowStep small {
-  color: #7d8bab;
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.legoWorkflowStep.active,
-.legoWorkflowStep.completed {
-  border-color: rgba(214, 179, 110, 0.34);
-  background: rgba(214, 179, 110, 0.07);
-}
-
-.legoWorkflowStep.active > strong,
-.legoWorkflowStep.completed > strong {
-  border-color: rgba(214, 179, 110, 0.56);
-  color: #f2d69c;
-  background: rgba(214, 179, 110, 0.12);
-}
-
-.partnerBetaPrompt {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
-  gap: 16px;
-  align-items: stretch;
-  padding: 18px;
-  border: 1px solid rgba(214, 179, 110, 0.26);
-  border-radius: 10px;
-  background:
-    radial-gradient(circle at 12% 12%, rgba(214, 179, 110, 0.14), transparent 30%),
-    linear-gradient(135deg, rgba(214, 179, 110, 0.08), rgba(0, 212, 106, 0.035)),
-    rgba(8, 10, 12, 0.44);
-}
-
-.partnerBetaCopy,
-.partnerBetaStep {
-  min-width: 0;
-}
-
-.partnerBetaCopy {
-  display: grid;
-  align-content: center;
-  gap: 8px;
-}
-
-.partnerBetaCopy h3 {
-  margin: 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.partnerBetaCopy p {
-  max-width: 620px;
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.65;
-}
-
-.partnerBetaChecklist {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.partnerBetaStep {
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  gap: 6px;
-  padding: 12px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.026);
-}
-
-.partnerBetaStep strong {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border: 1px solid rgba(214, 179, 110, 0.42);
-  border-radius: 50%;
-  color: #f2d69c;
-  font-size: 11px;
-}
-
-.partnerBetaStep span {
-  color: #f5f7fb;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.partnerBetaStep small {
-  color: #8da2c8;
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.analysisPipelinePanel {
-  display: grid;
-  gap: 14px;
-  padding: 18px;
-  border: 1px solid rgba(77, 159, 255, 0.2);
-  border-radius: 10px;
-  background:
-    linear-gradient(135deg, rgba(77, 159, 255, 0.08), transparent 56%),
-    rgba(8, 10, 12, 0.44);
-}
-
-.analysisPipelineHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: end;
-}
-
-.analysisPipelineHeader h3 {
-  margin: 4px 0 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.analysisPipelineGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.analysisPipelineStep {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-  padding: 13px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.analysisPipelineStep span {
-  width: fit-content;
-  padding: 4px 7px;
-  border-radius: 999px;
-  background: rgba(116, 132, 171, 0.12);
-  color: #8da2c8;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-}
-
-.analysisPipelineStep strong {
-  color: #f5f7fb;
-  font-size: 13px;
-}
-
-.analysisPipelineStep small {
-  color: #8da2c8;
-  line-height: 1.45;
-}
-
-.analysisPipelineStep.active {
-  border-color: rgba(77, 159, 255, 0.36);
-  background: rgba(77, 159, 255, 0.08);
-}
-
-.analysisPipelineStep.active span {
-  background: rgba(77, 159, 255, 0.16);
-  color: #4d9fff;
-}
-
-.analysisPipelineStep.complete {
-  border-color: rgba(0, 210, 106, 0.32);
-  background: rgba(0, 210, 106, 0.07);
-}
-
-.analysisPipelineStep.complete span {
-  background: rgba(0, 210, 106, 0.14);
-  color: #00d26a;
-}
-
-.collectibleBetaReportPanel {
-  gap: 18px;
-}
-
-.betaReportHero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 150px;
-  gap: 16px;
-  align-items: center;
-  padding: 20px;
-  border: 1px solid rgba(214, 179, 110, 0.24);
-  border-radius: 10px;
-  background:
-    linear-gradient(135deg, rgba(214, 179, 110, 0.1), transparent 58%),
-    rgba(8, 10, 12, 0.42);
-}
-
-.betaReportHero h3 {
-  max-width: 720px;
-  margin: 6px 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 28px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.betaReportHero p {
-  max-width: 680px;
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.65;
-}
-
-.betaReportScore {
-  display: grid;
-  place-items: center;
-  gap: 4px;
-  min-height: 120px;
-  border: 1px solid rgba(0, 212, 106, 0.22);
-  border-radius: 10px;
-  background: rgba(0, 212, 106, 0.06);
-  text-align: center;
-}
-
-.betaReportScore strong {
-  color: #00d46a;
-  font-size: 42px;
-  line-height: 1;
-}
-
-.betaReportScore span {
-  color: #f2d69c;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.betaReportGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.betaReportCard {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.026);
-}
-
-.betaReportCard > strong {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid rgba(214, 179, 110, 0.42);
-  border-radius: 50%;
-  color: #f2d69c;
-  font-size: 11px;
-}
-
-.betaReportCard span,
-.betaFeedbackPrompt span {
-  color: #f5f7fb;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.betaReportCard p,
-.betaFeedbackPrompt p {
-  margin: 5px 0 0;
-  color: #8da2c8;
-  line-height: 1.55;
-}
-
-.betaReportActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.betaFeedbackPrompt {
-  padding: 16px;
-  border: 1px solid rgba(214, 179, 110, 0.18);
-  border-radius: 8px;
-  background: rgba(214, 179, 110, 0.05);
-}
-
-.legoScanWorkspace {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
-  gap: 18px;
-  padding: 18px;
-  border: 1px solid rgba(214, 179, 110, 0.24);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.42);
-}
-
-.legoScanPreview {
-  min-height: 218px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  border: 1px dashed rgba(214, 179, 110, 0.36);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(214, 179, 110, 0.08), transparent 55%),
-    rgba(255, 255, 255, 0.018);
-}
-
-.legoScanPreview > div {
-  display: grid;
-  gap: 8px;
-  max-width: 210px;
-  text-align: center;
-}
-
-.legoScanPreview strong {
-  color: #f2d69c;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 500;
-}
-
-.legoScanPreview span,
-.legoScanCopy p,
-.legoFormIntro p {
-  color: #8da2c8;
-  line-height: 1.6;
-}
-
-.legoScanPreview.hasImage {
-  padding: 0;
-  border-style: solid;
-}
-
-.legoScanPreview img {
-  width: 100%;
-  height: 100%;
-  max-height: 310px;
-  object-fit: cover;
-}
-
-.legoScanCopy,
-.legoFormIntro {
-  display: grid;
-  align-content: center;
-  gap: 8px;
-}
-
-.legoScanCopy h3,
-.legoFormIntro h3 {
-  margin: 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.legoScanCopy p,
-.legoFormIntro p {
-  margin: 0;
-}
-
-.legoUploadButton {
-  cursor: pointer;
-}
-
-.legoUploadButton input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.legoFormIntro {
-  padding-top: 2px;
-}
-
-.legoPanelEyebrow,
-.legoValuationForm span,
-.legoMetricGrid span,
-.legoProjectionGrid span,
-.legoValuationDetailGrid > div > span {
-  color: #ffbf72;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.legoValuationForm {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  align-items: end;
-}
-
-.legoValuationForm label {
-  display: grid;
-  gap: 8px;
-}
-
-.legoValuationForm .primaryButton {
-  min-height: 48px;
-}
-
-.legoValuationForm textarea {
-  min-height: 92px;
-  resize: vertical;
-}
-
-.legoValuationWideField {
-  grid-column: 1 / -1;
-}
-
-.legoValuationResult,
-.legoValuationDetailGrid > div {
-  display: grid;
-  gap: 14px;
-}
-
-.legoValuationHeadline {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 191, 114, 0.16);
-}
-
-.legoValuationHeadline span,
-.legoValuationHeadline p,
-.legoValuationDetailGrid p,
-.legoValuationDetailGrid small,
-.legoProjectionNote {
-  color: #8da2c8;
-}
-
-.legoValuationHeadline h3 {
-  margin: 8px 0;
-  color: #f5f7fb;
-  font-size: 24px;
-}
-
-.legoValuationHeadline p,
-.legoValuationDetailGrid p {
-  margin: 0;
-  line-height: 1.55;
-}
-
-.legoScore {
-  min-width: 142px;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 212, 106, 0.2);
-  background: rgba(0, 212, 106, 0.08);
-  text-align: right;
-}
-
-.legoScore strong {
-  color: #00d46a;
-  font-size: 42px;
-}
-
-.legoScore span {
-  color: #8da2c8;
-  font-size: 17px;
-}
-
-.legoScore small {
-  display: block;
-  margin-top: 4px;
-  color: #00d46a;
-}
-
-.legoMetricGrid,
-.legoProjectionGrid,
-.legoValuationDetailGrid {
-  display: grid;
-  gap: 12px;
-}
-
-.legoMetricGrid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.legoProjectionGrid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.brickAlphaScorecard {
-  display: grid;
-  gap: 18px;
-  padding: 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(214, 179, 110, 0.22);
-  background:
-    radial-gradient(circle at top left, rgba(214, 179, 110, 0.1), transparent 34%),
-    rgba(255, 255, 255, 0.03);
-}
-
-.brickAlphaScorecardHeader,
-.brickAlphaMetricTop,
-.brickAlphaPortfolioContext {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.brickAlphaScorecardHeader {
-  align-items: start;
-}
-
-.brickAlphaScorecardHeader h3,
-.brickAlphaScorecardHeader p {
-  margin: 0;
-}
-
-.brickAlphaScorecardHeader h3 {
-  color: #f5f7fb;
-  font-size: 24px;
-}
-
-.brickAlphaScorecardHeader p,
-.brickAlphaMetricCard small,
-.brickAlphaPortfolioContext small {
-  color: #8da2c8;
-  line-height: 1.55;
-}
-
-.brickAlphaScorecardBadge {
-  min-width: 190px;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(214, 179, 110, 0.22);
-  background: rgba(5, 7, 12, 0.46);
-  display: grid;
-  gap: 4px;
-  text-align: right;
-}
-
-.brickAlphaScorecardBadge strong {
-  color: #ecd294;
-  font-size: 18px;
-}
-
-.brickAlphaScorecardBadge span {
-  color: #aaa99f;
-  font-size: 12px;
-}
-
-.brickAlphaMetricGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.brickAlphaMetricCard {
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  background: rgba(255, 255, 255, 0.025);
-  display: grid;
-  gap: 10px;
-}
-
-.brickAlphaMetricTop span,
-.brickAlphaPortfolioContext span {
-  color: #ffbf72;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.brickAlphaMetricTop strong {
-  color: #ecd294;
-}
-
-.brickAlphaMetricScore {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.brickAlphaMetricScore strong {
-  color: #00d46a;
-  font-size: 26px;
-}
-
-.brickAlphaMetricScore span {
-  color: #8da2c8;
-}
-
-.brickAlphaMetricTrack {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.brickAlphaMetricTrack span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #d6b36e, #00d46a);
-}
-
-.brickAlphaPortfolioContext {
-  align-items: center;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(214, 179, 110, 0.18);
-  background: rgba(214, 179, 110, 0.06);
-}
-
-.brickAlphaPortfolioContext strong {
-  color: #f5f7fb;
-}
-
-.legoValuationDetailGrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.legoMetricGrid div,
-.legoProjectionGrid div,
-.legoValuationDetailGrid > div {
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.legoMetricGrid div,
-.legoProjectionGrid div {
-  display: grid;
-  gap: 8px;
-}
-
-.legoMetricGrid strong,
-.legoProjectionGrid strong {
-  color: #f5f7fb;
-  font-size: 18px;
-}
-
-.legoValuationDetailGrid p {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.legoValuationDetailGrid p strong {
-  color: #f5f7fb;
-}
-
-.legoProjectionNote {
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.collectiblePortfolioDashboard {
-  display: grid;
-  gap: 14px;
-  margin-bottom: 16px;
-}
-
-.portfolioAppHero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: end;
-  padding: 20px;
-  border: 1px solid rgba(214, 179, 110, 0.22);
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(217, 178, 111, 0.22), transparent 36%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.014));
-}
-
-.portfolioAppHeroCopy {
-  display: grid;
-  gap: 7px;
-  min-width: 0;
-}
-
-.portfolioAppHeroCopy strong {
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(34px, 6vw, 58px);
-  font-weight: 500;
-  line-height: 0.96;
-  letter-spacing: 0;
-}
-
-.portfolioAppHeroCopy small {
-  color: #00d46a;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.portfolioAppHeroActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: 8px;
-}
-
-.portfolioSearchButton {
-  grid-column: 1 / -1;
-  min-height: 48px;
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: center;
-  padding: 0 14px;
-  border: 1px solid rgba(116, 132, 171, 0.16);
-  border-radius: 14px;
-  background: rgba(8, 10, 12, 0.38);
-  color: inherit;
-  cursor: pointer;
-}
-
-.portfolioSearchButton span {
-  color: #8da2c8;
-  font-size: 13px;
-}
-
-.portfolioSearchButton strong {
-  color: #f2d69c;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.workflowHeroCard {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
-  gap: 16px;
-  align-items: end;
-  padding: 18px;
-  border: 1px solid rgba(214, 179, 110, 0.2);
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(217, 178, 111, 0.15), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014));
-}
-
-.workflowHeroCard h3 {
-  max-width: 680px;
-  margin: 6px 0 8px;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(25px, 3.8vw, 38px);
-  font-weight: 500;
-  line-height: 1.03;
-  letter-spacing: 0;
-}
-
-.workflowHeroCard p {
-  max-width: 680px;
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.55;
-}
-
-.workflowHeroMetrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.workflowHeroMetrics div {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 12px;
-  background: rgba(8, 10, 12, 0.34);
-}
-
-.workflowHeroMetrics span {
-  color: #8da2c8;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.workflowHeroMetrics strong {
-  color: #f5f7fb;
-  font-size: 20px;
-  overflow-wrap: anywhere;
-}
-
-.workflowHeroActions {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.workflowHeroCard-watchlist {
-  border-color: rgba(77, 159, 255, 0.2);
-  background:
-    radial-gradient(circle at 10% 0%, rgba(77, 159, 255, 0.14), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014));
-}
-
-.workflowHeroCard-report {
-  border-color: rgba(0, 210, 106, 0.2);
-  background:
-    radial-gradient(circle at 10% 0%, rgba(0, 210, 106, 0.12), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014));
-}
-
-.portfolioHeroMetrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.portfolioHeroMetrics > div,
-.portfolioHealthCard,
-.portfolioGrowthPanel,
-.portfolioTopAssets,
-.portfolioAllocationPanel {
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid rgba(214, 179, 110, 0.18);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(214, 179, 110, 0.075), transparent 62%),
-    rgba(255, 255, 255, 0.025);
-}
-
-.portfolioHeroMetrics > div {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  gap: 7px;
-}
-
-.portfolioHeroMetrics > div::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  bottom: 12px;
-  width: 42px;
-  height: 20px;
-  border-right: 1px solid rgba(0, 210, 106, 0.36);
-  border-bottom: 1px solid rgba(0, 210, 106, 0.36);
-  transform: skewX(-18deg);
-}
-
-.portfolioHeroMetrics span,
-.portfolioHealthCard span,
-.portfolioAssetCard span {
-  color: #8da2c8;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.portfolioHeroMetrics strong,
-.portfolioHealthCard strong {
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 26px;
-  font-weight: 500;
-  line-height: 1.1;
-}
-
-.portfolioHeroMetrics small,
-.portfolioHealthCard small,
-.portfolioAssetCard small {
-  color: #8f9188;
-  line-height: 1.45;
-}
-
-.portfolioHealthGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.portfolioHealthCard {
-  display: grid;
-  gap: 7px;
-  background:
-    linear-gradient(135deg, rgba(77, 159, 255, 0.08), transparent 62%),
-    rgba(255, 255, 255, 0.022);
-}
-
-.portfolioHealthCard strong {
-  color: #d9b26f;
-  font-size: 30px;
-}
-
-.portfolioIntelligenceGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.portfolioIntelligenceCard {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.026);
-}
-
-.portfolioIntelligenceCard span {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.portfolioIntelligenceCard strong {
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.22;
-}
-
-.portfolioIntelligenceCard p {
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.58;
-}
-
-.portfolioIntelligenceCard.gold {
-  border-color: rgba(217, 178, 111, 0.24);
-  background: linear-gradient(135deg, rgba(217, 178, 111, 0.08), rgba(255, 255, 255, 0.02));
-}
-
-.portfolioIntelligenceCard.gold span {
-  color: #d9b26f;
-}
-
-.portfolioIntelligenceCard.blue {
-  border-color: rgba(77, 159, 255, 0.24);
-  background: linear-gradient(135deg, rgba(77, 159, 255, 0.08), rgba(255, 255, 255, 0.02));
-}
-
-.portfolioIntelligenceCard.blue span {
-  color: #4d9fff;
-}
-
-.portfolioIntelligenceCard.green {
-  border-color: rgba(0, 210, 106, 0.22);
-  background: linear-gradient(135deg, rgba(0, 210, 106, 0.07), rgba(255, 255, 255, 0.02));
-}
-
-.portfolioIntelligenceCard.green span {
-  color: #00d26a;
-}
-
-.portfolioGrowthPanel,
-.portfolioTopAssets,
-.portfolioAllocationPanel {
-  display: grid;
-  gap: 16px;
-}
-
-.portfolioGrowthHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: start;
-}
-
-.portfolioGrowthHeader h3 {
-  margin: 4px 0 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.portfolioGrowthHeader > strong {
-  color: #00d46a;
-  white-space: nowrap;
-}
-
-.portfolioLineChart {
-  display: grid;
-  gap: 12px;
-}
-
-.portfolioLineChart svg {
-  width: 100%;
-  height: 172px;
-  overflow: visible;
-  border-radius: 8px;
-  background:
-    linear-gradient(rgba(116, 132, 171, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(116, 132, 171, 0.05) 1px, transparent 1px),
-    rgba(8, 10, 12, 0.28);
-  background-size: 100% 25%, 14.28% 100%, auto;
-}
-
-.portfolioLineFill {
-  fill: url("#portfolioTrendFill");
-  stroke: none;
-}
-
-.portfolioLinePath {
-  fill: none;
-  stroke: #f2d69c;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3;
-  filter: drop-shadow(0 8px 14px rgba(214, 179, 110, 0.22));
-}
-
-.portfolioLineLabels,
-.portfolioLineStats {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.portfolioLineLabels span,
-.portfolioLineStats span,
-.portfolioAllocationRow span {
-  color: #8da2c8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.portfolioLineStats {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.portfolioLineStats div {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid rgba(116, 132, 171, 0.12);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.3);
-}
-
-.portfolioLineStats strong,
-.portfolioAllocationRow strong {
-  color: #f5f7fb;
-}
-
-.portfolioAllocationList {
-  display: grid;
-  gap: 12px;
-}
-
-.portfolioAllocationRow {
-  display: grid;
-  gap: 8px;
-}
-
-.portfolioAllocationRow > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.portfolioAllocationTrack {
-  overflow: hidden;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(116, 132, 171, 0.12);
-}
-
-.portfolioAllocationTrack span {
-  display: block;
-  width: var(--allocation-width);
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #f2d69c, rgba(0, 212, 106, 0.84));
-}
-
-.portfolioAssetList {
-  display: grid;
-  gap: 10px;
-}
-
-.investmentOpportunityGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.investmentOpportunityCard {
-  overflow: hidden;
-  display: grid;
-  min-width: 0;
-  border: 1px solid rgba(214, 179, 110, 0.2);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.investmentOpportunityBody {
-  display: grid;
-  gap: 13px;
-  min-width: 0;
-  padding: 16px;
-}
-
-.investmentOpportunityBody h3 {
-  margin: 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.12;
-}
-
-.investmentOpportunityMetrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.investmentOpportunityMetrics div {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  padding: 9px;
-  border: 1px solid rgba(116, 132, 171, 0.12);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.32);
-}
-
-.investmentOpportunityMetrics span,
-.investmentOpportunityReasons span {
-  color: #8da2c8;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.investmentOpportunityMetrics strong {
-  color: #f5f7fb;
-  font-size: 16px;
-  overflow-wrap: anywhere;
-}
-
-.investmentOpportunityReasons {
-  display: grid;
-  gap: 7px;
-}
-
-.investmentOpportunityReasons p {
-  position: relative;
-  margin: 0;
-  padding-left: 15px;
-  color: #8da2c8;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.investmentOpportunityReasons p::before {
-  position: absolute;
-  left: 0;
-  top: 0.56em;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  content: "";
-  background: #f2d69c;
-}
-
-.investmentOpportunityVerdict {
-  justify-self: start;
-  padding: 8px 11px;
-  border-radius: 999px;
-  background: rgba(0, 212, 106, 0.1);
-  color: #00d46a;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.investmentImportHeader {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(214, 179, 110, 0.14);
-}
-
-.portfolioAssetDetailButton {
-  min-height: 30px;
-  padding: 6px 9px;
-  font-size: 12px;
-}
-
-.assetDetailPanel {
-  display: grid;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid rgba(214, 179, 110, 0.2);
-  border-radius: 10px;
-  background:
-    linear-gradient(135deg, rgba(214, 179, 110, 0.07), transparent 56%),
-    rgba(255, 255, 255, 0.025);
-}
-
-.assetDetailHero {
-  display: grid;
-  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
-  gap: 18px;
-  align-items: stretch;
-}
-
-.assetDetailCopy {
-  display: grid;
-  align-content: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.assetDetailCopy h3 {
-  margin: 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 34px;
-  font-weight: 500;
-  line-height: 1.08;
-  letter-spacing: 0;
-}
-
-.assetDetailCopy p,
-.assetDetailThesis p {
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.55;
-}
-
-.assetDetailVerdict {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.assetDetailVerdict strong {
-  color: #00d46a;
-  font-size: 42px;
-  line-height: 1;
-}
-
-.assetDetailVerdict span,
-.assetDetailVerdict small {
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: rgba(0, 212, 106, 0.1);
-  color: #00d46a;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.assetDetailVerdict small {
-  background: rgba(214, 179, 110, 0.1);
-  color: #f2d69c;
-}
-
-.assetDetailMetrics,
-.assetDetailGrid,
-.assetForecastBars {
-  display: grid;
-  gap: 10px;
-}
-
-.assetDetailMetrics {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.assetDetailGrid {
-  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-  gap: 14px;
-}
-
-.assetDetailMetrics div,
-.assetDetailChart,
-.assetDetailThesis {
-  min-width: 0;
-  padding: 14px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.32);
-}
-
-.assetDetailMetrics div,
-.assetDetailChart,
-.assetDetailThesis,
-.assetDetailSources {
-  display: grid;
-  gap: 12px;
-}
-
-.assetDetailMetrics span,
-.assetDetailSources span {
-  color: #8da2c8;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.assetDetailMetrics strong {
-  color: #f5f7fb;
-  font-size: 21px;
-  overflow-wrap: anywhere;
-}
-
-.assetForecastBars {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-items: end;
-  min-height: 190px;
-}
-
-.assetForecastBar {
-  display: grid;
-  grid-template-rows: 1fr auto auto;
-  gap: 7px;
-  min-width: 0;
-  height: 190px;
-  text-align: center;
-}
-
-.assetForecastBar > span {
-  align-self: end;
-  display: block;
-  min-height: 26px;
-  height: var(--forecast-height);
-  border-radius: 7px 7px 3px 3px;
-  background: linear-gradient(180deg, #f2d69c, rgba(0, 212, 106, 0.32));
-}
-
-.assetForecastBar strong {
-  color: #f5f7fb;
-  font-size: 13px;
-  overflow-wrap: anywhere;
-}
-
-.assetForecastBar small,
-.assetDetailSources small {
-  color: #8da2c8;
-  font-size: 12px;
-}
-
-.assetDetailThesis p {
-  position: relative;
-  padding-left: 15px;
-}
-
-.assetDetailThesis p::before {
-  position: absolute;
-  left: 0;
-  top: 0.62em;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  content: "";
-  background: #f2d69c;
-}
-
-.assetSignalStack {
-  display: grid;
-  gap: 9px;
-  margin-top: 4px;
-}
-
-.assetSignalStack div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 12px;
-  align-items: baseline;
-  padding: 11px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.34);
-}
-
-.assetSignalStack span {
-  color: #8da2c8;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.assetSignalStack strong {
-  color: #00d26a;
-  font-size: 18px;
-}
-
-.assetSignalStack small {
-  grid-column: 1 / -1;
-  color: #8f9188;
-  line-height: 1.45;
-}
-
-.portfolioAssetCard {
-  display: grid;
-  grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.32);
-}
-
-.portfolioAssetCard > div {
-  min-width: 0;
-}
-
-.portfolioAssetCard > div:nth-child(2) {
-  display: grid;
-  gap: 4px;
-}
-
-.portfolioAssetCard strong {
-  color: #f5f7fb;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.portfolioAssetCard > div:last-child {
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-  text-align: right;
-}
-
-.portfolioAssetThumb,
-.legoVerdictImage {
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid rgba(214, 179, 110, 0.24);
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 28% 20%, rgba(242, 214, 156, 0.16), transparent 34%),
-    linear-gradient(145deg, rgba(214, 179, 110, 0.12), rgba(8, 10, 12, 0.75));
-}
-
-.legoAssetVisual {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: grid;
-  min-width: 0;
-  border: 1px solid rgba(214, 179, 110, 0.28);
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.14), transparent 24%),
-    linear-gradient(145deg, rgba(214, 179, 110, 0.16), rgba(8, 10, 12, 0.84));
-}
-
-.legoAssetVisual::before,
-.legoAssetVisual::after {
-  position: absolute;
-  content: "";
-  inset: auto -16% -22% -16%;
-  height: 48%;
-  border-radius: 50% 50% 0 0;
-  background: rgba(255, 255, 255, 0.09);
-  z-index: -1;
-}
-
-.legoAssetVisual::after {
-  inset: 18% -20% auto 44%;
-  height: 42%;
-  background: rgba(0, 0, 0, 0.18);
-  transform: rotate(-14deg);
-}
-
-.legoAssetVisual-marvel {
-  background:
-    radial-gradient(circle at 72% 25%, rgba(255, 255, 255, 0.18), transparent 18%),
-    linear-gradient(145deg, rgba(188, 34, 44, 0.7), rgba(12, 25, 58, 0.88));
-}
-
-.legoAssetVisual-library {
-  background:
-    radial-gradient(circle at 25% 20%, rgba(242, 214, 156, 0.22), transparent 24%),
-    linear-gradient(145deg, rgba(111, 73, 43, 0.72), rgba(24, 18, 13, 0.9));
-}
-
-.legoAssetVisual-valley {
-  background:
-    radial-gradient(circle at 24% 18%, rgba(242, 214, 156, 0.2), transparent 21%),
-    linear-gradient(145deg, rgba(56, 104, 76, 0.78), rgba(17, 31, 41, 0.92));
-}
-
-.legoAssetVisual-thumb {
-  width: 78px;
-  height: 64px;
-}
-
-.legoAssetVisual-hero {
-  width: 100%;
-  min-height: 210px;
-}
-
-.legoAssetVisual-opportunity {
-  min-height: 250px;
-}
-
-.legoAssetVisual-detail {
-  min-height: 330px;
-}
-
-.legoAssetBrand {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 5px 7px;
-  border-radius: 5px;
-  background: #d82020;
-  color: #fff6d8;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-}
-
-.legoAssetScene {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  opacity: 0.8;
-}
-
-.legoAssetScene span {
-  position: absolute;
-  display: block;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.13);
-}
-
-.legoAssetScene span:nth-child(1) {
-  width: 34%;
-  height: 16%;
-  left: 18%;
-  top: 36%;
-}
-
-.legoAssetScene span:nth-child(2) {
-  width: 24%;
-  height: 24%;
-  right: 18%;
-  top: 30%;
-}
-
-.legoAssetScene span:nth-child(3) {
-  width: 58%;
-  height: 12%;
-  right: 12%;
-  bottom: 18%;
-}
-
-.legoAssetCopy {
-  align-self: end;
-  display: grid;
-  gap: 3px;
-  padding: 12px;
-  margin-top: auto;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.62));
-}
-
-.legoAssetCopy small,
-.legoAssetCopy span {
-  color: rgba(245, 247, 251, 0.78);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.legoAssetCopy strong {
-  color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.05;
-}
-
-.legoAssetInitials {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  color: rgba(255, 255, 255, 0.22);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 42px;
-  font-weight: 800;
-  transform: translateY(-50%);
-}
-
-.portfolioAssetThumb {
-  width: 74px;
-  height: 58px;
-}
-
-.portfolioAssetThumb span,
-.legoVerdictImage span {
-  color: #f2d69c;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.portfolioAssetThumb strong,
-.legoVerdictImage strong {
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
-}
-
-.legoValuationPanel .panelHeader {
-  margin-bottom: 10px;
-}
-
-.investmentHeroCard {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.48fr);
-  gap: 18px;
-  align-items: end;
-  margin-bottom: 14px;
-  padding: 18px;
-  border: 1px solid rgba(214, 179, 110, 0.2);
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 16% 0%, rgba(217, 178, 111, 0.15), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
-}
-
-.investmentHeroCard h3 {
-  margin: 6px 0 8px;
-  max-width: 620px;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(28px, 4vw, 42px);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.investmentHeroCard p {
-  max-width: 640px;
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.55;
-}
-
-.investmentHeroStats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.investmentHeroStats div {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 12px;
-  background: rgba(8, 10, 12, 0.36);
-}
-
-.investmentHeroStats span {
-  color: #4d9fff;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.investmentHeroStats strong {
-  color: #f2d69c;
-  font-size: 12px;
-  letter-spacing: 0;
-}
-
-.legoScanWorkspace {
-  grid-template-columns: minmax(280px, 1.25fr) minmax(0, 0.75fr);
-  padding: 20px;
-  background:
-    linear-gradient(135deg, rgba(214, 179, 110, 0.09), transparent 58%),
-    rgba(8, 10, 12, 0.56);
-}
-
-.legoScanPreview {
-  min-height: 360px;
-}
-
-.legoScanPlaceholder {
-  max-width: 360px;
-}
-
-.legoCameraMark {
-  justify-self: center;
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  border-radius: 50%;
-  border: 1px solid rgba(214, 179, 110, 0.42);
-  background: rgba(214, 179, 110, 0.1);
-}
-
-.legoScanPlaceholder strong {
-  font-size: 32px;
-}
-
-.legoScanMethods {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.legoScanMethods span {
-  padding: 7px 10px;
-  border: 1px solid rgba(214, 179, 110, 0.22);
-  border-radius: 999px;
-  background: rgba(214, 179, 110, 0.06);
-  color: #dce7ff;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.legoVerdictCard {
-  display: grid;
-  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.28fr);
-  gap: 18px;
-  padding: 16px;
-  border: 1px solid rgba(0, 212, 106, 0.2);
-  border-radius: 10px;
-  background:
-    linear-gradient(135deg, rgba(0, 212, 106, 0.09), transparent 62%),
-    rgba(255, 255, 255, 0.025);
-}
-
-.legoVerdictImage {
-  min-height: 210px;
-}
-
-.legoVerdictImage.hasImage {
-  padding: 0;
-}
-
-.legoVerdictImage img {
-  width: 100%;
-  height: 100%;
-  min-height: 210px;
-  object-fit: cover;
-}
-
-.legoVerdictCopy {
-  display: grid;
-  align-content: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.legoVerdictCopy h3 {
-  margin: 0;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 28px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.legoVerdictScore {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: baseline;
-}
-
-.legoVerdictScore strong {
-  color: #00d46a;
-  font-size: 38px;
-  line-height: 1;
-}
-
-.legoVerdictScore span {
-  color: #f2d69c;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.legoVerdictMetrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.legoVerdictMetrics div {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid rgba(116, 132, 171, 0.12);
-  border-radius: 8px;
-  background: rgba(8, 10, 12, 0.32);
-}
-
-.legoVerdictMetrics span {
-  color: #8da2c8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.legoVerdictMetrics strong {
-  color: #f5f7fb;
-  font-size: 18px;
-  overflow-wrap: anywhere;
-}
-
-.verdictNextStepCard {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.45fr);
-  gap: 16px;
-  align-items: end;
-  padding: 16px;
-  border: 1px solid rgba(0, 210, 106, 0.2);
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(0, 210, 106, 0.14), transparent 34%),
-    rgba(255, 255, 255, 0.026);
-}
-
-.verdictNextStepCard h3 {
-  margin: 6px 0 7px;
-  color: #f5f7fb;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.verdictNextStepCard p {
-  margin: 0;
-  color: #8da2c8;
-  line-height: 1.55;
-}
-
-.verdictNextStepRail {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.verdictNextStepRail div {
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  min-width: 0;
-  padding: 10px 6px;
-  border: 1px solid rgba(116, 132, 171, 0.14);
-  border-radius: 12px;
-  background: rgba(8, 10, 12, 0.34);
-  text-align: center;
-}
-
-.verdictNextStepRail span {
-  color: #00d46a;
-  font-size: 10px;
-  font-weight: 900;
-}
-
-.verdictNextStepRail strong {
-  color: #f2d69c;
-  font-size: 11px;
-  line-height: 1.2;
-}
-
-@media (max-width: 760px) {
-  .collectibleInventoryToolbar,
-  .collectibleInventoryCategoryGrid,
-  .portfolioHeroMetrics,
-  .portfolioHealthGrid,
-  .portfolioIntelligenceGrid,
-  .portfolioAssetCard,
-  .investmentOpportunityGrid,
-  .investmentOpportunityMetrics,
-  .assetDetailHero,
-  .assetDetailMetrics,
-  .assetDetailGrid,
-  .assetForecastBars,
-  .partnerBetaPrompt,
-  .betaReportHero,
-  .betaReportGrid,
-  .analysisPipelineGrid,
-  .legoVerdictCard,
-  .legoVerdictMetrics,
-  .verdictNextStepCard,
-  .legoValuationForm,
-  .legoMetricGrid,
-  .brickAlphaMetricGrid,
-  .legoValuationDetailGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .brickAlphaScorecardHeader,
-  .brickAlphaPortfolioContext {
-    flex-direction: column;
-  }
-
-  .brickAlphaScorecardBadge {
-    min-width: 0;
-    text-align: left;
-  }
-
-  .legoValuationHeadline {
-    display: grid;
-  }
-
-  .legoScore {
-    min-width: 0;
-    text-align: left;
-  }
-
-  .legoWorkflowRail,
-  .partnerBetaChecklist,
-  .legoScanWorkspace {
-    grid-template-columns: 1fr;
-  }
-
-  .legoWorkflowRail {
-    gap: 6px;
-  }
-
-  .legoWorkflowStep {
-    padding: 9px 10px;
-  }
-
-  .partnerBetaPrompt {
-    padding: 14px;
-  }
-
-  .partnerBetaCopy h3 {
-    font-size: 21px;
-  }
-
-  .partnerBetaStep {
-    grid-template-columns: 32px minmax(0, 0.35fr) minmax(0, 1fr);
-    grid-template-rows: auto;
-    align-items: center;
-  }
-
-  .betaReportHero {
-    padding: 14px;
-  }
-
-  .betaReportHero h3 {
-    font-size: 22px;
-  }
-
-  .betaReportScore {
-    min-height: 96px;
-  }
-
-  .betaReportCard {
-    grid-template-columns: 34px minmax(0, 1fr);
-  }
-
-  .betaReportActions {
-    display: grid;
-  }
-
-  .legoScanWorkspace {
-    padding: 12px;
-  }
-
-  .legoScanPreview {
-    min-height: 260px;
-  }
-
-  .legoScanPlaceholder strong {
-    font-size: 28px;
-  }
-
-  .portfolioAssetCard > div:last-child {
-    justify-items: start;
-    text-align: left;
-  }
-
-  .portfolioGrowthHeader {
-    display: grid;
-  }
-
-  .portfolioLineStats {
-    grid-template-columns: 1fr;
-  }
-
-  .assetDetailCopy h3 {
-    font-size: 28px;
-  }
-
-  .assetForecastBar {
-    height: 150px;
-  }
 }
 
 .toolCard,
@@ -3084,6 +915,55 @@
   gap: 12px;
 }
 
+.saasAppShell .topbarTools {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .saasAppShell .topbar {
+    display: none;
+  }
+}
+
+.saasAppShell .topbar {
+  padding-top: 6px;
+  padding-bottom: 8px;
+}
+
+.saasAppShell .metricBlock {
+  min-width: 108px;
+  border-radius: 16px;
+  padding: 9px 10px;
+}
+
+.saasAppShell .metricBlock strong {
+  font-size: 14px;
+}
+
+.topbarInboxButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbarInboxButton strong {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f7fb;
+  font-size: 12px;
+}
+
+.topbarInboxButton.hasUnread strong {
+  background: #4a8bff;
+  color: #ffffff;
+}
+
 .livePill {
   border-radius: 999px;
   padding: 9px 14px;
@@ -3132,23 +1012,31 @@
 }
 
 .mobileUtilityRail {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: 10px;
-  padding: 12px 16px 0;
+  padding: 10px 16px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mobileUtilityRail::-webkit-scrollbar {
+  display: none;
 }
 
 .mobileUtilityChip {
-  padding: 12px 10px;
-  border-radius: 16px;
+  min-width: 106px;
+  padding: 10px 12px;
+  border-radius: 999px;
   border: 1px solid rgba(116, 132, 171, 0.14);
   background: rgba(255, 255, 255, 0.03);
   color: inherit;
-  display: grid;
-  gap: 4px;
-  justify-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   text-align: center;
   cursor: pointer;
+  flex: 0 0 auto;
   transition:
     transform 150ms ease,
     border-color 150ms ease,
@@ -3168,6 +1056,10 @@
 .mobileBottomNavItem strong {
   color: #f5f7fb;
   font-size: 12px;
+}
+
+.mobileUtilityChip strong {
+  white-space: nowrap;
 }
 
 .mobileUtilityChip:hover,
@@ -3232,6 +1124,176 @@
   gap: 18px;
   align-content: start;
   animation: workspaceViewportIn 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mobileNotificationCenter {
+  max-height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: none;
+}
+
+.mobileNotificationCenter::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileNotificationHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mobileNotificationHeader span {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mobileNotificationHeader strong {
+  display: block;
+  margin-top: 6px;
+  color: #fff6ea;
+  font-size: 28px;
+  line-height: 1.05;
+}
+
+.mobileNotificationHeader small {
+  display: block;
+  margin-top: 8px;
+  color: #8da2c8;
+  line-height: 1.5;
+}
+
+.mobileNotificationSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mobileNotificationSummaryCard {
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 6px;
+}
+
+.mobileNotificationSummaryCard span {
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mobileNotificationSummaryCard strong {
+  color: #f5f7fb;
+  font-size: 22px;
+}
+
+.mobileNotificationSummaryCard small {
+  color: #8da2c8;
+  line-height: 1.5;
+}
+
+.mobileNotificationActions,
+.mobileNotificationList,
+.mobileNotificationActionRow {
+  display: grid;
+  gap: 12px;
+}
+
+.mobileNotificationActions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobileNotificationItem {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(116, 132, 171, 0.16);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.mobileNotificationItem.unread {
+  border-color: rgba(74, 139, 255, 0.34);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.mobileNotificationOpen {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mobileNotificationItemTop,
+.mobileNotificationItemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobileNotificationTag,
+.mobileNotificationStatus {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mobileNotificationTag {
+  background: rgba(255, 255, 255, 0.05);
+  color: #dce7ff;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+}
+
+.mobileNotificationStatus.unread {
+  background: rgba(74, 139, 255, 0.14);
+  color: #9fc3ff;
+}
+
+.mobileNotificationStatus.read {
+  background: rgba(255, 255, 255, 0.04);
+  color: #8da2c8;
+}
+
+.mobileNotificationItem strong {
+  color: #f5f7fb;
+  font-size: 18px;
+}
+
+.mobileNotificationItem p,
+.mobileNotificationItemFooter small,
+.mobileNotificationItemFooter span {
+  margin: 0;
+  color: #8da2c8;
+  line-height: 1.55;
+}
+
+.mobileNotificationItemFooter span {
+  color: #dce7ff;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mobileNotificationEmpty {
+  padding: 14px;
 }
 
 .mobileMenuScreenHeader {
@@ -3411,248 +1473,173 @@
   min-width: 0;
 }
 
-.mobileAppShell .workspaceHero,
-.mobileAppShell .workspaceHeroMetricGrid,
-.mobileAppShell .workspaceCommandGrid,
-.mobileAppShell .deskBriefGrid,
-.mobileAppShell .splitGrid,
-.mobileAppShell .signalGrid,
-.mobileAppShell .collectibleGrid,
-.mobileAppShell .homeLaunchGrid,
-.mobileAppShell .homeStatusStrip,
-.mobileAppShell .homeActivityGrid,
-.mobileAppShell .feedbackLayout,
-.mobileAppShell .collectibleLaneGrid,
-.mobileAppShell .collectibleReferenceGrid,
-.mobileAppShell .partnerTestingGrid {
+.saasAppShell .workspaceHero,
+.saasAppShell .workspaceHeroMetricGrid,
+.saasAppShell .workspaceCommandGrid,
+.saasAppShell .deskBriefGrid,
+.saasAppShell .splitGrid,
+.saasAppShell .signalGrid,
+.saasAppShell .collectibleGrid,
+.saasAppShell .homeLaunchGrid,
+.saasAppShell .homeStatusStrip,
+.saasAppShell .homeActivityGrid,
+.saasAppShell .feedbackLayout,
+.saasAppShell .collectibleLaneGrid,
+.saasAppShell .collectibleReferenceGrid,
+.saasAppShell .partnerTestingGrid,
+.saasAppShell .subscriptionTierGrid,
+.saasAppShell .subscriptionValueGrid {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .summaryGrid,
-.mobileAppShell .chartPlanGrid,
-.mobileAppShell .signalCommandGrid,
-.mobileAppShell .workspaceCardMeta,
-.mobileAppShell .collectibleInventoryMeta,
-.mobileAppShell .reportMiniStats {
+.saasAppShell .summaryGrid,
+.saasAppShell .chartPlanGrid,
+.saasAppShell .signalCommandGrid,
+.saasAppShell .workspaceCardMeta,
+.saasAppShell .collectibleInventoryMeta,
+.saasAppShell .reportMiniStats {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.mobileAppShell .workspaceHero {
+.saasAppShell .workspaceHero {
   padding: 22px;
 }
 
-.mobileAppShell .workspaceHero h1 {
+.saasAppShell .workspaceCommandBar {
+  display: none;
+}
+
+.saasAppShell .homeTodayStack {
+  display: grid;
+}
+
+.saasAppShell .homeCommandDeck .homeLeadPanel {
+  display: none;
+}
+
+.saasAppShell .workspaceHero h1 {
   font-size: clamp(28px, 7vw, 36px);
   line-height: 1.04;
 }
 
-.mobileAppShell .workspaceHero p,
-.mobileAppShell .workspaceHeroMetric small,
-.mobileAppShell .workspaceCommandCard small,
-.mobileAppShell .deskBriefCard small {
+.saasAppShell .workspaceHero p,
+.saasAppShell .workspaceHeroMetric small,
+.saasAppShell .workspaceCommandCard small,
+.saasAppShell .deskBriefCard small {
   line-height: 1.5;
 }
 
-.mobileAppShell .workspaceHeroMetricGrid {
+.saasAppShell .workspaceHeroMetricGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.mobileAppShell .workspaceHeroMetric {
+.saasAppShell .workspaceHeroMetric {
   min-height: 0;
   padding: 14px;
 }
 
-.mobileAppShell .workspaceHeroMetric strong {
+.saasAppShell .workspaceHeroMetric strong {
   font-size: 16px;
 }
 
-.mobileAppShell .workspaceSectionChipRow,
-.mobileAppShell .segmentedControl,
-.mobileAppShell .deskFilters {
+.saasAppShell .workspaceSectionChipRow,
+.saasAppShell .segmentedControl,
+.saasAppShell .deskFilters {
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.mobileAppShell .workspaceSectionChipRow::-webkit-scrollbar,
-.mobileAppShell .segmentedControl::-webkit-scrollbar,
-.mobileAppShell .deskFilters::-webkit-scrollbar {
+.saasAppShell .workspaceSectionChipRow::-webkit-scrollbar,
+.saasAppShell .segmentedControl::-webkit-scrollbar,
+.saasAppShell .deskFilters::-webkit-scrollbar {
   display: none;
 }
 
-.mobileAppShell .workspaceSectionChip,
-.mobileAppShell .segmentedControl button {
+.saasAppShell .workspaceSectionChip,
+.saasAppShell .segmentedControl button {
   white-space: nowrap;
 }
 
-.mobileAppShell .homeLaunchCard,
-.mobileAppShell .collectibleLaneCard,
-.mobileAppShell .workspaceCommandCard {
+.saasAppShell .homeLaunchCard,
+.saasAppShell .collectibleLaneCard,
+.saasAppShell .workspaceCommandCard {
   border-radius: 20px;
 }
 
-.mobileAppShell .summaryCard {
+.saasAppShell .summaryCard {
   padding: 16px;
 }
 
-.mobileAppShell .panel,
-.mobileAppShell .summaryCard,
-.mobileAppShell .workspaceSectionBar,
-.mobileAppShell .workspaceCommandBar,
-.mobileAppShell .workspaceHero {
+.saasAppShell .panel,
+.saasAppShell .summaryCard,
+.saasAppShell .workspaceSectionBar,
+.saasAppShell .workspaceCommandBar,
+.saasAppShell .workspaceHero {
   border-radius: 22px;
 }
 
-.mobileAppShell .deskToolbar,
-.mobileAppShell .panelHeader,
-.mobileAppShell .pageHeader,
-.mobileAppShell .signalFoot,
-.mobileAppShell .panelActions,
-.mobileAppShell .topbarTools {
+.saasAppShell .deskToolbar,
+.saasAppShell .panelHeader,
+.saasAppShell .pageHeader,
+.saasAppShell .signalFoot,
+.saasAppShell .panelActions,
+.saasAppShell .topbarTools {
   flex-direction: column;
   align-items: stretch;
 }
 
-.mobileAppShell .signalCommandHero,
-.mobileAppShell .ticketHero,
-.mobileAppShell .ticketMetaGrid,
-.mobileAppShell .ticketPlanGrid,
-.mobileAppShell .executionModeRow,
-.mobileAppShell .connectorMetaGrid,
-.mobileAppShell .connectorSnapshotStats,
-.mobileAppShell .connectorFieldGrid {
+.saasAppShell .mobileNotificationSummaryGrid {
   grid-template-columns: 1fr;
 }
 
-.mobileAppShell .signalCommandSnapshot,
-.mobileAppShell .headerStatus {
+.saasAppShell .mobileNotificationActions {
+  grid-template-columns: 1fr;
+}
+
+.saasAppShell .signalCommandHero,
+.saasAppShell .ticketHero,
+.saasAppShell .ticketMetaGrid,
+.saasAppShell .ticketPlanGrid,
+.saasAppShell .executionModeRow,
+.saasAppShell .connectorMetaGrid,
+.saasAppShell .connectorSnapshotStats,
+.saasAppShell .connectorFieldGrid {
+  grid-template-columns: 1fr;
+}
+
+.saasAppShell .signalCommandSnapshot,
+.saasAppShell .headerStatus {
   min-width: 0;
   justify-items: start;
   text-align: left;
 }
 
-@media (min-width: 900px) {
-  .appShell.mobileAppShell {
-    display: grid;
-    grid-template-columns: 292px minmax(0, 1fr);
-    align-items: stretch;
-    justify-content: stretch;
-    gap: 0;
-    padding: 0;
-  }
+.saasAppShell .homeWatchGrid,
+.saasAppShell .compactSummaryGrid {
+  grid-template-columns: 1fr;
+}
 
-  .mobileAppShell .sidebar {
-    display: flex;
-  }
+.saasAppShell .signalCommandActions,
+.saasAppShell .watchItemActions,
+.saasAppShell .signalFootActions {
+  flex-direction: column;
+  align-items: stretch;
+}
 
-  .mobileAppShell .workspaceShell {
-    width: 100%;
-    min-height: 100vh;
-    max-height: none;
-    overflow: visible;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
+.saasAppShell .subscriptionRouteItem {
+  grid-template-columns: 1fr;
+}
 
-  .mobileAppShell .mobileTitleBar,
-  .mobileAppShell .mobileUtilityRail,
-  .mobileAppShell .mobileBottomNav,
-  .mobileAppShell .mobileMenuBackdrop {
-    display: none;
-  }
+.saasAppShell .subscriptionPromptTop {
+  flex-direction: column;
+}
 
-  .mobileAppShell .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .mobileAppShell .workspace {
-    padding: 28px 32px 44px;
-  }
-
-  .mobileAppShell .workspaceViewport {
-    width: min(100%, 1380px);
-    margin: 0 auto;
-    gap: 22px;
-  }
-
-  .mobileAppShell .workspaceHero {
-    grid-template-columns: minmax(0, 1.25fr) minmax(360px, 460px);
-    padding: 28px;
-  }
-
-  .mobileAppShell .workspaceHeroMetricGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .workspaceCommandGrid,
-  .mobileAppShell .collectibleReferenceGrid,
-  .mobileAppShell .partnerTestingGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .summaryGrid,
-  .mobileAppShell .collectibleInventoryMeta,
-  .mobileAppShell .reportMiniStats {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-
-  .mobileAppShell .panelHeader,
-  .mobileAppShell .panelActions,
-  .mobileAppShell .topbarTools {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .mobileAppShell .panelHeader {
-    display: flex;
-  }
-
-  .mobileAppShell .headerStatus {
-    justify-items: end;
-    text-align: right;
-  }
-
-  .mobileAppShell .legoWorkflowRail {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .legoScanWorkspace {
-    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
-    gap: 18px;
-    padding: 18px;
-  }
-
-  .mobileAppShell .legoValuationForm {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .legoMetricGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .legoProjectionGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .legoValuationDetailGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .legoValuationHeadline {
-    display: flex;
-  }
-
-  .mobileAppShell .legoScore {
-    min-width: 142px;
-    text-align: right;
-  }
+.saasAppShell .subscriptionPromptMeta {
+  min-width: 0;
+  justify-items: start;
+  text-align: left;
 }
 
 .workspaceHero {
@@ -3874,6 +1861,10 @@
   border-color: rgba(80, 153, 255, 0.22);
 }
 
+.workspaceCommandBar-subscriptions {
+  border-color: rgba(123, 92, 255, 0.22);
+}
+
 .workspaceCommandBar-connections {
   border-color: rgba(0, 181, 90, 0.16);
 }
@@ -3984,6 +1975,14 @@
     rgba(255, 255, 255, 0.02);
 }
 
+.workspaceHero-subscriptions {
+  background:
+    radial-gradient(circle at top right, rgba(123, 92, 255, 0.2), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(74, 139, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
 .workspaceHero-settings {
   background:
     radial-gradient(circle at top right, rgba(116, 132, 171, 0.14), transparent 22%),
@@ -4002,6 +2001,120 @@
 .homeCommandDeck {
   display: grid;
   gap: 16px;
+}
+
+.homeTodayStack {
+  display: none;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 26px;
+  border: 1px solid rgba(74, 139, 255, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(74, 139, 255, 0.18), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.025);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.22);
+}
+
+.homeTodayHeader,
+.homeTodayActionGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.homeTodayHeader {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.homeTodayHeader span,
+.homeTodayScore span,
+.homeTodayPrimary span,
+.homeTodayAction span {
+  color: #8da2c8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.homeTodayHeader strong {
+  display: block;
+  margin-top: 4px;
+  color: #f5f7fb;
+  font-size: 21px;
+  line-height: 1.12;
+}
+
+.homeTodayScore {
+  min-width: 78px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+  text-align: right;
+}
+
+.homeTodayScore strong {
+  color: #9fc3ff;
+  font-size: 18px;
+}
+
+.homeTodayPrimary {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.homeTodayPrimary strong {
+  color: #fff6ea;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.homeTodayPrimary small {
+  color: #b8c8e8;
+  line-height: 1.55;
+}
+
+.homeTodayActionGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.homeTodayAction {
+  min-height: 92px;
+  padding: 12px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+  color: inherit;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.homeTodayAction:hover {
+  transform: translateY(-1px);
+  border-color: rgba(74, 139, 255, 0.3);
+  background: rgba(74, 139, 255, 0.08);
+}
+
+.homeTodayAction strong {
+  color: #f5f7fb;
+  font-size: 15px;
+}
+
+.homeTodayAction small {
+  color: #8da2c8;
+  line-height: 1.35;
 }
 
 .homeLeadPanel {
@@ -4177,6 +2290,666 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.homeWatchGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.subPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.compactSummaryGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.watchlistStack {
+  display: grid;
+  gap: 12px;
+}
+
+.watchItemCard {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.watchItemMain {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.watchItemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.watchItemMain strong {
+  color: #f5f7fb;
+  font-size: 16px;
+}
+
+.watchItemMain small {
+  color: #8da2c8;
+  line-height: 1.55;
+}
+
+.watchItemActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.briefNoteCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.08), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.briefNoteCard p {
+  margin: 0;
+  color: #dce7ff;
+  line-height: 1.6;
+}
+
+.subscriptionPromptCard {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(123, 92, 255, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(123, 92, 255, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.subscriptionPromptInline {
+  margin-bottom: 16px;
+}
+
+.subscriptionPromptTop {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.subscriptionPromptTop h2,
+.subscriptionPromptTop h3 {
+  margin: 8px 0 0;
+  color: #f5f7fb;
+  line-height: 1.08;
+}
+
+.subscriptionPromptTop h2 {
+  font-size: 28px;
+}
+
+.subscriptionPromptTop h3 {
+  font-size: 22px;
+}
+
+.subscriptionPromptTop p {
+  margin: 12px 0 0;
+  color: #b8c8e8;
+  line-height: 1.7;
+}
+
+.subscriptionPromptMeta {
+  min-width: 160px;
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  text-align: right;
+}
+
+.subscriptionPromptMeta span {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.subscriptionPromptMeta strong {
+  color: #f5f7fb;
+  font-size: 20px;
+}
+
+.subscriptionPromptMeta small {
+  color: #b8c8e8;
+  line-height: 1.5;
+}
+
+.workflowProgressTrack {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(116, 132, 171, 0.14);
+}
+
+.workflowProgressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4a8bff, #7b5cff);
+}
+
+.workflowModeRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.workflowReminderCard {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(74, 139, 255, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(74, 139, 255, 0.16), transparent 44%),
+    linear-gradient(180deg, rgba(74, 139, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.workflowReminderTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflowReminderCard strong {
+  color: #f5f7fb;
+  font-size: 18px;
+}
+
+.workflowReminderCard p {
+  margin: 0;
+  color: #c7d4ee;
+  line-height: 1.6;
+}
+
+.workflowModeButton {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  text-align: left;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+  color: inherit;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.workflowModeButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(74, 139, 255, 0.24);
+}
+
+.workflowModeButton.active {
+  border-color: rgba(74, 139, 255, 0.34);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.workflowModeButton span {
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workflowModeButton strong {
+  color: #f5f7fb;
+  font-size: 15px;
+}
+
+.workflowModeButton small {
+  color: #b8c8e8;
+  line-height: 1.45;
+}
+
+.workflowCompleteCard {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 212, 106, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(0, 212, 106, 0.16), transparent 44%),
+    linear-gradient(180deg, rgba(0, 212, 106, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.workflowCompleteTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflowCompleteCard strong {
+  color: #f5f7fb;
+  font-size: 18px;
+}
+
+.workflowCompleteCard p {
+  margin: 0;
+  color: #c7d4ee;
+  line-height: 1.6;
+}
+
+.workflowHistoryRow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.workflowHistoryChip {
+  display: grid;
+  gap: 4px;
+  padding: 12px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+.workflowHistoryChip.active {
+  border-color: rgba(0, 212, 106, 0.26);
+  background:
+    linear-gradient(180deg, rgba(0, 212, 106, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.workflowHistoryChip.idle {
+  border-color: rgba(123, 92, 255, 0.14);
+}
+
+.workflowHistoryChip.today {
+  box-shadow: inset 0 0 0 1px rgba(74, 139, 255, 0.35);
+}
+
+.workflowHistoryChip span {
+  color: #8da2c8;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workflowHistoryChip strong {
+  color: #f5f7fb;
+  font-size: 14px;
+}
+
+.workflowHistoryChip small {
+  color: #b8c8e8;
+  font-size: 11px;
+}
+
+.workflowHistorySummary {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.workflowHistorySummary strong {
+  color: #f5f7fb;
+  font-size: 14px;
+}
+
+.workflowHistorySummary small {
+  color: #8da2c8;
+  line-height: 1.5;
+}
+
+.workflowReviewCard {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(123, 92, 255, 0.2);
+  background:
+    radial-gradient(circle at top right, rgba(123, 92, 255, 0.14), transparent 46%),
+    linear-gradient(180deg, rgba(123, 92, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.workflowReviewTop {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflowReviewTop strong {
+  display: block;
+  margin-top: 6px;
+  color: #f5f7fb;
+  font-size: 18px;
+}
+
+.workflowReviewCard p {
+  margin: 0;
+  color: #c7d4ee;
+  line-height: 1.6;
+}
+
+.workflowInsightCard {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.workflowInsightCard span {
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workflowInsightCard strong {
+  color: #f5f7fb;
+  font-size: 16px;
+}
+
+.workflowInsightCard small {
+  color: #c7d4ee;
+  line-height: 1.55;
+}
+
+.workflowReviewStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workflowReviewStat {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.workflowReviewStat span {
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workflowReviewStat strong {
+  color: #f5f7fb;
+  font-size: 16px;
+}
+
+.workflowHistoryEmpty {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px dashed rgba(116, 132, 171, 0.18);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.workflowHistoryEmpty strong {
+  color: #f5f7fb;
+}
+
+.workflowHistoryEmpty small {
+  color: #8da2c8;
+  line-height: 1.5;
+}
+
+.workflowStepGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.workflowStepCard {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.workflowStepCard.complete {
+  border-color: rgba(0, 212, 106, 0.24);
+  background:
+    linear-gradient(180deg, rgba(0, 212, 106, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.workflowStepCard.ready {
+  border-color: rgba(74, 139, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.workflowStepCard.pending {
+  border-color: rgba(123, 92, 255, 0.18);
+}
+
+.workflowStepTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflowStepCard strong {
+  color: #f5f7fb;
+  font-size: 17px;
+}
+
+.workflowStepCard p {
+  margin: 0;
+  color: #b8c8e8;
+  line-height: 1.65;
+}
+
+@media (max-width: 720px) {
+  .workflowModeRow {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowHistoryRow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .workflowReviewStats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subscriptionNarrativePanel {
+  gap: 18px;
+}
+
+.subscriptionPillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.subscriptionValueGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.subscriptionTierGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.subscriptionTierCard {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.subscriptionTierCardActive {
+  border-color: rgba(123, 92, 255, 0.34);
+  box-shadow: 0 18px 48px rgba(53, 26, 104, 0.22);
+}
+
+.subscriptionTierTop {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.subscriptionTierTop h3 {
+  margin: 6px 0 0;
+  color: #f5f7fb;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.subscriptionTierCard p {
+  margin: 0;
+  color: #b8c8e8;
+  line-height: 1.7;
+}
+
+.subscriptionTierBadge {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(123, 92, 255, 0.16);
+  border: 1px solid rgba(123, 92, 255, 0.28);
+  color: #ddd5ff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.subscriptionFeatureList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subscriptionFeatureList li {
+  display: grid;
+  gap: 4px;
+  padding-left: 16px;
+  position: relative;
+  color: #dce7ff;
+  line-height: 1.6;
+}
+
+.subscriptionFeatureList li::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7b5cff, #4a8bff);
+}
+
+.subscriptionFeatureList li span {
+  color: #b8c8e8;
+}
+
+.subscriptionRouteList {
+  display: grid;
+  gap: 12px;
+}
+
+.subscriptionRouteItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.subscriptionRouteItem strong {
+  color: #f5f7fb;
+}
+
+.subscriptionRouteItem small {
+  display: block;
+  margin-top: 6px;
+  color: #8da2c8;
+  line-height: 1.65;
+}
+
+.briefBulletList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  color: #b9c8e8;
+}
+
+.briefBulletList li {
+  line-height: 1.55;
+}
+
+.alertItemCard.triggered {
+  border-color: rgba(0, 212, 106, 0.32);
+  background:
+    linear-gradient(180deg, rgba(0, 212, 106, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.notificationCard.unread {
+  border-color: rgba(74, 139, 255, 0.34);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.025);
+}
+
 .homeLaunchCard,
 .homeStatusCard,
 .homeActivityCard {
@@ -4199,6 +2972,15 @@
     box-shadow 150ms ease;
 }
 
+.saasAppShell .homeLaunchCard {
+  min-height: 116px;
+  border-radius: 24px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(74, 139, 255, 0.09), rgba(255, 255, 255, 0.02) 48%),
+    rgba(255, 255, 255, 0.025);
+}
+
 .homeLaunchCard:hover {
   transform: translateY(-2px);
   border-color: rgba(74, 139, 255, 0.32);
@@ -4211,6 +2993,11 @@
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+}
+
+.saasAppShell .homeLaunchTop {
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
 }
 
 .homeLaunchCopy,
@@ -4245,6 +3032,18 @@
 .homeLaunchMeta {
   padding-top: 4px;
   border-top: 1px solid rgba(116, 132, 171, 0.12);
+}
+
+.saasAppShell .homeLaunchMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.saasAppShell .homeLaunchMeta strong {
+  text-align: right;
+  font-size: 13px;
 }
 
 .homeLaunchMeta span,
@@ -4427,6 +3226,13 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.signalCommandActions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .signalCommandMetric {
@@ -5308,7 +4114,20 @@
   margin-top: auto;
 }
 
+.signalFootActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.slimButton {
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
 .tradeButton,
+.secondaryButton,
 .primaryButton {
   border-radius: 12px;
   padding: 12px 16px;
@@ -5326,15 +4145,27 @@
   color: #05070c;
 }
 
+.secondaryButton {
+  background: rgba(24, 199, 168, 0.16);
+  color: #cffff5;
+  border: 1px solid rgba(24, 199, 168, 0.35);
+}
+
 .primaryButton {
   background: #4a8bff;
   color: #ffffff;
 }
 
 .ghostButton:hover,
+.secondaryButton:hover,
 .tradeButton:hover,
 .primaryButton:hover {
   transform: translateY(-1px);
+}
+
+.secondaryButton:hover {
+  box-shadow: 0 16px 34px rgba(24, 199, 168, 0.18);
+  background: rgba(24, 199, 168, 0.22);
 }
 
 .ghostButton:hover {
@@ -5358,14 +4189,107 @@
   text-transform: uppercase;
 }
 
+.themeAllocationPanel {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.themeAllocationPanel h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.themeAllocationPanel p {
+  margin: 8px 0 0;
+  color: #8da2c8;
+}
+
+.themeAllocationGrid {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.themeAllocationRow {
+  display: grid;
+  gap: 8px;
+}
+
+.themeAllocationLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.themeAllocationLabel span {
+  color: #8da2c8;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.themeAllocationBar {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.themeAllocationBarActual {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(74, 139, 255, 0.85), rgba(96, 214, 255, 0.75));
+}
+
+.themeAllocationBarTarget {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: #f5d565;
+  box-shadow: 0 0 0 1px rgba(15, 24, 40, 0.45);
+}
+
+.themeAllocationRow small {
+  color: #8da2c8;
+}
+
+.alphaSignalRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.panelHeader .alphaSignalRow {
+  margin-top: 12px;
+}
+
 .summaryCard {
   padding: 18px;
+}
+
+.summaryCard small {
+  color: #8da2c8;
+  line-height: 1.5;
 }
 
 .summaryCardButton {
   text-align: left;
   cursor: pointer;
   transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.summaryCardAccent {
+  border-color: rgba(74, 139, 255, 0.32);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.1), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.035);
 }
 
 .summaryCardButton:hover {
@@ -5840,27 +4764,6 @@
   border-color: rgba(116, 132, 171, 0.18);
 }
 
-.systemStatusRail {
-  padding: 0 24px 16px;
-}
-
-.appStatusBanner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.appStatusBanner div {
-  display: grid;
-  gap: 4px;
-}
-
-.appStatusBanner span {
-  color: inherit;
-  opacity: 0.86;
-}
-
 .emptyState {
   padding: 28px 20px;
   border-radius: 18px;
@@ -5906,9 +4809,9 @@
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(74, 139, 255, 0.14), transparent 32%),
-    radial-gradient(circle at top right, rgba(0, 181, 90, 0.1), transparent 26%),
-    #05070c;
+    radial-gradient(circle at top left, rgba(201, 169, 98, 0.08), transparent 32%),
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.06), transparent 26%),
+    #08090d;
 }
 
 .bootSplashShell {
@@ -5917,9 +4820,9 @@
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(74, 139, 255, 0.22), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(0, 181, 90, 0.12), transparent 24%),
-    #05070c;
+    radial-gradient(circle at top left, rgba(201, 169, 98, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(91, 108, 255, 0.08), transparent 24%),
+    #08090d;
 }
 
 .bootSplashPanel {
@@ -6001,9 +4904,9 @@
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at top left, rgba(74, 139, 255, 0.18), transparent 30%),
-    radial-gradient(circle at top right, rgba(0, 181, 90, 0.1), transparent 24%),
-    #05070c;
+    radial-gradient(circle at top left, rgba(201, 169, 98, 0.1), transparent 30%),
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.08), transparent 24%),
+    #08090d;
 }
 
 .splashPanel {
@@ -6324,6 +5227,12 @@
 .authStage {
   display: grid;
   gap: 18px;
+}
+
+.landingHeroActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .splashPreviewPanel,
@@ -7041,43 +5950,20 @@
   gap: 20px;
 }
 
-.authShellMinimal {
-  background: #05070c;
-}
-
-.authPanelMinimal {
-  width: min(100%, 420px);
-  gap: 22px;
-  padding: 0;
-  text-align: center;
-}
-
-.authPanelMinimal > .authPanel {
-  width: 100%;
-  padding: 24px;
-  border-radius: 16px;
-  text-align: left;
-}
-
-.authMinimalLogo {
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-}
-
-.authMinimalLogo .brandMark {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  font-size: 20px;
-}
-
-.authMinimalLogo .brandWordmark {
-  font-size: 20px;
-}
-
 .authStage {
   padding: 16px 0;
+}
+
+.authStageCompact {
+  gap: 10px;
+  text-align: center;
+  align-content: center;
+  justify-items: center;
+}
+
+.authStageCompact .authBlurb {
+  max-width: 32ch;
+  margin-top: 4px;
 }
 
 .authHighlightGrid {
@@ -7117,6 +6003,31 @@
 .authPanelHeader {
   display: grid;
   gap: 8px;
+}
+
+.authBrandLockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.authBrandMark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.authBrandMeta {
+  display: grid;
+  gap: 2px;
+}
+
+.authBrandMeta small {
+  color: #8da2c8;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .authPanelHeader h2 {
@@ -7174,37 +6085,81 @@
   text-transform: uppercase;
 }
 
-.authFooterNote {
-  margin-top: 4px;
+.authModeSwitch {
+  width: fit-content;
 }
 
-.authModeSwitch {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(116, 132, 171, 0.14);
+.authForm .primaryButton,
+.authForm .secondaryButton {
+  width: 100%;
+  justify-content: center;
+}
+
+.authAuxActions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  color: #8da2c8;
-  font-size: 13px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.authBackButton {
-  margin-top: 12px;
-  border: 0;
+.authLinkButton {
+  min-height: 0;
   padding: 0;
+  border: 0;
   background: transparent;
   color: #8da2c8;
-  font: inherit;
   font-size: 13px;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
-.authBackButton:disabled {
-  cursor: wait;
-  opacity: 0.65;
+.authLinkButton:hover {
+  color: #dbe7ff;
+  background: transparent;
+}
+
+.authValueCard {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(116, 132, 171, 0.14);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.authValueCard span {
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.authValueCard strong {
+  color: #f5f7fb;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.authValueCard small {
+  color: #b3c1de;
+  line-height: 1.55;
+}
+
+.authValueList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #dbe7ff;
+}
+
+.authValueList li {
+  line-height: 1.5;
+}
+
+.authFooterNote {
+  margin-top: 4px;
 }
 
 .chartSurface {
@@ -7512,6 +6467,7 @@
   .workspaceCommandGrid,
   .opsLaneGrid,
   .summaryGrid,
+  .portfolioFlywheel,
   .homeLeadStats,
   .homePulseGrid,
   .homeDeskPulseGrid,
@@ -7524,7 +6480,9 @@
   .feedbackToolbar,
   .collectibleInventoryMeta,
   .collectibleLaneGrid,
-  .collectibleReferenceGrid {
+  .collectibleReferenceGrid,
+  .brickAlphaDecisionGrid,
+  .investmentThesisGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -7615,7 +6573,13 @@
   .collectibleInventoryToolbar,
   .collectibleInventoryMeta,
   .collectibleLaneGrid,
-  .collectibleReferenceGrid {
+  .collectibleReferenceGrid,
+  .brickAlphaDecisionGrid,
+  .brickAlphaScoreGrid,
+  .investmentThesisGrid,
+  .portfolioFlywheel,
+  .subscriptionTierGrid,
+  .subscriptionValueGrid {
     grid-template-columns: 1fr;
   }
 
@@ -7679,6 +6643,20 @@
   .feedbackToolbarCount {
     justify-items: start;
   }
+
+  .subscriptionRouteItem {
+    grid-template-columns: 1fr;
+  }
+
+  .subscriptionPromptTop {
+    flex-direction: column;
+  }
+
+  .subscriptionPromptMeta {
+    min-width: 0;
+    justify-items: start;
+    text-align: left;
+  }
 }
 
 @media (max-width: 720px) {
@@ -7689,6 +6667,10 @@
 
   .workspaceHero {
     padding: 18px;
+  }
+
+  .workspaceHeroText p {
+    max-width: 30ch;
   }
 
   .workspaceHero h1,
@@ -7731,6 +6713,29 @@
   .workspaceSectionChip {
     flex: 1 1 calc(50% - 10px);
     text-align: center;
+  }
+
+  .homeLaunchCard {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .homeLaunchTop {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .homeLaunchCopy strong {
+    font-size: 17px;
+  }
+
+  .homeLeadPanel {
+    padding: 18px;
+    gap: 14px;
+  }
+
+  .homeLeadTop h2 {
+    font-size: 24px;
   }
 
   .tableHeaderRow,
@@ -7881,6 +6886,13 @@
     rgba(255, 255, 255, 0.03);
 }
 
+.mobileMenuRow-support {
+  border-color: rgba(116, 132, 171, 0.18);
+  background:
+    linear-gradient(135deg, rgba(116, 132, 171, 0.08), rgba(255, 255, 255, 0.02) 46%),
+    rgba(255, 255, 255, 0.028);
+}
+
 .mobileMenuRow-news .mobileMenuRowGlyph {
   color: #7ea1ff;
 }
@@ -7899,6 +6911,10 @@
 
 .mobileMenuRow-portfolio .mobileMenuRowGlyph {
   color: #8eb3ff;
+}
+
+.mobileMenuRow-support .mobileMenuRowGlyph {
+  color: #c2cee6;
 }
 
 .mobileMenuSupportCard {
@@ -7936,1245 +6952,260 @@
   text-transform: uppercase;
 }
 
-.splashHeroPrimary {
-  width: fit-content;
-  min-width: 220px;
-  margin-top: 8px;
-}
-
-.splashSupportCompact {
-  opacity: 0.72;
-}
-
-.splashSupportCompact .mobileMenuSupportList {
-  display: none;
-}
-
-.splashSupportCompact .splashAvailabilityNote {
-  margin-top: 0;
-}
-
-.splashPanelCompact .mobileMenuRow {
-  min-height: 92px;
-  grid-template-columns: 58px minmax(0, 1fr) 28px;
-  border-radius: 18px;
-}
-
-.splashPanelCompact .mobileMenuRowGlyph {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-}
-
-.splashPanelCompact .mobileMenuRowCopy strong {
-  font-size: 18px;
-}
-
-.splashPanelCompact .mobileMenuRowTop small {
-  display: none;
-}
-
-.splashPanelCompact .mobileMenuRowCopy small:last-child {
-  max-width: 44ch;
-}
-
-.mobileMenuRow {
-  grid-template-columns: 64px minmax(0, 1fr) 76px 30px;
-}
-
-.mobileMenuRowVisual {
-  height: 64px;
-  display: flex;
-  align-items: end;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 8px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-
-.mobileMenuRowVisual span {
-  display: block;
-  width: 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.mobileMenuRowVisual span:nth-child(1) { height: 26%; }
-.mobileMenuRowVisual span:nth-child(2) { height: 68%; }
-.mobileMenuRowVisual span:nth-child(3) { height: 44%; }
-.mobileMenuRowVisual span:nth-child(4) { height: 82%; }
-
-.mobileMenuRow-news .mobileMenuRowVisual span {
-  background: linear-gradient(180deg, rgba(126, 161, 255, 0.95), rgba(126, 161, 255, 0.35));
-}
-
-.mobileMenuRow-trade .mobileMenuRowVisual span {
-  background: linear-gradient(180deg, rgba(0, 212, 106, 0.95), rgba(0, 212, 106, 0.28));
-}
-
-.mobileMenuRow-crypto .mobileMenuRowVisual span {
-  background: linear-gradient(180deg, rgba(255, 191, 114, 0.95), rgba(255, 191, 114, 0.28));
-}
-
-.mobileMenuRow-collectibles .mobileMenuRowVisual span {
-  background: linear-gradient(180deg, rgba(209, 156, 255, 0.95), rgba(209, 156, 255, 0.28));
-}
-
-.mobileMenuRow-portfolio .mobileMenuRowVisual span {
-  background: linear-gradient(180deg, rgba(142, 179, 255, 0.95), rgba(142, 179, 255, 0.28));
-}
-
 .mobileMenuRowArrow {
   text-align: center;
   font-size: 16px;
   font-weight: 700;
 }
 
-@media (max-width: 520px) {
-  .mobileMenuRow {
-    grid-template-columns: 60px minmax(0, 1fr) 60px 24px;
-  }
-
-  .mobileMenuRowVisual {
-    height: 58px;
-    gap: 4px;
-    padding: 8px 6px;
-  }
-
-  .mobileMenuRowVisual span {
-    width: 7px;
-  }
-}
-
-/* BrickAlpha premium beta: restrained private-collection visual language */
-:root {
-  --ct-ink: #10110f;
-  --ct-ink-deep: #090a09;
-  --ct-surface: rgba(25, 27, 24, 0.96);
-  --ct-surface-raised: rgba(32, 35, 31, 0.96);
-  --ct-line: rgba(218, 195, 151, 0.2);
-  --ct-line-soft: rgba(218, 195, 151, 0.1);
-  --ct-brass: #d6b36e;
-  --ct-brass-bright: #ecd294;
-  --ct-ivory: #f4f0e7;
-  --ct-muted: #aaa99f;
-}
-
-.appShell,
-.authShell,
-.authShellMinimal,
-.splashShell,
-.bootSplashShell {
-  background: var(--ct-ink-deep);
-}
-
-.brandMark,
-.bootSplashMark {
-  border-radius: 8px;
-  border: 1px solid rgba(214, 179, 110, 0.58);
-  background:
-    linear-gradient(135deg, rgba(214, 179, 110, 0.18), transparent 46%),
-    #05070c;
-  color: var(--ct-brass-bright);
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 14px 34px rgba(0, 0, 0, 0.22);
-  letter-spacing: 0;
-}
-
-.brandMark::before,
-.bootSplashMark::before {
-  content: "";
-  position: absolute;
-  inset: 4px 6px auto 6px;
-  height: 6px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 12% 50%, var(--ct-brass) 0 2px, transparent 2.5px),
-    radial-gradient(circle at 50% 50%, var(--ct-brass) 0 2px, transparent 2.5px),
-    radial-gradient(circle at 88% 50%, var(--ct-brass) 0 2px, transparent 2.5px);
-  opacity: 0.88;
-}
-
-.brandMark,
-.bootSplashMark {
-  isolation: isolate;
-}
-
-.brandWordmark,
-.authBrand,
-.bootSplashWordmark {
-  color: var(--ct-brass-bright);
-  letter-spacing: 0.06em;
-}
-
-.authShellMinimal {
-  padding: 24px;
-}
-
-.authPanelMinimal {
-  width: min(100%, 390px);
-  gap: 28px;
-}
-
-.authMinimalLogo {
-  gap: 16px;
-}
-
-.authMinimalLogo .brandMark {
-  width: 72px;
-  height: 72px;
-  border-radius: 8px;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-}
-
-.authMinimalLogo .brandWordmark {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.authPanelMinimal > .authPanel {
-  padding: 26px;
-  border-radius: 8px;
-  border-color: var(--ct-line);
-  background: var(--ct-surface);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.36);
-}
-
-.authPanelHeader h2 {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 25px;
-  font-weight: 500;
-}
-
-.authForm {
-  gap: 18px;
-}
-
-.authForm label {
-  gap: 8px;
-}
-
-.authForm label span,
-.sidebarCard span,
-.metricBlock span,
-.headerStatus span,
-.panelHeader p,
-.summaryCard span,
-.workspaceHeroEyebrow,
-.workspaceSectionBarHeader span,
-.workspaceSectionChip,
-.mobileMenuRowTop span,
-.mobileMenuRowTop small {
-  letter-spacing: 0;
-}
-
-.authForm input,
-.collectibleInventoryToolbar input,
-.collectibleInventoryToolbar select {
-  border-radius: 6px;
-  border-color: var(--ct-line-soft);
-  background: rgba(6, 7, 6, 0.5);
-  color: var(--ct-ivory);
-}
-
-.authForm input:focus,
-.collectibleInventoryToolbar input:focus,
-.collectibleInventoryToolbar select:focus {
-  border-color: rgba(214, 179, 110, 0.7);
-  box-shadow: 0 0 0 3px rgba(214, 179, 110, 0.1);
-}
-
-.primaryButton {
-  border-radius: 6px;
-  background: var(--ct-brass);
-  color: #17160f;
-  box-shadow: none;
-}
-
-.primaryButton:hover {
-  box-shadow: 0 12px 24px rgba(214, 179, 110, 0.16);
-  filter: brightness(1.06);
-}
-
-.ghostButton {
-  border-radius: 6px;
-  border-color: var(--ct-line-soft);
-  color: var(--ct-ivory);
-}
-
-.splashShellMobile {
-  padding: 22px 16px;
-}
-
-.splashMenuBackdrop {
-  overflow: visible;
-  background: transparent;
-}
-
-.splashMenuBackdrop::before {
-  display: none;
-}
-
-.splashPanelCompact {
-  width: min(100%, 520px);
-  gap: 22px;
-}
-
-.splashCompactHeader {
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--ct-line-soft);
-}
-
-.splashCompactHero {
-  gap: 8px;
-}
-
-.splashCompactHero h1 {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(38px, 10vw, 50px);
-  font-weight: 500;
-}
-
-.splashCompactHero .authBlurb {
-  color: var(--ct-muted);
-}
-
-.splashHeroPill {
-  border-radius: 999px;
-  border-color: var(--ct-line-soft);
-  background: rgba(214, 179, 110, 0.05);
-  color: #c9bd9e;
-  letter-spacing: 0;
-}
-
-.chooserResumeBar,
-.mobileMenuRow,
-.mobileMenuSupportCard {
-  border-radius: 8px;
-  border-color: var(--ct-line-soft);
-  background: var(--ct-surface);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
-}
-
-.mobileMenuRow {
-  min-height: 94px;
-  grid-template-columns: 54px minmax(0, 1fr) 18px;
-  gap: 14px;
-  padding: 16px;
-}
-
-.mobileMenuRow:hover,
-.mobileMenuSupportCard:hover {
-  border-color: rgba(214, 179, 110, 0.42);
-  background: var(--ct-surface-raised);
-  transform: translateY(-1px);
-}
-
-.mobileMenuRowGlyph {
-  width: 54px;
-  height: 54px;
-  border-radius: 6px;
-  border-color: var(--ct-line-soft);
-  background: rgba(214, 179, 110, 0.06);
-  color: var(--ct-brass-bright);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 16px;
-  letter-spacing: 0;
-}
-
-.mobileMenuRowCopy strong,
-.mobileMenuSupportCard strong {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.mobileMenuRowCopy small,
-.mobileMenuSupportCard small {
-  color: var(--ct-muted);
-}
-
-.mobileMenuRowTop span {
-  color: var(--ct-brass);
-}
-
-.mobileMenuRowTop small {
-  color: #99998f;
-}
-
-.mobileMenuRowArrow {
-  color: var(--ct-brass);
-}
-
-.mobileMenuRow-news,
-.mobileMenuRow-trade,
-.mobileMenuRow-crypto,
-.mobileMenuRow-collectibles,
-.mobileMenuRow-portfolio {
-  border-color: var(--ct-line-soft);
-  background: var(--ct-surface);
-}
-
-.mobileMenuRow-news .mobileMenuRowGlyph,
-.mobileMenuRow-trade .mobileMenuRowGlyph,
-.mobileMenuRow-crypto .mobileMenuRowGlyph,
-.mobileMenuRow-collectibles .mobileMenuRowGlyph,
-.mobileMenuRow-portfolio .mobileMenuRowGlyph {
-  color: var(--ct-brass-bright);
-}
-
-.mobileMenuSupportCard {
-  min-height: 82px;
-  padding: 14px;
-}
-
-.workspaceShell {
-  border-radius: 8px;
-  border-color: var(--ct-line);
-  background: var(--ct-ink);
-}
-
-.workspaceHero,
-.workspaceSectionBar,
-.workspaceCommandBar,
-.panel,
-.summaryCard,
-.collectibleReferenceCard,
-.collectibleInventoryStat,
-.deskBriefCard {
-  border-radius: 8px;
-  border-color: var(--ct-line-soft);
-  background: var(--ct-surface);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
-}
-
-.workspaceHero-collectibles {
-  border-color: rgba(214, 179, 110, 0.28);
-  background: var(--ct-surface-raised);
-}
-
-.workspaceHero h1,
-.panelHeader h2,
-.collectibleReferenceCard h3 {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.workspaceHeroEyebrow,
-.collectibleCategory {
-  color: var(--ct-brass);
-}
-
-.workspaceHero p,
-.panelHeader p,
-.collectibleReferenceCard p {
-  color: var(--ct-muted);
-}
-
-.summaryCard strong,
-.collectibleReferenceMeta strong,
-.headerStatus strong {
-  color: var(--ct-brass-bright);
-}
-
-.workspaceSectionChip {
-  border-radius: 999px;
-}
-
-.panel::before,
-.workspaceHero::before,
-.workspaceSectionBar::before,
-.summaryCard::before,
-.authPanel::before {
-  background: linear-gradient(90deg, transparent, rgba(236, 210, 148, 0.18), transparent);
-}
-
-@media (max-width: 520px) {
-  .mobileMenuRow {
-    grid-template-columns: 54px minmax(0, 1fr) 18px;
-  }
-
-  .workspace {
-    padding: 10px 10px 18px;
-  }
-
-  .collectiblesServicePage {
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .collectiblesServiceNav {
-    padding: 0;
-  }
-
-  .collectiblesServiceNav small {
-    display: none;
-  }
-
-  .collectiblesServicePage > .panel {
-    min-width: 0;
-    padding: 16px;
-  }
-
-  .collectiblesServicePage .panelHeader {
-    display: grid;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-
-  .collectiblesServicePage .panelHeader > *,
-  .collectiblesServicePage .collectibleInventoryToolbar,
-  .collectiblesServicePage .collectibleInventoryToolbar label,
-  .collectiblesServicePage .collectibleInventoryStat,
-  .collectiblesServicePage .emptyState {
-    min-width: 0;
-  }
-
-  .collectiblesServicePage .headerStatus {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 5px;
-    min-width: 0;
-    text-align: left;
-  }
-
-  .collectiblesServicePage .headerStatus strong {
-    overflow-wrap: anywhere;
-  }
-
-  .collectiblesServicePage .collectibleInventoryToolbar,
-  .collectiblesServicePage .collectibleInventoryCategoryGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-    width: 100%;
-  }
-
-  .collectiblesServicePage .collectibleInventoryToolbar input,
-  .collectiblesServicePage .collectibleInventoryToolbar select {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .collectiblesServicePage .collectibleInventoryMobileList {
-    display: grid;
-  }
-
-  .collectiblesServicePage .collectibleInventoryTableWrap {
-    display: none;
-  }
-
-  .collectiblesServicePage h2,
-  .collectiblesServicePage h3,
-  .collectiblesServicePage p,
-  .collectiblesServicePage span,
-  .collectiblesServicePage small,
-  .collectiblesServicePage strong {
-    overflow-wrap: anywhere;
-  }
-}
-
-/* Signed-in beta refinement: remove prototype phone chrome and unify the register */
-.workspaceShell::before {
-  display: none;
-}
-
-.mobileTitleBar {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--ct-line-soft);
-  background: rgba(16, 17, 15, 0.98);
-}
-
-.mobileBrandCopy strong {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  font-weight: 500;
-}
-
-.mobileBrandCopy small,
-.mobileTitleMeta span {
-  color: var(--ct-muted);
-}
-
-.mobileTitleMeta span {
-  letter-spacing: 0;
-}
-
-.mobileTitleMeta strong {
-  color: var(--ct-brass-bright);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 500;
-}
-
-.mobileMenuButton {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  border-color: var(--ct-line-soft);
-  background: rgba(214, 179, 110, 0.05);
-}
-
-.mobileMenuButton span {
-  height: 1px;
-  background: var(--ct-brass-bright);
-}
-
-.mobileMenuButton:hover {
-  border-color: rgba(214, 179, 110, 0.42);
-  background: rgba(214, 179, 110, 0.1);
-}
-
-.topbar {
-  padding: 12px 16px;
-  gap: 12px;
-  border-bottom-color: var(--ct-line-soft);
-  background: rgba(11, 12, 11, 0.96);
-  box-shadow: none;
-}
-
-.metricStrip {
-  gap: 8px;
-}
-
-.metricBlock {
-  min-width: 132px;
-  padding: 11px 12px;
-  border-radius: 6px;
-  border-color: var(--ct-line-soft);
-  background: rgba(214, 179, 110, 0.035);
-}
-
-.metricBlock span {
-  color: var(--ct-muted);
-  letter-spacing: 0;
-}
-
-.metricBlock strong {
-  color: var(--ct-brass-bright);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
-  font-weight: 500;
-}
-
-.metricBlock small {
-  color: #8f9188;
-}
-
-.metricButton:hover {
-  border-color: rgba(214, 179, 110, 0.34);
-  background: rgba(214, 179, 110, 0.07);
-}
-
-/* The signed-in beta always renders inside a compact app shell, even on a wide browser. */
-.mobileAppShell .collectiblesServicePage {
-  gap: 12px;
-  min-width: 0;
-}
-
-.mobileAppShell .collectiblesServicePage > .panel {
-  min-width: 0;
-  padding: 16px;
-}
-
-.mobileAppShell .collectiblesServicePage .panelHeader {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 14px;
+.splashSummaryGrid {
+  margin: 6px 0 2px;
 }
 
-.mobileAppShell .collectiblesServicePage .panelHeader > *,
-.mobileAppShell .collectiblesServicePage .headerStatus,
-.mobileAppShell .legoWorkflowStep,
-.mobileAppShell .partnerBetaPrompt,
-.mobileAppShell .partnerBetaStep,
-.mobileAppShell .legoScanCopy,
-.mobileAppShell .legoFormIntro,
-.mobileAppShell .legoValuationForm label {
-  min-width: 0;
+.staticMenuRow,
+.staticMenuSupportCard {
+  cursor: default;
 }
 
-.mobileAppShell .collectiblesServicePage .headerStatus {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 5px;
+.launchMenuRow {
+  appearance: none;
+  font: inherit;
   text-align: left;
 }
 
-.mobileAppShell .legoWorkflowRail,
-.mobileAppShell .partnerBetaPrompt,
-.mobileAppShell .partnerBetaChecklist,
-.mobileAppShell .analysisPipelineGrid,
-.mobileAppShell .betaReportHero,
-.mobileAppShell .betaReportGrid,
-.mobileAppShell .legoScanWorkspace,
-.mobileAppShell .legoValuationForm,
-.mobileAppShell .legoMetricGrid,
-.mobileAppShell .legoProjectionGrid,
-.mobileAppShell .legoValuationDetailGrid {
-  grid-template-columns: minmax(0, 1fr);
+.staticMenuRow {
+  grid-template-columns: 64px minmax(0, 1fr) auto;
 }
 
-.mobileAppShell .legoWorkflowRail {
-  gap: 6px;
+.staticMenuRow:hover,
+.staticMenuSupportCard:hover {
+  transform: none;
 }
 
-.mobileAppShell .legoWorkflowStep {
-  padding: 10px;
-}
-
-.mobileAppShell .partnerBetaPrompt {
-  padding: 14px;
-}
-
-.mobileAppShell .partnerBetaStep {
-  grid-template-columns: 32px minmax(0, 0.35fr) minmax(0, 1fr);
-  grid-template-rows: auto;
-  align-items: center;
-}
-
-.mobileAppShell .betaReportHero {
-  padding: 14px;
-}
-
-.mobileAppShell .betaReportHero h3 {
-  font-size: 22px;
-}
-
-.mobileAppShell .betaReportScore {
-  min-height: 96px;
-}
-
-.mobileAppShell .betaReportActions {
-  display: grid;
-}
-
-.mobileAppShell .legoWorkflowStep span,
-.mobileAppShell .legoWorkflowStep small,
-.mobileAppShell .partnerBetaStep span,
-.mobileAppShell .partnerBetaStep small,
-.mobileAppShell .partnerBetaCopy p,
-.mobileAppShell .betaReportHero p,
-.mobileAppShell .betaReportCard p,
-.mobileAppShell .betaFeedbackPrompt p,
-.mobileAppShell .legoScanCopy p,
-.mobileAppShell .legoFormIntro p {
-  overflow-wrap: normal;
-  word-break: normal;
-}
-
-.mobileAppShell .legoScanWorkspace {
-  gap: 14px;
-  padding: 12px;
-}
-
-.mobileAppShell .legoScanPreview {
-  min-height: 184px;
-}
-
-.mobileAppShell .legoValuationForm input,
-.mobileAppShell .legoValuationForm select,
-.mobileAppShell .legoValuationForm textarea {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-}
-
-.mobileAppShell .legoValuationHeadline {
-  display: grid;
-}
-
-.mobileAppShell .legoScore {
-  min-width: 0;
-  text-align: left;
-}
-
-.livePill {
-  border: 1px solid rgba(139, 178, 154, 0.24);
-  background: rgba(139, 178, 154, 0.08);
-  color: #a8cbb4;
-  letter-spacing: 0;
-}
-
-.avatarCircle {
-  background: rgba(214, 179, 110, 0.14);
-  color: var(--ct-brass-bright);
-}
-
-.workspace {
-  padding: 16px 16px 22px;
-}
-
-.mobileMenuBackdrop {
-  padding: 20px 16px;
-  background: rgba(9, 10, 9, 0.96);
-}
-
-.mobileMenuScreenHeader strong {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 500;
-}
-
-.mobileMenuScreenHeader span,
-.mobileMenuScreenSection > span {
-  color: var(--ct-brass);
-  letter-spacing: 0;
-}
-
-.mobileMenuPill {
-  border-radius: 6px;
-  border-color: var(--ct-line-soft);
-  background: var(--ct-surface);
-}
-
-.mobileBottomNav {
-  border-top-color: var(--ct-line-soft);
-  background: rgba(9, 10, 9, 0.98);
-}
-
-.splashAvailabilityNote {
-  display: grid;
-  gap: 4px;
-  margin-top: 12px;
-  padding: 13px 2px 2px;
-  border-top: 1px solid var(--ct-line-soft);
-}
-
-.splashAvailabilityNote span {
-  color: var(--ct-brass);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+.staticMenuRow .mobileMenuRowArrow {
+  min-width: 82px;
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.splashAvailabilityNote strong {
-  color: var(--ct-ivory);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
-  font-weight: 700;
+.staticMenuSupportCard {
+  align-items: start;
 }
 
-.splashAvailabilityNote small {
-  max-width: 640px;
-  color: var(--ct-muted);
+.splashRailPrimary {
+  width: 100%;
+}
+
+.splashPanelServicesOnly {
+  gap: 18px;
+}
+
+.splashPanelServicesOnly .splashCompactHeader {
+  margin-bottom: 4px;
+  justify-content: center;
+  text-align: center;
+}
+
+.splashServiceBrandLockup {
+  justify-content: center;
+}
+
+.splashPanelServicesOnly .authBrandMeta {
+  justify-items: start;
+}
+
+.splashPanelServicesOnly .authBrandMeta small {
+  color: #8da2c8;
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.4;
 }
 
-/* Final collectibles beta layout pass: web gets the investment desk, mobile gets one clean stack. */
-@media (min-width: 900px) {
-  .mobileAppShell .legoScanWorkspace {
-    grid-template-columns: minmax(320px, 1.25fr) minmax(280px, 0.75fr);
-    gap: 20px;
-    padding: 20px;
-  }
-
-  .mobileAppShell .legoScanPreview {
-    min-height: 380px;
-  }
-
-  .mobileAppShell .legoVerdictCard {
-    grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
-  }
-
-  .mobileAppShell .legoVerdictMetrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .portfolioHeroMetrics {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .portfolioHealthGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .portfolioIntelligenceGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .analysisPipelineGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .investmentOpportunityGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .portfolioAssetCard {
-    grid-template-columns: 74px minmax(0, 1fr) minmax(88px, auto);
-  }
-
-  .mobileAppShell .assetDetailHero {
-    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
-  }
-
-  .mobileAppShell .assetDetailMetrics {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mobileAppShell .assetDetailGrid {
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-  }
-}
-
-@media (max-width: 899px) {
-  .mobileAppShell .portfolioHeroMetrics,
-  .mobileAppShell .portfolioHealthGrid,
-  .mobileAppShell .portfolioIntelligenceGrid,
-  .mobileAppShell .portfolioAssetCard,
-  .mobileAppShell .investmentOpportunityGrid,
-  .mobileAppShell .investmentOpportunityMetrics,
-  .mobileAppShell .assetDetailHero,
-  .mobileAppShell .assetDetailMetrics,
-  .mobileAppShell .assetDetailGrid,
-  .mobileAppShell .assetForecastBars,
-  .mobileAppShell .analysisPipelineGrid,
-  .mobileAppShell .legoVerdictCard,
-  .mobileAppShell .legoVerdictMetrics {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .mobileAppShell .legoScanPreview {
-    min-height: 260px;
-  }
-
-  .mobileAppShell .portfolioAssetCard > div:last-child {
-    justify-items: start;
-    text-align: left;
-  }
-}
-
-/* Mobile-app simplification: the signed-in beta is intentionally a compact app shell,
-   so it should never inherit wide desktop grids just because the browser viewport is wide. */
-.mobileAppShell .collectiblesServicePage {
-  gap: 10px;
-}
-
-.mobileAppShell .topbar,
-.mobileAppShell .mobileUtilityRail {
-  display: none;
-}
-
-.mobileAppShell .workspace {
-  padding: 12px 12px calc(82px + env(safe-area-inset-bottom, 0px));
-}
-
-.mobileAppShell .mobileBottomNav {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  padding: 9px 10px calc(9px + env(safe-area-inset-bottom, 0px));
-  border-top-color: rgba(214, 179, 110, 0.14);
-  background:
-    linear-gradient(180deg, rgba(7, 8, 7, 0.72), rgba(7, 8, 7, 0.98)),
-    rgba(7, 8, 7, 0.98);
-}
-
-.mobileAppShell .mobileBottomNavItem {
-  min-height: 54px;
-  padding: 8px 4px;
-  border-radius: 14px;
-}
-
-.mobileAppShell .mobileBottomNavItem span {
-  display: none;
-}
-
-.mobileAppShell .mobileBottomNavItem strong {
-  color: #aeb5c8;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.mobileAppShell .mobileBottomNavItem.active {
-  border-color: rgba(217, 178, 111, 0.28);
-  background: rgba(217, 178, 111, 0.09);
-}
-
-.mobileAppShell .mobileBottomNavItem.active strong {
-  color: #f2d69c;
-}
-
-.mobileAppShell .collectiblesServiceNav {
-  display: none;
-}
-
-.mobileAppShell .collectiblesServicePage > .panel {
-  padding: 14px;
-  border-radius: 16px;
-  box-shadow: none;
-}
-
-.mobileAppShell .collectiblesServicePage .panelHeader {
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.mobileAppShell .collectiblesServicePage .panelHeader p,
-.mobileAppShell .collectiblesServicePage .headerStatus,
-.mobileAppShell .legoValuationPanel > .panelHeader,
-.mobileAppShell .partnerBetaPrompt,
-.mobileAppShell .analysisPipelinePanel,
-.mobileAppShell .legoWorkflowRail,
-.mobileAppShell .portfolioIntelligenceGrid,
-.mobileAppShell .portfolioAllocationPanel {
-  display: none;
-}
-
-.mobileAppShell .investmentHeroCard {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  margin-bottom: 12px;
-  padding: 16px;
-  border-radius: 18px;
-}
-
-.mobileAppShell .investmentHeroCard h3 {
-  margin: 5px 0 7px;
-  font-size: 31px;
-}
-
-.mobileAppShell .investmentHeroCard p {
-  font-size: 13px;
-}
-
-.mobileAppShell .investmentHeroStats {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.mobileAppShell .investmentHeroStats div {
-  justify-items: center;
-  padding: 9px 6px;
-  text-align: center;
-}
-
-.mobileAppShell .legoWorkflowRail {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.mobileAppShell .legoWorkflowStep {
-  justify-items: center;
-  gap: 5px;
-  padding: 8px 5px;
-  border-radius: 12px;
-  text-align: center;
-}
-
-.mobileAppShell .legoWorkflowStep strong {
-  width: 24px;
-  height: 24px;
-  flex-basis: 24px;
-  font-size: 11px;
-}
-
-.mobileAppShell .legoWorkflowStep span {
-  font-size: 10px;
-  line-height: 1.2;
-}
-
-.mobileAppShell .legoWorkflowStep small {
-  display: none;
-}
-
-.mobileAppShell .legoScanWorkspace,
-.mobileAppShell .legoValuationForm,
-.mobileAppShell .portfolioHeroMetrics,
-.mobileAppShell .portfolioHealthGrid,
-.mobileAppShell .portfolioAssetCard,
-.mobileAppShell .investmentOpportunityGrid,
-.mobileAppShell .investmentOpportunityMetrics,
-.mobileAppShell .assetDetailHero,
-.mobileAppShell .assetDetailMetrics,
-.mobileAppShell .assetDetailGrid,
-.mobileAppShell .assetForecastBars,
-.mobileAppShell .legoVerdictCard,
-.mobileAppShell .legoVerdictMetrics,
-.mobileAppShell .betaReportHero,
-.mobileAppShell .betaReportGrid,
-.mobileAppShell .legoMetricGrid,
-.mobileAppShell .legoProjectionGrid,
-.mobileAppShell .legoValuationDetailGrid {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.mobileAppShell .legoScanWorkspace {
+.splashServiceMenuOnly {
+  margin-top: 2px;
   gap: 12px;
-  padding: 0;
-  border: 0;
-  background: transparent;
 }
 
-.mobileAppShell .legoScanPreview {
-  min-height: 300px;
-  border-radius: 18px;
-  background:
-    linear-gradient(140deg, rgba(214, 179, 110, 0.12), rgba(77, 159, 255, 0.05)),
-    rgba(255, 255, 255, 0.026);
+.splashPanelServicesOnly .chooserActionRowSplit {
+  grid-template-columns: 1fr;
 }
 
-.mobileAppShell .legoScanPreview strong {
-  font-size: 24px;
+.splashPanelServicesOnly .mobileMenuRow {
+  min-height: 96px;
+  border-radius: 24px;
+  padding: 18px 16px;
 }
 
-.mobileAppShell .legoScanMethods {
-  display: none;
-}
-
-.mobileAppShell .legoScanCopy {
-  padding: 2px;
-}
-
-.mobileAppShell .legoScanCopy h3,
-.mobileAppShell .legoFormIntro h3 {
-  font-size: 20px;
-}
-
-.mobileAppShell .legoScanCopy p,
-.mobileAppShell .legoFormIntro p {
-  display: none;
-}
-
-.mobileAppShell .panelActions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-}
-
-.mobileAppShell .legoFormIntro {
-  padding-top: 4px;
-}
-
-.mobileAppShell .legoValuationForm {
-  gap: 10px;
-}
-
-.mobileAppShell .legoValuationForm label {
-  gap: 6px;
-}
-
-.mobileAppShell .legoValuationForm span,
-.mobileAppShell .legoPanelEyebrow {
-  font-size: 10px;
-}
-
-.mobileAppShell .legoValuationForm input,
-.mobileAppShell .legoValuationForm select,
-.mobileAppShell .legoValuationForm textarea {
-  min-height: 44px;
-  border-radius: 10px;
-  font-size: 15px;
-}
-
-.mobileAppShell .primaryButton,
-.mobileAppShell .ghostButton {
-  min-height: 46px;
-  border-radius: 12px;
-}
-
-.mobileAppShell .portfolioHeroMetrics {
-  display: none;
-}
-
-.mobileAppShell .portfolioAppHero {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  padding: 18px;
+.splashPanelServicesOnly .mobileMenuRowGlyph {
   border-radius: 20px;
 }
 
-.mobileAppShell .portfolioAppHeroCopy strong {
-  font-size: 42px;
+.splashPanelServicesOnly .mobileMenuRowTop {
+  justify-content: flex-start;
+  gap: 8px;
 }
 
-.mobileAppShell .portfolioAppHeroActions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.splashPanelServicesOnly .mobileMenuRowTop span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(74, 139, 255, 0.12);
 }
 
-.mobileAppShell .portfolioSearchButton {
-  min-height: 52px;
+.splashPanelServicesOnly .mobileMenuRowTop small {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.mobileAppShell .workflowHeroCard {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  padding: 16px;
-  border-radius: 20px;
+.splashPanelServicesOnly .mobileMenuRowCopy strong {
+  font-size: 19px;
 }
 
-.mobileAppShell .workflowHeroCard h3 {
+.splashPanelServicesOnly .mobileMenuRowCopy small:last-child {
+  color: #b3c1de;
+}
+
+.splashPanelServicesOnly .launchMenuRow .mobileMenuRowArrow {
+  min-width: 0;
+  color: #7ea1ff;
   font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.mobileAppShell .workflowHeroCard p {
-  font-size: 13px;
-}
-
-.mobileAppShell .workflowHeroMetrics {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.mobileAppShell .workflowHeroActions {
+.landingAccessCard {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(74, 139, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(74, 139, 255, 0.12), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  margin-bottom: 18px;
 }
 
-.mobileAppShell .collectibleInventorySummary,
-.mobileAppShell .collectibleInventoryActions,
-.mobileAppShell .betaReportHero {
-  display: none;
+.landingAccessCard span {
+  color: #8da2c8;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.mobileAppShell .portfolioHeroMetrics > div {
-  padding: 14px;
-  border-radius: 16px;
+.landingAccessCard strong {
+  color: #f5f7fb;
+  font-size: 18px;
 }
 
-.mobileAppShell .portfolioHeroMetrics strong {
-  font-size: 25px;
+.landingAccessCard small {
+  color: #b3c1de;
+  line-height: 1.5;
 }
 
-.mobileAppShell .portfolioHealthGrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+.landingAccessActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.mobileAppShell .portfolioHealthCard {
-  padding: 12px;
-  border-radius: 14px;
+@media (max-width: 520px) {
+  .mobileMenuRow {
+    grid-template-columns: 60px minmax(0, 1fr) 24px;
+  }
+
+  .staticMenuRow {
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+  }
 }
 
-.mobileAppShell .portfolioHealthCard strong {
-  font-size: 24px;
-}
+@media (max-width: 980px) {
+  .authBrandStage,
+  .authStage {
+    display: none;
+  }
 
-.mobileAppShell .portfolioGrowthPanel,
-.mobileAppShell .portfolioTopAssets,
-.mobileAppShell .assetDetailPanel,
-.mobileAppShell .legoVerdictCard {
-  border-radius: 16px;
-}
+  .authShell {
+    padding: 18px;
+    align-items: stretch;
+  }
 
-.mobileAppShell .assetDetailCopy h3 {
-  font-size: 26px;
+  .authShellInner {
+    max-width: 460px;
+    margin: 0 auto;
+  }
+
+  .authPanel {
+    width: 100%;
+    min-height: calc(100dvh - 36px);
+    padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    gap: 18px;
+  }
+
+  .authPanelStandalone {
+    justify-content: center;
+  }
+
+  .authModeSwitch {
+    width: 100%;
+  }
+
+  .authModeSwitch button {
+    flex: 1 1 0;
+  }
+
+  .landingShell .splashPanel {
+    gap: 18px;
+  }
+
+  .landingShell .splashPanel h1 {
+    font-size: 42px;
+    line-height: 1.02;
+  }
+
+  .landingShell .authBlurb {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .landingHeroActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .landingPreviewPanel {
+    display: none;
+  }
+
+  .landingValueGrid,
+  .landingFeatureRow,
+  .landingTesterCard,
+  .landingRouteStack,
+  .splashPreviewGrid,
+  .landingActions {
+    display: none;
+  }
+
+  .splashSectionSecondary {
+    display: none;
+  }
+
+  .splashSectionDeskChoice .splashSectionHeader p,
+  .splashSectionPrimary .splashSectionHeader p {
+    display: none;
+  }
+
+  .landingPrimaryGrid .splashCardPrimary {
+    padding: 18px;
+    gap: 12px;
+  }
+
+  .landingPrimaryGrid .landingChoiceMetaItem strong {
+    font-size: 13px;
+  }
 }

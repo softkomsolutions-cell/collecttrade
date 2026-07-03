@@ -1,11 +1,22 @@
-﻿import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  INTRO_ACTIONS,
-  NAV_ITEMS,
+  APP_NAME,
+  APP_SUBTAGLINE,
+  APP_TAGLINE,
+  APP_WORDMARK,
   PARTNER_TEST_FLOW,
-  SCREEN_PREVIEWS,
   TRADE_PATHS,
 } from "../appConfig";
+import {
+  AUTH_FEATURE_CARDS,
+  AuthDashboardPreview,
+  BrandLogo,
+} from "./brandLogo";
+import {
+  buildHomeEntrySelection,
+  buildPrimaryServiceRows,
+  ENTRY_ONBOARDING_SLIDES,
+} from "../serviceRegistry";
 import {
   defaultIntroIdForPage,
   defaultSectionIdForIntro,
@@ -24,6 +35,211 @@ export function EmptyState({ title, body }) {
   );
 }
 
+export function GlobalSearch({ open, query, onQueryChange, results, onSelect, onClose }) {
+  const inputRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [open]);
+
+  if (!open) {
+    return null;
+  }
+
+  const safeActiveIndex = Math.min(activeIndex, Math.max(results.length - 1, 0));
+
+  const handleClose = () => {
+    setActiveIndex(0);
+    onClose();
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      handleClose();
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.min(index + 1, Math.max(results.length - 1, 0)));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.max(index - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter" && results[safeActiveIndex]) {
+      event.preventDefault();
+      onSelect(results[safeActiveIndex]);
+    }
+  };
+
+  return (
+    <div className="globalSearchBackdrop" onClick={handleClose} role="presentation">
+      <div
+        className="globalSearchPanel"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-label="Global search"
+      >
+        <div className="globalSearchInputRow">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+            <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={(event) => {
+              onQueryChange(event.target.value);
+              setActiveIndex(0);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Search workspaces, sections, and tools..."
+            aria-label="Search"
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="globalSearchResults">
+          {results.length ? (
+            <>
+              <div className="globalSearchGroupLabel">Results</div>
+              {results.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`globalSearchResult ${index === safeActiveIndex ? "active" : ""}`}
+                  onClick={() => onSelect(item)}
+                  onMouseEnter={() => setActiveIndex(index)}
+                >
+                  <div className="globalSearchResultGlyph">{item.glyph}</div>
+                  <div className="globalSearchResultCopy">
+                    <strong>{item.label}</strong>
+                    <small>{item.hint}</small>
+                  </div>
+                </button>
+              ))}
+            </>
+          ) : (
+            <div className="globalSearchEmpty">
+              {query.trim() ? "No matching workspaces or sections." : "Type to search across the platform."}
+            </div>
+          )}
+        </div>
+
+        <div className="globalSearchFooter">
+          <span>
+            <kbd>↑</kbd>
+            <kbd>↓</kbd>
+            navigate
+          </span>
+          <span>
+            <kbd>↵</kbd>
+            open
+          </span>
+          <span>
+            <kbd>esc</kbd>
+            close
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SaasTopNav({
+  workspaceLabel,
+  feedMode,
+  feedModeTone,
+  notificationCount,
+  onOpenSearch,
+  onOpenNotifications,
+  onOpenFeedback,
+  onLogout,
+  userInitial,
+}) {
+  return (
+    <header className="saasTopNav">
+      <div className="saasTopNavBreadcrumb">
+        <BrandLogo size="xs" className="saasTopNavLogo" />
+        <span>{APP_NAME}</span>
+        <span className="saasTopNavDivider">/</span>
+        <strong>{workspaceLabel}</strong>
+      </div>
+
+      <button type="button" className="saasTopNavSearch" onClick={onOpenSearch}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        Search workspaces...
+        <kbd>⌘K</kbd>
+      </button>
+
+      <div className="saasTopNavActions">
+        <div className={`saasTopNavPill live ${feedModeTone || ""}`}>{feedMode}</div>
+
+        <button
+          type="button"
+          className="saasTopNavIconButton"
+          aria-label="Alerts inbox"
+          onClick={onOpenNotifications}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 2C5.8 2 4 3.8 4 6v2.5L2.5 11h11L12 8.5V6c0-2.2-1.8-4-4-4z"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinejoin="round"
+            />
+            <path d="M6.5 11a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.3" />
+          </svg>
+          {notificationCount ? <span className="badge">{notificationCount}</span> : null}
+        </button>
+
+        <button type="button" className="ghostButton" onClick={onOpenFeedback}>
+          Feedback
+        </button>
+        <button type="button" className="ghostButton" onClick={onLogout}>
+          Log out
+        </button>
+        <div className="avatarCircle">{userInitial}</div>
+      </div>
+    </header>
+  );
+}
+
+export function ExecutiveSummaryStrip({ metrics = [] }) {
+  if (!metrics.length) {
+    return null;
+  }
+
+  return (
+    <section className="executiveSummaryStrip" aria-label="Executive summary">
+      {metrics.map((metric) => (
+        <button
+          key={metric.id}
+          type="button"
+          className="executiveKpiCard"
+          onClick={metric.action}
+        >
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+          <small>{metric.detail}</small>
+        </button>
+      ))}
+    </section>
+  );
+}
 export function WorkspaceHero({
   tone = "blue",
   eyebrow,
@@ -150,11 +366,10 @@ export function WorkspaceCommandBar({
 
 export function BootSplash() {
   return (
-    <div className="bootSplashShell" aria-label="BrickAlpha is opening">
+    <div className="bootSplashShell" aria-label={`${APP_NAME} is opening`}>
       <div className="bootSplashPanel">
-        <div className="bootSplashMark">BA</div>
-        <div className="bootSplashWordmark">BRICKALPHA</div>
-        <div className="bootSplashTag">AI-powered investment intelligence for collectibles</div>
+        <BrandLogo variant="full" size="xl" className="bootSplashLogo" />
+        <div className="bootSplashTag">{APP_TAGLINE}</div>
         <div className="bootSplashPulse" aria-hidden="true">
           <span />
           <span />
@@ -166,121 +381,17 @@ export function BootSplash() {
 }
 
 export function SplashScreen({ ready, activeDesk, onLaunch }) {
-  const savedPreference = readLaunchPreference();
-  const savedLaunch = savedPreference?.page === "collectibles" ? savedPreference : null;
+  const savedLaunch = readLaunchPreference();
   const launchDesk = savedLaunch?.desk || normalizeDesk(activeDesk);
-  const savedLaunchLabel = savedLaunch ? workspaceLabel(savedLaunch.page, savedLaunch.desk) : null;
-  const serviceMenuRows = [
-    {
-      id: "valuation",
-      ordinal: "01",
-      glyph: "VL",
-      title: "Analyze a Purchase",
-      tag: "Valuation",
-      tone: "collectibles",
-      detail: "Upload, identify, value, score, forecast, and save the asset in under 30 seconds.",
-      selection: {
-        page: "collectibles",
-        desk: launchDesk,
-        introId: "collectibles",
-        sectionId: "collectibles-valuation",
-      },
-    },
-    {
-      id: "collection",
-      ordinal: "02",
-      glyph: "CO",
-      title: "Portfolio Home",
-      tag: "Portfolio summary",
-      tone: "portfolio",
-      detail: "Review saved purchases, current estimates, and long-range projections.",
-      selection: {
-        page: "collectibles",
-        desk: launchDesk,
-        introId: "collectibles",
-        sectionId: "collectibles-portfolio",
-      },
-    },
-    {
-      id: "inventory",
-      ordinal: "03",
-      glyph: "IN",
-      title: "Holdings",
-      tag: "Collection register",
-      tone: "portfolio",
-      detail: "Search holdings, cost basis, condition, rarity, and estimates.",
-      selection: {
-        page: "collectibles",
-        desk: launchDesk,
-        introId: "collectibles",
-        sectionId: "collectibles-owned-inventory",
-      },
-    },
-  ];
-  const supportMenuRows = [
-    {
-      id: "activity",
-      title: "Investment Activity",
-      detail: "Purchases and sales",
-      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-transactions" },
-    },
-    {
-      id: "sources",
-      title: "Source Library",
-      detail: "Shared documents and references",
-      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-partner-sources" },
-    },
-    {
-      id: "research",
-      title: "Research Inventory",
-      detail: "Ideas, source checks, and product context",
-      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-grid" },
-    },
-    {
-      id: "documentation",
-      title: "Documentation & Provenance",
-      detail: "Condition, appraisals, receipts, and source trail",
-      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-documentation" },
-    },
-    {
-      id: "digital-registry",
-      title: "Digital Registry",
-      detail: "Physical-to-digital records and verification readiness",
-      selection: { page: "collectibles", desk: launchDesk, introId: "collectibles", sectionId: "collectibles-digital-registry" },
-    },
-  ];
-  const onboardingSlides = [
-    {
-      id: "collectibles",
-      glyph: "CL",
-      eyebrow: "Collectibles first",
-      title: "Know if the collectible is a good investment.",
-      description:
-        "Upload a photo, identify the asset, get a valuation, score the investment, and save it to your portfolio.",
-      accent: "collectibles",
-      bars: [48, 82, 62, 92],
-    },
-    {
-      id: "portfolio",
-      glyph: "PF",
-      eyebrow: "Evidence matters",
-      title: "Document what makes the item valuable.",
-      description:
-        "Capture condition, rarity, provenance, comparable sales, sources, and a clear 1, 5, and 10 year scenario.",
-      accent: "portfolio",
-      bars: [56, 74, 88, 68],
-    },
-    {
-      id: "partner-imports",
-      glyph: "IM",
-      eyebrow: "Portfolio imports",
-      title: "Bring reviewed collections into one inventory.",
-      description:
-        "Load reviewed LEGO portfolios and keep every position inside one collection register.",
-      accent: "trade",
-      bars: [42, 68, 54, 80],
-    },
-  ];
+  const defaultTradingDesk = launchDesk === "crypto" ? "forex" : launchDesk;
+  const homeLaunch = buildHomeEntrySelection(launchDesk);
+  const serviceMenuRows = buildPrimaryServiceRows({
+    launchDesk,
+    launchDeskLabel: labelDesk(launchDesk),
+    defaultTradingDesk,
+    defaultTradingDeskLabel: labelDesk(defaultTradingDesk),
+  });
+  const onboardingSlides = ENTRY_ONBOARDING_SLIDES;
   const [onboardingStep, setOnboardingStep] = useState(onboardingSlides.length);
   const onboardingComplete = onboardingStep >= onboardingSlides.length;
   const currentOnboardingSlide =
@@ -299,7 +410,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
       <div className="splashShell splashShellMobile">
         <div className="onboardingPanel">
           <div className="onboardingTopBar">
-            <div className="authBrand">BRICKALPHA</div>
+            <BrandLogo variant="full" size="sm" />
             <button type="button" className="ghostButton onboardingSkipButton" onClick={skipOnboarding}>
               Skip
             </button>
@@ -354,120 +465,50 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
 
   return (
     <div className="splashShell splashShellMobile">
-      <div className="splashPanel splashPanelCompact splashMenuBackdrop">
+      <div className="splashPanel splashPanelCompact splashMenuBackdrop splashPanelServicesOnly">
         <div className="splashCompactHeader">
-          <div className="authBrand">BRICKALPHA</div>
-        </div>
-
-        <div className="splashCompactHero">
-          <div className="splashEyebrow">Collectible investment intelligence</div>
-          <h1>Know what it is worth. Know what to buy next.</h1>
-          <p className="authBlurb">
-            Upload collectible evidence, get an investment verdict, and manage the collection from
-            one premium portfolio app.
-          </p>
-          <div className="splashHeroPillRow" aria-hidden="true">
-            <span className="splashHeroPill">Score</span>
-            <span className="splashHeroPill">Forecast</span>
-            <span className="splashHeroPill">Portfolio</span>
-          </div>
-          <button
-            type="button"
-            className="primaryButton splashHeroPrimary"
-            onClick={() =>
-              onLaunch({
-                page: "collectibles",
-                desk: launchDesk,
-                introId: "collectibles",
-                sectionId: "collectibles-portfolio",
-              })
-            }
-            disabled={!ready}
-          >
-            Open Portfolio App
-          </button>
-        </div>
-
-        {savedLaunch ? (
-          <button
-            type="button"
-            className="chooserResumeBar"
-            onClick={() => onLaunch(savedLaunch)}
-            disabled={!ready}
-          >
-            <div className="chooserResumeCopy">
-              <span>Resume</span>
-              <strong>{savedLaunchLabel}</strong>
-              <small>Continue from your last route.</small>
-            </div>
-            <div className="mobileMenuRowArrow">-&gt;</div>
-          </button>
-        ) : null}
-
-        <section className="splashSection splashSectionCompact">
-          <div className="splashSectionHeader">
-            <div>
-              <span>Start here</span>
-              <strong>Core actions</strong>
+          <div className="authBrandLockup splashServiceBrandLockup">
+            <BrandLogo size="md" />
+            <div className="authBrandMeta">
+              <div className="authBrand">{APP_WORDMARK}</div>
+              <small>Investment Platform</small>
             </div>
           </div>
+        </div>
 
-          <div className="mobileMenuScreenList splashServiceMenuList">
-            {serviceMenuRows.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`mobileMenuRow mobileMenuRow-${item.tone}`}
-                onClick={() => onLaunch(item.selection)}
-                disabled={!ready}
-              >
-                <div className="mobileMenuRowGlyph">{item.glyph}</div>
-                <div className="mobileMenuRowCopy">
-                  <div className="mobileMenuRowTop">
-                    <span>{item.ordinal}</span>
-                    <small>{item.tag}</small>
-                  </div>
-                  <strong>{item.title}</strong>
-                  <small>{item.detail}</small>
+        <div className="mobileMenuScreenList splashServiceMenuList splashServiceMenuOnly">
+          {serviceMenuRows.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`mobileMenuRow mobileMenuRow-${item.tone || "support"} launchMenuRow`}
+              onClick={() => onLaunch(item.selection)}
+              disabled={!ready}
+            >
+              <div className="mobileMenuRowGlyph">{item.glyph}</div>
+              <div className="mobileMenuRowCopy">
+                <div className="mobileMenuRowTop">
+                  <span>{item.ordinal}</span>
+                  <small>{item.tag}</small>
                 </div>
-                <div className="mobileMenuRowArrow">-&gt;</div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="splashSection splashSectionCompact splashSupportCompact">
-          <div className="splashSectionHeader">
-            <div>
-              <span>Records</span>
-              <strong>Available in the menu</strong>
-            </div>
-          </div>
-
-          <div className="mobileMenuSupportList chooserSupportList">
-            {supportMenuRows.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="mobileMenuSupportCard"
-                onClick={() => onLaunch(item.selection)}
-                disabled={!ready}
-              >
                 <strong>{item.title}</strong>
                 <small>{item.detail}</small>
-              </button>
-            ))}
-          </div>
-          <div className="splashAvailabilityNote">
-            <span>Collection services</span>
-            <strong>Core register active</strong>
-            <small>
-              Valuation, inventory, catalog, documentation, registry, reviewed imports, and source
-              records are available.
-            </small>
-          </div>
-        </section>
+              </div>
+              <div className="mobileMenuRowArrow" aria-hidden="true">{">"}</div>
+            </button>
+          ))}
+        </div>
 
+        <div className="chooserActionRow chooserActionRowSplit">
+          <button
+            type="button"
+            className="primaryButton splashRailPrimary"
+            onClick={() => onLaunch(homeLaunch)}
+            disabled={!ready}
+          >
+            Continue to Dashboard
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -476,7 +517,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
 function describeLaunchSelection(page, desk, sectionId) {
   if (page === "home") {
     return {
-      label: "Workspace Home",
+      label: "Executive Dashboard",
       hint: "You'll land on the hub with quick launch, session context, and partner-readiness cards.",
     };
   }
@@ -502,12 +543,19 @@ function describeLaunchSelection(page, desk, sectionId) {
     };
   }
 
-  if (page === "reports") {
-    return {
-      label: "Reports",
-      hint: "You'll land on the visual reporting workspace with performance, exposure, and signal analytics.",
-    };
-  }
+    if (page === "reports") {
+      return {
+        label: "Research Center",
+        hint: "You'll land on the visual research workspace with performance, exposure, and signal analytics.",
+      };
+    }
+
+    if (page === "subscriptions") {
+      return {
+        label: "Subscriptions",
+        hint: "You'll land on the plan workspace with premium value, tiers, and upgrade paths.",
+      };
+    }
 
   return {
     label: workspaceLabel(page, desk),
@@ -515,80 +563,146 @@ function describeLaunchSelection(page, desk, sectionId) {
   };
 }
 
-export function LandingShell({ initialLaunch, onContinue }) {
+export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = false, demoStatus = "" }) {
   const landingActions = [
     {
-      id: "valuation",
-      glyph: "VL",
-      eyebrow: "Value",
-      title: "Rate a Purchase",
-      page: "collectibles",
-      introId: "collectibles",
-      sectionId: "collectibles-valuation",
-      destination: "Valuation desk",
-      bestFor: "Rate a purchase",
-      blurb: "Value LEGO sets, minifigures, sealed items, and reviewed collection positions.",
+      id: "news",
+      glyph: "NW",
+      eyebrow: "Macro",
+      title: "News",
+      page: "news",
+      introId: "news",
+      sectionId: "macro-feed",
+      destination: "Macro feed",
+      bestFor: "Start with context",
+      blurb: "Start with the tape, South African context, and the headlines driving the next move.",
     },
     {
-      id: "portfolio-home",
-      glyph: "PF",
-      eyebrow: "Home",
-      title: "Portfolio Home",
-      page: "collectibles",
-      introId: "collectibles",
-      sectionId: "collectibles-portfolio",
-      destination: "Dashboard",
-      bestFor: "Review portfolio",
-      blurb: "Open the dashboard with saved holdings, estimates, projections, and recent activity.",
+      id: "alpha-signals",
+      glyph: "AS",
+      eyebrow: "Signals",
+      title: "Alpha Signals",
+      page: "signals",
+      introId: "trade",
+      sectionId: "signals-grid",
+      destination: "Signals grid",
+      bestFor: "Scan clean setups",
+      blurb: "Open the filtered signals grid first and scan the cleanest EMA setups before acting.",
     },
     {
-      id: "inventory",
-      glyph: "IN",
-      eyebrow: "Own",
-      title: "Owned Inventory",
-      page: "collectibles",
-      introId: "collectibles",
-      sectionId: "collectibles-owned-inventory",
-      destination: "Inventory register",
-      bestFor: "Review holdings",
-      blurb: "Search owned items, cost basis, rarity, condition, and current estimates.",
+      id: "trade",
+      glyph: "TR",
+      eyebrow: "Execution",
+      title: "Trade Desk",
+      page: "signals",
+      introId: "trade",
+      sectionId: "chart-panel",
+      destination: "Active chart",
+      bestFor: "Go straight to execution",
+      blurb: "Go straight into the active chart, structure plan, and ticket workflow.",
     },
     {
-      id: "imports",
-      glyph: "IM",
-      eyebrow: "Load",
-      title: "Reviewed Imports",
+      id: "collectibles",
+      glyph: "CL",
+      eyebrow: "Alt",
+      title: "LEGO Investments",
       page: "collectibles",
       introId: "collectibles",
-      sectionId: "collectibles-reviewed-portfolios",
-      destination: "Reviewed portfolios",
-      bestFor: "Load collection data",
-      blurb: "Import reconciled LEGO portfolios into the working inventory register.",
-    },
-    {
-      id: "activity",
-      glyph: "AC",
-      eyebrow: "Track",
-      title: "Investment Activity",
-      page: "collectibles",
-      introId: "collectibles",
-      sectionId: "collectibles-transactions",
-      destination: "Purchase and sale ledger",
-      bestFor: "Review the trail",
-      blurb: "Keep acquisitions and exits together as a collectible investment ledger.",
+      sectionId: "investment-analysis",
+      destination: "LEGO Investments focus",
+      bestFor: "Trade alternatives",
+      blurb: "Analyze LEGO sets and investment-grade collectibles with the same disciplined ticket flow.",
     },
   ];
-  const secondaryActions = [];
+  const secondaryActions = [
+    {
+      id: "home",
+      glyph: "HM",
+      eyebrow: "Hub",
+      title: "Dashboard",
+      page: "home",
+      introId: "home",
+      sectionId: "home-dashboard",
+      destination: "Executive Dashboard",
+      blurb: "Land on the executive dashboard for NAV, collection grade, and portfolio intelligence.",
+    },
+    {
+      id: "portfolio",
+      glyph: "PF",
+      eyebrow: "Book",
+      title: "Portfolio",
+      page: "portfolio",
+      introId: "portfolio",
+      sectionId: "open-positions",
+      destination: "Open positions",
+      blurb: "Review open positions, PnL, and recent closes before you put on the next trade.",
+    },
+      {
+        id: "reports",
+        glyph: "RP",
+        eyebrow: "Review",
+        title: "Research Center",
+      page: "reports",
+      introId: "reports",
+      sectionId: "reports-performance",
+        destination: "Performance research",
+        blurb: "Open visual research with performance curves, desk exposure, and signal analytics.",
+      },
+      {
+        id: "subscriptions",
+        glyph: "SB",
+        eyebrow: "Plans",
+        title: "Subscriptions",
+        page: "subscriptions",
+        introId: "subscriptions",
+        sectionId: "subscriptions-overview",
+        destination: "Subscription plans",
+        blurb: "Show plan tiers, premium features, and the value path that makes the service commercially real.",
+      },
+      {
+        id: "tools",
+        glyph: "TL",
+      eyebrow: "Assist",
+      title: "Tools",
+      page: "tools",
+      introId: "tools",
+      sectionId: "tools-workbench",
+      destination: "Tools workbench",
+      blurb: "Use the mentor, chart analyzer, simulator, and research shelf before you commit.",
+    },
+    {
+      id: "connections",
+      glyph: "CN",
+      eyebrow: "Route",
+      title: "Connections",
+      page: "connections",
+      introId: "connections",
+      sectionId: "connections-overview",
+      destination: "Connector overview",
+      blurb: "Check brokers, live routing, feed health, and connector readiness in one place.",
+    },
+    {
+      id: "settings",
+      glyph: "ST",
+      eyebrow: "Setup",
+      title: "Settings",
+      page: "settings",
+      introId: "settings",
+      sectionId: "news-region",
+      destination: "Workspace settings",
+      blurb: "Adjust region, workspace preferences, and saved desk targets before the session starts.",
+    },
+  ];
   const allActions = [...landingActions, ...secondaryActions];
 
-  const initialPage = "collectibles";
+  const initialPage = initialLaunch?.page || "news";
   const initialDesk = initialLaunch?.desk || "forex";
   const initialIntroId = initialLaunch?.introId || defaultIntroIdForPage(initialPage);
   const [selectedActionId, setSelectedActionId] = useState(
     allActions.some((action) => action.id === initialLaunch?.landingId)
       ? initialLaunch.landingId
       : allActions.find((action) => action.page === initialPage && action.sectionId === initialLaunch?.sectionId)
-        ?.id || "valuation",
+        ?.id || (initialPage === "signals" && initialLaunch?.sectionId === "chart-panel" ? "trade" : initialIntroId === "trade" ? "alpha-signals" : initialIntroId),
   );
   const [selectedPage, setSelectedPage] = useState(initialPage);
   const [selectedDesk, setSelectedDesk] = useState(initialDesk);
@@ -624,44 +738,101 @@ export function LandingShell({ initialLaunch, onContinue }) {
       <div className="splashPanel landingPanel">
         <div className="splashHero landingHero">
           <div className="splashHeroCopy">
-            <div className="authBrand">BRICKALPHA</div>
-            <div className="splashEyebrow">AI-POWERED INVESTMENT INTELLIGENCE FOR COLLECTIBLES</div>
-            <h1>Know what your collection is worth. Know what to buy next.</h1>
+            <BrandLogo variant="full" size="lg" className="landingHeroLogo" />
+            <div className="splashEyebrow">INVESTMENT PLATFORM</div>
+            <h1>Your LEGO investment command center.</h1>
             <p className="authBlurb">
-              BrickAlpha helps collectors upload, identify, value, score, forecast, and track
-              collectible investments in one trusted workspace.
+              Portfolio intelligence, AI investment scores, and collection analytics in one premium
+              platform. Create an account or explore the live demo.
             </p>
+
+            <div className="landingHeroActions">
+              <button
+                type="button"
+                className="primaryButton"
+                onClick={() =>
+                  onContinue(
+                    {
+                      page: selectedPage,
+                      desk: selectedDesk,
+                      introId: selectedIntroId,
+                      sectionId: selectedSectionId,
+                      landingId: selectedActionId,
+                    },
+                    "register",
+                  )
+                }
+              >
+                Create Account
+              </button>
+              <button
+                type="button"
+                className="ghostButton"
+                onClick={() =>
+                  onContinue(
+                    {
+                      page: selectedPage,
+                      desk: selectedDesk,
+                      introId: selectedIntroId,
+                      sectionId: selectedSectionId,
+                      landingId: selectedActionId,
+                    },
+                    "login",
+                  )
+                }
+              >
+                Sign In
+              </button>
+              {onDemo ? (
+                <button
+                  type="button"
+                  className="secondaryButton"
+                  onClick={() =>
+                    onDemo({
+                      page: selectedPage,
+                      desk: selectedDesk,
+                      introId: selectedIntroId,
+                      sectionId: selectedSectionId,
+                      landingId: selectedActionId,
+                    })
+                  }
+                  disabled={demoBusy}
+                >
+                  {demoBusy ? "Opening Demo..." : "Explore Live Demo"}
+                </button>
+              ) : null}
+            </div>
 
             <div className="landingValueGrid">
               <div className="landingValueCard">
-                <span>Purchase Analysis</span>
-                <strong>Instant investment verdict</strong>
-                <small>Review price paid, market value, gain, risk, score, and 1, 5, and 10 year scenarios.</small>
+                <span>Macro Context</span>
+                <strong>South Africa-aware tape</strong>
+                <small>Desk-aware headlines, honest timestamps, and route context before the trade.</small>
               </div>
               <div className="landingValueCard">
-                <span>Evidence</span>
-                <strong>Provenance and comparables</strong>
-                <small>Capture condition, rarity, sources, and comparable-market evidence in one flow.</small>
+                <span>Alpha Signals</span>
+                <strong>8 / 21 EMA workflow</strong>
+                <small>Crosses, retests, structure plans, and visible exits baked into the desk.</small>
               </div>
               <div className="landingValueCard">
-                <span>Portfolio</span>
-                <strong>Cross-asset intelligence</strong>
-                <small>Track inventory positions and keep your next decision grounded in the wider collection.</small>
+                <span>Execution</span>
+                <strong>Paper first, live where ready</strong>
+                <small>Venue-aware tickets, risk budgets, and saved workflows that stay coherent.</small>
               </div>
             </div>
 
             <div className="landingFeatureRow">
               <div className="landingFeatureChip">
-                <span>LEGO collection</span>
-                <strong>Beta focus: LEGO and Pokémon next</strong>
+                <span>Trading lanes</span>
+                <strong>Forex, ETFs, Crypto, JSE</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Investment record</span>
-                <strong>Cost, value, rarity, provenance</strong>
+                <span>Alternative book</span>
+                <strong>LEGO investment holdings</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Partner portfolios</span>
-                <strong>Reviewed imports and references</strong>
+                <span>Support stack</span>
+                <strong>Tools and connections</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Workspace state</span>
@@ -671,7 +842,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
 
             <div className="landingTesterCard">
               <span>Partner testing route</span>
-                <strong>Valuation, inventory, imports, and activity</strong>
+              <strong>Landing, News, Trade Desk, LEGO Investments, Feedback Board</strong>
               <small>
                 If this session is for partner feedback, use the built-in test pass so notes land in one
                 place and cover the main product surfaces.
@@ -700,7 +871,9 @@ export function LandingShell({ initialLaunch, onContinue }) {
               <div className="splashPreviewCard">
                 <span>Desk</span>
                 <strong>
-                  Collectibles
+                  {selectedPage === "signals" || selectedPage === "news"
+                    ? labelDesk(selectedDesk)
+                    : "Cross-workspace"}
                 </strong>
               </div>
               <div className="splashPreviewCard">
@@ -709,7 +882,7 @@ export function LandingShell({ initialLaunch, onContinue }) {
               </div>
               <div className="splashPreviewCard">
                 <span>Mode</span>
-                <strong>Authentication required</strong>
+                <strong>{onDemo ? "Demo or sign-in" : "Authentication required"}</strong>
               </div>
             </div>
 
@@ -726,14 +899,16 @@ export function LandingShell({ initialLaunch, onContinue }) {
                 <div>
                   <strong>Anchor the desk</strong>
                   <small>
-                    The collectibles investment workspace opens without a market desk filter.
+                    {selectedPage === "signals" || selectedPage === "news"
+                      ? `${labelDesk(selectedDesk)} frames the session.`
+                      : "This workspace opens without a desk filter."}
                   </small>
                 </div>
               </div>
               <div className="landingRouteStep">
                 <span>03</span>
                 <div>
-                  <strong>Sign in and continue</strong>
+                  <strong>Create account or sign in</strong>
                   <small>Your selected route is carried through auth and restored on entry.</small>
                 </div>
               </div>
@@ -741,12 +916,12 @@ export function LandingShell({ initialLaunch, onContinue }) {
           </div>
         </div>
 
-        <div className="splashSection">
+        <div className="splashSection splashSectionPrimary">
           <div className="splashSectionHeader">
             <div>
               <span>Choose Your Start</span>
-              <strong>Pick the workspace you want first</strong>
-              <p>This is the app introduction screen your users should see before the login form.</p>
+              <strong>Choose where to start</strong>
+              <p>Pick the first lane you want to open after account access.</p>
             </div>
           </div>
 
@@ -781,37 +956,36 @@ export function LandingShell({ initialLaunch, onContinue }) {
           </div>
         </div>
 
-        {secondaryActions.length ? (
-          <div className="splashSection">
-            <div className="splashSectionHeader">
-              <div>
-                <span>More Workspaces</span>
-                <strong>Open another workspace first</strong>
-              </div>
-            </div>
-
-            <div className="splashWorkspaceRow landingWorkspaceRow">
-              {secondaryActions.map((action) => (
-                <button
-                  key={action.id}
-                  type="button"
-                  className={`splashWorkspaceChip ${selectedActionId === action.id ? "active" : ""}`}
-                  onClick={() => handleActionSelect(action)}
-                >
-                  <div className="landingWorkspaceHeader">
-                    <span>{action.title}</span>
-                    <strong>{action.glyph}</strong>
-                  </div>
-                  <em>{action.destination}</em>
-                  <small>{action.blurb}</small>
-                </button>
-              ))}
+        <div className="splashSection splashSectionSecondary">
+          <div className="splashSectionHeader">
+            <div>
+              <span>More Workspaces</span>
+              <strong>Open the supporting parts of the platform first if that’s your priority</strong>
+              <p>These usually support the main trading flow, but they should still be available from the first screen.</p>
             </div>
           </div>
-        ) : null}
+
+          <div className="splashWorkspaceRow landingWorkspaceRow">
+            {secondaryActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className={`splashWorkspaceChip ${selectedActionId === action.id ? "active" : ""}`}
+                onClick={() => handleActionSelect(action)}
+              >
+                <div className="landingWorkspaceHeader">
+                  <span>{action.title}</span>
+                  <strong>{action.glyph}</strong>
+                </div>
+                <em>{action.destination}</em>
+                <small>{action.blurb}</small>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {selectedPage === "signals" || selectedPage === "news" ? (
-          <div className="splashSection">
+          <div className="splashSection splashSectionDeskChoice">
             <div className="splashSectionHeader">
               <div>
                 <span>Desk Choice</span>
@@ -848,42 +1022,25 @@ export function LandingShell({ initialLaunch, onContinue }) {
         ) : null}
 
         <div className="panelActions landingActions">
-          <button
-            type="button"
-            className="primaryButton"
-            onClick={() =>
-              onContinue(
-                {
+          {demoStatus ? <div className="statusBanner">{demoStatus}</div> : null}
+          {onDemo ? (
+            <button
+              type="button"
+              className="secondaryButton"
+              onClick={() =>
+                onDemo({
                   page: selectedPage,
                   desk: selectedDesk,
                   introId: selectedIntroId,
                   sectionId: selectedSectionId,
                   landingId: selectedActionId,
-                },
-                "login",
-              )
-            }
-          >
-            Sign In to Continue
-          </button>
-          <button
-            type="button"
-            className="ghostButton"
-            onClick={() =>
-              onContinue(
-                {
-                  page: selectedPage,
-                  desk: selectedDesk,
-                  introId: selectedIntroId,
-                  sectionId: selectedSectionId,
-                  landingId: selectedActionId,
-                },
-                "register",
-              )
-            }
-          >
-            Create Account
-          </button>
+                })
+              }
+              disabled={demoBusy}
+            >
+              {demoBusy ? "Opening Demo..." : "Explore Live Demo"}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -891,117 +1048,249 @@ export function LandingShell({ initialLaunch, onContinue }) {
 }
 
 export function AuthShell({
+  authMode,
+  authView = "auth",
   authForm,
-  mode = "register",
+  resetForm,
   authStatus,
-  busy = false,
+  resetStatus,
+  resetHintCode,
+  onBack,
+  onModeChange,
   onSubmit,
   onFieldChange,
-  onModeChange,
-  onBackToLanding,
+  onResetFieldChange,
+  onForgotPassword,
+  onPasswordResetRequest,
+  onPasswordResetConfirm,
+  onReturnToLogin,
+  onDemo,
+  demoBusy = false,
 }) {
-  const isLogin = mode === "login";
-  const title = isLogin ? "Sign in" : "Create account";
-  const body = isLogin
-    ? "Welcome back. Sign in to restore your portfolio, route, and partner feedback workspace."
-    : "Create a secure BrickAlpha workspace for valuations, holdings, reports, and feedback.";
-  const ctaLabel = busy
-    ? isLogin
-      ? "Signing in..."
-      : "Creating account..."
-    : title;
+  const isResetRequest = authView === "forgot-request";
+  const isResetConfirm = authView === "forgot-reset";
+  const isResetFlow = isResetRequest || isResetConfirm;
 
   return (
-    <div className="authShell authShellMinimal">
-      <div className="authPanel authPanelMinimal">
-        <div className="authMinimalLogo">
-          <div className="brandMark">BA</div>
-          <div className="brandWordmark">BRICKALPHA</div>
-        </div>
+    <div className="authShell premiumAuthShell">
+      <div className="authShellInner premiumAuthLayout">
+        <section className="authBrandStage">
+          <BrandLogo variant="full" size="hero" className="authBrandStageLogo" />
+          <h1 className="authBrandStageHeadline">
+            AI Investment Intelligence
+            <span>for LEGO Collectors</span>
+          </h1>
+          <p className="authBrandStageSubheadline">{APP_SUBTAGLINE}</p>
 
-        <div className="authPanel">
+          <div className="authFeatureGrid">
+            {AUTH_FEATURE_CARDS.map((feature) => (
+              <div className="authFeatureCard" key={feature.id}>
+                <span className="authFeatureCheck" aria-hidden="true">
+                  ✓
+                </span>
+                <strong>{feature.label}</strong>
+              </div>
+            ))}
+          </div>
+
+          <AuthDashboardPreview />
+        </section>
+
+        <div className="authPanel authPanelPremium authPanelStandalone">
           <div className="authPanelHeader">
             <div>
-              <h2>{title}</h2>
-              <p>{body}</p>
+              <div className="authBrandLockup authBrandLockupCompact">
+                <BrandLogo size="sm" />
+                <div className="authBrandMeta">
+                  <div className="authBrand">{APP_WORDMARK}</div>
+                  <small>{APP_TAGLINE}</small>
+                </div>
+              </div>
+              <h2>
+                {isResetRequest
+                  ? "Reset your password"
+                  : isResetConfirm
+                    ? "Set a new password"
+                    : authMode === "login"
+                      ? "Welcome back"
+                      : "Create your account"}
+              </h2>
+              <p>
+                {isResetRequest
+                  ? "Enter your email and we will send you a reset code."
+                  : isResetConfirm
+                    ? "Enter your reset code and choose a new password."
+                    : authMode === "login"
+                      ? "Sign in to your investment dashboard."
+                      : "Start building portfolio intelligence for your collection."}
+              </p>
             </div>
+            {onBack ? (
+              <button type="button" className="ghostButton authBackButton" onClick={onBack}>
+                Back
+              </button>
+            ) : null}
           </div>
 
-          <form className="authForm" onSubmit={onSubmit}>
-            {!isLogin ? (
+          {isResetFlow ? (
+            <form className="authForm" onSubmit={isResetRequest ? onPasswordResetRequest : onPasswordResetConfirm}>
               <label>
-                <span>Name</span>
+                <span>Email</span>
                 <input
-                  type="text"
-                  value={authForm.name}
-                  onChange={(event) => onFieldChange("name", event.target.value)}
-                  placeholder="Your name"
-                  autoComplete="name"
-                  disabled={busy}
+                  type="email"
+                  value={resetForm.email}
+                  onChange={(event) => onResetFieldChange("email", event.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
                 />
               </label>
-            ) : null}
 
-            <label>
-              <span>Email</span>
-              <input
-                type="email"
-                value={authForm.email}
-                onChange={(event) => onFieldChange("email", event.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-                disabled={busy}
-              />
-            </label>
+              {isResetConfirm ? (
+                <>
+                  <label>
+                    <span>Reset code</span>
+                    <input
+                      type="text"
+                      value={resetForm.code}
+                      onChange={(event) => onResetFieldChange("code", event.target.value)}
+                      placeholder="6-digit code"
+                      autoComplete="one-time-code"
+                    />
+                  </label>
 
-            <label>
-              <span>Password</span>
-              <input
-                type="password"
-                value={authForm.password}
-                onChange={(event) => onFieldChange("password", event.target.value)}
-                placeholder="Minimum 8 characters"
-                autoComplete={isLogin ? "current-password" : "new-password"}
-                disabled={busy}
-              />
-            </label>
+                  {resetHintCode ? (
+                    <div className="statusBanner subtleBanner">
+                      <strong>Your reset code</strong>
+                      <small>
+                        Enter <strong>{resetHintCode}</strong> to continue.
+                      </small>
+                    </div>
+                  ) : null}
 
-            {authStatus ? (
-              <div className="statusBanner warningBanner" role="alert">
-                {authStatus}
+                  <label>
+                    <span>New password</span>
+                    <input
+                      type="password"
+                      value={resetForm.password}
+                      onChange={(event) => onResetFieldChange("password", event.target.value)}
+                      placeholder="Minimum 8 characters"
+                      autoComplete="new-password"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Confirm password</span>
+                    <input
+                      type="password"
+                      value={resetForm.confirmPassword}
+                      onChange={(event) => onResetFieldChange("confirmPassword", event.target.value)}
+                      placeholder="Repeat the new password"
+                      autoComplete="new-password"
+                    />
+                  </label>
+                </>
+              ) : null}
+
+              {resetStatus ? <div className="statusBanner">{resetStatus}</div> : null}
+
+              <button className="primaryButton authPrimaryButton" type="submit">
+                {isResetRequest ? "Send reset code" : "Reset password"}
+              </button>
+
+              <div className="authAuxActions">
+                <button type="button" className="ghostButton authLinkButton" onClick={onReturnToLogin}>
+                  Back to sign in
+                </button>
+                {isResetConfirm ? (
+                  <button type="button" className="ghostButton authLinkButton" onClick={onPasswordResetRequest}>
+                    Request new code
+                  </button>
+                ) : null}
               </div>
-            ) : null}
+            </form>
+          ) : (
+            <>
+              <div className="segmentedControl authModeSwitch">
+                <button
+                  type="button"
+                  className={authMode === "login" ? "active" : ""}
+                  onClick={() => onModeChange("login")}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  className={authMode === "register" ? "active" : ""}
+                  onClick={() => onModeChange("register")}
+                >
+                  Create Account
+                </button>
+              </div>
 
-            <button className="primaryButton" type="submit" disabled={busy} aria-busy={busy}>
-              {ctaLabel}
-            </button>
-          </form>
+              <form className="authForm authFormPremium" onSubmit={onSubmit}>
+                {authMode === "register" ? (
+                  <label>
+                    <span>Name</span>
+                    <input
+                      type="text"
+                      value={authForm.name}
+                      onChange={(event) => onFieldChange("name", event.target.value)}
+                      placeholder="Your name"
+                      autoComplete="name"
+                    />
+                  </label>
+                ) : null}
 
-          <div className="authModeSwitch">
-            <span>{isLogin ? "Need a workspace?" : "Already have an account?"}</span>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => onModeChange(isLogin ? "register" : "login")}
-              disabled={busy}
-            >
-              {isLogin ? "Create account" : "Sign in"}
-            </button>
-          </div>
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={authForm.email}
+                    onChange={(event) => onFieldChange("email", event.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </label>
 
-          <button
-            type="button"
-            className="authBackButton"
-            onClick={onBackToLanding}
-            disabled={busy}
-          >
-            Back to product overview
-          </button>
+                <label>
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={authForm.password}
+                    onChange={(event) => onFieldChange("password", event.target.value)}
+                    placeholder="Minimum 8 characters"
+                    autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                  />
+                </label>
+
+                {authMode === "login" ? (
+                  <div className="authAuxActions">
+                    <button type="button" className="ghostButton authLinkButton" onClick={onForgotPassword}>
+                      Forgot password?
+                    </button>
+                  </div>
+                ) : null}
+
+                {authStatus ? <div className="statusBanner">{authStatus}</div> : null}
+
+                <button className="primaryButton authPrimaryButton" type="submit">
+                  {authMode === "login" ? "Sign In" : "Create Account"}
+                </button>
+                {onDemo ? (
+                  <button type="button" className="secondaryButton" onClick={onDemo} disabled={demoBusy}>
+                    {demoBusy ? "Opening demo..." : "Explore demo"}
+                  </button>
+                ) : null}
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+
 
 
 

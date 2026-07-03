@@ -25,8 +25,25 @@ import {
   venueDetailLabel,
 } from "../appUtils";
 import { EmptyState } from "./appShell";
+import { alphaSignalTone } from "../brickAlphaModel";
 
-export function SignalCard({ signal, executionPlan, marketSource, isActive, onSelect, onFastTrade }) {
+export function AlphaSignalBadges({ signals = [] }) {
+  if (!signals.length) {
+    return null;
+  }
+
+  return (
+    <div className="alphaSignalRow">
+      {signals.map((signal) => (
+        <span className={`signalBadge ${alphaSignalTone(signal)}`} key={signal}>
+          {signal}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function SignalCard({ signal, executionPlan, marketSource, isActive, onSelect, onFastTrade, onWatch }) {
   const routeLabel =
     executionPlan?.mode === "live"
       ? venueDetailLabel(executionPlan.providerLabel, executionPlan.pair)
@@ -114,16 +131,28 @@ export function SignalCard({ signal, executionPlan, marketSource, isActive, onSe
           <strong>{signal.label}</strong>
           <span>{signal.exitRule}</span>
         </div>
-        <button
-          className="tradeButton"
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onFastTrade(signal);
-          }}
-        >
-          Open Ticket
-        </button>
+        <div className="signalFootActions">
+          <button
+            className="ghostButton slimButton"
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onWatch?.(signal);
+            }}
+          >
+            Watch
+          </button>
+          <button
+            className="tradeButton"
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onFastTrade(signal);
+            }}
+          >
+            Open Ticket
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -147,23 +176,36 @@ export function TradeCollectibleCard({ item, isActive, onSelect, onTrade }) {
 
       <h3>{item.name}</h3>
       <p>{item.thesis || item.description}</p>
+      <AlphaSignalBadges signals={item.alphaSignals} />
 
       <div className="collectibleStats">
         <div>
-          <span>Price</span>
-          <strong>{formatCollectiblePrice(item.price)}</strong>
+          <span>Brick Alpha</span>
+          <strong>{item.brickAlphaScore ? `${item.brickAlphaScore}/100` : "--"}</strong>
         </div>
         <div>
-          <span>Move</span>
-          <strong className={positiveTone(item.changePercent)}>{item.changePercent}%</strong>
+          <span>Grade</span>
+          <strong>{item.investmentGrade || "--"}</strong>
         </div>
         <div>
-          <span>Liquidity</span>
-          <strong>{item.liquidity}</strong>
+          <span>Action</span>
+          <strong>{item.recommendation || "Watch"}</strong>
         </div>
         <div>
-          <span>Venue</span>
-          <strong>{item.venue}</strong>
+          <span>Theme</span>
+          <strong>{item.legoTheme || "--"}</strong>
+        </div>
+        <div>
+          <span>Discount</span>
+          <strong className={positiveTone(item.discountPercentage)}>
+            {Number.isFinite(item.discountPercentage) ? `${item.discountPercentage.toFixed(1)}%` : "--"}
+          </strong>
+        </div>
+        <div>
+          <span>ROI</span>
+          <strong className={positiveTone(item.estimatedRoi)}>
+            {Number.isFinite(item.estimatedRoi) ? `${item.estimatedRoi.toFixed(1)}%` : "--"}
+          </strong>
         </div>
       </div>
 
@@ -458,15 +500,18 @@ export function TechnicalSummaryPanel({ signal }) {
 export function ConnectorCard({
   provider,
   timeZone,
-  valrForm,
+  formValues,
   busyKey,
-  onValrFieldChange,
-  onSaveValr,
+  onFieldChange,
+  onSave,
   onTest,
   onSync,
   onDisconnect,
 }) {
   const isValr = provider.id === "valr";
+  const isIbkr = provider.id === "ibkr";
+  const isSaxo = provider.id === "saxo";
+  const isEasyEquities = provider.id === "easyequities";
   const fundedBalances = (provider.accountSnapshot?.balances || []).filter(
     (entry) => Math.abs(entry.total) > 0,
   );
@@ -521,8 +566,8 @@ export function ConnectorCard({
               <span>API Key</span>
               <input
                 type="text"
-                value={valrForm.apiKey}
-                onChange={(event) => onValrFieldChange("apiKey", event.target.value)}
+                value={formValues.apiKey || ""}
+                onChange={(event) => onFieldChange(provider.id, "apiKey", event.target.value)}
                 placeholder="Paste VALR API key"
               />
             </label>
@@ -531,8 +576,8 @@ export function ConnectorCard({
               <span>API Secret</span>
               <input
                 type="password"
-                value={valrForm.apiSecret}
-                onChange={(event) => onValrFieldChange("apiSecret", event.target.value)}
+                value={formValues.apiSecret || ""}
+                onChange={(event) => onFieldChange(provider.id, "apiSecret", event.target.value)}
                 placeholder="Paste VALR API secret"
               />
             </label>
@@ -541,8 +586,8 @@ export function ConnectorCard({
           <label className="formField">
             <span>Preferred BTC Pair</span>
             <select
-              value={valrForm.preferredPair}
-              onChange={(event) => onValrFieldChange("preferredPair", event.target.value)}
+              value={formValues.preferredPair || VALR_PAIR_OPTIONS[0].value}
+              onChange={(event) => onFieldChange(provider.id, "preferredPair", event.target.value)}
             >
               {VALR_PAIR_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -556,11 +601,150 @@ export function ConnectorCard({
             <span>Subaccount ID (optional)</span>
             <input
               type="text"
-              value={valrForm.subAccountId}
-              onChange={(event) => onValrFieldChange("subAccountId", event.target.value)}
+              value={formValues.subAccountId || ""}
+              onChange={(event) => onFieldChange(provider.id, "subAccountId", event.target.value)}
               placeholder="Primary account by default"
             />
           </label>
+        </div>
+      ) : isIbkr ? (
+        <div className="connectorForm">
+          <div className="connectorSavedState">
+            <span>Gateway profile</span>
+            <strong>{provider.config.gatewayUrl || "No gateway URL saved yet"}</strong>
+            <small>
+              {provider.config.accountId
+                ? `Account ${provider.config.accountId} mapped for this workspace.`
+                : "Save your Client Portal / Web API gateway details to stage the lane."}
+            </small>
+          </div>
+
+          <div className="connectorFieldGrid">
+            <label className="formField">
+              <span>Gateway URL</span>
+              <input
+                type="url"
+                value={formValues.gatewayUrl || ""}
+                onChange={(event) => onFieldChange(provider.id, "gatewayUrl", event.target.value)}
+                placeholder="https://localhost:5001 or gateway URL"
+              />
+            </label>
+
+            <label className="formField">
+              <span>Account ID</span>
+              <input
+                type="text"
+                value={formValues.accountId || ""}
+                onChange={(event) => onFieldChange(provider.id, "accountId", event.target.value)}
+                placeholder="U1234567"
+              />
+            </label>
+          </div>
+
+          <label className="formField">
+            <span>Environment</span>
+            <select
+              value={formValues.environment || "paper"}
+              onChange={(event) => onFieldChange(provider.id, "environment", event.target.value)}
+            >
+              <option value="paper">Paper</option>
+              <option value="live">Live</option>
+            </select>
+          </label>
+        </div>
+      ) : isSaxo ? (
+        <div className="connectorForm">
+          <div className="connectorSavedState">
+            <span>Saved app keys</span>
+            <strong>{provider.config.appKeyMasked || "No Saxo app key saved yet"}</strong>
+            <small>
+              {provider.config.hasSecret
+                ? "Client secret is stored on the server."
+                : "Add your OpenAPI app credentials to stage this connection."}
+            </small>
+          </div>
+
+          <div className="connectorFieldGrid">
+            <label className="formField">
+              <span>App Key</span>
+              <input
+                type="text"
+                value={formValues.appKey || ""}
+                onChange={(event) => onFieldChange(provider.id, "appKey", event.target.value)}
+                placeholder="Paste Saxo app key"
+              />
+            </label>
+
+            <label className="formField">
+              <span>App Secret</span>
+              <input
+                type="password"
+                value={formValues.appSecret || ""}
+                onChange={(event) => onFieldChange(provider.id, "appSecret", event.target.value)}
+                placeholder="Paste Saxo app secret"
+              />
+            </label>
+          </div>
+
+          <div className="connectorFieldGrid">
+            <label className="formField">
+              <span>Account Key</span>
+              <input
+                type="text"
+                value={formValues.accountKey || ""}
+                onChange={(event) => onFieldChange(provider.id, "accountKey", event.target.value)}
+                placeholder="Optional account key"
+              />
+            </label>
+
+            <label className="formField">
+              <span>Environment</span>
+              <select
+                value={formValues.environment || "simulation"}
+                onChange={(event) => onFieldChange(provider.id, "environment", event.target.value)}
+              >
+                <option value="simulation">Simulation</option>
+                <option value="live">Live</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      ) : isEasyEquities ? (
+        <div className="connectorForm">
+          <div className="connectorSavedState">
+            <span>Manual profile</span>
+            <strong>{provider.config.accountLabel || "No EasyEquities profile saved yet"}</strong>
+            <small>
+              This keeps the JSE lane visible while we wait for a supported live integration path.
+            </small>
+          </div>
+
+          <div className="connectorFieldGrid">
+            <label className="formField">
+              <span>Account Label</span>
+              <input
+                type="text"
+                value={formValues.accountLabel || ""}
+                onChange={(event) => onFieldChange(provider.id, "accountLabel", event.target.value)}
+                placeholder="Primary EasyEquities account"
+              />
+            </label>
+
+            <label className="formField">
+              <span>Funding Bank</span>
+              <select
+                value={formValues.fundingBank || ""}
+                onChange={(event) => onFieldChange(provider.id, "fundingBank", event.target.value)}
+              >
+                <option value="">Select bank</option>
+                <option value="absa">Absa</option>
+                <option value="capitec">Capitec</option>
+                <option value="fnb">FNB</option>
+                <option value="nedbank">Nedbank</option>
+                <option value="standard-bank">Standard Bank</option>
+              </select>
+            </label>
+          </div>
         </div>
       ) : (
         <div className="connectorPlaceholder">
@@ -575,12 +759,21 @@ export function ConnectorCard({
           <button
             type="button"
             className="primaryButton"
-            onClick={onSaveValr}
+            onClick={() => onSave(provider.id)}
             disabled={busyKey === `${provider.id}:save`}
           >
             {busyKey === `${provider.id}:save` ? "Saving..." : "Save Credentials"}
           </button>
-        ) : null}
+        ) : (
+          <button
+            type="button"
+            className="primaryButton"
+            onClick={() => onSave(provider.id)}
+            disabled={busyKey === `${provider.id}:save`}
+          >
+            {busyKey === `${provider.id}:save` ? "Saving..." : "Save Setup"}
+          </button>
+        )}
         <button
           type="button"
           className="ghostButton"
@@ -593,9 +786,13 @@ export function ConnectorCard({
           type="button"
           className="ghostButton"
           onClick={() => onSync(provider.id)}
-          disabled={busyKey === `${provider.id}:sync`}
+          disabled={busyKey === `${provider.id}:sync` || provider.supportsSync === false}
         >
-          {busyKey === `${provider.id}:sync` ? "Syncing..." : "Sync Balances"}
+          {busyKey === `${provider.id}:sync`
+            ? "Syncing..."
+            : provider.supportsSync === false
+              ? "Sync Staged"
+              : "Sync Balances"}
         </button>
         {isValr ? (
           <button
@@ -605,6 +802,15 @@ export function ConnectorCard({
             disabled={busyKey === `${provider.id}:disconnect`}
           >
             {busyKey === `${provider.id}:disconnect` ? "Disconnecting..." : "Disconnect"}
+          </button>
+        ) : provider.configured ? (
+          <button
+            type="button"
+            className="ghostButton"
+            onClick={() => onDisconnect(provider.id)}
+            disabled={busyKey === `${provider.id}:disconnect`}
+          >
+            {busyKey === `${provider.id}:disconnect` ? "Clearing..." : "Clear Setup"}
           </button>
         ) : null}
         <button
@@ -762,7 +968,7 @@ export function OrderTicketModal({
         <div className="ticketBriefGrid">
           <div className="ticketBriefCard">
             <span>Desk</span>
-            <strong>{ticket.deskLabel || (ticket.kind === "collectible" ? "Collectibles" : "Signals desk")}</strong>
+            <strong>{ticket.deskLabel || (ticket.kind === "collectible" ? "LEGO Investments" : "Signals desk")}</strong>
             <small>{ticket.executionCue || "Use the desk rules to stay selective."}</small>
           </div>
           <div className="ticketBriefCard">
@@ -781,7 +987,7 @@ export function OrderTicketModal({
           </div>
           <div className="ticketBriefCard">
             <span>Note focus</span>
-            <strong>{ticket.kind === "collectible" ? "Inventory thesis" : "Entry thesis"}</strong>
+            <strong>{ticket.kind === "collectible" ? "Investment thesis" : "Entry thesis"}</strong>
             <small>{ticket.notePlaceholder}</small>
           </div>
         </div>
@@ -1029,7 +1235,7 @@ export function CloseTradeModal({ trade, busy, onClose, onFieldChange, onSubmit 
         <div className="ticketHero">
           <div>
             <span className="collectibleCategory">
-              {trade.assetClass === "collectible" ? "Collectible position" : "Market position"}
+              {trade.assetClass === "collectible" ? "LEGO investment position" : "Market position"}
             </span>
             <h3>{trade.ticker}</h3>
           </div>
@@ -1050,7 +1256,7 @@ export function CloseTradeModal({ trade, busy, onClose, onFieldChange, onSubmit 
         ) : (
           <div className="statusBanner subtleBanner">
             <strong>Paper close</strong>
-            <span>This closes the position inside BrickAlpha only.</span>
+            <span>This closes the position inside Brick Alpha only.</span>
           </div>
         )}
 
@@ -1154,7 +1360,7 @@ export function PositionDetailCard({ trade, timeZone, onNavigate, onCloseTrade }
           <strong>
             {trade.executionMode === "live"
               ? venueDetailLabel(providerLabel(trade.executionProvider), trade.executionPair)
-              : "BrickAlpha Paper"}
+              : "Brick Alpha Paper"}
           </strong>
         </div>
         <div>
@@ -1177,7 +1383,66 @@ export function PositionDetailCard({ trade, timeZone, onNavigate, onCloseTrade }
           <span>Risk Budget</span>
           <strong>{formatTradePrice(trade, trade.riskBudget)}</strong>
         </div>
+        {trade.assetClass === "collectible" ? (
+          <>
+            <div>
+              <span>Brick Alpha Score</span>
+              <strong>{trade.brickAlphaScore ? `${trade.brickAlphaScore}/100` : "--"}</strong>
+            </div>
+            <div>
+              <span>Investment Grade</span>
+              <strong>{trade.investmentGrade || "--"}</strong>
+            </div>
+            <div>
+              <span>Recommendation</span>
+              <strong>{trade.recommendation || "Hold"}</strong>
+            </div>
+            <div>
+              <span>Sell-by Target</span>
+              <strong>{trade.sellByTargetDate || "--"}</strong>
+            </div>
+            <div>
+              <span>Retirement Status</span>
+              <strong>{trade.retirementStatus || "--"}</strong>
+            </div>
+            <div>
+              <span>Retirement Probability</span>
+              <strong>
+                {Number.isFinite(trade.retirementProbability)
+                  ? `${Math.round(trade.retirementProbability)}%`
+                  : "--"}
+              </strong>
+            </div>
+            <div>
+              <span>Risk Score</span>
+              <strong>{trade.riskScore ? `${trade.riskScore}/100` : "--"}</strong>
+            </div>
+          </>
+        ) : null}
       </div>
+
+      {trade.assetClass === "collectible" && trade.investmentThesis ? (
+        <div className="investmentThesisGrid">
+          {trade.alphaSignals?.length ? (
+            <div className="positionNote">
+              <span>Alpha Signals</span>
+              <AlphaSignalBadges signals={trade.alphaSignals} />
+            </div>
+          ) : null}
+          <div className="positionNote">
+            <span>Why Attractive</span>
+            <p>{trade.investmentThesis.attractive}</p>
+          </div>
+          <div className="positionNote">
+            <span>Upside Drivers</span>
+            <p>{trade.investmentThesis.upsideDrivers.join(" | ")}</p>
+          </div>
+          <div className="positionNote">
+            <span>Exit Strategy</span>
+            <p>{trade.investmentThesis.exitStrategy}</p>
+          </div>
+        </div>
+      ) : null}
 
       {trade.orderNote ? (
         <div className="positionNote">
