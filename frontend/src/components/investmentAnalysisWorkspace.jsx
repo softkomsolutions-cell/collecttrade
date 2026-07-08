@@ -15,6 +15,7 @@ import { AlphaSignalBadges } from "./workspaceCards";
 import { InvestmentAnalysisChart } from "./investmentAnalysisChart";
 import { ScoreBar, ScoreRing } from "./brickAlphaScoreDisplay";
 import { ScoreExplanationPanel } from "./scoreExplanationPanel";
+import heroImageFallback from "../assets/hero.png";
 
 const HORIZON_OPTIONS = [1, 3, 5, 10];
 
@@ -208,21 +209,6 @@ function formatCommentaryParagraphs(text) {
   return paragraphs.slice(0, 4);
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function retirementProgress(item, productionStart) {
-  const startMs = Date.parse(productionStart);
-  const endMs = Date.parse(item?.actualRetirementDate || item?.expectedRetirementDate);
-  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
-    return 0;
-  }
-  const nowMs = Date.now();
-  const progress = (nowMs - startMs) / (endMs - startMs);
-  return clamp(progress, 0, 1);
-}
-
 function buildMinifigureCards(item) {
   const roster = MINIFIGURE_ROSTERS[item.id] || [];
   const exclusiveCount = Math.max(1, Number(item.exclusiveMinifigures) || 1);
@@ -363,7 +349,6 @@ export function InvestmentAnalysisWorkspace({
   const heroImageUrl = extractPrimaryImageUrl(item);
   const discountLabel = formatDiscountLabel(item);
   const retirementCountdown = formatCountdownLabel(item);
-  const retirementFill = retirementProgress(item, productionStart);
   const commentaryParagraphs = formatCommentaryParagraphs(commentary);
 
   return (
@@ -584,11 +569,8 @@ export function InvestmentAnalysisWorkspace({
             <span>Production Start</span>
             <strong>{productionStart}</strong>
           </div>
-          <div
-            className="iaRetirementTrack"
-            style={{ "--ia-retire-progress": `${Math.round(retirementFill * 100)}%` }}
-          >
-            <div className="iaRetirementTrackFill" style={{ width: `${Math.round(retirementFill * 100)}%` }} />
+          <div className="iaRetirementTrack">
+            <div className="iaRetirementTrackFill" />
             <div className="iaRetirementMarker iaRetirementMarker-today">
               <span>Today</span>
               <strong>{todayLabel}</strong>
@@ -600,11 +582,6 @@ export function InvestmentAnalysisWorkspace({
           </div>
         </div>
         <div className="iaRetirementStats">
-          <div className="iaRetirementCountdown">
-            <span>Countdown</span>
-            <strong>{retirementCountdown}</strong>
-            <small>{item.retirementStatus}</small>
-          </div>
           <div>
             <span>Confidence</span>
             <strong>{Math.round(item.retirementConfidence)}%</strong>
@@ -647,10 +624,6 @@ export function InvestmentAnalysisWorkspace({
               </div>
               <h3>{figure.name}</h3>
               <small>{figure.role}</small>
-              <p className="iaMinifigureNote">
-                Collector demand: <strong>{figure.popularity >= 80 ? "High" : figure.popularity >= 60 ? "Moderate" : "Developing"}</strong>{" "}
-                · Exclusivity: <strong>{Number(item.exclusiveMinifigures) >= 3 ? "Strong" : Number(item.exclusiveMinifigures) >= 1 ? "Moderate" : "Limited"}</strong>
-              </p>
               <div className="iaMinifigureMetrics">
                 <div>
                   <span>Popularity</span>
@@ -785,18 +758,8 @@ export function InvestmentAnalysisWorkspace({
           {comparables.map((comp) => (
             <article className="iaComparableCard" key={`${comp.sku}-${comp.name}`}>
               <div className="iaComparableTop">
-                <div className="iaComparableImage" aria-hidden="true">
-                  <span>LEGO</span>
-                  <strong>#{comp.sku}</strong>
-                </div>
-                <div className="iaComparableTitle">
-                  <strong>{comp.name}</strong>
-                  <span>Set #{comp.sku}</span>
-                </div>
-                <div className="iaComparableCallout">
-                  <span>ROI</span>
-                  <strong className={positiveTone(comp.growth)}>+{Number(comp.growth).toFixed(0)}%</strong>
-                </div>
+                <strong>{comp.name}</strong>
+                <span>#{comp.sku}</span>
               </div>
               <div className="iaComparableMetrics">
                 <div>

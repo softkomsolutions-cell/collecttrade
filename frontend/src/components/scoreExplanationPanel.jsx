@@ -451,7 +451,7 @@ function ContributionCard({ metric, rank }) {
   );
 }
 
-export function ScoreExplanationPanel({ item }) {
+export function ScoreExplanationPanel({ item, embedded = false }) {
   const explanation = useMemo(() => {
     if (!item) {
       return null;
@@ -533,10 +533,10 @@ export function ScoreExplanationPanel({ item }) {
         </div>
       </section>
 
-      <footer className="wtsVerdict">
+      <footer className={`wtsVerdict${embedded ? " wtsVerdict-embedded" : ""}`}>
         <span className="wtsVerdictLabel">Analyst verdict</span>
         <p>{explanation.recommendationExplanation}</p>
-        {explanation.grade ? <small>{explanation.grade}</small> : null}
+        {embedded || !explanation.grade ? null : <small>{explanation.grade}</small>}
       </footer>
     </article>
   );

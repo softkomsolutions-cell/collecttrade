@@ -13,13 +13,15 @@ export function scoreTone(score) {
 }
 
 export function ScoreRing({ score, label = "Score", size = "default" }) {
-  const radius = 54;
+  const radius = size === "xlarge" ? 68 : 54;
   const circumference = 2 * Math.PI * radius;
   const progress = (Math.min(100, Math.max(0, Number(score) || 0)) / 100) * circumference;
+  const sizeClass =
+    size === "xlarge" ? " iaScoreRing-xlarge" : size === "large" ? " iaScoreRing-large" : "";
 
   return (
     <div
-      className={`iaScoreRing iaScoreRing-${scoreTone(score)}${size === "large" ? " iaScoreRing-large" : ""}`}
+      className={`iaScoreRing iaScoreRing-${scoreTone(score)}${sizeClass}`}
     >
       <svg viewBox="0 0 128 128" aria-hidden="true">
         <circle className="iaScoreRingTrack" cx="64" cy="64" r={radius} />
