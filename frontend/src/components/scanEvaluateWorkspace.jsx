@@ -11,7 +11,6 @@ import {
   buildForecastCards,
   buildMarketPricing,
   buildRetirementSnapshot,
-  demoSeedFromFile,
   findCatalogMatch,
   getCopilotResponse,
   getDemoSetProfile,
@@ -100,7 +99,7 @@ function CameraModal({ onCapture, onClose }) {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      } catch (cameraError) {
+      } catch {
         setError("Camera unavailable — use Upload Image instead.");
       }
     }

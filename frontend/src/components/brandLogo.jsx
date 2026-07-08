@@ -43,7 +43,6 @@ export function BrandLogo({
 
   if (variant === "full" || showWordmark) {
     const height = dimension;
-    const width = Math.round(dimension * 4.6);
 
     return (
       <div className={`brandLogoLockup ${className}`.trim()} aria-label="Brick Alpha">

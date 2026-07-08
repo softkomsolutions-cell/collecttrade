@@ -5,7 +5,6 @@ import {
   APP_TAGLINE,
   APP_WORDMARK,
   PARTNER_TEST_FLOW,
-  TRADE_PATHS,
 } from "../appConfig";
 import {
   AUTH_FEATURE_CARDS,
@@ -20,8 +19,6 @@ import {
 import {
   defaultIntroIdForPage,
   defaultSectionIdForIntro,
-  labelDesk,
-  normalizeDesk,
   readLaunchPreference,
   workspaceLabel,
 } from "../appUtils";
@@ -382,14 +379,14 @@ export function BootSplash() {
 
 export function SplashScreen({ ready, activeDesk, onLaunch }) {
   const savedLaunch = readLaunchPreference();
-  const launchDesk = savedLaunch?.desk || normalizeDesk(activeDesk);
-  const defaultTradingDesk = launchDesk === "crypto" ? "forex" : launchDesk;
+  const launchDesk = savedLaunch?.desk || activeDesk;
+  const defaultTradingDesk = launchDesk;
   const homeLaunch = buildHomeEntrySelection(launchDesk);
   const serviceMenuRows = buildPrimaryServiceRows({
     launchDesk,
-    launchDeskLabel: labelDesk(launchDesk),
+    launchDeskLabel: "LEGO",
     defaultTradingDesk,
-    defaultTradingDeskLabel: labelDesk(defaultTradingDesk),
+    defaultTradingDeskLabel: "LEGO",
   });
   const onboardingSlides = ENTRY_ONBOARDING_SLIDES;
   const [onboardingStep, setOnboardingStep] = useState(onboardingSlides.length);
@@ -514,7 +511,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
   );
 }
 
-function describeLaunchSelection(page, desk, sectionId) {
+function describeLaunchSelection(page) {
   if (page === "home") {
     return {
       label: "Executive Dashboard",
@@ -522,43 +519,15 @@ function describeLaunchSelection(page, desk, sectionId) {
     };
   }
 
-  if (page === "news") {
+  if (page === "scan-evaluate") {
     return {
-      label: `${labelDesk(desk)} News`,
-      hint: "You'll land on the macro feed with the selected desk framing the tape.",
+      label: "Scan & Evaluate",
+      hint: "You'll land on the scan flow and can generate an evaluation immediately.",
     };
   }
-
-  if (page === "signals" && sectionId === "signals-grid") {
-    return {
-      label: `${labelDesk(desk)} Alpha Signals`,
-      hint: "You'll land on the live signals grid with the desk filter already applied.",
-    };
-  }
-
-  if (page === "signals") {
-    return {
-      label: `${labelDesk(desk)} Trade Desk`,
-      hint: "You'll go straight into the chart, active setup, and ticket workflow.",
-    };
-  }
-
-    if (page === "reports") {
-      return {
-        label: "Research Center",
-        hint: "You'll land on the visual research workspace with performance, exposure, and signal analytics.",
-      };
-    }
-
-    if (page === "subscriptions") {
-      return {
-        label: "Subscriptions",
-        hint: "You'll land on the plan workspace with premium value, tiers, and upgrade paths.",
-      };
-    }
 
   return {
-    label: workspaceLabel(page, desk),
+    label: workspaceLabel(page),
     hint: "Your first workspace will be ready as soon as you sign in.",
   };
 }
@@ -566,52 +535,28 @@ function describeLaunchSelection(page, desk, sectionId) {
 export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = false, demoStatus = "" }) {
   const landingActions = [
     {
-      id: "news",
-      glyph: "NW",
-      eyebrow: "Macro",
-      title: "News",
-      page: "news",
-      introId: "news",
-      sectionId: "macro-feed",
-      destination: "Macro feed",
-      bestFor: "Start with context",
-      blurb: "Start with the tape, South African context, and the headlines driving the next move.",
-    },
-    {
-      id: "alpha-signals",
-      glyph: "AS",
-      eyebrow: "Signals",
-      title: "Alpha Signals",
-      page: "signals",
-      introId: "trade",
-      sectionId: "signals-grid",
-      destination: "Signals grid",
-      bestFor: "Scan clean setups",
-      blurb: "Open the filtered signals grid first and scan the cleanest EMA setups before acting.",
-    },
-    {
-      id: "trade",
-      glyph: "TR",
-      eyebrow: "Execution",
-      title: "Trade Desk",
-      page: "signals",
-      introId: "trade",
-      sectionId: "chart-panel",
-      destination: "Active chart",
-      bestFor: "Go straight to execution",
-      blurb: "Go straight into the active chart, structure plan, and ticket workflow.",
+      id: "scan-evaluate",
+      glyph: "📷",
+      eyebrow: "Start",
+      title: "Scan & Evaluate",
+      page: "scan-evaluate",
+      introId: "scan-evaluate",
+      sectionId: "scan-evaluate",
+      destination: "Instant evaluation",
+      bestFor: "Start with a set",
+      blurb: "Upload a photo, confirm the set, generate a Brick Alpha score, then save it into your portfolio.",
     },
     {
       id: "collectibles",
       glyph: "CL",
-      eyebrow: "Alt",
+      eyebrow: "Analyze",
       title: "LEGO Investments",
       page: "collectibles",
       introId: "collectibles",
       sectionId: "investment-analysis",
-      destination: "LEGO Investments focus",
-      bestFor: "Trade alternatives",
-      blurb: "Analyze LEGO sets and investment-grade collectibles with the same disciplined ticket flow.",
+      destination: "Investment analysis",
+      bestFor: "Analyze and save holdings",
+      blurb: "Run an investment analysis, attach evidence and notes, and manage LEGO positions in one workflow.",
     },
   ];
   const secondaryActions = [
@@ -635,19 +580,8 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
       introId: "portfolio",
       sectionId: "open-positions",
       destination: "Open positions",
-      blurb: "Review open positions, PnL, and recent closes before you put on the next trade.",
+      blurb: "Review holdings, position details, and activity history.",
     },
-      {
-        id: "reports",
-        glyph: "RP",
-        eyebrow: "Review",
-        title: "Research Center",
-      page: "reports",
-      introId: "reports",
-      sectionId: "reports-performance",
-        destination: "Performance research",
-        blurb: "Open visual research with performance curves, desk exposure, and signal analytics.",
-      },
       {
         id: "subscriptions",
         glyph: "SB",
@@ -659,28 +593,6 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
         destination: "Subscription plans",
         blurb: "Show plan tiers, premium features, and the value path that makes the service commercially real.",
       },
-      {
-        id: "tools",
-        glyph: "TL",
-      eyebrow: "Assist",
-      title: "Tools",
-      page: "tools",
-      introId: "tools",
-      sectionId: "tools-workbench",
-      destination: "Tools workbench",
-      blurb: "Use the mentor, chart analyzer, simulator, and research shelf before you commit.",
-    },
-    {
-      id: "connections",
-      glyph: "CN",
-      eyebrow: "Route",
-      title: "Connections",
-      page: "connections",
-      introId: "connections",
-      sectionId: "connections-overview",
-      destination: "Connector overview",
-      blurb: "Check brokers, live routing, feed health, and connector readiness in one place.",
-    },
     {
       id: "settings",
       glyph: "ST",
@@ -695,17 +607,17 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
   ];
   const allActions = [...landingActions, ...secondaryActions];
 
-  const initialPage = initialLaunch?.page || "news";
+  const initialPage = initialLaunch?.page || "scan-evaluate";
   const initialDesk = initialLaunch?.desk || "forex";
   const initialIntroId = initialLaunch?.introId || defaultIntroIdForPage(initialPage);
   const [selectedActionId, setSelectedActionId] = useState(
     allActions.some((action) => action.id === initialLaunch?.landingId)
       ? initialLaunch.landingId
       : allActions.find((action) => action.page === initialPage && action.sectionId === initialLaunch?.sectionId)
-        ?.id || (initialPage === "signals" && initialLaunch?.sectionId === "chart-panel" ? "trade" : initialIntroId === "trade" ? "alpha-signals" : initialIntroId),
+        ?.id || initialIntroId,
   );
   const [selectedPage, setSelectedPage] = useState(initialPage);
-  const [selectedDesk, setSelectedDesk] = useState(initialDesk);
+  const [selectedDesk] = useState(initialDesk);
   const [selectedIntroId, setSelectedIntroId] = useState(initialIntroId);
   const [selectedSectionId, setSelectedSectionId] = useState(
     initialLaunch?.sectionId || defaultSectionIdForIntro(initialPage, initialIntroId),
@@ -713,24 +625,13 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
 
   const selectedAction =
     allActions.find((action) => action.id === selectedActionId) || allActions[0];
-  const launchDetails = describeLaunchSelection(selectedPage, selectedDesk, selectedSectionId);
-  const deskPathOptions = TRADE_PATHS.filter((path) => path.page === "signals");
+  const launchDetails = describeLaunchSelection(selectedPage);
 
   const handleActionSelect = (action) => {
     setSelectedActionId(action.id);
     setSelectedPage(action.page);
     setSelectedIntroId(action.introId);
-    if (action.page === "signals" || action.page === "news") {
-      setSelectedDesk((currentDesk) => normalizeDesk(currentDesk || initialDesk));
-    }
     setSelectedSectionId(action.sectionId || defaultSectionIdForIntro(action.page, action.introId));
-  };
-
-  const handleTradePathSelect = (path) => {
-    setSelectedDesk(path.desk || selectedDesk);
-    setSelectedPage(path.page);
-    setSelectedIntroId(path.page === "news" ? "news" : "trade");
-    setSelectedSectionId(path.page === "signals" ? selectedSectionId : defaultSectionIdForIntro(path.page, "trade"));
   };
 
   return (
@@ -805,34 +706,34 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
 
             <div className="landingValueGrid">
               <div className="landingValueCard">
-                <span>Macro Context</span>
-                <strong>South Africa-aware tape</strong>
-                <small>Desk-aware headlines, honest timestamps, and route context before the trade.</small>
+                <span>Identify</span>
+                <strong>Scan set details fast</strong>
+                <small>Upload a photo, confirm the match, and capture the set identity cleanly.</small>
               </div>
               <div className="landingValueCard">
-                <span>Alpha Signals</span>
-                <strong>8 / 21 EMA workflow</strong>
-                <small>Crosses, retests, structure plans, and visible exits baked into the desk.</small>
+                <span>Evaluate</span>
+                <strong>Brick Alpha score + thesis</strong>
+                <small>Get a recommendation with a clear score breakdown and evidence-led notes.</small>
               </div>
               <div className="landingValueCard">
-                <span>Execution</span>
-                <strong>Paper first, live where ready</strong>
-                <small>Venue-aware tickets, risk budgets, and saved workflows that stay coherent.</small>
+                <span>Track</span>
+                <strong>Portfolio intelligence</strong>
+                <small>Save holdings and review performance, retirement timelines, and activity history.</small>
               </div>
             </div>
 
             <div className="landingFeatureRow">
               <div className="landingFeatureChip">
-                <span>Trading lanes</span>
-                <strong>Forex, ETFs, Crypto, JSE</strong>
+                <span>Workflow</span>
+                <strong>Scan → Evaluate → Save</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Alternative book</span>
+                <span>Holdings</span>
                 <strong>LEGO investment holdings</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Support stack</span>
-                <strong>Tools and connections</strong>
+                <span>Commercial</span>
+                <strong>Subscriptions-ready</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Workspace state</span>
@@ -842,7 +743,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
 
             <div className="landingTesterCard">
               <span>Partner testing route</span>
-              <strong>Landing, News, Trade Desk, LEGO Investments, Feedback Board</strong>
+              <strong>Landing, Scan & Evaluate, LEGO Investments, Portfolio, Feedback Board</strong>
               <small>
                 If this session is for partner feedback, use the built-in test pass so notes land in one
                 place and cover the main product surfaces.
@@ -871,9 +772,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
               <div className="splashPreviewCard">
                 <span>Desk</span>
                 <strong>
-                  {selectedPage === "signals" || selectedPage === "news"
-                    ? labelDesk(selectedDesk)
-                    : "Cross-workspace"}
+                  {"LEGO Investments"}
                 </strong>
               </div>
               <div className="splashPreviewCard">
@@ -897,12 +796,8 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
               <div className="landingRouteStep">
                 <span>02</span>
                 <div>
-                  <strong>Anchor the desk</strong>
-                  <small>
-                    {selectedPage === "signals" || selectedPage === "news"
-                      ? `${labelDesk(selectedDesk)} frames the session.`
-                      : "This workspace opens without a desk filter."}
-                  </small>
+                  <strong>Follow one workflow</strong>
+                  <small>Scan, evaluate, save, and review without switching product lanes.</small>
                 </div>
               </div>
               <div className="landingRouteStep">
@@ -961,7 +856,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
             <div>
               <span>More Workspaces</span>
               <strong>Open the supporting parts of the platform first if that’s your priority</strong>
-              <p>These usually support the main trading flow, but they should still be available from the first screen.</p>
+              <p>Account and billing workspaces stay available without distracting from the LEGO investment workflow.</p>
             </div>
           </div>
 
@@ -984,42 +879,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
           </div>
         </div>
 
-        {selectedPage === "signals" || selectedPage === "news" ? (
-          <div className="splashSection splashSectionDeskChoice">
-            <div className="splashSectionHeader">
-              <div>
-                <span>Desk Choice</span>
-                <strong>Choose the market lane that should anchor the first screen</strong>
-                <p>News and signal workflows both make more sense when they open inside the right desk.</p>
-              </div>
-            </div>
-
-            <div className="splashGrid">
-              {deskPathOptions.map((path) => (
-                <button
-                  key={path.id}
-                  type="button"
-                  className={`splashCard splashDeskCard ${selectedDesk === path.desk ? "active" : ""}`}
-                  onClick={() => handleTradePathSelect(path)}
-                >
-                  <div className="splashCardMeta">
-                    <span className="splashGlyph splashGlyphSmall">{path.glyph}</span>
-                    <span className="splashCardFlag">{path.eyebrow}</span>
-                  </div>
-                  <div className="splashDeskCardTitle">
-                    <strong>{path.title}</strong>
-                    <small>{path.destination}</small>
-                  </div>
-                  <small>{path.blurb}</small>
-                  <div className="landingDeskMeta">
-                    <span>Best for</span>
-                    <strong>{path.eyebrow}</strong>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        {null}
 
         <div className="panelActions landingActions">
           {demoStatus ? <div className="statusBanner">{demoStatus}</div> : null}

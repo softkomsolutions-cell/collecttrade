@@ -71,10 +71,6 @@ function daysBetween(start, end) {
   return Math.max(0, Math.round((endMs - startMs) / MS_PER_DAY));
 }
 
-function yearsBetween(start, end) {
-  return daysBetween(start, end) / 365;
-}
-
 function retirementTimelineScore(item, today = new Date()) {
   if (item.actualRetirementDate) {
     return 95;
@@ -727,7 +723,6 @@ export function buildBrickAlphaScoreBreakdown(item) {
 export function buildPriceForecast(item, years) {
   const current = numberOrZero(item.currentMarketValue);
   const projected = numberOrZero(item.projectedFutureValue);
-  const buyPrice = numberOrZero(item.buyPrice || item.retailPrice);
   const horizonMonths = years * 12;
   const annualGrowth =
     current > 0 && projected > current

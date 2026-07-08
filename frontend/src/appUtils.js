@@ -44,25 +44,9 @@ export function labelDesk(desk) {
   return desk === "all" ? "All Markets" : findDeskMeta(desk).label;
 }
 
-export function workspaceLabel(page, desk) {
+export function workspaceLabel(page, _desk) {
   if (page === "home") {
     return "Executive Dashboard";
-  }
-
-  if (page === "news") {
-    return desk === "all" ? "News Workspace" : `${labelDesk(desk)} News`;
-  }
-
-  if (page === "signals") {
-    return desk === "all" ? "Signals Workspace" : `${findDeskMeta(desk).heading}`;
-  }
-
-  if (page === "tools") {
-    return "Tools";
-  }
-
-  if (page === "connections") {
-    return "Connections";
   }
 
   if (page === "collectibles") {
@@ -71,10 +55,6 @@ export function workspaceLabel(page, desk) {
 
   if (page === "scan-evaluate") {
     return "Scan & Evaluate";
-  }
-
-  if (page === "reports") {
-    return "Research Center";
   }
 
   if (page === "subscriptions") {
@@ -89,8 +69,8 @@ export function defaultIntroIdForPage(page) {
     return "home";
   }
 
-  if (page === "news") {
-    return "news";
+  if (page === "scan-evaluate") {
+    return "scan-evaluate";
   }
 
   if (page === "collectibles") {
@@ -101,10 +81,6 @@ export function defaultIntroIdForPage(page) {
     return "portfolio";
   }
 
-  if (page === "reports") {
-    return "reports";
-  }
-
   if (page === "subscriptions") {
     return "subscriptions";
   }
@@ -113,28 +89,12 @@ export function defaultIntroIdForPage(page) {
     return "settings";
   }
 
-  if (page === "tools") {
-    return "tools";
-  }
-
-  if (page === "connections") {
-    return "connections";
-  }
-
-  return "trade";
+  return "collectibles";
 }
 
-export function defaultSectionIdForIntro(page, introId) {
+export function defaultSectionIdForIntro(page, _introId) {
   if (page === "home") {
     return "home-overview";
-  }
-
-  if (page === "news") {
-    return "macro-feed";
-  }
-
-  if (page === "signals") {
-    return introId === "news" ? "macro-feed" : "signals-grid";
   }
 
   if (page === "collectibles") {
@@ -147,10 +107,6 @@ export function defaultSectionIdForIntro(page, introId) {
 
   if (page === "portfolio") {
     return "open-positions";
-  }
-
-  if (page === "reports") {
-    return "reports-performance";
   }
 
   if (page === "subscriptions") {

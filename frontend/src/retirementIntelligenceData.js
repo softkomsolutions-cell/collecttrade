@@ -393,7 +393,7 @@ function extractSetNumber(item) {
   return match ? match[1] : "--";
 }
 
-export function buildRetirementSummaryKpis(watchlist = [], openTrades = [], portfolioNav = 0) {
+export function buildRetirementSummaryKpis(watchlist = [], portfolioNav = 0) {
   const retiringThisQuarter = watchlist.filter((item) => {
     const months = monthsUntilRetirement(item);
     return months !== null && months >= 0 && months <= 3;

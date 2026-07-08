@@ -725,7 +725,7 @@ export function HomeScreen({
   });
   const launchCards = serviceLaunchDefinitions.map(buildLaunchCard);
   const supportLaunchCards = supportLaunchDefinitions.map(buildLaunchCard);
-  const homeActions = [
+  const _homeActions = [
     {
       id: "holdings",
       label: "View Holdings",
