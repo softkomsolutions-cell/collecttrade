@@ -2328,6 +2328,7 @@
     linear-gradient(145deg, rgba(201, 169, 98, 0.18), rgba(91, 108, 255, 0.12)),
     #11141d;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
 }
 
 .iaHeroImage strong {
@@ -2335,6 +2336,24 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--ba-text-primary);
+}
+
+.iaHeroImagePhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.02);
+  filter: saturate(1.08) contrast(1.03);
+}
+
+.iaHeroImage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(8, 9, 13, 0.05), rgba(8, 9, 13, 0.62));
+  pointer-events: none;
 }
 
 .iaHeroImageBadge {
@@ -2349,6 +2368,7 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  z-index: 2;
 }
 
 .iaHeroBody {
@@ -2572,6 +2592,75 @@
   color: var(--ba-text-secondary);
 }
 
+.iaVerdictLead {
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ba-text-secondary);
+  max-width: 92ch;
+}
+
+.iaVerdictGrid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.iaVerdictBlock {
+  grid-column: span 6;
+  padding: 16px;
+  border-radius: var(--ba-radius-lg);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--ba-border-subtle);
+  min-height: 92px;
+}
+
+.iaVerdictBlock span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-gold);
+}
+
+.iaVerdictBlock ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ba-text-secondary);
+  line-height: 1.55;
+}
+
+.iaVerdictBlock p {
+  margin: 0;
+  color: var(--ba-text-secondary);
+  line-height: 1.55;
+}
+
+.iaVerdictBlock-highlight {
+  grid-column: span 7;
+  border-color: rgba(91, 108, 255, 0.26);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(91, 108, 255, 0.16), transparent 52%),
+    rgba(0, 0, 0, 0.18);
+}
+
+.iaVerdictBlock-action {
+  grid-column: span 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-color: rgba(201, 169, 98, 0.22);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(201, 169, 98, 0.14), transparent 55%),
+    rgba(0, 0, 0, 0.18);
+}
+
+.iaVerdictBlock-action .primaryButton {
+  width: 100%;
+  justify-content: center;
+}
+
 .iaThesisGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2675,7 +2764,94 @@
 
 .iaChartSurface {
   width: 100%;
-  min-height: 340px;
+  min-height: 420px;
+}
+
+.iaScenarioGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.iaScenarioCard {
+  padding: 18px;
+  border-radius: var(--ba-radius-xl);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.18);
+  display: grid;
+  gap: 10px;
+  min-height: 132px;
+}
+
+.iaScenarioLabel {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.iaScenarioValue {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.iaScenarioMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--ba-text-secondary);
+}
+
+.iaScenarioMeta span {
+  font-size: 12px;
+  color: var(--ba-text-muted);
+}
+
+.iaScenarioMeta strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.iaScenarioCard-best {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.14), transparent 58%),
+    rgba(0, 0, 0, 0.18);
+  border-color: rgba(34, 197, 94, 0.18);
+}
+
+.iaScenarioCard-expected {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(91, 108, 255, 0.16), transparent 58%),
+    rgba(0, 0, 0, 0.18);
+  border-color: rgba(91, 108, 255, 0.22);
+}
+
+.iaScenarioCard-worst {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(248, 113, 113, 0.12), transparent 58%),
+    rgba(0, 0, 0, 0.18);
+  border-color: rgba(248, 113, 113, 0.18);
+}
+
+.iaCommentaryBody {
+  display: grid;
+  gap: 12px;
+  max-width: 92ch;
+}
+
+.iaCommentaryBody p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ba-text-secondary);
+}
+
+.iaCommentaryEmpty {
+  color: var(--ba-text-muted);
 }
 
 .iaWeightLegend {
@@ -2795,7 +2971,7 @@
 .iaRetirementMarker {
   position: absolute;
   top: 50%;
-  left: 68%;
+  left: var(--ia-retire-progress, 68%);
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
@@ -2828,7 +3004,7 @@
 
 .iaRetirementStats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -2901,6 +3077,18 @@
   color: var(--ba-text-muted);
 }
 
+.iaMinifigureNote {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ba-text-secondary);
+}
+
+.iaMinifigureNote strong {
+  color: var(--ba-text-primary);
+  font-weight: 600;
+}
+
 .iaMinifigureMetrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2930,7 +3118,7 @@
 
 .iaComparableTop {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
@@ -2939,6 +3127,67 @@
 .iaComparableTop span {
   color: var(--ba-gold);
   font-size: 12px;
+}
+
+.iaComparableImage {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(91, 108, 255, 0.18);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(91, 108, 255, 0.18), transparent 60%),
+    rgba(255, 255, 255, 0.02);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.iaComparableImage span {
+  display: none;
+}
+
+.iaComparableImage strong {
+  font-family: var(--ba-font-mono);
+  font-size: 12px;
+  color: rgba(244, 245, 247, 0.92);
+}
+
+.iaComparableTitle {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.iaComparableTitle strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iaComparableTitle span {
+  color: var(--ba-text-muted);
+  font-size: 12px;
+}
+
+.iaComparableCallout {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  padding-left: 10px;
+}
+
+.iaComparableCallout span {
+  color: var(--ba-text-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iaComparableCallout strong {
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .iaComparableMetrics {
@@ -3300,9 +3549,22 @@
     grid-row: auto;
   }
 
-  .iaTwoColumn,
-  .iaThesisGrid {
+  .iaTwoColumn {
     grid-template-columns: 1fr;
+  }
+
+  .iaScenarioGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .iaVerdictGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .iaVerdictBlock,
+  .iaVerdictBlock-highlight,
+  .iaVerdictBlock-action {
+    grid-column: 1 / -1;
   }
 
   .iaRetirementTimeline {
@@ -3330,7 +3592,7 @@
   }
 
   .iaHeroMetrics,
-  .iaForecastGrid,
+  .iaScenarioGrid,
   .iaPortfolioGrid,
   .iaRetirementStats {
     grid-template-columns: 1fr;

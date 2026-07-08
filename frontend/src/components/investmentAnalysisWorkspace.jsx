@@ -149,6 +149,80 @@ function productionStartDate(item) {
   return date.toISOString().slice(0, 10);
 }
 
+function extractPrimaryImageUrl(item) {
+  const candidates = [
+    item?.imageUrl,
+    item?.imageURL,
+    item?.image,
+    item?.thumbnailUrl,
+    item?.thumbnailURL,
+    item?.thumbnail,
+    item?.photoUrl,
+    item?.photo,
+  ];
+  const url = candidates.find((value) => typeof value === "string" && value.trim().length);
+  return url ? url.trim() : null;
+}
+
+function formatDiscountLabel(item) {
+  const discount = Number(item?.discountPercentage) || 0;
+  if (discount > 0) {
+    return `${discount.toFixed(0)}% below retail`;
+  }
+  if (discount < 0) {
+    return `${Math.abs(discount).toFixed(0)}% above retail`;
+  }
+  return "At retail";
+}
+
+function formatCountdownLabel(item) {
+  const anchor = item?.actualRetirementDate || item?.expectedRetirementDate;
+  const ms = Date.parse(anchor);
+  if (!Number.isFinite(ms)) {
+    return "--";
+  }
+  const months = Math.round((ms - Date.now()) / (1000 * 60 * 60 * 24 * 30.42));
+  if (months <= 0) {
+    return "Retired";
+  }
+  if (months === 1) {
+    return "1 month";
+  }
+  return `${months} months`;
+}
+
+function formatCommentaryParagraphs(text) {
+  const cleaned = String(text || "").replace(/^"+|"+$/g, "").trim();
+  if (!cleaned) {
+    return [];
+  }
+  const sentences = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+
+  const paragraphs = [];
+  for (let i = 0; i < sentences.length; i += 3) {
+    paragraphs.push(sentences.slice(i, i + 3).join(" "));
+  }
+  return paragraphs.slice(0, 4);
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function retirementProgress(item, productionStart) {
+  const startMs = Date.parse(productionStart);
+  const endMs = Date.parse(item?.actualRetirementDate || item?.expectedRetirementDate);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+    return 0;
+  }
+  const nowMs = Date.now();
+  const progress = (nowMs - startMs) / (endMs - startMs);
+  return clamp(progress, 0, 1);
+}
+
 function buildMinifigureCards(item) {
   const roster = MINIFIGURE_ROSTERS[item.id] || [];
   const exclusiveCount = Math.max(1, Number(item.exclusiveMinifigures) || 1);
@@ -286,6 +360,11 @@ export function InvestmentAnalysisWorkspace({
   const brickEconomyUrl = `https://www.brickeconomy.com/set/${extractSetNumber(item)}`;
   const productionStart = productionStartDate(item);
   const todayLabel = new Date().toISOString().slice(0, 10);
+  const heroImageUrl = extractPrimaryImageUrl(item);
+  const discountLabel = formatDiscountLabel(item);
+  const retirementCountdown = formatCountdownLabel(item);
+  const retirementFill = retirementProgress(item, productionStart);
+  const commentaryParagraphs = formatCommentaryParagraphs(commentary);
 
   return (
     <section className="iaWorkspace" id="investment-analysis">
@@ -307,9 +386,13 @@ export function InvestmentAnalysisWorkspace({
 
       <header className="iaHero">
         <div className="iaHeroVisual">
-          <div className="iaHeroImage" aria-hidden="true">
+          <div className="iaHeroImage" aria-hidden={!heroImageUrl}>
             <span className="iaHeroImageBadge">{item.legoTheme}</span>
-            <strong>{extractSetNumber(item)}</strong>
+            {heroImageUrl ? (
+              <img className="iaHeroImagePhoto" src={heroImageUrl} alt={`${item.name} set image`} />
+            ) : (
+              <strong>{extractSetNumber(item)}</strong>
+            )}
           </div>
         </div>
 
@@ -330,7 +413,7 @@ export function InvestmentAnalysisWorkspace({
           <div className="iaHeroMetrics">
             <div className="iaHeroMetric iaHeroMetric-score">
               <span>Brick Alpha Score</span>
-              <ScoreRing score={item.brickAlphaScore} />
+              <ScoreRing score={item.brickAlphaScore} size="large" />
             </div>
             <div className="iaHeroMetric">
               <span>Investment Grade</span>
@@ -352,21 +435,30 @@ export function InvestmentAnalysisWorkspace({
             <div className="iaHeroMetric">
               <span>Current Value</span>
               <strong>{formatCollectiblePrice(item.currentMarketValue)}</strong>
+              <small>{discountLabel}</small>
             </div>
             <div className="iaHeroMetric">
               <span>Retail Price</span>
               <strong>{formatCollectiblePrice(item.retailPrice)}</strong>
             </div>
+            <div className="iaHeroMetric">
+              <span>Retirement Status</span>
+              <strong>{item.retirementStatus}</strong>
+              <small>{item.actualRetirementDate || item.expectedRetirementDate || "--"} · {retirementCountdown}</small>
+            </div>
             {isOwned ? (
               <div className="iaHeroMetric">
-                <span>Paid Price</span>
-                <strong>{formatCollectiblePrice(ownedTrade.entryPrice || item.buyPrice)}</strong>
+                <span>Portfolio Position</span>
+                <strong>{portfolioPosition}</strong>
+                <small className={positiveTone(ownedTrade.pnl)}>{Number(ownedTrade.pnl || 0).toFixed(1)}% return</small>
               </div>
-            ) : null}
-            <div className="iaHeroMetric">
-              <span>Portfolio Position</span>
-              <strong>{portfolioPosition}</strong>
-            </div>
+            ) : (
+              <div className="iaHeroMetric">
+                <span>Portfolio Position</span>
+                <strong>{portfolioPosition}</strong>
+                <small>Actionable entry & timing insights below</small>
+              </div>
+            )}
           </div>
 
           <div className="iaHeroActions">
@@ -377,26 +469,19 @@ export function InvestmentAnalysisWorkspace({
             >
               Add to Portfolio
             </button>
-            <button
-              type="button"
-              className="ghostButton"
-              onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
-            >
-              Add to Watchlist
-            </button>
             <button type="button" className="ghostButton" onClick={() => openExternal(brickEconomyUrl)}>
-              View BrickEconomy
+              Source: BrickEconomy
             </button>
           </div>
         </div>
       </header>
 
-      <article className="iaGlassCard iaThesisCard">
+      <article className="iaGlassCard iaVerdictCard">
         <div className="iaSectionHeader">
-          <span className="executiveDashboardEyebrow">Investment Thesis</span>
-          <h2>Should you buy, hold, or sell?</h2>
+          <span className="executiveDashboardEyebrow">AI Investment Verdict</span>
+          <h2>{displayRecommendation(item.recommendation)} · {item.investmentGrade}</h2>
         </div>
-        <p className="iaThesisLead">
+        <p className="iaVerdictLead">
           {item.name} combines a strong {item.legoTheme} theme,{" "}
           {item.exclusiveMinifigures ? `${item.exclusiveMinifigures} exclusive minifigures, ` : ""}
           {item.retirementStatus === "Retired"
@@ -407,33 +492,39 @@ export function InvestmentAnalysisWorkspace({
           Brick Alpha currently rates this set as a {displayRecommendation(item.recommendation)} with{" "}
           {confidence >= 80 ? "high" : confidence >= 60 ? "moderate" : "developing"} confidence.
         </p>
-        <div className="iaThesisGrid">
-          <div className="iaThesisBlock">
-            <span>Upside Drivers</span>
+        <div className="iaVerdictGrid">
+          <div className="iaVerdictBlock">
+            <span>Why</span>
             <ul>
-              {thesis.upsideDrivers.map((driver) => (
+              {thesis.upsideDrivers.slice(0, 3).map((driver) => (
                 <li key={driver}>{driver}</li>
               ))}
             </ul>
           </div>
-          <div className="iaThesisBlock">
-            <span>Main Risks</span>
-            <ul>
-              {thesis.risks.map((risk) => (
-                <li key={risk}>{risk}</li>
-              ))}
-            </ul>
+          <div className="iaVerdictBlock">
+            <span>Biggest risk</span>
+            <p>{thesis.risks[0] || "Standard sealed storage and exit liquidity considerations apply."}</p>
           </div>
-          <div className="iaThesisBlock">
-            <span>Exit Strategy</span>
-            <p>{thesis.exitStrategy}</p>
-          </div>
-          <div className="iaThesisBlock">
-            <span>Ideal Holding Period</span>
+          <div className="iaVerdictBlock">
+            <span>Holding period</span>
             <p>
               {item.holdingPeriod} observed · target exit {item.sellByTargetDate} ·{" "}
               {item.retirementStatus === "Retired" ? "post-retirement hold" : "pre-retirement accumulation"}
             </p>
+          </div>
+          <div className="iaVerdictBlock">
+            <span>Exit timing</span>
+            <p>{thesis.exitStrategy}</p>
+          </div>
+          <div className="iaVerdictBlock iaVerdictBlock-highlight">
+            <span>Biggest upside</span>
+            <p>{thesis.upsideDrivers[0] || "Category demand and retirement-driven scarcity."}</p>
+          </div>
+          <div className="iaVerdictBlock iaVerdictBlock-action">
+            <span>Primary action</span>
+            <button type="button" className="primaryButton" onClick={() => openCollectibleTicket(item, "BUY")}>
+              Add to Portfolio
+            </button>
           </div>
         </div>
       </article>
@@ -493,8 +584,11 @@ export function InvestmentAnalysisWorkspace({
             <span>Production Start</span>
             <strong>{productionStart}</strong>
           </div>
-          <div className="iaRetirementTrack">
-            <div className="iaRetirementTrackFill" />
+          <div
+            className="iaRetirementTrack"
+            style={{ "--ia-retire-progress": `${Math.round(retirementFill * 100)}%` }}
+          >
+            <div className="iaRetirementTrackFill" style={{ width: `${Math.round(retirementFill * 100)}%` }} />
             <div className="iaRetirementMarker iaRetirementMarker-today">
               <span>Today</span>
               <strong>{todayLabel}</strong>
@@ -506,6 +600,11 @@ export function InvestmentAnalysisWorkspace({
           </div>
         </div>
         <div className="iaRetirementStats">
+          <div className="iaRetirementCountdown">
+            <span>Countdown</span>
+            <strong>{retirementCountdown}</strong>
+            <small>{item.retirementStatus}</small>
+          </div>
           <div>
             <span>Confidence</span>
             <strong>{Math.round(item.retirementConfidence)}%</strong>
@@ -548,6 +647,10 @@ export function InvestmentAnalysisWorkspace({
               </div>
               <h3>{figure.name}</h3>
               <small>{figure.role}</small>
+              <p className="iaMinifigureNote">
+                Collector demand: <strong>{figure.popularity >= 80 ? "High" : figure.popularity >= 60 ? "Moderate" : "Developing"}</strong>{" "}
+                · Exclusivity: <strong>{Number(item.exclusiveMinifigures) >= 3 ? "Strong" : Number(item.exclusiveMinifigures) >= 1 ? "Moderate" : "Limited"}</strong>
+              </p>
               <div className="iaMinifigureMetrics">
                 <div>
                   <span>Popularity</span>
@@ -576,7 +679,7 @@ export function InvestmentAnalysisWorkspace({
           <div className="iaSectionHeader iaSectionHeader-row">
             <div>
               <span className="executiveDashboardEyebrow">Price Forecast</span>
-              <h2>AI Forecast</h2>
+              <h2>Scenario forecast</h2>
             </div>
             <div className="iaHorizonToggle" role="tablist" aria-label="Forecast horizon">
               {HORIZON_OPTIONS.map((years) => (
@@ -592,27 +695,31 @@ export function InvestmentAnalysisWorkspace({
             </div>
           </div>
           {forecast ? (
-            <div className="iaForecastGrid">
-              <div>
-                <span>Expected CAGR</span>
-                <strong className={positiveTone(forecast.cagr)}>{forecast.cagr.toFixed(1)}%</strong>
-              </div>
-              <div>
-                <span>Best Case</span>
-                <strong>{formatCollectiblePrice(forecast.best)}</strong>
-              </div>
-              <div>
-                <span>Expected Case</span>
-                <strong>{formatCollectiblePrice(forecast.expected)}</strong>
-              </div>
-              <div>
-                <span>Worst Case</span>
-                <strong>{formatCollectiblePrice(forecast.worst)}</strong>
-              </div>
-              <div>
-                <span>Confidence</span>
-                <strong>{forecast.confidence}%</strong>
-              </div>
+            <div className="iaScenarioGrid">
+              <article className="iaScenarioCard iaScenarioCard-best">
+                <span className="iaScenarioLabel">Best</span>
+                <strong className="iaScenarioValue">{formatCollectiblePrice(forecast.best)}</strong>
+                <div className="iaScenarioMeta">
+                  <span>Expected CAGR</span>
+                  <strong className={positiveTone(forecast.cagr)}>{forecast.cagr.toFixed(1)}%</strong>
+                </div>
+              </article>
+              <article className="iaScenarioCard iaScenarioCard-expected">
+                <span className="iaScenarioLabel">Expected</span>
+                <strong className="iaScenarioValue">{formatCollectiblePrice(forecast.expected)}</strong>
+                <div className="iaScenarioMeta">
+                  <span>Confidence</span>
+                  <strong>{forecast.confidence}%</strong>
+                </div>
+              </article>
+              <article className="iaScenarioCard iaScenarioCard-worst">
+                <span className="iaScenarioLabel">Worst</span>
+                <strong className="iaScenarioValue">{formatCollectiblePrice(forecast.worst)}</strong>
+                <div className="iaScenarioMeta">
+                  <span>Downside</span>
+                  <strong className={positiveTone(-Math.abs(Number(forecast.cagr) || 0))}>Stress case</strong>
+                </div>
+              </article>
             </div>
           ) : null}
         </article>
@@ -678,8 +785,18 @@ export function InvestmentAnalysisWorkspace({
           {comparables.map((comp) => (
             <article className="iaComparableCard" key={`${comp.sku}-${comp.name}`}>
               <div className="iaComparableTop">
-                <strong>{comp.name}</strong>
-                <span>#{comp.sku}</span>
+                <div className="iaComparableImage" aria-hidden="true">
+                  <span>LEGO</span>
+                  <strong>#{comp.sku}</strong>
+                </div>
+                <div className="iaComparableTitle">
+                  <strong>{comp.name}</strong>
+                  <span>Set #{comp.sku}</span>
+                </div>
+                <div className="iaComparableCallout">
+                  <span>ROI</span>
+                  <strong className={positiveTone(comp.growth)}>+{Number(comp.growth).toFixed(0)}%</strong>
+                </div>
               </div>
               <div className="iaComparableMetrics">
                 <div>
@@ -709,21 +826,24 @@ export function InvestmentAnalysisWorkspace({
           <span className="executiveDashboardEyebrow">AI Commentary</span>
           <h2>Brick Alpha Copilot</h2>
         </div>
-        <blockquote className="iaCommentary">"{commentary}"</blockquote>
+        <div className="iaCommentaryBody">
+          {commentaryParagraphs.length ? (
+            commentaryParagraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+          ) : (
+            <p className="iaCommentaryEmpty">No commentary available yet.</p>
+          )}
+        </div>
       </article>
 
       <footer className="iaActions">
         <button type="button" className="primaryButton" onClick={() => openCollectibleTicket(item, "BUY")}>
-          Buy More
-        </button>
-        <button type="button" className="ghostButton" onClick={() => jumpToPageSection("subscriptions", "subscriptions-overview")}>
-          Add Alert
+          Add to Portfolio
         </button>
         <button type="button" className="ghostButton" onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}>
           Track Retirement
         </button>
         <button type="button" className="ghostButton" onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}>
-          Compare Sets
+          Compare
         </button>
         <button type="button" className="ghostButton" onClick={() => jumpToPageSection("reports", "reports-overview")}>
           Export Report

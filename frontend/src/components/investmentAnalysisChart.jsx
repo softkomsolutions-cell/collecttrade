@@ -54,7 +54,7 @@ export function InvestmentAnalysisChart({ item, horizonYears = 3 }) {
 
     const chart = createChart(chartRef.current, {
       width: chartRef.current.clientWidth,
-      height: 340,
+      height: 420,
       layout: {
         background: { color: "transparent" },
         textColor: "#8da2c8",
