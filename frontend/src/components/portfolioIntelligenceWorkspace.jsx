@@ -142,6 +142,26 @@ function recommendationTone(recommendation) {
   return "hold";
 }
 
+function extractPrimaryImageUrl(item) {
+  const candidates = [
+    item?.imageUrl,
+    item?.imageURL,
+    item?.image,
+    item?.thumbnailUrl,
+    item?.thumbnailURL,
+    item?.thumbnail,
+    item?.photoUrl,
+    item?.photo,
+    item?.raw?.imageUrl,
+    item?.raw?.imageURL,
+    item?.raw?.thumbnailUrl,
+    item?.raw?.thumbnailURL,
+    item?.raw?.photoUrl,
+  ];
+  const url = candidates.find((value) => typeof value === "string" && value.trim().length);
+  return url ? url.trim() : null;
+}
+
 function retirementTone(status) {
   const normalized = String(status || "").toLowerCase();
   if (normalized === "retired") {
@@ -350,7 +370,7 @@ function PortfolioGrowthChart({ points }) {
 
     const chart = createChart(chartRef.current, {
       width: chartRef.current.clientWidth,
-      height: 320,
+      height: 380,
       layout: {
         background: { color: "transparent" },
         textColor: "#8da2c8",
@@ -418,13 +438,21 @@ function PortfolioGrowthChart({ points }) {
   );
 }
 
-function HoldingCard({ holding, onAnalyze, onWatchlist, onSelect }) {
+function HoldingCard({ holding, onAnalyze }) {
+  const heroImageUrl = extractPrimaryImageUrl(holding);
+  const profitLoss = (numberOrZero(holding.currentValue) - numberOrZero(holding.paidPrice)) * numberOrZero(holding.quantity);
   return (
     <article className="piHoldingCard">
       <div className="piHoldingCardTop">
-        <div className="piSetImagePlaceholder" aria-hidden="true">
-          <span>{holding.setNumber}</span>
-          <small>LEGO</small>
+        <div className="piHoldingImage" aria-hidden={!heroImageUrl}>
+          {heroImageUrl ? (
+            <img className="piHoldingImagePhoto" src={heroImageUrl} alt={`${holding.name} set image`} />
+          ) : (
+            <div className="piSetImagePlaceholder" aria-hidden="true">
+              <span>{holding.setNumber}</span>
+              <small>LEGO</small>
+            </div>
+          )}
         </div>
         <div className="piHoldingCardIdentity">
           <div className="piHoldingCardMeta">
@@ -438,28 +466,31 @@ function HoldingCard({ holding, onAnalyze, onWatchlist, onSelect }) {
             {holding.theme} · {holding.year} · {holding.pieces.toLocaleString()} pcs · {holding.minifigs} minifigs
           </p>
         </div>
-        <div className="piHoldingCardScore">
+        <div className="piHoldingCardScore" aria-label="Brick Alpha score and grade">
           <strong>{Math.round(holding.brickAlphaScore)}</strong>
           <span>Brick Alpha</span>
+          <small className="piHoldingGrade">{holding.investmentGrade}</small>
         </div>
       </div>
 
       <div className="piHoldingMetrics">
         <div>
-          <span>Retail</span>
-          <strong>{formatCollectiblePrice(holding.retailPrice)}</strong>
+          <span>Current Value</span>
+          <strong>{formatCollectiblePrice(holding.currentValue * holding.quantity)}</strong>
         </div>
         <div>
-          <span>Paid</span>
-          <strong>{formatCollectiblePrice(holding.paidPrice)}</strong>
+          <span>Profit/Loss</span>
+          <strong className={positiveTone(profitLoss)}>{formatCollectiblePrice(profitLoss)}</strong>
         </div>
         <div>
-          <span>Current</span>
-          <strong>{formatCollectiblePrice(holding.currentValue)}</strong>
-        </div>
-        <div>
-          <span>Growth</span>
+          <span>ROI</span>
           <strong className={positiveTone(holding.growthPercent)}>{formatSignedPercent(holding.growthPercent)}</strong>
+        </div>
+        <div>
+          <span>Recommendation</span>
+          <strong className={`piHoldingReco piHoldingReco-${recommendationTone(holding.recommendation)}`}>
+            {holding.recommendation}
+          </strong>
         </div>
         <div>
           <span>Qty</span>
@@ -467,29 +498,9 @@ function HoldingCard({ holding, onAnalyze, onWatchlist, onSelect }) {
         </div>
       </div>
 
-      <div className="piIntelligenceLayer">
-        <div className="piIntelligenceBadges">
-          <span className={`piRecommendation piRecommendation-${recommendationTone(holding.recommendation)}`}>
-            {holding.recommendation}
-          </span>
-          <span className="piGradeBadge">{holding.investmentGrade}</span>
-          <span className="piRiskBadge">Risk · {holding.riskLabel}</span>
-          <span className="piRetirementProb">
-            Retirement {Math.round(holding.retirementProbability)}%
-          </span>
-        </div>
-        <p className="piAiNote">{holding.aiNote}</p>
-      </div>
-
       <div className="piHoldingActions">
-        <button type="button" className="ghostButton slimButton" onClick={() => onAnalyze(holding)}>
-          Analyze set
-        </button>
-        <button type="button" className="ghostButton slimButton" onClick={() => onWatchlist(holding)}>
-          Add to watchlist
-        </button>
-        <button type="button" className="ghostButton slimButton" onClick={() => onSelect(holding)}>
-          View position
+        <button type="button" className="primaryButton slimButton" onClick={() => onAnalyze(holding)}>
+          Open Analysis
         </button>
       </div>
     </article>
@@ -581,11 +592,105 @@ export function PortfolioIntelligenceWorkspace({
   );
 
   const overview = useMemo(() => buildPortfolioOverview(holdings), [holdings]);
+  const portfolioSummary = useMemo(() => {
+    const tradeLike = holdings.map((holding) => ({
+      assetClass: "collectible",
+      quantity: holding.quantity,
+      entryPrice: holding.paidPrice,
+      currentPrice: holding.currentValue,
+      buyPrice: holding.paidPrice,
+      currentMarketValue: holding.currentValue,
+      brickAlphaScore: holding.brickAlphaScore,
+      riskScore: holding.riskScore,
+      legoTheme: holding.theme,
+      category: holding.theme,
+    }));
+    return summarizeBrickAlphaPortfolio(tradeLike);
+  }, [holdings]);
   const themeRows = useMemo(
     () => buildThemeAllocationRows(holdings, overview.netAssetValue),
     [holdings, overview.netAssetValue],
   );
   const growthPoints = useMemo(() => buildCollectionGrowthSeries(holdings), [holdings]);
+  const recentChange = useMemo(() => monthlyGrowthTrend(growthPoints), [growthPoints]);
+
+  const retirementExposure = useMemo(() => {
+    const total = overview.netAssetValue || 0;
+    if (!total) {
+      return 0;
+    }
+    const retiringValue = holdings
+      .filter((holding) => ["Retired", "Retiring Soon"].includes(holding.availability))
+      .reduce((sum, holding) => sum + holding.currentValue * holding.quantity, 0);
+    return (retiringValue / total) * 100;
+  }, [holdings, overview.netAssetValue]);
+
+  const healthMetrics = useMemo(() => {
+    const overallHealth = numberOrZero(portfolioSummary.confidenceScore);
+    const diversification = numberOrZero(portfolioSummary.diversificationScore);
+    const collectionQuality = numberOrZero(portfolioSummary.averageBrickAlphaScore);
+    const risk = portfolioSummary.riskLevel || "--";
+    return [
+      { label: "Overall Health", value: `${Math.round(overallHealth)}/100`, tone: overallHealth >= 70 ? "good" : overallHealth >= 50 ? "ok" : "weak" },
+      { label: "Diversification", value: `${Math.round(diversification)}/100`, tone: diversification >= 70 ? "good" : diversification >= 50 ? "ok" : "weak" },
+      { label: "Retirement Exposure", value: `${retirementExposure.toFixed(1)}%`, tone: retirementExposure <= 25 ? "good" : retirementExposure <= 45 ? "ok" : "weak" },
+      { label: "Cash Deployed", value: formatCollectiblePrice(overview.costBasis), sublabel: "Cost basis" },
+      { label: "Collection Quality", value: `${Math.round(collectionQuality)}/100`, tone: collectionQuality >= 70 ? "good" : collectionQuality >= 50 ? "ok" : "weak" },
+      { label: "Risk", value: risk, tone: risk === "Low" ? "good" : risk === "Balanced" ? "ok" : "weak" },
+    ];
+  }, [
+    overview.costBasis,
+    portfolioSummary.averageBrickAlphaScore,
+    portfolioSummary.confidenceScore,
+    portfolioSummary.diversificationScore,
+    portfolioSummary.riskLevel,
+    retirementExposure,
+  ]);
+
+  const managerInsights = useMemo(() => {
+    const insights = [];
+    const topTheme = themeRows[0];
+    if (topTheme && topTheme.percent >= 35) {
+      insights.push(`You are overweight in ${topTheme.theme} (${topTheme.percent.toFixed(0)}% of NAV).`);
+    } else if (topTheme) {
+      insights.push(`${topTheme.theme} is your largest theme exposure (${topTheme.percent.toFixed(0)}% of NAV).`);
+    }
+
+    const underAllocated = themeRows.find((row) => row.percent > 0 && row.percent <= 10);
+    if (underAllocated) {
+      insights.push(`Increase diversification by building exposure beyond ${underAllocated.theme}.`);
+    }
+
+    const duplicates = holdings.filter((holding) => holding.quantity >= 2);
+    if (duplicates.length) {
+      insights.push(`Sell duplicate exposure: ${duplicates.slice(0, 1)[0].name} has ${duplicates[0].quantity} units.`);
+    }
+
+    const retireSoonCount = holdings.filter((holding) => holding.availability === "Retiring Soon").length;
+    if (retireSoonCount) {
+      insights.push(`${retireSoonCount} retirement opportunity${retireSoonCount === 1 ? " is" : "ies are"} approaching.`);
+    }
+
+    return insights.slice(0, 4);
+  }, [holdings, themeRows]);
+
+  const watchlistHoldings = useMemo(() => {
+    const items = (watchlistItems || []).map((item) => {
+      const ticker = item.ticker || item.label || item.sku;
+      const match = collectibles.find((candidate) => String(candidate.sku || "").trim() === String(ticker || "").trim())
+        || collectibles.find((candidate) => String(candidate.id || "").includes(String(ticker || "")));
+      const enriched = match ? enrichBrickAlphaCollectible(match) : null;
+      const normalized = normalizeHolding(
+        enriched || { id: `watch-${ticker}`, name: item.label || ticker, sku: ticker, legoTheme: "Watchlist", brand: "LEGO" },
+        { source: "watchlist", watchlistIds },
+      );
+      return normalized;
+    });
+    return items
+      .slice()
+      .sort((a, b) => numberOrZero(b.brickAlphaScore) - numberOrZero(a.brickAlphaScore))
+      .slice(0, 6);
+  }, [collectibles, enrichBrickAlphaCollectible, watchlistIds, watchlistItems]);
 
   const availableThemes = useMemo(
     () => Array.from(new Set(holdings.map((holding) => holding.theme))).sort(),
@@ -616,22 +721,6 @@ export function PortfolioIntelligenceWorkspace({
 
     return result;
   }, [activeFilters, holdings, isDemoMode, selectedThemes]);
-
-  const portfolioSummary = useMemo(() => {
-    const tradeLike = holdings.map((holding) => ({
-      assetClass: "collectible",
-      quantity: holding.quantity,
-      entryPrice: holding.paidPrice,
-      currentPrice: holding.currentValue,
-      buyPrice: holding.paidPrice,
-      currentMarketValue: holding.currentValue,
-      brickAlphaScore: holding.brickAlphaScore,
-      riskScore: holding.riskScore,
-      legoTheme: holding.theme,
-      category: holding.theme,
-    }));
-    return summarizeBrickAlphaPortfolio(tradeLike);
-  }, [holdings]);
 
   function toggleFilter(filterId) {
     setActiveFilters((current) => {
@@ -701,36 +790,10 @@ export function PortfolioIntelligenceWorkspace({
   }
 
   const overviewMetrics = [
-    { label: "Owned Sets", value: overview.ownedSets },
-    { label: "Unique Sets", value: overview.uniqueSets },
-    { label: "Retired Sets", value: overview.retiredSets },
-    { label: "Pieces", value: overview.pieces.toLocaleString() },
-    { label: "Minifigs", value: overview.minifigs },
-    {
-      label: "Retail Value",
-      value: formatCollectiblePrice(overview.retailValue),
-    },
-    {
-      label: "Paid Price",
-      value: formatCollectiblePrice(overview.costBasis),
-      detail: "Cost basis",
-    },
-    {
-      label: "Current Value",
-      value: formatCollectiblePrice(overview.netAssetValue),
-      detail: "Net asset value",
-      primary: true,
-    },
-    {
-      label: "Unrealised Gain",
-      value: formatCollectiblePrice(overview.unrealizedGain),
-      tone: overview.unrealizedGain,
-    },
-    {
-      label: "Growth",
-      value: formatSignedPercent(overview.growthPercent),
-      tone: overview.growthPercent,
-    },
+    { label: "Portfolio Value", value: formatCollectiblePrice(overview.netAssetValue), detail: "Net asset value", primary: true },
+    { label: "Today's Change", value: formatSignedPercent(recentChange), detail: "Recent trend", tone: recentChange },
+    { label: "Collection Grade", value: portfolioSummary.collectionGrade || "--", detail: `${formatScore(portfolioSummary.averageBrickAlphaScore)} avg score` },
+    { label: "Brick Alpha Portfolio Score", value: formatScore(portfolioSummary.confidenceScore), detail: "Overall score", tone: portfolioSummary.confidenceScore },
   ];
 
   return (
@@ -744,31 +807,50 @@ export function PortfolioIntelligenceWorkspace({
 
       {actionStatus ? <div className="statusBanner subtleBanner">{actionStatus}</div> : null}
 
-      <section className="piPanel" id="portfolio-intelligence">
-        <header className="piPanelHeader">
+      <section className="piPanel piPanel-hero" id="portfolio-intelligence">
+        <header className="piPanelHeader piHeroHeader">
           <div>
-            <span className="piEyebrow">Collection Intelligence</span>
-            <h2>Portfolio Overview</h2>
-            <p>Your LEGO collection as an investment portfolio — NAV, cost basis, and growth at a glance.</p>
+            <span className="piEyebrow">Portfolio Intelligence</span>
+            <h2>Brick Alpha Portfolio</h2>
+            <p>Portfolio value, performance, risk, and next best moves — presented like a wealth dashboard.</p>
           </div>
           <div className="piHeaderStatus">
-            <span>Collection grade</span>
-            <strong>{portfolioSummary.collectionGrade}</strong>
-            <small>Avg score {formatScore(portfolioSummary.averageBrickAlphaScore)}</small>
+            <span>Risk profile</span>
+            <strong>{portfolioSummary.riskLevel || "Balanced"}</strong>
+            <small>Diversification {formatScore(portfolioSummary.diversificationScore)}</small>
           </div>
         </header>
 
-        <div className="piOverviewGrid">
+        <div className="piHeroGrid" aria-label="Portfolio hero metrics">
           {overviewMetrics.map((metric) => (
             <div
               key={metric.label}
-              className={`piOverviewCard${metric.primary ? " piOverviewCard-primary" : ""}`}
+              className={`piHeroCard${metric.primary ? " piHeroCard-primary" : ""}`}
             >
               <span>{metric.label}</span>
               <strong className={metric.tone != null ? positiveTone(metric.tone) : undefined}>
                 {metric.value}
               </strong>
               {metric.detail ? <small>{metric.detail}</small> : null}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="piPanel piPanel-health" id="portfolio-health">
+        <header className="piPanelHeader">
+          <div>
+            <span className="piEyebrow">Portfolio Health</span>
+            <h2>Overall health & risk</h2>
+            <p>Simple indicators for diversification, retirement exposure, quality, and risk posture.</p>
+          </div>
+        </header>
+        <div className="piHealthGrid" aria-label="Portfolio health indicators">
+          {healthMetrics.map((metric) => (
+            <div key={metric.label} className={`piHealthCard${metric.tone ? ` piHealthCard-${metric.tone}` : ""}`}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              {metric.sublabel ? <small>{metric.sublabel}</small> : null}
             </div>
           ))}
         </div>
@@ -796,21 +878,17 @@ export function PortfolioIntelligenceWorkspace({
 
         {themeRows.length ? (
           <>
-            <div className="piThemeTable">
-              <div className="piThemeTableHeader">
-                <span>Theme</span>
-                <span>Sets</span>
-                <span>Portfolio value</span>
-                <span>% of book</span>
-              </div>
+            <div className="piAllocationList" aria-label="Theme allocation bars">
               {themeRows.map((row) => (
-                <div className="piThemeTableRow" key={row.theme}>
-                  <strong>{row.theme}</strong>
-                  <span>{row.sets}</span>
-                  <span>{formatCollectiblePrice(row.value)}</span>
-                  <span>{row.percent.toFixed(1)}%</span>
-                  <div className="piThemeBar" aria-hidden="true">
-                    <span style={{ width: `${Math.min(100, row.percent)}%` }} />
+                <div className="piAllocationRow" key={row.theme}>
+                  <div className="piAllocationTop">
+                    <strong>{row.theme}</strong>
+                    <span className="piAllocationMeta">
+                      {row.sets} sets · {formatCollectiblePrice(row.value)} · {row.percent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="piAllocationTrack" aria-hidden="true">
+                    <span className="piAllocationFill" style={{ width: `${Math.min(100, row.percent)}%` }} />
                   </div>
                 </div>
               ))}
@@ -820,6 +898,35 @@ export function PortfolioIntelligenceWorkspace({
           <EmptyState
             title="No allocation view yet"
             body="No holdings found. Add LEGO positions to unlock theme allocation, diversification, and portfolio-grade KPIs."
+          />
+        )}
+      </section>
+
+      <section className="piPanel piPanel-manager" id="ai-portfolio-manager">
+        <header className="piPanelHeader piPanelHeader-split">
+          <div>
+            <span className="piEyebrow">AI Portfolio Manager</span>
+            <h2>Manager brief</h2>
+            <p>Natural language guidance that reads like a portfolio manager.</p>
+          </div>
+          <div className="piManagerBadge">
+            <span>Confidence</span>
+            <strong>{formatScore(portfolioSummary.confidenceScore)}</strong>
+          </div>
+        </header>
+        {managerInsights.length ? (
+          <div className="piManagerInsights" aria-label="Portfolio manager insights">
+            {managerInsights.map((line) => (
+              <div className="piManagerInsight" key={line}>
+                <span className="piManagerDot" aria-hidden="true" />
+                <p>{line}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="AI manager warming up"
+            body="Add a few holdings to unlock overweight signals, diversification recommendations, and retirement opportunities."
           />
         )}
       </section>
@@ -876,8 +983,6 @@ export function PortfolioIntelligenceWorkspace({
                 key={holding.id}
                 holding={holding}
                 onAnalyze={handleAnalyze}
-                onWatchlist={handleWatchlist}
-                onSelect={handleSelect}
               />
             ))}
           </div>
@@ -889,32 +994,35 @@ export function PortfolioIntelligenceWorkspace({
         )}
       </section>
 
-      <section className="piPanel piPanel-legacy" id="portfolio-dashboard">
-        <header className="piPanelHeader">
+      <section className="piPanel piPanel-watchlist" id="portfolio-watchlist">
+        <header className="piPanelHeader piPanelHeader-split">
           <div>
-            <span className="piEyebrow">Legacy dashboard</span>
-            <h2>Portfolio Dashboard</h2>
-            <p>Roll-up metrics preserved for navigation compatibility.</p>
+            <span className="piEyebrow">Watchlist</span>
+            <h2>Highest opportunity first</h2>
+            <p>Prioritised by Brick Alpha Score (presentation only).</p>
+          </div>
+          <div className="piActionCluster">
+            <button type="button" className="ghostButton slimButton" onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}>
+              Browse catalog
+            </button>
           </div>
         </header>
-        <div className="piLegacyMetrics">
-          <div>
-            <span>Net Asset Value</span>
-            <strong>{formatCollectiblePrice(portfolioSummary.netAssetValue)}</strong>
+        {watchlistHoldings.length ? (
+          <div className="piWatchlistGrid" aria-label="Watchlist opportunities">
+            {watchlistHoldings.map((holding) => (
+              <HoldingCard
+                key={holding.id}
+                holding={holding}
+                onAnalyze={handleAnalyze}
+              />
+            ))}
           </div>
-          <div>
-            <span>Cost Basis</span>
-            <strong>{formatCollectiblePrice(portfolioSummary.costBasis)}</strong>
-          </div>
-          <div>
-            <span>Diversification</span>
-            <strong>{formatScore(portfolioSummary.diversificationScore)}</strong>
-          </div>
-          <div>
-            <span>Confidence</span>
-            <strong>{formatScore(portfolioSummary.confidenceScore)}</strong>
-          </div>
-        </div>
+        ) : (
+          <EmptyState
+            title="No watchlist items yet"
+            body="Add sets to your watchlist to surface the highest-opportunity opportunities here first."
+          />
+        )}
       </section>
     </div>
   );

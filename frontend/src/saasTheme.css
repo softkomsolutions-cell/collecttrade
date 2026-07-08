@@ -4196,6 +4196,214 @@
   margin-bottom: 24px;
 }
 
+.piPanel-hero {
+  border-color: rgba(201, 169, 98, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.1), transparent 44%),
+    radial-gradient(circle at bottom left, rgba(201, 169, 98, 0.1), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
+  box-shadow: var(--ba-shadow-md);
+}
+
+.piHeroHeader {
+  margin-bottom: 18px;
+}
+
+.piHeroGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.piHeroCard {
+  padding: 16px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.18);
+  display: grid;
+  gap: 8px;
+}
+
+.piHeroCard-primary {
+  border-color: rgba(201, 169, 98, 0.3);
+  background:
+    linear-gradient(135deg, rgba(201, 169, 98, 0.12), rgba(0, 0, 0, 0.16) 55%),
+    rgba(0, 0, 0, 0.18);
+}
+
+.piHeroCard span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ba-text-muted);
+}
+
+.piHeroCard strong {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--ba-text-primary);
+}
+
+.piHeroCard small {
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+}
+
+.piHealthGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.piHealthCard {
+  padding: 16px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.16);
+  display: grid;
+  gap: 6px;
+}
+
+.piHealthCard-good {
+  border-color: rgba(34, 197, 94, 0.22);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.piHealthCard-ok {
+  border-color: rgba(91, 108, 255, 0.22);
+  background: rgba(91, 108, 255, 0.06);
+}
+
+.piHealthCard-weak {
+  border-color: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.piHealthCard span {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.piHealthCard strong {
+  font-size: 18px;
+  color: var(--ba-text-primary);
+}
+
+.piHealthCard small {
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+}
+
+.piAllocationList {
+  display: grid;
+  gap: 12px;
+}
+
+.piAllocationRow {
+  padding: 14px 14px 16px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.14);
+  display: grid;
+  gap: 10px;
+}
+
+.piAllocationTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.piAllocationTop strong {
+  font-size: 14px;
+  color: var(--ba-text-primary);
+}
+
+.piAllocationMeta {
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+}
+
+.piAllocationTrack {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.piAllocationFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(201, 169, 98, 0.75), rgba(91, 108, 255, 0.75));
+}
+
+.piPanel-manager {
+  border-color: rgba(91, 108, 255, 0.2);
+  background:
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.1), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012));
+}
+
+.piManagerBadge {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+}
+
+.piManagerBadge span {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.piManagerBadge strong {
+  font-size: 16px;
+  color: var(--ba-text-primary);
+}
+
+.piManagerInsights {
+  display: grid;
+  gap: 10px;
+}
+
+.piManagerInsight {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid rgba(91, 108, 255, 0.18);
+  background: rgba(91, 108, 255, 0.06);
+}
+
+.piManagerDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-top: 4px;
+  background: linear-gradient(180deg, rgba(201, 169, 98, 0.95), rgba(91, 108, 255, 0.95));
+}
+
+.piManagerInsight p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ba-text-secondary);
+}
+
+.piWatchlistGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
 .piDemoBanner {
   display: flex;
   flex-wrap: wrap;
@@ -4512,6 +4720,26 @@
   align-items: start;
 }
 
+.piHoldingImage {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--ba-radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(201, 169, 98, 0.2);
+  background: linear-gradient(145deg, rgba(201, 169, 98, 0.12), rgba(91, 108, 255, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.piHoldingImagePhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.03);
+  filter: saturate(1.08) contrast(1.03);
+}
+
 .piSetImagePlaceholder {
   display: flex;
   flex-direction: column;
@@ -4613,6 +4841,12 @@
   color: var(--ba-text-muted);
 }
 
+.piHoldingGrade {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ba-text-secondary);
+}
+
 .piHoldingMetrics {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -4637,6 +4871,22 @@
 
 .piHoldingMetrics strong {
   font-size: 14px;
+}
+
+.piHoldingReco {
+  font-weight: 600;
+}
+
+.piHoldingReco-buy {
+  color: var(--ba-success);
+}
+
+.piHoldingReco-hold {
+  color: #9aa8ff;
+}
+
+.piHoldingReco-sell {
+  color: var(--ba-warning);
 }
 
 .piIntelligenceLayer {
@@ -4722,6 +4972,14 @@
 }
 
 @media (max-width: 1200px) {
+  .piHeroGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .piHealthGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .piOverviewGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -4740,6 +4998,10 @@
     padding: 18px;
   }
 
+  .piHeroGrid {
+    grid-template-columns: 1fr;
+  }
+
   .piOverviewGrid,
   .piHoldingMetrics,
   .piLegacyMetrics {
@@ -4748,6 +5010,11 @@
 
   .piHoldingCardTop {
     grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  .piHoldingImage {
+    width: 60px;
+    height: 60px;
   }
 
   .piHoldingCardScore {
@@ -4765,6 +5032,10 @@
     grid-template-columns: 1fr;
     gap: 4px;
     padding-bottom: 18px;
+  }
+
+  .piHealthGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
