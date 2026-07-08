@@ -1318,19 +1318,62 @@
   background:
     radial-gradient(circle at top right, rgba(212, 175, 95, 0.1), transparent 42%),
     var(--ba-bg-surface);
+  box-shadow: var(--ba-shadow-lg);
+}
+
+.executiveDashboardHeroCopy {
+  display: grid;
+  gap: 6px;
 }
 
 .executiveDashboardCompactHeader h1 {
   margin: 0;
-  font-size: 26px;
-  font-weight: 600;
+  font-size: clamp(26px, 2.2vw, 34px);
+  font-weight: 650;
+  line-height: 1.05;
   letter-spacing: -0.03em;
+  color: var(--ba-text-primary);
+}
+
+.executiveDashboardHeroSub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ba-text-secondary);
+}
+
+.executiveDashboardEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveDashboardStatus {
+  display: grid;
+  gap: 2px;
+  text-align: right;
+}
+
+.executiveDashboardStatus span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveDashboardStatus strong {
+  font-size: 13px;
+  font-weight: 600;
   color: var(--ba-text-primary);
 }
 
 .executiveKpiStrip {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -1338,24 +1381,32 @@
   padding: 16px 18px;
   border-radius: var(--ba-radius-lg);
   border: 1px solid var(--ba-border-subtle);
-  background: var(--ba-bg-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px);
   display: grid;
   gap: 6px;
   text-align: left;
   cursor: pointer;
-  transition: border-color var(--ba-transition), transform var(--ba-transition);
+  transition:
+    border-color var(--ba-transition),
+    transform var(--ba-transition),
+    box-shadow var(--ba-transition);
 }
 
 .executiveKpiStripCard:hover {
   border-color: rgba(212, 175, 95, 0.28);
   transform: translateY(-1px);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
 }
 
 .executiveKpiStripCard-primary {
   border-color: rgba(212, 175, 95, 0.24);
   background:
     linear-gradient(135deg, rgba(212, 175, 95, 0.08), transparent 55%),
-    var(--ba-bg-surface);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.02);
 }
 
 .executiveKpiStripCard span {
@@ -1366,8 +1417,8 @@
 }
 
 .executiveKpiStripCard strong {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: clamp(22px, 1.7vw, 28px);
+  font-weight: 650;
   line-height: 1.12;
   color: var(--ba-text-primary);
 }
@@ -1379,8 +1430,8 @@
 
 .executiveDashboardCompactGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: auto auto;
+  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-rows: minmax(260px, 1fr) minmax(200px, 0.92fr);
   gap: 14px;
   flex: 1;
   min-height: 0;
@@ -1390,19 +1441,49 @@
   padding: 18px 20px;
   border-radius: var(--ba-radius-lg);
   border: 1px solid var(--ba-border-subtle);
-  background: var(--ba-bg-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(14px);
   display: grid;
   gap: 12px;
   align-content: start;
   min-height: 0;
   overflow: hidden;
+  box-shadow: var(--ba-shadow-md);
 }
 
 .executiveCompactPanel-ai {
   border-color: rgba(91, 108, 255, 0.2);
   background:
     radial-gradient(circle at top left, rgba(91, 108, 255, 0.06), transparent 50%),
-    var(--ba-bg-surface);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.executiveCompactPanel-aiHero {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  padding: 22px 24px;
+}
+
+.executiveCompactPanel-alerts {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+}
+
+.executiveCompactPanel-opportunities {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.executiveCompactPanel-snapshot {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+}
+
+.executiveCompactPanel-intel {
+  display: none;
 }
 
 .executiveCompactPanel h3 {
@@ -1419,47 +1500,276 @@
   color: var(--ba-text-secondary);
 }
 
+.executiveAiSummary-premium {
+  font-size: 15px;
+  line-height: 1.75;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.executiveAiCta {
+  justify-self: start;
+}
+
+.executiveRetirementBuckets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.executiveRetirementBucket {
+  padding: 10px 12px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ba-transition), transform var(--ba-transition);
+}
+
+.executiveRetirementBucket:hover {
+  border-color: rgba(212, 175, 95, 0.22);
+  transform: translateY(-1px);
+}
+
+.executiveRetirementBucket span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveRetirementBucket strong {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--ba-text-primary);
+}
+
+.executiveRetirementBucket small {
+  font-size: 11px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveRetirementBucket.urgent {
+  border-color: rgba(255, 88, 88, 0.22);
+  background: radial-gradient(circle at top left, rgba(255, 88, 88, 0.08), transparent 55%), rgba(255, 255, 255, 0.02);
+}
+
+.executiveRetirementBucket.warning {
+  border-color: rgba(255, 186, 73, 0.22);
+  background: radial-gradient(circle at top left, rgba(255, 186, 73, 0.08), transparent 55%), rgba(255, 255, 255, 0.02);
+}
+
 .executiveRetirementChips-compact {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.executiveOpportunityList,
-.executiveIntelList {
-  display: grid;
-  gap: 8px;
-  max-height: 140px;
-  overflow-y: auto;
-}
-
-.executiveOpportunityItem,
-.executiveIntelItem {
-  display: grid;
-  gap: 4px;
+.executiveRetirementChip {
   padding: 10px 12px;
   border-radius: var(--ba-radius-md);
   border: 1px solid var(--ba-border-subtle);
   background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 4px;
   text-align: left;
   cursor: pointer;
-  transition: border-color var(--ba-transition);
+  transition: border-color var(--ba-transition), transform var(--ba-transition);
 }
 
-.executiveOpportunityItem:hover,
-.executiveIntelItem:hover {
-  border-color: rgba(91, 108, 255, 0.3);
+.executiveRetirementChip:hover {
+  border-color: rgba(91, 108, 255, 0.32);
+  transform: translateY(-1px);
 }
 
-.executiveOpportunityItem strong,
-.executiveIntelItem strong {
+.executiveRetirementChip span {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveRetirementChip strong {
+  font-size: 12px;
+  color: var(--ba-text-primary);
+}
+
+.executiveRetirementChip-overdue {
+  border-color: rgba(255, 88, 88, 0.24);
+  background: radial-gradient(circle at top left, rgba(255, 88, 88, 0.07), transparent 60%), rgba(255, 255, 255, 0.02);
+}
+
+.executiveRetirementChip-imminent {
+  border-color: rgba(255, 186, 73, 0.24);
+  background: radial-gradient(circle at top left, rgba(255, 186, 73, 0.07), transparent 60%), rgba(255, 255, 255, 0.02);
+}
+
+.executiveRetirementChip-approaching {
+  border-color: rgba(212, 175, 95, 0.18);
+}
+
+.executiveOpportunityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 0;
+}
+
+.executiveOpportunityCard {
+  padding: 14px 14px;
+  border-radius: var(--ba-radius-lg);
+  border: 1px solid rgba(91, 108, 255, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(91, 108, 255, 0.07), transparent 55%),
+    rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--ba-transition), border-color var(--ba-transition), box-shadow var(--ba-transition);
+  min-height: 152px;
+}
+
+.executiveOpportunityCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(91, 108, 255, 0.34);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26);
+}
+
+.executiveOpportunityCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.executiveOpportunitySource {
+  font-size: 11px;
+  color: var(--ba-text-muted);
+}
+
+.executiveOpportunityScore {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.executiveOpportunityScore span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveOpportunityScore strong {
+  font-size: 20px;
+  font-weight: 650;
+  color: var(--ba-text-primary);
+}
+
+.executiveOpportunityCopy strong {
   font-size: 13px;
   color: var(--ba-text-primary);
 }
 
-.executiveOpportunityItem small,
-.executiveIntelItem span {
+.executiveOpportunityCopy small {
   font-size: 11px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveOpportunityCta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.executiveSnapshotGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.executiveSnapshotMetric {
+  padding: 12px 14px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.12);
+  display: grid;
+  gap: 4px;
+}
+
+.executiveSnapshotMetric span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveSnapshotMetric strong {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--ba-text-primary);
+}
+
+.executiveSnapshotMetric small {
+  font-size: 11px;
+  color: var(--ba-text-secondary);
+}
+
+.executiveSnapshotThemes {
+  padding: 12px 14px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid var(--ba-border-subtle);
+  background: rgba(0, 0, 0, 0.12);
+  display: grid;
+  gap: 10px;
+}
+
+.executiveSnapshotThemes > span {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ba-text-muted);
+}
+
+.executiveSnapshotThemeRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.executiveSnapshotTheme {
+  padding: 10px 10px;
+  border-radius: var(--ba-radius-md);
+  border: 1px solid rgba(212, 175, 95, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 4px;
+}
+
+.executiveSnapshotTheme strong {
+  font-size: 12px;
+  color: var(--ba-text-primary);
+}
+
+.executiveSnapshotTheme small {
+  font-size: 11px;
+  color: var(--ba-text-muted);
+}
+
+.executiveSnapshotMuted {
+  font-size: 12px;
   color: var(--ba-text-muted);
 }
 
@@ -1468,22 +1778,25 @@
   flex-wrap: wrap;
   gap: 8px;
   padding-top: 4px;
+  justify-content: space-between;
 }
 
 .executiveDashboardQuickNav button {
   padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid var(--ba-border-subtle);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.015);
+  backdrop-filter: blur(12px);
   color: var(--ba-text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: border-color var(--ba-transition), color var(--ba-transition);
+  transition: border-color var(--ba-transition), color var(--ba-transition), transform var(--ba-transition);
 }
 
 .executiveDashboardQuickNav button:hover {
   border-color: rgba(91, 108, 255, 0.4);
   color: var(--ba-text-primary);
+  transform: translateY(-1px);
 }
 
 .investmentAnalysisPlaceholder {
@@ -1511,11 +1824,28 @@
 
   .executiveDashboardCompactGrid {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
 
   .executiveDashboardCompact {
     max-height: none;
     overflow: visible;
+  }
+
+  .executiveCompactPanel-aiHero,
+  .executiveCompactPanel-alerts,
+  .executiveCompactPanel-opportunities,
+  .executiveCompactPanel-snapshot {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .executiveCompactPanel-intel {
+    display: grid;
+  }
+
+  .executiveOpportunityGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1526,6 +1856,18 @@
 
   .executiveKpiStripCard-primary {
     grid-column: 1 / -1;
+  }
+
+  .executiveRetirementBuckets {
+    grid-template-columns: 1fr;
+  }
+
+  .executiveOpportunityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .executiveSnapshotThemeRow {
+    grid-template-columns: 1fr;
   }
 
   .investmentAnalysisPlaceholderGrid {
