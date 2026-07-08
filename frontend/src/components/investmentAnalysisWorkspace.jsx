@@ -260,8 +260,8 @@ export function InvestmentAnalysisWorkspace({
     return (
       <section className="iaWorkspace iaWorkspace-empty panel" id="investment-analysis">
         <EmptyState
-          title="Select a LEGO set to analyse"
-          body="Choose a set from your catalog to open the Brick Alpha Investment Analysis workspace."
+          title="Start your first Investment Analysis"
+          body="Select a LEGO set to open Brick Alpha Score, retirement timing, forecasts, and premium recommendations."
         />
         {legoSets.length ? (
           <div className="iaSetPicker">

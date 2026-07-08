@@ -817,7 +817,10 @@ export function PortfolioIntelligenceWorkspace({
             </div>
           </>
         ) : (
-          <EmptyState title="No theme data" body="Add LEGO holdings to see theme allocation." />
+          <EmptyState
+            title="No allocation view yet"
+            body="No holdings found. Add LEGO positions to unlock theme allocation, diversification, and portfolio-grade KPIs."
+          />
         )}
       </section>
 
@@ -881,7 +884,7 @@ export function PortfolioIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No holdings match filters"
-            body="Clear filters or add LEGO positions to populate your collection book."
+            body="Clear filters or add your first LEGO holding to populate a premium wealth dashboard for your collection."
           />
         )}
       </section>

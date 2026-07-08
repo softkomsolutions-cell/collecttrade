@@ -221,7 +221,10 @@ export function RetirementIntelligenceWorkspace({
                       </button>
                     ))
                   ) : (
-                    <div className="riHeatmapEmpty">No sets</div>
+                    <div className="riHeatmapEmpty">
+                      <strong>Empty</strong>
+                      <small>Add LEGO sets to populate this retirement window.</small>
+                    </div>
                   )}
                 </div>
               </div>
@@ -256,7 +259,7 @@ export function RetirementIntelligenceWorkspace({
             ) : (
               <EmptyState
                 title="No ranked opportunities"
-                body="Retirement intelligence will populate as LEGO sets are tracked."
+                body="Track or add your first LEGO set to unlock retirement heatmaps, timing alerts, and AI exit guidance."
               />
             )}
           </article>
@@ -410,7 +413,7 @@ export function RetirementIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No retirement candidates"
-            body="Track LEGO sets to populate the retirement intelligence dashboard."
+            body="Start by scanning your first LEGO set, then add it to your watchlist or portfolio to unlock retirement intelligence."
           />
         )}
       </article>
@@ -448,7 +451,7 @@ export function RetirementIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No strong buys flagged"
-            body="Conviction picks appear when sets score highly ahead of retirement windows."
+            body="Conviction picks appear once sets are tracked. Scan a set to generate Brick Alpha scores and retirement timing."
           />
         )}
       </article>

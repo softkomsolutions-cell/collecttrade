@@ -4765,10 +4765,30 @@
 }
 
 .emptyState {
-  padding: 28px 20px;
+  padding: 22px 20px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(116, 132, 171, 0.24);
+  border: 1px solid rgba(116, 132, 171, 0.18);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.emptyStateIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: rgba(214, 226, 255, 0.9);
+  background: rgba(74, 139, 255, 0.1);
+  border: 1px solid rgba(74, 139, 255, 0.18);
+  flex: 0 0 auto;
+}
+
+.emptyStateCopy {
+  min-width: 0;
 }
 
 .emptyState p {

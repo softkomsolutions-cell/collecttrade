@@ -143,8 +143,8 @@ export function HomeExecutiveDashboard({
             </div>
           ) : (
             <EmptyState
-              title="No retirement alerts"
-              body="Your holdings are not approaching retirement windows."
+              title="No retirement alerts yet"
+              body="No holdings are near retirement. Add your first LEGO position to unlock timeline alerts and exit guidance."
             />
           )}
         </section>
@@ -181,8 +181,8 @@ export function HomeExecutiveDashboard({
           ) : (
             <>
               <EmptyState
-                title="No strong buys flagged"
-                body="Open Investment Analysis to research catalog opportunities."
+                title="No strong buys highlighted yet"
+                body="Start by scanning your first LEGO set, then open Investment Analysis to surface high‑conviction opportunities."
               />
               <button
                 type="button"
@@ -225,8 +225,8 @@ export function HomeExecutiveDashboard({
             </div>
           ) : (
             <EmptyState
-              title="Intelligence warming up"
-              body="Market headlines will appear here as the feed refreshes."
+              title="Market intelligence is warming up"
+              body="Headlines and LEGO signals will appear here as the feed refreshes. In the meantime, scan a set to generate a fresh Brick Alpha verdict."
             />
           )}
         </section>

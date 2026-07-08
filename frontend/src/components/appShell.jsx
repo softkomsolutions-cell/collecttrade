@@ -29,8 +29,35 @@ import {
 export function EmptyState({ title, body }) {
   return (
     <div className="emptyState">
-      <h3>{title}</h3>
-      <p>{body}</p>
+      <div className="emptyStateIcon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path
+            d="M5.2 8.2l4.8-4.1 4.8 4.1v6.8a1.7 1.7 0 01-1.7 1.7H6.9a1.7 1.7 0 01-1.7-1.7V8.2z"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinejoin="round"
+            opacity="0.7"
+          />
+          <path
+            d="M7.3 10.1h5.4"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            opacity="0.55"
+          />
+          <path
+            d="M7.3 12.8h3.4"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            opacity="0.55"
+          />
+        </svg>
+      </div>
+      <div className="emptyStateCopy">
+        <h3>{title}</h3>
+        <p>{body}</p>
+      </div>
     </div>
   );
 }

@@ -591,6 +591,23 @@
   box-shadow: var(--ba-shadow-sm);
 }
 
+.saasAppShell .emptyState {
+  border-radius: var(--ba-radius-lg);
+  border-color: var(--ba-border-subtle);
+  background: var(--ba-bg-surface);
+}
+
+.saasAppShell .emptyStateIcon {
+  border-radius: var(--ba-radius-md);
+  border-color: rgba(91, 108, 255, 0.22);
+  background: rgba(91, 108, 255, 0.12);
+  color: rgba(226, 232, 255, 0.95);
+}
+
+.saasAppShell .emptyState p {
+  color: var(--ba-text-secondary);
+}
+
 .saasAppShell .primaryButton {
   background: var(--ba-accent);
   border-radius: var(--ba-radius-md);
@@ -1323,7 +1340,7 @@
   border: 1px solid var(--ba-border-subtle);
   background: var(--ba-bg-surface);
   display: grid;
-  gap: 4px;
+  gap: 6px;
   text-align: left;
   cursor: pointer;
   transition: border-color var(--ba-transition), transform var(--ba-transition);
@@ -1342,20 +1359,21 @@
 }
 
 .executiveKpiStripCard span {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ba-text-muted);
 }
 
 .executiveKpiStripCard strong {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
+  line-height: 1.12;
   color: var(--ba-text-primary);
 }
 
 .executiveKpiStripCard small {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ba-text-secondary);
 }
 
@@ -3078,7 +3096,7 @@
 }
 
 .riKpiCard strong {
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.1;
   color: var(--ba-text-primary);
 }
@@ -3199,7 +3217,20 @@
   border-radius: var(--ba-radius-md);
   border: 1px dashed var(--ba-border-subtle);
   text-align: center;
+  color: var(--ba-text-muted);
+  display: grid;
+  gap: 6px;
+  align-content: center;
+}
+
+.riHeatmapEmpty strong {
   font-size: 12px;
+  font-weight: 600;
+  color: var(--ba-text-secondary);
+}
+
+.riHeatmapEmpty small {
+  font-size: 11px;
   color: var(--ba-text-muted);
 }
 
@@ -3667,6 +3698,8 @@
   border-radius: var(--ba-radius-md);
   border: 1px solid var(--ba-border-subtle);
   background: rgba(0, 0, 0, 0.18);
+  display: grid;
+  gap: 6px;
 }
 
 .piOverviewCard-primary {
@@ -3676,7 +3709,6 @@
 
 .piOverviewCard span {
   display: block;
-  margin-bottom: 8px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -3685,15 +3717,15 @@
 
 .piOverviewCard strong {
   display: block;
-  font-size: 20px;
+  font-size: 24px;
+  line-height: 1.12;
   color: var(--ba-text-primary);
 }
 
 .piOverviewCard small {
   display: block;
-  margin-top: 6px;
-  font-size: 11px;
-  color: var(--ba-text-muted);
+  font-size: 12px;
+  color: var(--ba-text-secondary);
 }
 
 .piGrowthChart {
