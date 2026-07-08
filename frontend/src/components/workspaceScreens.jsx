@@ -125,7 +125,7 @@ function reportDeskKeyForTrade(trade) {
 
 function reportDeskLabel(deskKey) {
   if (deskKey === "collectibles") {
-    return "LEGO Investments";
+    return "Investment Analysis";
   }
 
   return labelDesk(deskKey);
@@ -744,7 +744,7 @@ export function HomeScreen({
     },
     {
       id: "investments",
-      label: "LEGO Investments",
+      label: "Investment Analysis",
       meta: `${collectiblesResponse.items?.length || 0} catalog`,
       detail: "Research holdings, scores, and the investment decision engine.",
       onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
@@ -3054,9 +3054,9 @@ export function CollectiblesScreen({
     <>
       <WorkspaceHero
         tone="collectibles"
-        eyebrow="LEGO Investments"
-        title="LEGO Investments"
-        description="AI-powered investment analysis for every LEGO set — buy, hold, or sell with conviction."
+        eyebrow="Investment Analysis"
+        title="Investment Analysis"
+        description="Deep-dive into Brick Alpha score, retirement timing, forecasts, risks, and “Why This Score?”"
         statusLabel="Desk refresh"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
@@ -5531,10 +5531,10 @@ export function SettingsScreen({
           </div>
           <div className="partnerTestingCard">
             <span>Suggested partner pass</span>
-            <strong>Landing - News - Trade - LEGO Investments - Feedback</strong>
+            <strong>Landing - Scan & Evaluate - Investment Analysis - Portfolio - Feedback</strong>
             <small>
-              That route covers the front door, tape, execution flow, alternative-assets lane, and the
-              final feedback handoff.
+              That route covers the front door, scan-to-verdict workflow, analysis deep-dive, portfolio review,
+              and the final feedback handoff.
             </small>
           </div>
           <div className="partnerTestingCard">
@@ -5690,8 +5690,8 @@ export function SettingsScreen({
               >
                 <option value="landing">Landing / Login</option>
                 <option value="news">News</option>
-                <option value="trade">Trade</option>
-                <option value="collectibles">LEGO Investments</option>
+                <option value="trade">Legacy workspace</option>
+                <option value="collectibles">Investment Analysis</option>
                 <option value="portfolio">Portfolio</option>
                 <option value="tools">Tools</option>
                 <option value="connections">Connections</option>

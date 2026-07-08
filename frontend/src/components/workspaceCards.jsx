@@ -968,7 +968,7 @@ export function OrderTicketModal({
         <div className="ticketBriefGrid">
           <div className="ticketBriefCard">
             <span>Desk</span>
-            <strong>{ticket.deskLabel || (ticket.kind === "collectible" ? "LEGO Investments" : "Signals desk")}</strong>
+            <strong>{ticket.deskLabel || (ticket.kind === "collectible" ? "Investment Analysis" : "Workspace")}</strong>
             <small>{ticket.executionCue || "Use the desk rules to stay selective."}</small>
           </div>
           <div className="ticketBriefCard">

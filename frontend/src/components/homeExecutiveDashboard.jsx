@@ -17,6 +17,7 @@ export function HomeExecutiveDashboard({
   strongBuyOpportunities,
   unrealizedGainPercent,
 }) {
+  const hasPortfolioData = (portfolioHoldings || []).length > 0;
   return (
     <section className="executiveDashboardCompact" id="home-dashboard">
       <header className="executiveDashboardCompactHeader">
@@ -37,9 +38,11 @@ export function HomeExecutiveDashboard({
           onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
         >
           <span>Portfolio Value</span>
-          <strong>{formatCollectiblePrice(brickAlphaPortfolio.netAssetValue)}</strong>
+          <strong>{hasPortfolioData ? formatCollectiblePrice(brickAlphaPortfolio.netAssetValue) : "--"}</strong>
           <small>
-            {portfolioHoldings.length} holding{portfolioHoldings.length === 1 ? "" : "s"}
+            {hasPortfolioData
+              ? `${portfolioHoldings.length} holding${portfolioHoldings.length === 1 ? "" : "s"}`
+              : "Demo portfolio — add holdings to personalise"}
           </small>
         </button>
         <button
@@ -48,12 +51,16 @@ export function HomeExecutiveDashboard({
           onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
         >
           <span>Portfolio Growth</span>
-          <strong className={positiveTone(brickAlphaPortfolio.unrealizedGain)}>
-            {unrealizedGainPercent != null
+          <strong className={positiveTone(hasPortfolioData ? brickAlphaPortfolio.unrealizedGain : 0)}>
+            {hasPortfolioData && unrealizedGainPercent != null
               ? `${unrealizedGainPercent >= 0 ? "+" : ""}${unrealizedGainPercent.toFixed(1)}%`
               : "--"}
           </strong>
-          <small>{formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)} unrealised</small>
+          <small>
+            {hasPortfolioData
+              ? `${formatCollectiblePrice(brickAlphaPortfolio.unrealizedGain)} unrealised`
+              : "Trend appears once holdings are added"}
+          </small>
         </button>
         <button
           type="button"
@@ -61,8 +68,8 @@ export function HomeExecutiveDashboard({
           onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
         >
           <span>Brick Alpha Score</span>
-          <strong>{formatScore(brickAlphaPortfolio.averageBrickAlphaScore)}</strong>
-          <small>Portfolio average</small>
+          <strong>{hasPortfolioData ? formatScore(brickAlphaPortfolio.averageBrickAlphaScore) : "--"}</strong>
+          <small>{hasPortfolioData ? "Portfolio average" : "Demo until you add holdings"}</small>
         </button>
         <button
           type="button"
@@ -175,7 +182,7 @@ export function HomeExecutiveDashboard({
             <>
               <EmptyState
                 title="No strong buys flagged"
-                body="Open LEGO Investments to research catalog opportunities."
+                body="Open Investment Analysis to research catalog opportunities."
               />
               <button
                 type="button"

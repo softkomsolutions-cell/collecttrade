@@ -2735,7 +2735,7 @@ export default function App() {
   ];
   const globalSearchIndex = useMemo(
     () =>
-      NAV_ITEMS.flatMap((item) => {
+      NAV_ITEMS.filter((item) => !["news", "signals"].includes(item.id)).flatMap((item) => {
         const workspaceEntry = {
           id: `workspace-${item.id}`,
           label: item.label,
@@ -2807,56 +2807,35 @@ export default function App() {
   }, [closeGlobalSearch, currentUser, openGlobalSearch, searchVisible, splashVisible]);
 
   const primaryNavItems = NAV_ITEMS.filter((item) =>
-    ["home", "scan-evaluate", "collectibles", "portfolio", "news", "signals"].includes(item.id),
+    ["home", "scan-evaluate", "collectibles", "portfolio"].includes(item.id),
   );
   const utilityNavItems = NAV_ITEMS.filter((item) =>
     ["subscriptions", "tools", "reports", "connections", "settings"].includes(item.id),
   );
-  const defaultTradingDesk = ["forex", "etfs", "jse"].includes(activeDesk) ? activeDesk : "forex";
   const menuPrimaryItems = [
     {
-      id: "menu-news",
-      glyph: "NW",
-      label: "News",
-      detail: `${labelDesk(activeDesk)} macro tape`,
-      action: () => handleMenuNavigate("news", activeDesk),
-    },
-    {
-      id: "menu-trading",
-      glyph: "TR",
-      label: "Trading",
-      detail: `${labelDesk(defaultTradingDesk)} signal desk`,
-      action: () => handleMenuNavigate("signals", defaultTradingDesk),
-    },
-    {
-      id: "menu-crypto",
-      glyph: "CR",
-      label: "Crypto",
-      detail: "BTC and crypto desk",
-      action: () => handleMenuNavigate("signals", "crypto"),
+      id: "menu-scan-evaluate",
+      glyph: "📷",
+      label: "Scan & Evaluate",
+      detail: "Scan a set and generate a saved verdict",
+      action: () => handleMenuNavigate("scan-evaluate", activeDesk),
     },
     {
       id: "menu-collectibles",
       glyph: "CL",
-      label: "LEGO Investments",
-      detail: "collectibles",
+      label: "Investment Analysis",
+      detail: "Deep-dive into score, risks, and forecasts",
       action: () => handleMenuNavigate("collectibles", activeDesk),
     },
     {
       id: "menu-portfolio",
       glyph: "PF",
-      label: "Portfolio",
-      detail: "Open positions and history",
+      label: "Portfolio Intelligence",
+      detail: "Holdings, allocation, and growth",
       action: () => handleMenuNavigate("portfolio", activeDesk),
     },
   ];
-  const menuDeskItems = MARKET_DESKS.map((desk) => ({
-    id: desk.id,
-    label: desk.label,
-    detail: desk.shortLabel,
-    active: activeDesk === desk.id,
-    action: () => handleMenuNavigate(page === "news" ? "news" : "signals", desk.id),
-  }));
+  const menuDeskItems = [];
   const menuSupportItems = [
     {
       id: "menu-home",
@@ -3262,7 +3241,9 @@ export default function App() {
           {NAV_GROUPS.map((group) => (
             <div className="navGroup" key={group.id}>
               <div className="navGroupLabel">{group.label}</div>
-              {NAV_ITEMS.filter((item) => item.section.toLowerCase() === group.id).map((item) => (
+              {NAV_ITEMS.filter((item) => item.section.toLowerCase() === group.id)
+                .filter((item) => !["news", "signals"].includes(item.id))
+                .map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -3288,7 +3269,7 @@ export default function App() {
           </div>
           <div className="sidebarUserMeta">
             <strong>{currentUser.name || currentUser.email}</strong>
-            <small>{labelDesk(activeDesk)} desk</small>
+            <small>Workspace</small>
           </div>
         </div>
       </aside>
@@ -3326,7 +3307,7 @@ export default function App() {
 
           <div className="mobileTitleActions">
             <div className="mobileTitleMeta">
-              <span>{labelDesk(activeDesk)}</span>
+              <span>Workspace</span>
               <strong>{marketModeLabel(signalsResponse.marketData?.mode)}</strong>
             </div>
             {!isAppInstalled ? (
@@ -3490,7 +3471,7 @@ export default function App() {
                   <strong>Choose where to go</strong>
                   <small>
                     {currentUser?.name || currentUser?.email || "Current session"} |{" "}
-                    {labelDesk(activeDesk)} | {currentWorkspaceCard.label}
+                    Workspace | {currentWorkspaceCard.label}
                   </small>
                 </div>
                 <button type="button" className="ghostButton mobileMenuClose" onClick={closeMenu}>
@@ -3511,22 +3492,24 @@ export default function App() {
                 ))}
               </div>
 
-              <div className="mobileMenuScreenSection">
-                <span>Desk shortcuts</span>
-                <div className="mobileMenuPillRow">
-                  {menuDeskItems.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`mobileMenuPill ${item.active ? "active" : ""}`}
-                      onClick={item.action}
-                    >
-                      <strong>{item.label}</strong>
-                      <small>{item.detail}</small>
-                    </button>
-                  ))}
+              {menuDeskItems.length ? (
+                <div className="mobileMenuScreenSection">
+                  <span>Desk shortcuts</span>
+                  <div className="mobileMenuPillRow">
+                    {menuDeskItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`mobileMenuPill ${item.active ? "active" : ""}`}
+                        onClick={item.action}
+                      >
+                        <strong>{item.label}</strong>
+                        <small>{item.detail}</small>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
 
               <div className="mobileMenuScreenSection">
                 <span>Workspace &amp; Support</span>

@@ -95,7 +95,7 @@ export const NAV_ITEMS = [
   },
   {
     id: "collectibles",
-    label: "LEGO Investments",
+    label: "Investment Analysis",
     glyph: "CL",
     section: "Market",
     hint: "collectibles desk",
@@ -159,7 +159,7 @@ export const NAV_ITEMS = [
 ];
 
 export const NAV_GROUPS = [
-  { id: "market", label: "Investment Platform" },
+  { id: "market", label: "Workspace" },
   { id: "platform", label: "Support & Admin" },
 ];
 
@@ -169,7 +169,7 @@ export const SCREEN_PREVIEWS = {
   signals: "Live 8/21 EMA setups, chart structure, and execution tickets.",
   tools: "AI mentor, chart analyzer, simulator, and research workspace for decision support.",
   connections: "Broker, venue, feed, and execution controls with live readiness and sync status.",
-  collectibles: "Tradable LEGO, Pokemon, and other LEGO investment holdings positions.",
+  collectibles: "Investment analysis for LEGO sets — scoring, retirement timing, forecasts, and risks.",
   "scan-evaluate":
     "Photograph or upload a LEGO set for instant AI identification, Brick Alpha scoring, and investment recommendations.",
   portfolio: "LEGO collection intelligence — NAV, growth, theme allocation, and Brick Alpha holdings.",
@@ -472,11 +472,11 @@ export const INTRO_ACTIONS = [
     ordinal: "03",
     glyph: "CL",
     eyebrow: "Alt",
-    title: "LEGO Investments",
+    title: "Investment Analysis",
     page: "collectibles",
     sectionId: "investment-analysis",
-    destination: "LEGO Investment Focus",
-    blurb: "Open LEGO, Pokemon, and LEGO investment holdings positions with their own ticket workflow.",
+    destination: "Investment Analysis",
+    blurb: "Deep-dive into Brick Alpha score, retirement timing, forecasts, risks, and “Why This Score?”",
   },
   {
     id: "portfolio",
@@ -593,9 +593,9 @@ export const TRADE_PATHS = [
     desk: null,
     glyph: "AL",
     eyebrow: "ALT",
-    title: "Analyze LEGO Investments",
-    destination: "LEGO Investments",
-    blurb: "Analyze LEGO sets and investment-grade collectibles with the same ticket workflow.",
+    title: "Open Investment Analysis",
+    destination: "Investment Analysis",
+    blurb: "Deep-dive into Brick Alpha score, retirement timing, forecasts, risks, and “Why This Score?”",
   },
 ];
 
@@ -664,8 +664,8 @@ export const PARTNER_TEST_FLOW = [
   {
     id: "collectibles",
     ordinal: "04",
-    title: "LEGO Investments",
-    detail: "Review LEGO investment holdings versus market intelligence and test whether the workflow stays inside Brick Alpha.",
+    title: "Investment Analysis",
+    detail: "Review Brick Alpha scoring, retirement forecasts, and portfolio impact inside Brick Alpha.",
     page: "collectibles",
     desk: null,
     sectionId: "collectibles-grid",

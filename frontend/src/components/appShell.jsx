@@ -471,7 +471,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
             <BrandLogo size="md" />
             <div className="authBrandMeta">
               <div className="authBrand">{APP_WORDMARK}</div>
-              <small>Investment Platform</small>
+              <small>AI Investment Intelligence for LEGO Collectors</small>
             </div>
           </div>
         </div>
@@ -493,10 +493,23 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
                 </div>
                 <strong>{item.title}</strong>
                 <small>{item.detail}</small>
+                {item.valueBadges?.length ? (
+                  <div className="launchValueBadges" aria-label="Value highlights">
+                    {item.valueBadges.map((badge) => (
+                      <span className="launchValueBadge" key={`${item.id}-${badge}`}>
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="mobileMenuRowArrow" aria-hidden="true">{">"}</div>
             </button>
           ))}
+        </div>
+
+        <div className="launchFlowConnector" aria-label="Workflow">
+          Scan → Analyse → Review
         </div>
 
         <div className="chooserActionRow chooserActionRowSplit">
@@ -506,7 +519,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
             onClick={() => onLaunch(homeLaunch)}
             disabled={!ready}
           >
-            Continue to Dashboard
+            Enter Workspace
           </button>
         </div>
       </div>
@@ -605,13 +618,13 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
       id: "collectibles",
       glyph: "CL",
       eyebrow: "Alt",
-      title: "LEGO Investments",
+      title: "Investment Analysis",
       page: "collectibles",
       introId: "collectibles",
       sectionId: "investment-analysis",
-      destination: "LEGO Investments focus",
-      bestFor: "Trade alternatives",
-      blurb: "Analyze LEGO sets and investment-grade collectibles with the same disciplined ticket flow.",
+      destination: "Investment Analysis",
+      bestFor: "Deep-dive analysis",
+      blurb: "Deep-dive into Brick Alpha score, retirement timing, forecasts, risks, and “Why This Score?”",
     },
   ];
   const secondaryActions = [
@@ -805,30 +818,30 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
 
             <div className="landingValueGrid">
               <div className="landingValueCard">
-                <span>Macro Context</span>
-                <strong>South Africa-aware tape</strong>
-                <small>Desk-aware headlines, honest timestamps, and route context before the trade.</small>
+                <span>Brick Alpha Score</span>
+                <strong>Verdicts you can explain</strong>
+                <small>Consistent scoring, risks, and “Why This Score?” so decisions stay grounded.</small>
               </div>
               <div className="landingValueCard">
-                <span>Alpha Signals</span>
-                <strong>8 / 21 EMA workflow</strong>
-                <small>Crosses, retests, structure plans, and visible exits baked into the desk.</small>
+                <span>Retirement Forecasts</span>
+                <strong>Timing you can plan around</strong>
+                <small>Retirement windows and portfolio impact to guide hold horizons.</small>
               </div>
               <div className="landingValueCard">
-                <span>Execution</span>
-                <strong>Paper first, live where ready</strong>
-                <small>Venue-aware tickets, risk budgets, and saved workflows that stay coherent.</small>
+                <span>Portfolio Intelligence</span>
+                <strong>Allocation, growth, and guidance</strong>
+                <small>Track holdings, theme exposure, and AI recommendations in one workspace.</small>
               </div>
             </div>
 
             <div className="landingFeatureRow">
               <div className="landingFeatureChip">
-                <span>Trading lanes</span>
-                <strong>Forex, ETFs, Crypto, JSE</strong>
+                <span>Workflow</span>
+                <strong>Scan → Analyse → Review</strong>
               </div>
               <div className="landingFeatureChip">
-                <span>Alternative book</span>
-                <strong>LEGO investment holdings</strong>
+                <span>Investment analysis</span>
+                <strong>Sets, forecasts, and risks</strong>
               </div>
               <div className="landingFeatureChip">
                 <span>Support stack</span>
@@ -842,7 +855,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
 
             <div className="landingTesterCard">
               <span>Partner testing route</span>
-              <strong>Landing, News, Trade Desk, LEGO Investments, Feedback Board</strong>
+              <strong>Landing, Scan &amp; Evaluate, Investment Analysis, Portfolio, Feedback Board</strong>
               <small>
                 If this session is for partner feedback, use the built-in test pass so notes land in one
                 place and cover the main product surfaces.

@@ -66,7 +66,7 @@ export function workspaceLabel(page, desk) {
   }
 
   if (page === "collectibles") {
-    return "LEGO Investments";
+    return "Investment Analysis";
   }
 
   if (page === "scan-evaluate") {
