@@ -937,7 +937,7 @@ export function OrderTicketModal({
       >
         <div className="panelHeader">
           <div>
-            <h2 id="order-ticket-title">Order Ticket</h2>
+            <h2 id="order-ticket-title">{ticket.kind === "collectible" ? "Add to Portfolio" : "Order Ticket"}</h2>
             <p>{ticket.summary}</p>
           </div>
           <button type="button" className="ghostButton" onClick={onClose}>
@@ -1043,7 +1043,7 @@ export function OrderTicketModal({
 
         {ticket.warnings?.length ? (
           <div className="ticketChecklistBlock">
-            <span>Desk cautions</span>
+            <span>{ticket.kind === "collectible" ? "Guidance" : "Desk cautions"}</span>
             <div className="ticketChecklist">
               {ticket.warnings.map((warning) => (
                 <div key={warning} className="ticketChecklistRow">
@@ -1116,7 +1116,7 @@ export function OrderTicketModal({
           </div>
 
           <label className="formField">
-            <span>Desk Note</span>
+            <span>{ticket.kind === "collectible" ? "Investment Note" : "Desk Note"}</span>
             <textarea
               rows="4"
               value={ticket.orderNote}
@@ -1203,7 +1203,7 @@ export function OrderTicketModal({
             onClick={onSubmit}
             disabled={busy || invalidPlan || (executionPlan?.mode === "live" && !executionPlan.ready)}
           >
-            {busy ? "Submitting..." : `${ticket.side} ${ticket.kind === "collectible" ? "Collectible" : "Position"}`}
+            {busy ? "Submitting..." : ticket.kind === "collectible" ? "Add to Portfolio" : `${ticket.side} Position`}
           </button>
         </div>
       </div>

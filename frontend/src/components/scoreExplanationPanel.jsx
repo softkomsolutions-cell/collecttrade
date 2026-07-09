@@ -94,7 +94,7 @@ function metricReason(metric) {
       if (numberOrZero(item.discountPercentage) > 0) {
         return "Modest discount to MSRP supports entry pricing.";
       }
-      return "Trading at or above retail — upside depends on scarcity and demand.";
+      return "Priced at or above retail — upside depends on scarcity and demand.";
 
     case "themeStrength":
       return score >= 70

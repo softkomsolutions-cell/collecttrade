@@ -645,7 +645,7 @@ export function marketModeLabel(mode) {
     return "Live + Fallback";
   }
 
-  return "Simulated";
+  return "Model Data";
 }
 
 export function technicalTone(value) {

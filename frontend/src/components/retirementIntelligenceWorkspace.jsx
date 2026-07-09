@@ -309,15 +309,14 @@ export function RetirementIntelligenceWorkspace({
           <span className="executiveDashboardEyebrow">Premium Intelligence</span>
           <h2>Retirement Intelligence</h2>
           <p>
-            Retirement radar — heatmap timing, conviction scores, and portfolio-aware
-            buy/hold/sell guidance.
+            What should you buy before retirement? Heatmap timing, conviction scores, and portfolio-aware guidance.
           </p>
         </div>
         {demoCount > 0 ? (
           <div className="riDemoBadge" title="Demo retirement timelines">
             <span>Demo Data</span>
             <strong>
-              {demoCount} demo · {watchlist.length - demoCount} live
+              {demoCount} demo · {watchlist.length - demoCount} catalog
             </strong>
           </div>
         ) : null}
@@ -513,7 +512,7 @@ export function RetirementIntelligenceWorkspace({
             ) : (
               <EmptyState
                 title="Retirement guidance loading"
-                body="Add LEGO sets to your watchlist or portfolio to unlock retirement timing intelligence and exit guidance."
+                body="Track retiring sets to find opportunities. Add holdings to unlock timing intelligence."
               />
             )}
             <div className="riManagerExamples" aria-label="Examples">
@@ -746,7 +745,7 @@ export function RetirementIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No retirement candidates"
-            body="Start by scanning your first LEGO set, then add it to your watchlist or portfolio to unlock retirement intelligence."
+            body="Track retiring sets to find opportunities. Scan a set or add holdings to populate this radar."
           />
         )}
       </article>

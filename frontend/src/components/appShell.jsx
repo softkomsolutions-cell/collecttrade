@@ -783,7 +783,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
             <h1>Your LEGO investment command center.</h1>
             <p className="authBlurb">
               Portfolio intelligence, AI investment scores, and collection analytics in one premium
-              platform. Create an account or explore the live demo.
+              platform. Create an account or explore the demo.
             </p>
 
             <div className="landingHeroActions">
@@ -838,7 +838,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
                   }
                   disabled={demoBusy}
                 >
-                  {demoBusy ? "Opening Demo..." : "Explore Live Demo"}
+                  {demoBusy ? "Opening Demo..." : "Explore Demo"}
                 </button>
               ) : null}
             </div>
@@ -1078,7 +1078,7 @@ export function LandingShell({ initialLaunch, onContinue, onDemo, demoBusy = fal
               }
               disabled={demoBusy}
             >
-              {demoBusy ? "Opening Demo..." : "Explore Live Demo"}
+              {demoBusy ? "Opening Demo..." : "Explore Demo"}
             </button>
           ) : null}
         </div>

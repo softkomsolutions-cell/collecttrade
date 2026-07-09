@@ -2710,7 +2710,7 @@ export function ToolsScreen({
         }}
         secondaryAction={{
           label: "Open Portfolio",
-          onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
+          onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
         }}
       />
       <WorkspaceSectionBar
@@ -3034,7 +3034,7 @@ export function CollectiblesScreen({
       label: "Open Portfolio",
       meta: "Review book",
       detail: "Check how LEGO investment positions sit inside the wider portfolio.",
-      onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
+      onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
     },
   ];
 
@@ -3044,14 +3044,14 @@ export function CollectiblesScreen({
         tone="collectibles"
         eyebrow="Investment Analysis"
         title="Investment Analysis"
-        description="Deep-dive into Brick Alpha score, retirement timing, forecasts, risks, and “Why This Score?”"
-        statusLabel="Desk refresh"
+        description="Why should you buy or avoid a set? Brick Alpha score, retirement timing, forecasts, risks, and score breakdown."
+        statusLabel="Last updated"
         statusValue={formatDateTime(collectiblesResponse.updatedAt, appSettings.timezone)}
         metrics={[
           {
-            label: "Tradable items",
+            label: "Catalog sets",
             value: collectibles.length,
-            detail: "Live LEGO holdings",
+            detail: "Model data",
           },
           {
             label: "Brands",
@@ -3084,7 +3084,7 @@ export function CollectiblesScreen({
         }}
         secondaryAction={{
           label: "Open Portfolio",
-          onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
+          onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
         }}
       />
       <WorkspaceSectionBar
@@ -3094,7 +3094,7 @@ export function CollectiblesScreen({
       <WorkspaceCommandBar
         tone="collectibles"
         title="LEGO Investment Shortcuts"
-        hint="Keep trading, verification, and portfolio review in one tidy flow."
+        hint="Scan, analyze, and review your collection in one flow."
         actions={collectibleActions}
       />
 
@@ -3247,10 +3247,10 @@ export function CollectiblesScreen({
                 <h2>{group.brand}</h2>
                 <p>
                   {group.brand === "LEGO"
-                    ? "Display-led sets, minifigures, and collector holdings with the market intelligence shelf available beside the trade flow."
+                    ? "Display-led sets, minifigures, and collector holdings with model-backed market data."
                     : group.brand === "Pokemon"
                       ? "Sealed and graded trading-card holdings with faster collector demand read-through."
-                      : "collectibles tracked inside the same ticket and portfolio workflow."}
+                      : "Collectibles tracked inside the same portfolio workflow."}
                 </p>
               </div>
               <div className="headerStatus">
@@ -3302,7 +3302,7 @@ export function ScanEvaluateScreen({
         tone="collectibles"
         eyebrow="Scan & Evaluate"
         title="Scan & Evaluate"
-        description="Photograph a set, upload an image, or enter a set number — Brick Alpha delivers investment analysis with score, forecast, and portfolio actions."
+        description="Should I buy this set? Photograph a set, upload an image, or enter a set number — Brick Alpha delivers a model-backed verdict with score, forecast, and portfolio actions."
         statusLabel="Engine"
         statusValue="Brick Alpha (Demo)"
         metrics={[
@@ -3328,12 +3328,12 @@ export function ScanEvaluateScreen({
           },
         ]}
         primaryAction={{
-          label: "Open Analysis",
-          onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
+          label: "Evaluate a Set",
+          onClick: () => jumpToPageSection("scan-evaluate", "scan-evaluate"),
         }}
         secondaryAction={{
           label: "Open Portfolio",
-          onClick: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
+          onClick: () => jumpToPageSection("portfolio", "portfolio-intelligence"),
         }}
       />
       <WorkspaceSectionBar
@@ -3396,26 +3396,18 @@ export function PortfolioScreen({
       onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
     },
     {
-      id: "positions",
-      label: "Open Positions",
-      meta: `${openTrades.length}`,
-      detail: "All live collectible positions.",
-      onClick: () => jumpToPageSection("portfolio", "open-positions"),
+      id: "analysis",
+      label: "Open Analysis",
+      meta: "Deep dive",
+      detail: "Brick Alpha score, forecasts, and retirement timing.",
+      onClick: () => jumpToPageSection("collectibles", "investment-analysis"),
     },
     {
-      id: "history",
-      label: "Order History",
-      meta: `${closedTrades.length}`,
-      detail: "Review closes, timestamps, and exit discipline.",
-      onClick: () => jumpToPageSection("portfolio", "order-history"),
-    },
-    {
-      id: "selected",
-      label: "Position Detail",
-      meta: activePortfolioTrade?.ticker || "No selection",
-      detail: "Jump to the current position detail pane.",
-      onClick: () => jumpToPageSection("portfolio", "position-detail"),
-      disabled: !activePortfolioTrade,
+      id: "scan",
+      label: "Scan & Evaluate",
+      meta: "New set",
+      detail: "Identify a set and get an instant verdict.",
+      onClick: () => jumpToPageSection("scan-evaluate", "scan-evaluate"),
     },
   ];
 
@@ -3425,14 +3417,14 @@ export function PortfolioScreen({
         tone="portfolio"
         eyebrow="Collection Intelligence"
         title="Portfolio Intelligence"
-        description="Your LEGO collection as an investment portfolio — NAV, growth, theme allocation, and Brick Alpha recommendations."
+        description="How is your collection performing? NAV, growth, theme allocation, and Brick Alpha recommendations."
         statusLabel="Last engine tick"
         statusValue={formatDateTime(health.metrics?.lastEngineTickAt, appSettings.timezone)}
         metrics={[
           {
             label: "Open positions",
             value: collectibleHoldings.length || (isDemoMode ? portfolioContext.portfolioHoldings.length : 0),
-            detail: isDemoMode ? "Demo collection" : "Live LEGO holdings",
+            detail: isDemoMode ? "Demo Portfolio" : "Your holdings",
           },
           {
             label: "Closed positions",
@@ -3458,7 +3450,7 @@ export function PortfolioScreen({
           onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
         }}
         secondaryAction={{
-          label: "Export Portfolio",
+          label: "Export Report",
           onClick: () => jumpToPageSection("portfolio", "portfolio-holdings"),
         }}
       />
@@ -3469,7 +3461,7 @@ export function PortfolioScreen({
       <WorkspaceCommandBar
         tone="portfolio"
         title="Portfolio Shortcuts"
-        hint="Collection intelligence, holdings, open book, and execution history."
+        hint="Collection intelligence, holdings, and performance review."
         actions={portfolioActions}
       />
 
@@ -5425,8 +5417,8 @@ export function SettingsScreen({
       <section className="panel" id="partner-testing">
         <div className="panelHeader">
           <div>
-            <h2>Partner Testing</h2>
-            <p>When your partners get access, this becomes the shared place to log, review, and close feedback.</p>
+            <h2>Feedback Board</h2>
+            <p>Log, review, and close product feedback in one place.</p>
           </div>
         </div>
 

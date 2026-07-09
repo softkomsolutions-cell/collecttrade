@@ -15,7 +15,8 @@ function normalizeSetNumber(value) {
 }
 
 function isLiveApiEnabled() {
-  const raw = import.meta?.env?.LIVE_API_ENABLED;
+  const raw =
+    import.meta?.env?.VITE_LIVE_API_ENABLED ?? import.meta?.env?.LIVE_API_ENABLED;
   if (raw === undefined || raw === null || raw === "") {
     return false;
   }
@@ -59,22 +60,26 @@ class MarketDataService {
    * @returns {import('../models/setMarketData').SetMarketData|null}
    */
   getSetSync(setNumber) {
-    const normalized = normalizeSetNumber(setNumber);
-    if (!normalized) {
+    try {
+      const normalized = normalizeSetNumber(setNumber);
+      if (!normalized) {
+        return null;
+      }
+
+      const cached = this.cache.getEntry(normalized);
+      if (cached?.data && isSetMarketData(cached.data)) {
+        return cached.data;
+      }
+
+      const demo = this.demoProvider.getSet(normalized);
+      if (demo) {
+        return demo;
+      }
+
+      return null;
+    } catch {
       return null;
     }
-
-    const cached = this.cache.getEntry(normalized);
-    if (cached.data && isSetMarketData(cached.data)) {
-      return cached.data;
-    }
-
-    const demo = this.demoProvider.getSet(normalized);
-    if (demo) {
-      return demo;
-    }
-
-    return null;
   }
 
   /**

@@ -321,8 +321,8 @@ export function InvestmentAnalysisWorkspace({
     return (
       <section className="iaWorkspace iaWorkspace-empty panel" id="investment-analysis">
         <EmptyState
-          title="Start your first Investment Analysis"
-          body="Select a LEGO set to open Brick Alpha Score, retirement timing, forecasts, and premium recommendations."
+          title="Select a set to analyze"
+          body="Start by scanning your first LEGO set, or pick one below to see why Brick Alpha recommends buy, hold, or avoid."
         />
         {legoSets.length ? (
           <div className="iaSetPicker">
@@ -339,6 +339,13 @@ export function InvestmentAnalysisWorkspace({
             ))}
           </div>
         ) : null}
+        <button
+          type="button"
+          className="ghostButton slimButton"
+          onClick={() => jumpToPageSection("scan-evaluate", "scan-evaluate")}
+        >
+          Scan & Evaluate
+        </button>
       </section>
     );
   }
@@ -386,6 +393,7 @@ export function InvestmentAnalysisWorkspace({
           <div className="iaHeroIntro">
             <span className="executiveDashboardEyebrow">Investment Analysis</span>
             <h1>{item.name}</h1>
+            <p className="iaHeroPurpose">Why should you buy or avoid this set?</p>
             <div className="iaHeroMeta">
               <span>#{extractSetNumber(item)}</span>
               <span>{item.legoTheme}</span>

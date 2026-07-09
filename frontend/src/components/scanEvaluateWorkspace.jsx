@@ -528,8 +528,8 @@ export function ScanEvaluateWorkspace({
               <span className="executiveDashboardEyebrow">Hero Feature</span>
               <h2>Scan a LEGO set. Get an instant investment verdict.</h2>
               <p>
-                Photograph, upload, or enter a set number — Brick Alpha identifies the set, pulls market
-                data, and delivers a complete investment analysis in seconds.
+                Photograph, upload, or enter a set number — Brick Alpha matches against the demo catalog and
+                delivers a model-backed investment verdict in seconds.
               </p>
             </div>
             <div className="seHeroStats">
@@ -538,7 +538,7 @@ export function ScanEvaluateWorkspace({
                 <span>Catalog sets</span>
               </div>
               <div>
-                <strong>AI</strong>
+                <strong>Demo</strong>
                 <span>Identification</span>
               </div>
               <div>
@@ -549,8 +549,8 @@ export function ScanEvaluateWorkspace({
           </article>
 
           <div className="seAcquisitionHeader">
-            <span className="executiveDashboardEyebrow">Acquisition methods</span>
-            <h2>Scan a LEGO set</h2>
+            <span className="executiveDashboardEyebrow">Scan & Evaluate</span>
+            <h2>Should I buy this set?</h2>
           </div>
 
           <div className="seAcquisitionGrid">
@@ -629,7 +629,7 @@ export function ScanEvaluateWorkspace({
                     }}
                   />
                   <button type="button" className="primaryButton" onClick={handleSetNumberSubmit}>
-                    Open Analysis
+                    Evaluate Set
                   </button>
                 </div>
               </article>
@@ -854,23 +854,17 @@ export function ScanEvaluateWorkspace({
               <button type="button" className="primaryButton" onClick={handleAddToPortfolio}>
                 Add to Portfolio
               </button>
-              <button type="button" className="ghostButton" onClick={handleAddToWatchlist}>
-                Add to Watchlist
-              </button>
-              <button type="button" className="ghostButton" onClick={() => setActionStatus("PDF report queued for demo export.")}>
-                Generate PDF Report
-              </button>
-              <button type="button" className="ghostButton" onClick={() => setActionStatus("Analysis link copied to clipboard (demo).")}>
-                Share Analysis
-              </button>
-              <button type="button" className="ghostButton" onClick={handleOpenInvestmentAnalysis}>
-                Compare Sets
+              <button type="button" className="primaryButton" onClick={handleOpenInvestmentAnalysis}>
+                Open Analysis
               </button>
               <button type="button" className="ghostButton" onClick={handleTrackRetirement}>
                 Track Retirement
               </button>
+              <button type="button" className="ghostButton" onClick={handleAddToWatchlist}>
+                Add to Watchlist
+              </button>
               <button type="button" className="ghostButton" onClick={handleOpenInvestmentAnalysis}>
-                Investment Analysis
+                Compare
               </button>
             </div>
           </article>

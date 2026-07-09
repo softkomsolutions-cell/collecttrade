@@ -849,7 +849,7 @@ export function PortfolioIntelligenceWorkspace({
           <div>
             <span className="piEyebrow">Portfolio Intelligence</span>
             <h2>Brick Alpha Portfolio</h2>
-            <p>Portfolio value, performance, risk, and next best moves — presented like a wealth dashboard.</p>
+            <p>How is your collection performing? Value, growth, risk, and next best moves.</p>
           </div>
           <div className="piHeaderStatus">
             <span>Risk profile</span>
@@ -934,7 +934,7 @@ export function PortfolioIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No allocation view yet"
-            body="No holdings found. Add LEGO positions to unlock theme allocation, diversification, and portfolio-grade KPIs."
+            body="Add holdings to unlock portfolio intelligence — theme allocation and diversification appear here."
           />
         )}
       </section>
@@ -963,7 +963,7 @@ export function PortfolioIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="Portfolio guidance loading"
-            body="Add LEGO positions to unlock personalised portfolio guidance and rebalancing suggestions."
+            body="Add holdings to unlock personalised portfolio guidance and rebalancing suggestions."
           />
         )}
       </section>
@@ -977,10 +977,10 @@ export function PortfolioIntelligenceWorkspace({
           </div>
           <div className="piActionCluster">
             <button type="button" className="ghostButton slimButton" onClick={handleExport}>
-              Export portfolio
+              Export Report
             </button>
             <button type="button" className="primaryButton slimButton" onClick={handleGenerateReport}>
-              Generate report
+              Export Report
             </button>
           </div>
         </header>
@@ -1026,7 +1026,7 @@ export function PortfolioIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No holdings match filters"
-            body="Clear filters or add your first LEGO holding to populate a premium wealth dashboard for your collection."
+            body="Clear filters or add your first LEGO holding to build your collection dashboard."
           />
         )}
       </section>
@@ -1057,7 +1057,7 @@ export function PortfolioIntelligenceWorkspace({
         ) : (
           <EmptyState
             title="No watchlist items yet"
-            body="Add sets to your watchlist to surface the highest-opportunity opportunities here first."
+            body="Add sets to your watchlist from Scan & Evaluate to surface opportunities here."
           />
         )}
       </section>

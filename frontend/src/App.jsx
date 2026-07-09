@@ -49,6 +49,7 @@ import {
   SaasTopNav,
   SplashScreen,
 } from "./components/appShell";
+import { BrandLogo } from "./components/brandLogo";
 import { resolvePortfolioContext } from "./components/portfolioIntelligenceWorkspace";
 import {
   enrichBrickAlphaCollectible,

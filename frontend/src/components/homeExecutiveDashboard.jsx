@@ -1,5 +1,6 @@
 import { EmptyState } from "./appShell";
 import { formatCollectiblePrice, formatDateTime, positiveTone } from "../appUtils";
+import { monthsUntilRetirement } from "../retirementIntelligenceData";
 
 function formatScore(value) {
   const numeric = Number(value);
@@ -63,17 +64,21 @@ export function HomeExecutiveDashboard({
   const retirementImmediate = retirementAlerts.filter((item) =>
     ["Overdue", "Imminent"].includes(item.retirementStatus),
   );
+  const retirementSixMonths = portfolioHoldings.filter((holding) => {
+    const months = monthsUntilRetirement(holding);
+    return months !== null && months > 3 && months <= 6;
+  });
   const retirementThreeMonths = retirementAlerts.filter((item) => item.retirementStatus === "Approaching");
   return (
     <section className="executiveDashboardCompact" id="home-dashboard">
       <header className="executiveDashboardCompactHeader">
         <div className="executiveDashboardHeroCopy">
-          <span className="executiveDashboardEyebrow">Executive command centre</span>
+          <span className="executiveDashboardEyebrow">Dashboard</span>
           <h1>
             {greeting} {displayName}
           </h1>
           <p className="executiveDashboardHeroSub">
-            Portfolio value, performance, opportunities, and investment brief — all above the fold.
+            What should you pay attention to today? Retirement alerts, top opportunities, and your portfolio brief.
           </p>
         </div>
         {isDemoMode ? (
@@ -91,7 +96,7 @@ export function HomeExecutiveDashboard({
         <button
           type="button"
           className="executiveKpiStripCard executiveKpiStripCard-primary"
-          onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          onClick={() => jumpToPageSection("portfolio", "portfolio-intelligence")}
         >
           <span>Portfolio Value</span>
           <strong>{hasPortfolioData ? formatCollectiblePrice(brickAlphaPortfolio.netAssetValue) : "--"}</strong>
@@ -104,7 +109,7 @@ export function HomeExecutiveDashboard({
         <button
           type="button"
           className="executiveKpiStripCard"
-          onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          onClick={() => jumpToPageSection("portfolio", "portfolio-intelligence")}
         >
           <span>Today&apos;s Growth</span>
           <strong className={positiveTone(hasPortfolioData ? brickAlphaPortfolio.unrealizedGain : 0)}>
@@ -121,7 +126,7 @@ export function HomeExecutiveDashboard({
         <button
           type="button"
           className="executiveKpiStripCard"
-          onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          onClick={() => jumpToPageSection("portfolio", "portfolio-intelligence")}
         >
           <span>Collection Grade</span>
           <strong>{brickAlphaPortfolio.collectionGrade || "--"}</strong>
@@ -130,7 +135,7 @@ export function HomeExecutiveDashboard({
         <button
           type="button"
           className="executiveKpiStripCard"
-          onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+          onClick={() => jumpToPageSection("portfolio", "portfolio-intelligence")}
         >
           <span>Brick Alpha Score</span>
           <strong>{hasPortfolioData ? formatScore(aiConfidenceScore) : "--"}</strong>
@@ -195,11 +200,11 @@ export function HomeExecutiveDashboard({
             </button>
             <button
               type="button"
-              className="executiveRetirementBucket"
+              className={`executiveRetirementBucket ${retirementSixMonths.length ? "warning" : ""}`}
               onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}
             >
               <span>6 Months</span>
-              <strong>0</strong>
+              <strong>{retirementSixMonths.length}</strong>
               <small>Tracking</small>
             </button>
           </div>
@@ -220,7 +225,7 @@ export function HomeExecutiveDashboard({
           ) : (
             <EmptyState
               title="No retirement alerts yet"
-              body="No holdings are near retirement. Add your first LEGO position to unlock timeline alerts and exit guidance."
+              body="Track retiring sets to find opportunities. Add holdings or scan a set to unlock timeline alerts."
             />
           )}
         </section>
@@ -239,12 +244,7 @@ export function HomeExecutiveDashboard({
                   key={item.id}
                   type="button"
                   className="executiveOpportunityCard"
-                  onClick={() =>
-                    jumpToPageSection(
-                      item.source === "portfolio" ? "portfolio" : "collectibles",
-                      item.source === "portfolio" ? "portfolio-holdings" : "retirement-intelligence",
-                    )
-                  }
+                  onClick={() => jumpToPageSection("collectibles", "investment-analysis")}
                 >
                   <div className="executiveOpportunityCardTop">
                     <span className="executiveOpportunityRank">
@@ -297,14 +297,14 @@ export function HomeExecutiveDashboard({
             <>
               <EmptyState
                 title="No strong buys highlighted yet"
-                body="Start by scanning your first LEGO set, then open Investment Analysis to surface high‑conviction opportunities."
+                body="Start by scanning your first LEGO set to surface high-conviction opportunities."
               />
               <button
                 type="button"
                 className="ghostButton slimButton"
-                onClick={() => jumpToPageSection("collectibles", "collectibles-grid")}
+                onClick={() => jumpToPageSection("scan-evaluate", "scan-evaluate")}
               >
-                Browse catalog
+                Scan a set
               </button>
             </>
           )}
@@ -319,7 +319,7 @@ export function HomeExecutiveDashboard({
             <button
               type="button"
               className="ghostButton slimButton"
-              onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
+              onClick={() => jumpToPageSection("portfolio", "portfolio-intelligence")}
             >
               Open Portfolio
             </button>
@@ -347,7 +347,7 @@ export function HomeExecutiveDashboard({
                   ))}
                 </div>
               ) : (
-                <small className="executiveSnapshotMuted">Theme allocation appears once holdings are added.</small>
+                <small className="executiveSnapshotMuted">Add holdings to unlock theme allocation.</small>
               )}
             </div>
           </div>
@@ -397,7 +397,7 @@ export function HomeExecutiveDashboard({
         <button type="button" onClick={() => jumpToPageSection("collectibles", "investment-analysis")}>
           Investment Analysis
         </button>
-        <button type="button" onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}>
+        <button type="button" onClick={() => jumpToPageSection("portfolio", "portfolio-intelligence")}>
           Portfolio
         </button>
         <button type="button" onClick={() => jumpToPageSection("collectibles", "retirement-intelligence")}>

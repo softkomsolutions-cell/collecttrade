@@ -98,14 +98,14 @@ export const NAV_ITEMS = [
     label: "Investment Analysis",
     glyph: "CL",
     section: "Market",
-    hint: "collectibles desk",
+    hint: "Brick Alpha score, retirement timing, and forecasts",
   },
   {
     id: "portfolio",
     label: "Portfolio",
     glyph: "PF",
     section: "Market",
-    hint: "Live positions and history",
+    hint: "Collection performance and holdings",
   },
   {
     id: "news",
@@ -212,8 +212,6 @@ export const PAGE_SECTION_LINKS = {
     { id: "investment-analysis", label: "Analysis" },
     { id: "retirement-intelligence", label: "Retirement" },
     { id: "collectibles-trading", label: "Browse" },
-    { id: "collectibles-reference", label: "Reference" },
-    { id: "collectibles-grid", label: "Catalog" },
   ],
   "scan-evaluate": [{ id: "scan-evaluate", label: "Evaluate" }],
   portfolio: [
@@ -221,10 +219,6 @@ export const PAGE_SECTION_LINKS = {
     { id: "portfolio-growth", label: "Growth" },
     { id: "portfolio-allocation", label: "Themes" },
     { id: "portfolio-holdings", label: "Holdings" },
-    { id: "portfolio-dashboard", label: "Dashboard" },
-    { id: "position-detail", label: "Detail" },
-    { id: "open-positions", label: "Open" },
-    { id: "order-history", label: "History" },
   ],
   reports: [
     { id: "reports-overview", label: "Overview" },
