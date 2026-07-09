@@ -55,6 +55,7 @@ import {
   enrichBrickAlphaTrade,
   summarizeBrickAlphaPortfolio,
 } from "./brickAlphaModel";
+import { marketDataService } from "./services/marketDataService";
 
 function lazyNamedExport(factory, exportName) {
   return lazy(() =>
@@ -1122,6 +1123,11 @@ export default function App() {
       brands: collectiblesData.brands || [],
       referenceShelves: collectiblesData.referenceShelves || [],
     });
+
+    const legoSetNumbers = (collectiblesData.items || [])
+      .filter((item) => item.brand === "LEGO" && item.sku)
+      .map((item) => item.sku);
+    marketDataService.preload(legoSetNumbers).catch(() => {});
     setHealth({
       ...EMPTY_HEALTH,
       ...healthData,

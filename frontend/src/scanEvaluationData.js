@@ -3,6 +3,11 @@
  * Keeps demo content out of UI components — swap for API calls when backend is ready.
  */
 
+import { marketDataService } from "./services/marketDataService";
+import { DEMO_SET_NUMBER_MAP, DEMO_SET_PROFILES } from "./providers/demoMarketData";
+
+export { DEMO_SET_NUMBER_MAP, DEMO_SET_PROFILES };
+
 export const PROCESSING_STEPS = [
   { id: "uploading", label: "Uploading..." },
   { id: "analysing", label: "Demo identification running..." },
@@ -10,124 +15,6 @@ export const PROCESSING_STEPS = [
   { id: "market", label: "Fetching market data..." },
   { id: "scoring", label: "Calculating Brick Alpha score..." },
 ];
-
-export const DEMO_SET_NUMBER_MAP = {
-  "75252": "lego-star-wars-75252",
-  "75313": "lego-star-wars-75313",
-  "76269": "lego-marvel-76269",
-  "76218": "lego-marvel-76218",
-  "75367": "lego-star-wars-75367",
-  "71043": "lego-harry-potter-71043",
-  "10305": "lego-icons-10305",
-  "10316": "lego-icons-10316",
-  "76261": "lego-marvel-76261",
-  "76178": "lego-marvel-76178",
-  "75290": "lego-star-wars-75290",
-  "75192": "lego-star-wars-75192",
-};
-
-export const DEMO_SET_PROFILES = {
-  "75252": {
-    name: "Imperial Star Destroyer",
-    theme: "Star Wars",
-    pieces: 4784,
-    minifigures: 2,
-    retailPrice: 32999,
-    imageUrl:
-      "https://images.brickset.com/sets/images/75252-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "3–5 years",
-    expectedRoi: 36,
-  },
-  "75313": {
-    name: "AT-AT",
-    theme: "Star Wars",
-    pieces: 6785,
-    minifigures: 9,
-    retailPrice: 34999,
-    imageUrl: "https://images.brickset.com/sets/images/75313-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "3–5 years",
-    expectedRoi: 32,
-  },
-  "76269": {
-    name: "Avengers Tower",
-    theme: "Marvel Super Heroes",
-    pieces: 5201,
-    minifigures: 14,
-    retailPrice: 24999,
-    imageUrl: "https://images.brickset.com/sets/images/76269-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "2–4 years",
-    expectedRoi: 28,
-  },
-  "76218": {
-    name: "Sanctum Sanctorum",
-    theme: "Marvel Super Heroes",
-    pieces: 2708,
-    minifigures: 9,
-    retailPrice: 8999,
-    imageUrl: "https://images.brickset.com/sets/images/76218-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "2–3 years",
-    expectedRoi: 24,
-  },
-  "75367": {
-    name: "Venator-Class Republic Attack Cruiser",
-    theme: "Star Wars",
-    pieces: 5374,
-    minifigures: 2,
-    retailPrice: 27999,
-    imageUrl: "https://images.brickset.com/sets/images/75367-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "4–6 years",
-    expectedRoi: 40,
-  },
-  "71043": {
-    name: "Hogwarts Castle",
-    theme: "Harry Potter",
-    pieces: 6020,
-    minifigures: 4,
-    retailPrice: 19999,
-    imageUrl: "https://images.brickset.com/sets/images/71043-1.jpg",
-    brickEconomyStatus: "Retired · Premium",
-    investmentHorizon: "Hold",
-    expectedRoi: 18,
-  },
-  "10305": {
-    name: "Lion Knights' Castle",
-    theme: "Icons",
-    pieces: 4514,
-    minifigures: 22,
-    retailPrice: 17999,
-    imageUrl: "https://images.brickset.com/sets/images/10305-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "3–5 years",
-    expectedRoi: 34,
-  },
-  "10316": {
-    name: "Rivendell",
-    theme: "Icons",
-    pieces: 6167,
-    minifigures: 15,
-    retailPrice: 19999,
-    imageUrl: "https://images.brickset.com/sets/images/10316-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "3–5 years",
-    expectedRoi: 38,
-  },
-  "76261": {
-    name: "Spider-Man Final Battle",
-    theme: "Marvel Super Heroes",
-    pieces: 395,
-    minifigures: 4,
-    retailPrice: 3499,
-    imageUrl: "https://images.brickset.com/sets/images/76261-1.jpg",
-    brickEconomyStatus: "Tracked",
-    investmentHorizon: "1–2 years",
-    expectedRoi: 15,
-  },
-};
 
 export const PREMIUM_COMPARABLES = [
   {
@@ -221,7 +108,7 @@ export function identifySetNumberFromFilename(filename) {
 
 export function getDemoSetProfile(setNumber) {
   const normalized = normalizeSetNumber(setNumber);
-  return DEMO_SET_PROFILES[normalized] || null;
+  return marketDataService.toScanDemoProfile(marketDataService.getSetSync(normalized));
 }
 
 export function findCatalogMatch(collectibles, setNumber, demoSeed = 0) {

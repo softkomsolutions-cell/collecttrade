@@ -5,6 +5,7 @@ import {
   legoThemeFor,
   themeAllocationFor,
 } from "./brickAlphaModel";
+import { MARKET_DATA_SOURCES } from "./services/marketDataSources";
 
 function numberOrZero(value) {
   const numeric = Number(value);
@@ -18,7 +19,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  * Used when BrickEconomy live retirement timelines are unavailable.
  * Replace RETIREMENT_DEMO_CATALOG with API payloads from BrickEconomy integration.
  */
-export const RETIREMENT_DEMO_SOURCE = "demo";
+export const RETIREMENT_DEMO_SOURCE = MARKET_DATA_SOURCES.DEMO;
 
 export const RETIREMENT_HEATMAP_BUCKETS = [
   { id: "0-3", label: "0–3 mo", minMonths: 0, maxMonths: 3 },
@@ -459,7 +460,9 @@ export function buildRetirementWatchlist(collectibles = [], openTrades = [], tod
         opportunityScore: retirementOpportunityScore(enriched),
         portfolioStatus: portfolioStatusFor(enriched, openTrades),
         ownedTrade: ownedTradeFor(enriched, openTrades),
-        dataSource: liveLegoIncludes(collectibles, enriched.id) ? "live" : RETIREMENT_DEMO_SOURCE,
+        dataSource: liveLegoIncludes(collectibles, enriched.id)
+          ? MARKET_DATA_SOURCES.BRICK_ECONOMY
+          : RETIREMENT_DEMO_SOURCE,
       };
     })
     .filter((item) => item.retirementStatus !== "Retired")
