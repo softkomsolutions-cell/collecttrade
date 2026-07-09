@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const Parser = require("rss-parser");
+const { marketDataService } = require("./services/marketDataService");
 
 const app = express();
 const parser = new Parser();
@@ -4021,6 +4022,7 @@ function buildHealth() {
     sources: newsMeta.sourceStatus,
     marketSources: marketDataMeta.sourceStatus,
     connectors: connectorSummary.providers,
+    marketDataApi: marketDataService.getHealthSnapshot(),
   };
 }
 
@@ -4136,6 +4138,29 @@ app.get("/", (_req, res) => {
 
 app.get("/api/health", (_req, res) => {
   res.json(buildHealth());
+});
+
+app.get("/api/market-data/:setNumber", async (req, res) => {
+  const setNumber = String(req.params.setNumber || "").trim();
+
+  try {
+    const record = await marketDataService.getSet(setNumber);
+
+    if (!record) {
+      res.status(404).json({ ok: false, error: "set_not_found" });
+      return;
+    }
+
+    res.json(record);
+  } catch (_error) {
+    const fallback = marketDataService.getDemoFallback(setNumber);
+    if (fallback) {
+      res.json(fallback);
+      return;
+    }
+
+    res.status(404).json({ ok: false, error: "set_not_found" });
+  }
 });
 
 app.post("/api/auth/register", (req, res) => {
