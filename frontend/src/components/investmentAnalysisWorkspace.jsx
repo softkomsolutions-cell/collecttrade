@@ -463,7 +463,7 @@ export function InvestmentAnalysisWorkspace({
 
       <article className="iaGlassCard iaVerdictCard">
         <div className="iaSectionHeader">
-          <span className="executiveDashboardEyebrow">AI Investment Verdict</span>
+          <span className="executiveDashboardEyebrow">Investment Verdict</span>
           <h2>{displayRecommendation(item.recommendation)} · {item.investmentGrade}</h2>
         </div>
         <p className="iaVerdictLead">
@@ -786,8 +786,8 @@ export function InvestmentAnalysisWorkspace({
 
       <article className="iaGlassCard iaCommentaryCard">
         <div className="iaSectionHeader">
-          <span className="executiveDashboardEyebrow">AI Commentary</span>
-          <h2>Brick Alpha Copilot</h2>
+          <span className="executiveDashboardEyebrow">Model notes (Demo)</span>
+          <h2>Brick Alpha notes</h2>
         </div>
         <div className="iaCommentaryBody">
           {commentaryParagraphs.length ? (

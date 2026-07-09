@@ -168,7 +168,7 @@ function ProcessingOverlay({ activeStepIndex }) {
     <div className="seProcessingOverlay">
       <div className="seProcessingCard">
         <div className="seProcessingPulse" aria-hidden="true" />
-        <h2>Brick Alpha AI</h2>
+        <h2>Brick Alpha</h2>
         <ol className="seProcessingSteps">
           {PROCESSING_STEPS.map((step, index) => {
             const state =
@@ -194,7 +194,7 @@ function ManualSearchPanel({ collectibles, onSelect, onCancel }) {
     <article className="seGlassCard seManualPanel">
       <div className="seSectionHeader">
         <span className="executiveDashboardEyebrow">Manual identification</span>
-        <h2>AI could not identify automatically</h2>
+        <h2>Could not identify automatically</h2>
         <p>Search by set number, name, or theme — autocomplete against the Brick Alpha catalog.</p>
       </div>
       <label className="seField">
@@ -241,7 +241,7 @@ function CopilotCard({ evaluation }) {
   return (
     <article className="seGlassCard seCopilotCard">
       <div className="seSectionHeader">
-        <span className="executiveDashboardEyebrow">AI Copilot</span>
+        <span className="executiveDashboardEyebrow">Investment advisor (Demo)</span>
         <h2>Investment advisor</h2>
       </div>
       <div className="seCopilotThread">
@@ -321,7 +321,7 @@ export function ScanEvaluateWorkspace({
   );
 
   const portfolioStatus = useMemo(
-    () => (evaluation ? portfolioStatusFor(evaluation, openTrades) : "Not Owned"),
+    () => (evaluation ? portfolioStatusFor(evaluation, openTrades) || "Opportunity" : "—"),
     [evaluation, openTrades],
   );
 
@@ -341,7 +341,7 @@ export function ScanEvaluateWorkspace({
       const normalized = normalizeSetNumber(setNumber);
       if (!normalized) {
         setPhase("manual");
-        setActionStatus("AI could not identify automatically — search the catalog below.");
+        setActionStatus("Could not identify automatically — search the catalog below.");
         return;
       }
 
@@ -590,6 +590,7 @@ export function ScanEvaluateWorkspace({
             }}
             role="button"
             tabIndex={0}
+            aria-label="Upload set image"
           >
             <div className="seUploadDropzoneInner">
               <span className="seUploadDropIcon">📷</span>
@@ -627,7 +628,7 @@ export function ScanEvaluateWorkspace({
                     }}
                   />
                   <button type="button" className="primaryButton" onClick={handleSetNumberSubmit}>
-                    Analyse
+                    Open Analysis
                   </button>
                 </div>
               </article>
@@ -662,7 +663,7 @@ export function ScanEvaluateWorkspace({
                 )}
               </div>
               <div className="seIdentificationMeta">
-                <span className="executiveDashboardEyebrow">AI identification result</span>
+                <span className="executiveDashboardEyebrow">Identification result (Demo)</span>
                 <h2>{evaluation.name}</h2>
                 <div className="seIdentificationGrid">
                   <div><span>Set number</span><strong>#{extractSetNumber(evaluation)}</strong></div>
@@ -726,7 +727,7 @@ export function ScanEvaluateWorkspace({
           {aiSummary ? (
             <article className="seGlassCard seAiSummaryCard">
               <div className="seSectionHeader">
-                <span className="executiveDashboardEyebrow">AI investment summary</span>
+                <span className="executiveDashboardEyebrow">Investment summary</span>
                 <h2>Brick Alpha recommendation</h2>
               </div>
               <p className="seAiSummaryLead">{aiSummary.lead}</p>

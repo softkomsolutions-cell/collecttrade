@@ -49,7 +49,7 @@ import {
   SaasTopNav,
   SplashScreen,
 } from "./components/appShell";
-import { BrandLogo } from "./components/brandLogo";
+import { resolvePortfolioContext } from "./components/portfolioIntelligenceWorkspace";
 import {
   enrichBrickAlphaCollectible,
   enrichBrickAlphaTrade,
@@ -2687,8 +2687,13 @@ export default function App() {
   );
 
   const brickAlphaSummary = useMemo(
-    () => summarizeBrickAlphaPortfolio(enrichedPortfolio),
-    [enrichedPortfolio],
+    () =>
+      resolvePortfolioContext({
+        closedTrades,
+        collectibles,
+        openTrades,
+      }).brickAlphaPortfolio,
+    [closedTrades, collectibles, openTrades],
   );
   const topMetrics = [
     {
@@ -2733,9 +2738,20 @@ export default function App() {
       action: () => jumpToPageSection("portfolio", "portfolio-dashboard"),
     },
   ];
+  const LEGO_SEARCH_PAGES = new Set([
+    "home",
+    "scan-evaluate",
+    "collectibles",
+    "portfolio",
+    "reports",
+    "subscriptions",
+    "settings",
+  ]);
+  const LEGACY_SEARCH_PATTERN =
+    /\b(trade|trading|forex|crypto|signal|signals|execution|partner|legacy|desk|simulated)\b/i;
   const globalSearchIndex = useMemo(
     () =>
-      NAV_ITEMS.filter((item) => !["news", "signals"].includes(item.id)).flatMap((item) => {
+      NAV_ITEMS.filter((item) => LEGO_SEARCH_PAGES.has(item.id)).flatMap((item) => {
         const workspaceEntry = {
           id: `workspace-${item.id}`,
           label: item.label,
@@ -2744,16 +2760,26 @@ export default function App() {
           page: item.id,
           sectionId: null,
         };
-        const sectionEntries = (PAGE_SECTION_LINKS[item.id] || []).map((section) => ({
-          id: `section-${item.id}-${section.id}`,
-          label: section.label,
-          hint: `${item.label} · ${section.label}`,
-          glyph: item.glyph,
-          page: item.id,
-          sectionId: section.id,
-        }));
+        const sectionEntries = (PAGE_SECTION_LINKS[item.id] || [])
+          .filter(
+            (section) =>
+              !LEGACY_SEARCH_PATTERN.test(section.label) &&
+              !LEGACY_SEARCH_PATTERN.test(section.id),
+          )
+          .map((section) => ({
+            id: `section-${item.id}-${section.id}`,
+            label: section.label,
+            hint: `${item.label} · ${section.label}`,
+            glyph: item.glyph,
+            page: item.id,
+            sectionId: section.id,
+          }));
         return [workspaceEntry, ...sectionEntries];
-      }),
+      })
+        .filter(
+          (entry) =>
+            !LEGACY_SEARCH_PATTERN.test(entry.label) && !LEGACY_SEARCH_PATTERN.test(entry.hint),
+        ),
     [],
   );
   const globalSearchResults = useMemo(() => {
@@ -2884,14 +2910,8 @@ export default function App() {
     {
       id: "menu-feedback",
       label: "Feedback Board",
-      detail: "Partner notes and status",
+      detail: "Notes and status",
       action: () => handleMenuSection("settings", "feedback-board"),
-    },
-    {
-      id: "menu-testing",
-      label: "Partner Testing",
-      detail: "Guided review route",
-      action: () => handleMenuSection("settings", "partner-testing"),
     },
     {
       id: "menu-intro",

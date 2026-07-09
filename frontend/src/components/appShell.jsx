@@ -498,7 +498,7 @@ export function SplashScreen({ ready, activeDesk, onLaunch }) {
             <BrandLogo size="md" />
             <div className="authBrandMeta">
               <div className="authBrand">{APP_WORDMARK}</div>
-              <small>AI Investment Intelligence for LEGO Collectors</small>
+              <small>{APP_TAGLINE}</small>
             </div>
           </div>
         </div>

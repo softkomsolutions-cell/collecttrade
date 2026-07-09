@@ -218,11 +218,14 @@ export function TradeCollectibleCard({ item, isActive, onSelect, onTrade }) {
             onTrade(item, "BUY");
           }}
         >
-          Buy Ticket
+          Add to Portfolio
         </button>
         <button
           className="ghostButton"
           type="button"
+          hidden
+          aria-hidden="true"
+          tabIndex={-1}
           onClick={(event) => {
             event.stopPropagation();
             onTrade(item, "SELL");

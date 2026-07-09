@@ -5,7 +5,7 @@ export const LAUNCH_PREF_KEY = "collecttrade_launch_preference";
 export const APP_NAME = "Brick Alpha";
 export const APP_WORDMARK = "BRICK ALPHA";
 export const APP_MARK = "BA";
-export const APP_TAGLINE = "AI Investment Intelligence for LEGO Collectors";
+export const APP_TAGLINE = "Investment Intelligence for LEGO Collectors";
 export const APP_SUBTAGLINE = "Build Value. Grow Wealth.";
 export const LOGO_ICON = "/brick-alpha-icon.svg";
 export const LOGO_FULL = "/brick-alpha-logo.svg";
@@ -83,7 +83,7 @@ export const NAV_ITEMS = [
     label: "Dashboard",
     glyph: "HM",
     section: "Market",
-    hint: "Executive summary — portfolio value, growth, and AI insights",
+    hint: "Executive summary — portfolio value, growth, and insights",
   },
   {
     id: "scan-evaluate",
@@ -91,7 +91,7 @@ export const NAV_ITEMS = [
     glyph: "📷",
     icon: "camera",
     section: "Market",
-    hint: "Photo scan and instant Brick Alpha investment evaluation",
+    hint: "Photo scan and instant Brick Alpha evaluation",
   },
   {
     id: "collectibles",
@@ -164,14 +164,14 @@ export const NAV_GROUPS = [
 ];
 
 export const SCREEN_PREVIEWS = {
-  home: "Executive summary — portfolio value, growth, AI insights, and buy opportunities at a glance.",
+  home: "Executive summary — portfolio value, growth, insights, and buy opportunities at a glance.",
   news: "Desk-specific macro headlines, South African context, and the full tape in one place.",
   signals: "Live 8/21 EMA setups, chart structure, and execution tickets.",
-  tools: "AI mentor, chart analyzer, simulator, and research workspace for decision support.",
+  tools: "Mentor, chart analyzer, simulator, and research workspace for decision support.",
   connections: "Broker, venue, feed, and execution controls with live readiness and sync status.",
   collectibles: "Investment analysis for LEGO sets — scoring, retirement timing, forecasts, and risks.",
   "scan-evaluate":
-    "Photograph or upload a LEGO set for instant AI identification, Brick Alpha scoring, and investment recommendations.",
+    "Photograph or upload a LEGO set for instant identification, Brick Alpha scoring, and investment recommendations.",
   portfolio: "LEGO collection intelligence — NAV, growth, theme allocation, and Brick Alpha holdings.",
   reports: "Performance reporting, signal analytics, desk exposure, and visual review graphs.",
   subscriptions: "Plan tiers, premium feature value, and the commercial upgrade path.",
@@ -196,9 +196,7 @@ export const PAGE_SECTION_LINKS = {
   ],
   tools: [
     { id: "tools-workbench", label: "Mentor" },
-    { id: "chart-analyzer", label: "Analyzer" },
     { id: "scenario-simulator", label: "Simulator" },
-    { id: "learn-dashboard", label: "Learn" },
     { id: "progress-dashboard", label: "Progress" },
   ],
   connections: [
@@ -240,14 +238,11 @@ export const PAGE_SECTION_LINKS = {
     { id: "subscriptions-premium", label: "Premium" },
   ],
   settings: [
-    { id: "account-settings", label: "Account" },
-    { id: "install-app", label: "Install" },
-    { id: "news-region", label: "Region" },
-    { id: "alerts-plan", label: "Alerts" },
-    { id: "routine-preferences", label: "Routine" },
-    { id: "partner-testing", label: "Testing" },
-    { id: "feedback-board", label: "Feedback" },
-    { id: "web-targets", label: "Targets" },
+    { id: "account-settings", label: "Profile" },
+    { id: "alerts-plan", label: "Subscription" },
+    { id: "routine-preferences", label: "Preferences" },
+    { id: "news-region", label: "Notifications" },
+    { id: "install-app", label: "About" },
   ],
 };
 

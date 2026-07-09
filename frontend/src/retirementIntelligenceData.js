@@ -1,7 +1,9 @@
 import {
+  THEME_ALLOCATION_TARGETS,
   buildPriceForecast,
   enrichBrickAlphaCollectible,
   legoThemeFor,
+  themeAllocationFor,
 } from "./brickAlphaModel";
 
 function numberOrZero(value) {
@@ -321,22 +323,105 @@ export function retirementOpportunityScore(item) {
   );
 }
 
+export const COUNTDOWN_URGENCY_BUCKETS = {
+  "0-3": { label: "0–3 Months", tone: "critical", emoji: "🔴" },
+  "3-6": { label: "3–6 Months", tone: "warning", emoji: "🟠" },
+  "6-12": { label: "6–12 Months", tone: "caution", emoji: "🟡" },
+  "12+": { label: "12+ Months", tone: "calm", emoji: "🟢" },
+};
+
+export const OPPORTUNITY_RANK_MEDALS = ["🥇", "🥈", "🥉"];
+
+export function countdownUrgencyFor(item, today = new Date()) {
+  const months = monthsUntilRetirement(item, today);
+  const bucket = retirementBucketFor(item, today);
+  const meta = COUNTDOWN_URGENCY_BUCKETS[bucket] || COUNTDOWN_URGENCY_BUCKETS["12+"];
+
+  if (months === null) {
+    return { ...meta, label: "Timeline unknown", months: null, bucket };
+  }
+  if (months < 0) {
+    return { ...COUNTDOWN_URGENCY_BUCKETS["0-3"], label: "0–3 Months", months: 0, bucket: "0-3" };
+  }
+
+  return {
+    ...meta,
+    months: Math.max(0, Math.round(months)),
+    bucket,
+  };
+}
+
+export function opportunityRankLabel(rank, compact = false) {
+  if (compact) {
+    if (rank === 1) return "🥇 #1";
+    if (rank === 2) return "🥈 #2";
+    if (rank === 3) return "🥉 #3";
+    return `#${rank}`;
+  }
+  if (rank === 1) {
+    return "🥇 #1 Opportunity This Month";
+  }
+  if (rank === 2) {
+    return "🥈 #2 Opportunity";
+  }
+  if (rank === 3) {
+    return "🥉 #3 Opportunity";
+  }
+  return `#${rank} Opportunity`;
+}
+
 export function portfolioStatusFor(item, openTrades = []) {
   const owned = openTrades.find(
     (trade) =>
       trade.assetClass === "collectible" &&
       (trade.collectibleId === item.id || trade.catalogId === item.id),
   );
+
   if (!owned) {
-    return "Not Owned";
+    if (item.recommendation === "Watch" || item.recommendation === "Hold") {
+      return "Watch Only";
+    }
+    return null;
   }
-  if (item.recommendation === "Strong Buy" || item.recommendation === "Buy") {
-    return "Buy More";
-  }
+
+  const theme = legoThemeFor(item);
+  const allocation = themeAllocationFor(openTrades);
+  const target = numberOrZero(THEME_ALLOCATION_TARGETS[theme] ?? THEME_ALLOCATION_TARGETS.Other);
+  const actual = numberOrZero(allocation.actual[theme]);
+  const atOrAboveTarget = actual >= target;
+
   if (item.recommendation === "Sell" || item.recommendation === "Avoid") {
     return "Sell";
   }
-  return "Hold";
+  if (atOrAboveTarget) {
+    return "Target Allocation Reached";
+  }
+  if (item.recommendation === "Strong Buy" || item.recommendation === "Buy") {
+    return "Consider Buying More";
+  }
+  if (item.recommendation === "Watch") {
+    return "Watch Only";
+  }
+  return "Owned";
+}
+
+export function portfolioStatusTone(status) {
+  if (status === "Consider Buying More") {
+    return "buy";
+  }
+  if (status === "Sell") {
+    return "sell";
+  }
+  if (status === "Target Allocation Reached") {
+    return "hold";
+  }
+  if (status === "Owned") {
+    return "neutral";
+  }
+  if (status === "Watch Only") {
+    return "neutral";
+  }
+  return "neutral";
 }
 
 export function ownedTradeFor(item, openTrades = []) {
@@ -378,7 +463,11 @@ export function buildRetirementWatchlist(collectibles = [], openTrades = [], tod
       };
     })
     .filter((item) => item.retirementStatus !== "Retired")
-    .sort((left, right) => right.opportunityScore - left.opportunityScore);
+    .sort((left, right) => right.opportunityScore - left.opportunityScore)
+    .map((item, index) => ({
+      ...item,
+      opportunityRank: index + 1,
+    }));
 }
 
 function liveLegoIncludes(collectibles, id) {
@@ -431,7 +520,7 @@ export function buildRetirementInsight(item) {
   if (!item) {
     return {
       headline: "No retirement opportunities ranked yet",
-      body: "Add LEGO sets to your watchlist or portfolio to unlock AI retirement intelligence.",
+      body: "Add LEGO sets to your watchlist or portfolio to unlock retirement timing intelligence.",
       drivers: [],
     };
   }
@@ -487,15 +576,25 @@ export function strongBuyBeforeRetirement(watchlist = [], limit = 5) {
     .slice(0, limit);
 }
 
+export function topOpportunities(watchlist = [], limit = 3) {
+  return watchlist.slice(0, limit);
+}
+
 export function portfolioActionFor(item) {
   if (!item?.ownedTrade) {
     return item?.recommendation === "Strong Buy" || item?.recommendation === "Buy" ? "Buy" : "Watch";
   }
-  if (item.portfolioStatus === "Buy More") {
+  if (item.portfolioStatus === "Consider Buying More") {
     return "Buy More";
   }
   if (item.portfolioStatus === "Sell") {
     return "Sell";
+  }
+  if (item.portfolioStatus === "Target Allocation Reached") {
+    return "Hold";
+  }
+  if (item.portfolioStatus === "Watch Only") {
+    return "Watch";
   }
   return "Hold";
 }

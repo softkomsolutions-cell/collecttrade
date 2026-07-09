@@ -241,6 +241,47 @@ function buildDemoHoldings(collectibles) {
   });
 }
 
+function holdingsToTradeLike(holdings) {
+  return holdings.map((holding) => ({
+    assetClass: "collectible",
+    quantity: holding.quantity,
+    entryPrice: holding.paidPrice,
+    currentPrice: holding.currentValue,
+    buyPrice: holding.paidPrice,
+    currentMarketValue: holding.currentValue,
+    brickAlphaScore: holding.brickAlphaScore,
+    riskScore: holding.riskScore,
+    legoTheme: holding.theme,
+    category: holding.theme,
+  }));
+}
+
+export function resolvePortfolioContext({ openTrades = [], closedTrades = [], collectibles = [] }) {
+  const liveCollectibleTrades = openTrades.filter((trade) => trade.assetClass === "collectible");
+  const isDemoMode = liveCollectibleTrades.length === 0;
+  const demoHoldings = isDemoMode ? buildDemoHoldings(collectibles) : [];
+  const overview = isDemoMode ? buildPortfolioOverview(demoHoldings) : null;
+  const brickAlphaPortfolio = isDemoMode
+    ? summarizeBrickAlphaPortfolio(holdingsToTradeLike(demoHoldings))
+    : summarizeBrickAlphaPortfolio([...openTrades, ...closedTrades]);
+  const portfolioHoldings = isDemoMode ? demoHoldings : liveCollectibleTrades;
+  const unrealizedGainPercent = isDemoMode
+    ? overview?.costBasis
+      ? (overview.unrealizedGain / overview.costBasis) * 100
+      : null
+    : brickAlphaPortfolio.costBasis
+      ? (brickAlphaPortfolio.unrealizedGain / brickAlphaPortfolio.costBasis) * 100
+      : null;
+
+  return {
+    brickAlphaPortfolio,
+    isDemoMode,
+    overview,
+    portfolioHoldings,
+    unrealizedGainPercent,
+  };
+}
+
 function buildPortfolioOverview(holdings) {
   const uniqueSets = new Set(holdings.map((holding) => holding.setNumber)).size;
   const ownedSets = holdings.reduce((sum, holding) => sum + holding.quantity, 0);
@@ -592,21 +633,10 @@ export function PortfolioIntelligenceWorkspace({
   );
 
   const overview = useMemo(() => buildPortfolioOverview(holdings), [holdings]);
-  const portfolioSummary = useMemo(() => {
-    const tradeLike = holdings.map((holding) => ({
-      assetClass: "collectible",
-      quantity: holding.quantity,
-      entryPrice: holding.paidPrice,
-      currentPrice: holding.currentValue,
-      buyPrice: holding.paidPrice,
-      currentMarketValue: holding.currentValue,
-      brickAlphaScore: holding.brickAlphaScore,
-      riskScore: holding.riskScore,
-      legoTheme: holding.theme,
-      category: holding.theme,
-    }));
-    return summarizeBrickAlphaPortfolio(tradeLike);
-  }, [holdings]);
+  const portfolioSummary = useMemo(
+    () => summarizeBrickAlphaPortfolio(holdingsToTradeLike(holdings)),
+    [holdings],
+  );
   const themeRows = useMemo(
     () => buildThemeAllocationRows(holdings, overview.netAssetValue),
     [holdings, overview.netAssetValue],
@@ -690,7 +720,7 @@ export function PortfolioIntelligenceWorkspace({
       .slice()
       .sort((a, b) => numberOrZero(b.brickAlphaScore) - numberOrZero(a.brickAlphaScore))
       .slice(0, 6);
-  }, [collectibles, enrichBrickAlphaCollectible, watchlistIds, watchlistItems]);
+  }, [collectibles, watchlistIds, watchlistItems]);
 
   const availableThemes = useMemo(
     () => Array.from(new Set(holdings.map((holding) => holding.theme))).sort(),
@@ -798,9 +828,10 @@ export function PortfolioIntelligenceWorkspace({
 
   return (
     <div className="piWorkspace">
+      <div id="portfolio-dashboard" className="piAnchor" tabIndex={-1} aria-hidden="true" />
       {isDemoMode ? (
         <div className="piDemoBanner">
-          <span>Demo portfolio</span>
+          <span>Demo Data</span>
           <p>Showing Brick Alpha model data — add LEGO positions to replace with your live collection.</p>
         </div>
       ) : null}
@@ -905,7 +936,7 @@ export function PortfolioIntelligenceWorkspace({
       <section className="piPanel piPanel-manager" id="ai-portfolio-manager">
         <header className="piPanelHeader piPanelHeader-split">
           <div>
-            <span className="piEyebrow">AI Portfolio Manager</span>
+            <span className="piEyebrow">Portfolio Manager (Demo)</span>
             <h2>Manager brief</h2>
             <p>Natural language guidance that reads like a portfolio manager.</p>
           </div>
@@ -925,8 +956,8 @@ export function PortfolioIntelligenceWorkspace({
           </div>
         ) : (
           <EmptyState
-            title="AI manager warming up"
-            body="Add a few holdings to unlock overweight signals, diversification recommendations, and retirement opportunities."
+            title="Portfolio guidance loading"
+            body="Add LEGO positions to unlock personalised portfolio guidance and rebalancing suggestions."
           />
         )}
       </section>

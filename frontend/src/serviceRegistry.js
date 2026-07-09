@@ -25,7 +25,7 @@ export const ENTRY_ONBOARDING_SLIDES = [
     eyebrow: "Review",
     title: "Track portfolio intelligence over time.",
     description:
-      "Track holdings, allocation, growth, and AI portfolio recommendations in one premium workspace.",
+      "Track holdings, allocation, growth, and portfolio recommendations in one premium workspace.",
     accent: "collectibles",
     bars: [42, 68, 54, 80],
   },

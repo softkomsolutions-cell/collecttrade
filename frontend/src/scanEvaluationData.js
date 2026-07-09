@@ -5,7 +5,7 @@
 
 export const PROCESSING_STEPS = [
   { id: "uploading", label: "Uploading..." },
-  { id: "analysing", label: "AI analysing image..." },
+  { id: "analysing", label: "Demo identification running..." },
   { id: "identifying", label: "Identifying LEGO set..." },
   { id: "market", label: "Fetching market data..." },
   { id: "scoring", label: "Calculating Brick Alpha score..." },

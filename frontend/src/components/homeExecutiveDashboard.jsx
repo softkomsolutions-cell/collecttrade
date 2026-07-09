@@ -3,7 +3,15 @@ import { formatCollectiblePrice, formatDateTime, positiveTone } from "../appUtil
 
 function formatScore(value) {
   const numeric = Number(value);
-  return Number.isFinite(numeric) ? `${Math.round(numeric)}/100` : "--";
+  return Number.isFinite(numeric) ? `${Math.round(numeric)}` : "--";
+}
+
+function formatPercent(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return "--";
+  }
+  return `${numeric >= 0 ? "+" : ""}${numeric.toFixed(1)}%`;
 }
 
 function timeOfDayGreeting(isoTime, timezone) {
@@ -38,6 +46,7 @@ export function HomeExecutiveDashboard({
   aiSummary,
   appSettings,
   brickAlphaPortfolio,
+  isDemoMode = false,
   jumpToPageSection,
   marketIntelligence,
   portfolioHoldings,
@@ -45,7 +54,7 @@ export function HomeExecutiveDashboard({
   strongBuyOpportunities,
   unrealizedGainPercent,
 }) {
-  const hasPortfolioData = (portfolioHoldings || []).length > 0;
+  const hasPortfolioData = isDemoMode || (portfolioHoldings || []).length > 0;
   const nowIso = new Date().toISOString();
   const greeting = timeOfDayGreeting(nowIso, appSettings?.timezone);
   const displayName = appSettings?.userName || "Darren";
@@ -64,9 +73,14 @@ export function HomeExecutiveDashboard({
             {greeting} {displayName}
           </h1>
           <p className="executiveDashboardHeroSub">
-            Portfolio value, performance, opportunities, and AI brief — all above the fold.
+            Portfolio value, performance, opportunities, and investment brief — all above the fold.
           </p>
         </div>
+        {isDemoMode ? (
+          <div className="executiveDashboardStatus">
+            <span className="demoBadge subtleDemoBadge">Demo Data</span>
+          </div>
+        ) : null}
         <div className="executiveDashboardStatus">
           <span>As of</span>
           <strong>{formatDateTime(nowIso, appSettings.timezone)}</strong>
@@ -83,8 +97,8 @@ export function HomeExecutiveDashboard({
           <strong>{hasPortfolioData ? formatCollectiblePrice(brickAlphaPortfolio.netAssetValue) : "--"}</strong>
           <small>
             {hasPortfolioData
-              ? `${portfolioHoldings.length} holding${portfolioHoldings.length === 1 ? "" : "s"}`
-              : "Demo portfolio — add holdings to personalise"}
+              ? `${portfolioHoldings.length} holding${portfolioHoldings.length === 1 ? "" : "s"}${isDemoMode ? " · demo" : ""}`
+              : "Add LEGO positions to personalise"}
           </small>
         </button>
         <button
@@ -118,7 +132,7 @@ export function HomeExecutiveDashboard({
           className="executiveKpiStripCard"
           onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
         >
-          <span>AI Confidence</span>
+          <span>Brick Alpha Score</span>
           <strong>{hasPortfolioData ? formatScore(aiConfidenceScore) : "--"}</strong>
           <small>{hasPortfolioData ? "Model confidence in portfolio posture" : "Appears once holdings are added"}</small>
         </button>
@@ -128,8 +142,8 @@ export function HomeExecutiveDashboard({
         <section className="executiveCompactPanel executiveCompactPanel-ai executiveCompactPanel-aiHero">
           <div className="executivePanelHeader">
             <div>
-              <span className="executiveDashboardEyebrow">AI Copilot</span>
-              <h3>AI Portfolio Brief</h3>
+              <span className="executiveDashboardEyebrow">Portfolio Brief{isDemoMode ? " (Demo)" : ""}</span>
+              <h3>Investment Summary</h3>
             </div>
           </div>
           <p className="executiveAiSummary executiveAiSummary-premium">{aiSummary}</p>
@@ -138,7 +152,7 @@ export function HomeExecutiveDashboard({
             className="ghostButton slimButton executiveAiCta"
             onClick={() => jumpToPageSection("collectibles", "investment-analysis")}
           >
-            Analyse with AI
+            Open Analysis
           </button>
         </section>
 
@@ -214,12 +228,12 @@ export function HomeExecutiveDashboard({
         <section className="executiveCompactPanel executiveCompactPanel-opportunities">
           <div className="executivePanelHeader">
             <div>
-              <h3>Strong Buy</h3>
-              <p>What should I buy? Highest‑conviction opportunities.</p>
+              <h3>Opportunity Ranking{isDemoMode ? " (Demo)" : ""}</h3>
+              <p>Top conviction picks ranked by opportunity score.</p>
             </div>
           </div>
           {strongBuyOpportunities.length ? (
-            <div className="executiveOpportunityGrid" aria-label="Strong buy cards">
+            <div className="executiveOpportunityGrid" aria-label="Opportunity ranking cards">
               {strongBuyOpportunities.map((item) => (
                 <button
                   key={item.id}
@@ -228,26 +242,53 @@ export function HomeExecutiveDashboard({
                   onClick={() =>
                     jumpToPageSection(
                       item.source === "portfolio" ? "portfolio" : "collectibles",
-                      item.source === "portfolio" ? "open-positions" : "investment-analysis",
+                      item.source === "portfolio" ? "portfolio-holdings" : "retirement-intelligence",
                     )
                   }
                 >
                   <div className="executiveOpportunityCardTop">
-                    <span className="signalBadge buy">Strong Buy</span>
-                    <span className="executiveOpportunitySource">
-                      {item.source === "portfolio" ? "In portfolio" : "From catalog"}
+                    <span className="executiveOpportunityRank">
+                      {item.opportunityRank <= 3
+                        ? ["🥇 #1", "🥈 #2", "🥉 #3"][item.opportunityRank - 1]
+                        : `#${item.opportunityRank}`}
                     </span>
+                    {item.portfolioStatus ? (
+                      <span className="executiveOpportunitySource">
+                        {item.portfolioStatus === "Owned" ? "✓ " : ""}
+                        {item.portfolioStatus}
+                      </span>
+                    ) : (
+                      <span className="executiveOpportunitySource">New opportunity</span>
+                    )}
                   </div>
-                  <div className="executiveOpportunityScore">
-                    <span>Score</span>
-                    <strong>{formatScore(item.brickAlphaScore)}</strong>
+                  <div className="executiveOpportunityMetrics">
+                    <div>
+                      <span>Score</span>
+                      <strong>{formatScore(item.brickAlphaScore)}</strong>
+                    </div>
+                    <div>
+                      <span>ROI</span>
+                      <strong className={positiveTone(item.expected12MonthRoi)}>
+                        {formatPercent(item.expected12MonthRoi)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Months</span>
+                      <strong>
+                        {item.monthsToRetirement === null
+                          ? "--"
+                          : Math.max(0, Math.round(item.monthsToRetirement))}
+                      </strong>
+                    </div>
                   </div>
                   <div className="executiveOpportunityCopy">
                     <strong>{item.label}</strong>
-                    <small>{item.theme || item.investmentGrade || "LEGO"}</small>
+                    <small>
+                      {item.urgency?.emoji} {item.urgency?.label} · {item.recommendation}
+                    </small>
                   </div>
                   <div className="executiveOpportunityCta">
-                    <span>Analyse</span>
+                    <span>Open Analysis</span>
                   </div>
                 </button>
               ))}
@@ -280,7 +321,7 @@ export function HomeExecutiveDashboard({
               className="ghostButton slimButton"
               onClick={() => jumpToPageSection("portfolio", "portfolio-dashboard")}
             >
-              Open
+              Open Portfolio
             </button>
           </div>
           <div className="executiveSnapshotGrid">
@@ -342,15 +383,15 @@ export function HomeExecutiveDashboard({
             </div>
           ) : (
             <EmptyState
-              title="Market intelligence is warming up"
-              body="Headlines and LEGO signals will appear here as the feed refreshes. In the meantime, scan a set to generate a fresh Brick Alpha verdict."
+              title="Market intelligence loading"
+              body="LEGO investment headlines appear here as the feed refreshes. Scan a set to generate a fresh Brick Alpha verdict in the meantime."
             />
           )}
         </section>
       </div>
 
       <nav className="executiveDashboardQuickNav" aria-label="Workspace shortcuts">
-        <button type="button" onClick={() => jumpToPageSection("collectibles", "scan-evaluate")}>
+        <button type="button" onClick={() => jumpToPageSection("scan-evaluate", "scan-evaluate")}>
           Scan Set
         </button>
         <button type="button" onClick={() => jumpToPageSection("collectibles", "investment-analysis")}>
