@@ -9,6 +9,7 @@ import {
 } from "../brickAlphaModel";
 import { formatCollectiblePrice, positiveTone } from "../appUtils";
 import { EmptyState } from "./appShell";
+import { MarketDataMeta } from "./marketDataMeta";
 
 const FILTER_OPTIONS = [
   { id: "theme", label: "Theme", type: "multi" },
@@ -518,6 +519,11 @@ function HoldingCard({ holding, onAnalyze }) {
         <div>
           <span>Current Value</span>
           <strong>{formatCollectiblePrice(holding.currentValue * holding.quantity)}</strong>
+          <MarketDataMeta
+            setNumber={holding.setNumber}
+            source={holding?.raw?.marketDataSource}
+            lastUpdated={holding?.raw?.marketDataLastUpdated}
+          />
         </div>
         <div>
           <span>Profit/Loss</span>

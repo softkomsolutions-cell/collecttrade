@@ -26,6 +26,7 @@ import { monthsUntilRetirement, portfolioStatusFor } from "../retirementIntellig
 import { ScoreBar, ScoreRing } from "./brickAlphaScoreDisplay";
 import { ScoreExplanationPanel } from "./scoreExplanationPanel";
 import { AlphaSignalBadges } from "./workspaceCards";
+import { MarketDataMeta } from "./marketDataMeta";
 
 const ACQUISITION_METHODS = [
   { id: "camera", icon: "📷", label: "Take Photo", detail: "Use your device camera" },
@@ -671,7 +672,11 @@ export function ScanEvaluateWorkspace({
                   <div><span>Pieces</span><strong>{demoProfile?.pieces || evaluation.numberOfPieces || "—"}</strong></div>
                   <div><span>Minifigures</span><strong>{demoProfile?.minifigures || evaluation.numberOfMinifigures || "—"}</strong></div>
                   <div><span>Retail price</span><strong>{formatCollectiblePrice(evaluation.retailPrice)}</strong></div>
-                  <div><span>Current market value</span><strong>{formatCollectiblePrice(evaluation.currentMarketValue)}</strong></div>
+                  <div>
+                    <span>Current market value</span>
+                    <strong>{formatCollectiblePrice(evaluation.currentMarketValue)}</strong>
+                    <MarketDataMeta setNumber={identifiedSetNumber || extractSetNumber(evaluation)} />
+                  </div>
                   <div><span>Retirement status</span><strong>{evaluation.retirementStatus}</strong></div>
                   <div><span>Expected retirement</span><strong>{retirementSnapshot?.expectedRetirement}</strong></div>
                   <div><span>BrickEconomy status</span><strong>{demoProfile?.brickEconomyStatus || "Tracked"}</strong></div>
@@ -750,7 +755,11 @@ export function ScanEvaluateWorkspace({
               </div>
               <div className="sePricingGrid">
                 <div className="seMetric"><span>Retail</span><strong>{formatCollectiblePrice(marketPricing?.retail)}</strong></div>
-                <div className="seMetric"><span>Current value</span><strong>{formatCollectiblePrice(marketPricing?.currentValue)}</strong></div>
+                <div className="seMetric">
+                  <span>Current value</span>
+                  <strong>{formatCollectiblePrice(marketPricing?.currentValue)}</strong>
+                  <MarketDataMeta setNumber={identifiedSetNumber || extractSetNumber(evaluation)} />
+                </div>
                 <div className="seMetric"><span>Lowest price</span><strong>{formatCollectiblePrice(marketPricing?.lowestPrice)}</strong></div>
                 <div className="seMetric"><span>Highest price</span><strong>{formatCollectiblePrice(marketPricing?.highestPrice)}</strong></div>
                 <div className="seMetric"><span>Average market price</span><strong>{formatCollectiblePrice(marketPricing?.averageMarketPrice)}</strong></div>

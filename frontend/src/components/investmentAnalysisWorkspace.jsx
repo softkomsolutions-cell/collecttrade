@@ -16,6 +16,7 @@ import { InvestmentAnalysisChart } from "./investmentAnalysisChart";
 import { ScoreBar, ScoreRing } from "./brickAlphaScoreDisplay";
 import { ScoreExplanationPanel } from "./scoreExplanationPanel";
 import heroImageFallback from "../assets/hero.png";
+import { MarketDataMeta } from "./marketDataMeta";
 
 const HORIZON_OPTIONS = [1, 3, 5, 10];
 
@@ -421,6 +422,12 @@ export function InvestmentAnalysisWorkspace({
               <span>Current Value</span>
               <strong>{formatCollectiblePrice(item.currentMarketValue)}</strong>
               <small>{discountLabel}</small>
+              <MarketDataMeta
+                setNumber={extractSetNumber(item)}
+                source={item.marketDataSource}
+                lastUpdated={item.marketDataLastUpdated}
+                className="iaHeroMarketMeta"
+              />
             </div>
             <div className="iaHeroMetric">
               <span>Retail Price</span>

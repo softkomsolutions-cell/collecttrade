@@ -19,6 +19,7 @@ import {
 } from "../retirementIntelligenceData";
 import { EmptyState } from "./appShell";
 import { handleInteractiveKey } from "../appUtils";
+import { MarketDataMeta } from "./marketDataMeta";
 
 const TABLE_COLUMNS = [
   { key: "setNumber", label: "Set #" },
@@ -700,7 +701,14 @@ export function RetirementIntelligenceWorkspace({
                         ? "--"
                         : Math.max(0, Math.round(monthsUntilRetirement(item)))}
                     </td>
-                    <td>{formatCollectiblePrice(item.currentMarketValue)}</td>
+                    <td>
+                      {formatCollectiblePrice(item.currentMarketValue)}
+                      <MarketDataMeta
+                        setNumber={item.setNumber || item.sku}
+                        source={item.marketDataSource || item.dataSource}
+                        lastUpdated={item.marketDataLastUpdated}
+                      />
+                    </td>
                     <td className={positiveTone(item.expected12MonthRoi)}>
                       {formatPercent(item.expected12MonthRoi)}
                     </td>
