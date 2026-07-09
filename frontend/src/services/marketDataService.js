@@ -4,14 +4,33 @@ import { MARKET_DATA_SOURCES, getMarketDataSourceBadge, normalizeLegacyDataSourc
 import { formatLastUpdatedLabel, formatMarketDataTimestamp } from "./marketDataTimestamps";
 import { resolveMarketDataImages } from "./marketDataImages";
 import { demoMarketProvider } from "../providers/demoMarketProvider";
+import { requestJson } from "./api";
 
-const LIVE_API_ENABLED = false;
-const LIVE_API_BASE = "/api/market-data";
+const DEFAULT_LIVE_TIMEOUT_MS = 6500;
 
 function normalizeSetNumber(value) {
   return String(value || "")
     .replace(/[^0-9]/g, "")
     .slice(0, 6);
+}
+
+function isLiveApiEnabled() {
+  const raw = import.meta?.env?.LIVE_API_ENABLED;
+  if (raw === undefined || raw === null || raw === "") {
+    return false;
+  }
+  if (typeof raw === "boolean") {
+    return raw;
+  }
+  const text = String(raw).trim().toLowerCase();
+  return text === "1" || text === "true" || text === "yes" || text === "on";
+}
+
+function logDev(message) {
+  if (import.meta?.env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.log(message);
+  }
 }
 
 /**
@@ -75,6 +94,7 @@ class MarketDataService {
       existing.state === CACHE_STATES.LOADED &&
       existing.data
     ) {
+      logDev(`[MarketData] cache hit ${normalized}`);
       return existing.data;
     }
 
@@ -83,18 +103,29 @@ class MarketDataService {
     try {
       const live = await this.fetchLiveSet(normalized);
       if (live) {
+        logDev(`[MarketData] backend hit ${normalized}`);
         const normalizedLive = this.finalizeRecord(live);
         this.cache.setLoaded(normalized, normalizedLive);
         return normalizedLive;
       }
     } catch (error) {
       const fallback = this.getDemoFallback(normalized);
-      this.cache.setError(normalized, error, fallback);
+      const status = Number(error?.status || 0);
+      if (status === 404) {
+        logDev(`[MarketData] 404 ${normalized}`);
+      }
+      if (fallback) {
+        logDev(`[MarketData] demo fallback ${normalized}`);
+      }
+      const safeError =
+        status === 404 ? "Set not found" : "Live market data unavailable";
+      this.cache.setError(normalized, safeError, fallback);
       return fallback;
     }
 
     const fallback = this.getDemoFallback(normalized);
     if (fallback) {
+      logDev(`[MarketData] demo fallback ${normalized}`);
       this.cache.setLoaded(normalized, fallback);
       return fallback;
     }
@@ -141,19 +172,13 @@ class MarketDataService {
   }
 
   async fetchLiveSet(setNumber) {
-    if (!LIVE_API_ENABLED) {
+    if (!isLiveApiEnabled()) {
       return null;
     }
 
-    const response = await fetch(`${LIVE_API_BASE}/${encodeURIComponent(setNumber)}`, {
-      headers: { Accept: "application/json" },
+    const payload = await requestJson(`/api/market-data/${encodeURIComponent(setNumber)}`, {
+      timeoutMs: DEFAULT_LIVE_TIMEOUT_MS,
     });
-
-    if (!response.ok) {
-      throw new Error(`Live market data unavailable (${response.status})`);
-    }
-
-    const payload = await response.json();
     return createSetMarketData({
       ...payload,
       setNumber,

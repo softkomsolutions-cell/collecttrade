@@ -56,6 +56,7 @@ import {
   summarizeBrickAlphaPortfolio,
 } from "./brickAlphaModel";
 import { marketDataService } from "./services/marketDataService";
+import { requestJson } from "./services/api";
 
 function lazyNamedExport(factory, exportName) {
   return lazy(() =>
@@ -643,37 +644,6 @@ function buildChartPlan(activeSignal, orderTicket) {
       structuredEntry?.rationale ||
       "The signal structure is framing the first stop and target idea.",
   };
-}
-
-function createRequestHeaders(token, hasBody) {
-  const headers = {};
-  if (hasBody) {
-    headers["Content-Type"] = "application/json";
-  }
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-  return headers;
-}
-
-async function requestJson(path, options = {}) {
-  const { method = "GET", body, token } = options;
-  const response = await fetch(path, {
-    method,
-    headers: createRequestHeaders(token, body !== undefined),
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
-
-  if (!response.ok) {
-    const error = new Error(data?.error || data?.message || response.statusText);
-    error.status = response.status;
-    error.payload = data;
-    throw error;
-  }
-
-  return data;
 }
 
 function LoadingShell({ message }) {
